@@ -1,0 +1,1803 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Configuración Global — Portal Pilot</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    *,
+    *::before,
+    *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg: #04040a;
+      --bg2: #07070f;
+      --bg3: #0c0c1a;
+      --card: #0e0e1c;
+      --card2: #111124;
+      --border: rgba(139, 92, 246, 0.1);
+      --border2: rgba(139, 92, 246, 0.22);
+      --accent: #8b5cf6;
+      --accent2: #7c3aed;
+      --accent-glow: rgba(139, 92, 246, 0.35);
+      --cyan: #a78bfa;
+      --white: #fff;
+      --gray: #5d5d7a;
+      --gray2: #9ca3af;
+      --text: #c4c4d4;
+      --green: #34d399;
+      --red: #f87171;
+      --yellow: #fbbf24;
+      --radius: 10px;
+      --radius-lg: 18px;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      font-size: 16px;
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow-x: hidden;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    a {
+      text-decoration: none;
+      color: inherit;
+    }
+
+    ul {
+      list-style: none;
+    }
+
+    img {
+      max-width: 100%;
+      display: block;
+    }
+
+    button {
+      font-family: inherit;
+      cursor: pointer;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 clamp(16px, 4vw, 40px);
+    }
+
+    /* ===== CURSOR PERSONALIZADO (solo desktop) ===== */
+    #cursor-dot,
+    #cursor-ring,
+    #cursor-glow {
+      display: none;
+    }
+
+    @media (min-width: 1025px) {
+
+      #cursor-dot,
+      #cursor-ring,
+      #cursor-glow {
+        display: block;
+      }
+
+      #cursor-dot {
+        width: 6px;
+        height: 6px;
+        background: #fff;
+        border-radius: 50%;
+        position: fixed;
+        pointer-events: none;
+        z-index: 10000;
+        transition: transform .1s;
+      }
+
+      #cursor-ring {
+        width: 36px;
+        height: 36px;
+        border: 1px solid rgba(139, 92, 246, 0.6);
+        border-radius: 50%;
+        position: fixed;
+        pointer-events: none;
+        z-index: 9999;
+        transition: transform .15s ease, width .2s, height .2s, opacity .2s;
+        transform: translate(-50%, -50%);
+      }
+
+      #cursor-glow {
+        width: 500px;
+        height: 500px;
+        background: radial-gradient(circle, rgba(139, 92, 246, 0.12) 0, transparent 70%);
+        position: fixed;
+        pointer-events: none;
+        z-index: 0;
+        transform: translate(-50%, -50%);
+        transition: transform .08s;
+      }
+    }
+
+    ::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: var(--bg);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--accent);
+      border-radius: 2px;
+    }
+
+    #progress {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      z-index: 999;
+      background: transparent;
+    }
+
+    #progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--cyan));
+      width: 0;
+      transition: width .1s linear;
+    }
+
+    /* ===== BOTONES ===== */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 11px 24px;
+      border-radius: 40px;
+      font-size: 13px;
+      font-weight: 600;
+      border: none;
+      transition: all .25s;
+      white-space: nowrap;
+      font-family: 'DM Sans', sans-serif;
+    }
+
+    .btn-acc {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .btn-acc:hover {
+      background: var(--accent2);
+      transform: translateY(-1px);
+      box-shadow: 0 8px 28px var(--accent-glow);
+    }
+
+    .btn-ghost {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--white);
+      border: 1px solid var(--border2);
+    }
+
+    .btn-ghost:hover {
+      background: rgba(139, 92, 246, 0.1);
+      border-color: var(--border2);
+    }
+
+    .btn-outline {
+      background: transparent;
+      color: var(--white);
+      border: 1px solid var(--border2);
+    }
+
+    .btn-outline:hover {
+      background: rgba(139, 92, 246, 0.08);
+    }
+
+    .btn-danger {
+      background: rgba(248, 113, 113, 0.15);
+      color: var(--red);
+      border: 1px solid rgba(248, 113, 113, 0.3);
+    }
+
+    .btn-danger:hover {
+      background: var(--red);
+      color: #fff;
+    }
+
+    .btn-success {
+      background: rgba(52, 211, 153, 0.15);
+      color: var(--green);
+      border: 1px solid rgba(52, 211, 153, 0.3);
+    }
+
+    .btn-success:hover {
+      background: var(--green);
+      color: #fff;
+    }
+
+    .btn-warning {
+      background: rgba(251, 191, 36, 0.15);
+      color: var(--yellow);
+      border: 1px solid rgba(251, 191, 36, 0.3);
+    }
+
+    .btn-warning:hover {
+      background: var(--yellow);
+      color: #000;
+    }
+
+    .btn-sm {
+      padding: 8px 18px;
+      font-size: 12px;
+    }
+
+    .btn-xs {
+      padding: 6px 14px;
+      font-size: 11px;
+    }
+
+    /* ===== LAYOUT PRINCIPAL ===== */
+    .dashboard {
+      display: grid;
+      grid-template-columns: 240px 1fr;
+      min-height: 100vh;
+    }
+
+    /* ===== SIDEBAR ===== */
+    .sidebar {
+      background: var(--bg2);
+      border-right: 1px solid var(--border);
+      padding: 24px 16px;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      z-index: 50;
+    }
+
+    .sidebar-logo {
+      font-family: 'Syne', sans-serif;
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--white);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      margin-bottom: 24px;
+      border-radius: var(--radius);
+    }
+
+    .sidebar-logo .logo-icon {
+      width: 28px;
+      height: 28px;
+      background: var(--accent);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      color: #fff;
+    }
+
+    .sidebar-nav {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      flex: 1;
+    }
+
+    .sidebar-link {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      border-radius: var(--radius);
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--gray2);
+      transition: all .2s;
+    }
+
+    .sidebar-link:hover,
+    .sidebar-link.active {
+      background: rgba(139, 92, 246, 0.1);
+      color: var(--white);
+    }
+
+    .sidebar-link i {
+      width: 18px;
+      text-align: center;
+      font-size: 14px;
+    }
+
+    .sidebar-link.active {
+      border-left: 2px solid var(--accent);
+      padding-left: 14px;
+    }
+
+    .sidebar-footer {
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .sidebar-user {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: var(--radius);
+      background: var(--card);
+    }
+
+    .sidebar-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--cyan));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      color: #fff;
+      font-weight: 600;
+    }
+
+    .sidebar-username {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--white);
+    }
+
+    .sidebar-role {
+      font-size: 11px;
+      color: var(--gray);
+    }
+
+    /* ===== MAIN CONTENT ===== */
+    .main-content {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    /* ===== TOPBAR ===== */
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      background: rgba(4, 4, 10, 0.85);
+      backdrop-filter: blur(24px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 clamp(16px, 4vw, 40px);
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .topbar-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .topbar-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--white);
+    }
+
+    .topbar-title span {
+      color: var(--accent);
+    }
+
+    .topbar-search {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 40px;
+      padding: 8px 16px;
+      width: 280px;
+    }
+
+    .topbar-search input {
+      background: none;
+      border: none;
+      outline: none;
+      color: var(--text);
+      font-size: 13px;
+      width: 100%;
+    }
+
+    .topbar-search input::placeholder {
+      color: var(--gray);
+    }
+
+    .topbar-search i {
+      color: var(--gray);
+    }
+
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .topbar-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--card);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--gray2);
+      font-size: 14px;
+      position: relative;
+      transition: all .2s;
+    }
+
+    .topbar-btn:hover {
+      background: rgba(139, 92, 246, 0.1);
+      color: var(--accent);
+      border-color: var(--border2);
+    }
+
+    .topbar-btn .badge {
+      position: absolute;
+      top: -4px;
+      right: -4px;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--red);
+      color: #fff;
+      font-size: 9px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+    }
+
+    /* ===== PAGE HEADER ===== */
+    .page-header {
+      padding: clamp(24px, 4vw, 40px) clamp(16px, 4vw, 40px) 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      gap: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .page-title {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(24px, 4vw, 32px);
+      font-weight: 800;
+      color: var(--white);
+      letter-spacing: -1px;
+    }
+
+    .page-title span {
+      color: var(--accent);
+    }
+
+    .page-subtitle {
+      font-size: 14px;
+      color: var(--gray);
+      max-width: 480px;
+      line-height: 1.6;
+    }
+
+    .page-actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    /* ===== SETTINGS GRID ===== */
+    .settings-grid {
+      padding: 24px clamp(16px, 4vw, 40px);
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+    }
+
+    .settings-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .settings-card.full {
+      grid-column: span 2;
+    }
+
+    .settings-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .settings-card-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--white);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .settings-card-title i {
+      color: var(--accent);
+    }
+
+    .settings-card-badge {
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .settings-card-badge.live {
+      background: rgba(52, 211, 153, 0.15);
+      color: var(--green);
+    }
+
+    .settings-card-badge.warning {
+      background: rgba(251, 191, 36, 0.15);
+      color: var(--yellow);
+    }
+
+    /* ===== BANNER PREVIEW ===== */
+    .banner-preview {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-radius: var(--radius);
+      padding: 14px 20px;
+      margin: 12px 0;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: #fff;
+      font-size: 13px;
+    }
+
+    .banner-preview .close {
+      margin-left: auto;
+      background: rgba(255, 255, 255, 0.2);
+      border: none;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      cursor: pointer;
+    }
+
+    .banner-preview.info {
+      background: linear-gradient(135deg, var(--cyan), var(--accent));
+    }
+
+    .banner-preview.warning {
+      background: linear-gradient(135deg, var(--yellow), #f59e0b);
+    }
+
+    .banner-preview.danger {
+      background: linear-gradient(135deg, var(--red), #dc2626);
+    }
+
+    /* ===== FORMULARIOS ===== */
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--gray);
+      margin-bottom: 8px;
+      letter-spacing: .5px;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 12px 16px;
+      border-radius: 8px;
+      background: var(--card2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-size: 14px;
+      outline: none;
+      transition: border-color .2s;
+    }
+
+    .form-input:focus {
+      border-color: var(--accent);
+    }
+
+    .form-input::placeholder {
+      color: var(--gray);
+    }
+
+    .form-input:disabled {
+      opacity: .6;
+      cursor: not-allowed;
+    }
+
+    .form-textarea {
+      min-height: 100px;
+      resize: vertical;
+      font-family: 'DM Sans', sans-serif;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .form-select {
+      width: 100%;
+      padding: 12px 16px;
+      border-radius: 8px;
+      background: var(--card2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-size: 14px;
+      outline: none;
+      cursor: pointer;
+    }
+
+    .form-select option {
+      background: var(--card2);
+    }
+
+    .form-hint {
+      font-size: 11px;
+      color: var(--gray);
+      margin-top: 6px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .form-hint i {
+      color: var(--accent);
+    }
+
+    /* ===== TOGGLE SWITCH ===== */
+    .form-switch {
+      position: relative;
+      display: inline-block;
+      width: 48px;
+      height: 26px;
+    }
+
+    .form-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .form-switch-slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: var(--card2);
+      border: 1px solid var(--border);
+      transition: .3s;
+      border-radius: 26px;
+    }
+
+    .form-switch-slider:before {
+      position: absolute;
+      content: "";
+      height: 20px;
+      width: 20px;
+      left: 3px;
+      bottom: 2px;
+      background: #fff;
+      transition: .3s;
+      border-radius: 50%;
+    }
+
+    input:checked+.form-switch-slider {
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+
+    input:checked+.form-switch-slider:before {
+      transform: translateX(22px);
+    }
+
+    /* ===== TABLA ENV ===== */
+    .env-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+    }
+
+    .env-table th {
+      text-align: left;
+      padding: 12px 16px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--gray);
+      background: var(--card2);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .env-table td {
+      padding: 12px 16px;
+      font-size: 13px;
+      color: var(--text);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .env-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .env-key {
+      font-family: monospace;
+      font-weight: 600;
+      color: var(--cyan);
+    }
+
+    .env-value {
+      font-family: monospace;
+      color: var(--gray2);
+      max-width: 200px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .env-value.masked {
+      filter: blur(4px);
+      cursor: pointer;
+      transition: filter .2s;
+    }
+
+    .env-value.masked:hover {
+      filter: none;
+    }
+
+    .env-actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    .env-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      background: var(--card2);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--gray2);
+      font-size: 11px;
+      cursor: pointer;
+      transition: all .2s;
+    }
+
+    .env-btn:hover {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+
+    /* ===== LISTA DE ADMINS ===== */
+    .admins-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .admin-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px;
+      background: var(--card2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+    }
+
+    .admin-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--cyan));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      color: #fff;
+      font-weight: 600;
+    }
+
+    .admin-info {
+      flex: 1;
+    }
+
+    .admin-name {
+      font-weight: 600;
+      color: var(--white);
+      font-size: 14px;
+    }
+
+    .admin-email {
+      font-size: 12px;
+      color: var(--gray);
+    }
+
+    .admin-role {
+      font-size: 11px;
+      background: var(--card);
+      padding: 2px 10px;
+      border-radius: 4px;
+      color: var(--gray2);
+      margin-top: 4px;
+      display: inline-block;
+    }
+
+    .admin-meta {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 11px;
+      color: var(--gray);
+    }
+
+    .admin-actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    .action-icon-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: var(--card2);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--gray2);
+      font-size: 12px;
+      cursor: pointer;
+      transition: all .2s;
+      margin-right: 4px;
+    }
+
+    .action-icon-btn:hover {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+
+    .action-icon-btn.danger:hover {
+      background: var(--red);
+      border-color: var(--red);
+    }
+
+    /* ===== MODALES ===== */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .3s;
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      width: 100%;
+      max-width: 480px;
+      max-height: 90vh;
+      overflow-y: auto;
+      transform: translateY(20px);
+      transition: transform .3s;
+    }
+
+    .modal-overlay.active .modal {
+      transform: translateY(0);
+    }
+
+    .modal-header {
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--white);
+    }
+
+    .modal-close {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--card2);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--gray2);
+      font-size: 14px;
+      cursor: pointer;
+      transition: all .2s;
+    }
+
+    .modal-close:hover {
+      background: var(--red);
+      color: #fff;
+      border-color: var(--red);
+    }
+
+    .modal-body {
+      padding: 24px;
+    }
+
+    .modal-footer {
+      padding: 16px 24px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+    }
+
+    /* ===== CONFIRM DIALOG ===== */
+    .confirm-dialog {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1001;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .3s;
+    }
+
+    .confirm-dialog.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .confirm-box {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      width: 100%;
+      max-width: 420px;
+      padding: 24px;
+    }
+
+    .confirm-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: rgba(248, 113, 113, 0.15);
+      color: var(--red);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      margin: 0 auto 16px;
+    }
+
+    .confirm-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--white);
+      text-align: center;
+      margin-bottom: 8px;
+    }
+
+    .confirm-message {
+      font-size: 14px;
+      color: var(--gray);
+      text-align: center;
+      line-height: 1.6;
+      margin-bottom: 24px;
+    }
+
+    .confirm-actions {
+      display: flex;
+      gap: 12px;
+    }
+
+    .confirm-actions .btn {
+      flex: 1;
+      justify-content: center;
+    }
+
+    /* ===== TOAST NOTIFICATIONS ===== */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 20px;
+      font-size: 13px;
+      color: var(--white);
+      z-index: 2000;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      animation: slideIn .3s ease;
+    }
+
+    .toast.success {
+      border-left: 3px solid var(--green);
+    }
+
+    .toast.error {
+      border-left: 3px solid var(--red);
+    }
+
+    .toast.info {
+      border-left: 3px solid var(--cyan);
+    }
+
+    .toast.warning {
+      border-left: 3px solid var(--yellow);
+    }
+
+    @keyframes slideIn {
+      from {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+
+    @keyframes slideOut {
+      from {
+        transform: translateX(0);
+        opacity: 1;
+      }
+
+      to {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+    }
+
+    /* ===== REVEAL ANIMATION ===== */
+    .reveal {
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity .6s ease, transform .6s ease;
+    }
+
+    .reveal.in {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ===== SIDEBAR TOGGLE (HAMBURGUER) ===== */
+    .sidebar-toggle {
+      display: none;
+      position: fixed;
+      top: 16px;
+      left: 16px;
+      z-index: 1000;
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      background: var(--accent);
+      border: none;
+      color: white;
+      font-size: 18px;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 12px var(--accent-glow);
+      cursor: pointer;
+    }
+
+    /* ===== OVERLAY PARA SIDEBAR MÓVIL ===== */
+    .sidebar-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(4px);
+      z-index: 999;
+    }
+
+    .sidebar-overlay.active {
+      display: block;
+    }
+
+    /* =========================================
+       RESPONSIVE - MEDIA QUERIES
+       ========================================= */
+
+    /* Tablet y móvil: Sidebar off-canvas */
+    @media (max-width: 1024px) {
+      .sidebar-toggle {
+        display: flex !important;
+      }
+
+      .sidebar {
+        position: fixed !important;
+        left: -260px !important;
+        top: 0;
+        width: 260px;
+        height: 100vh;
+        z-index: 1000;
+        transition: left .3s ease;
+        background: var(--bg2);
+        border-right: 1px solid var(--border);
+        padding: 20px 16px;
+      }
+
+      .sidebar.active {
+        left: 0 !important;
+      }
+
+      .main-content {
+        margin-left: 0 !important;
+      }
+
+      .settings-grid {
+        grid-template-columns: 1fr !important;
+      }
+
+      .settings-card.full {
+        grid-column: span 1 !important;
+      }
+
+      .form-row {
+        grid-template-columns: 1fr !important;
+        gap: 12px;
+      }
+
+      .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+      }
+
+      .page-actions {
+        width: 100%;
+        justify-content: flex-end;
+      }
+    }
+
+    /* Móvil: ajustes adicionales */
+    @media (max-width: 768px) {
+      .topbar {
+        padding: 0 12px;
+        height: 56px;
+      }
+
+      .topbar-search {
+        display: none;
+      }
+
+      .btn {
+        padding: 12px 20px;
+        font-size: 14px;
+        min-height: 44px;
+      }
+
+      .btn-sm {
+        padding: 10px 16px;
+        font-size: 13px;
+      }
+
+      .settings-card {
+        padding: 16px;
+        border-radius: 14px;
+      }
+
+      .form-input,
+      .form-select,
+      .form-textarea {
+        padding: 12px 14px;
+        font-size: 15px;
+      }
+
+      .env-table {
+        font-size: 13px;
+      }
+
+      .env-value {
+        max-width: 100px;
+      }
+
+      .admin-item {
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .admin-actions {
+        width: 100%;
+        justify-content: flex-end;
+        margin-top: 4px;
+      }
+
+      .banner-preview {
+        font-size: 13px;
+        padding: 10px 14px;
+      }
+    }
+
+    /* Móvil muy pequeño */
+    @media (max-width: 480px) {
+      .page-title {
+        font-size: 18px;
+      }
+
+      .page-subtitle {
+        font-size: 13px;
+      }
+
+      .btn {
+        width: 100%;
+        justify-content: center;
+      }
+
+      .page-actions {
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .form-switch {
+        transform: scale(0.85);
+        transform-origin: left center;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Progress bar -->
+  <div id="progress">
+    <div id="progress-fill"></div>
+  </div>
+  <!-- Custom cursor (solo desktop) -->
+  <div id="cursor-dot"></div>
+  <div id="cursor-ring"></div>
+  <div id="cursor-glow"></div>
+
+  <!-- Botón hamburguesa para móvil -->
+  <button class="sidebar-toggle" id="sidebarToggle" onclick="toggleSidebar()" aria-label="Menú">
+    <i class="fas fa-bars"></i>
+  </button>
+
+  <!-- Overlay para cerrar sidebar al tocar fuera -->
+  <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+  <!-- MODAL: NUEVO ADMIN -->
+  <div class="modal-overlay" id="addAdminModal">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title"><i class="fas fa-user-plus" style="margin-right:8px;color:var(--accent)"></i>Nuevo
+          Administrador</div>
+        <button class="modal-close" onclick="closeModal('addAdminModal')"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="modal-body">
+        <form id="addAdminForm">
+          <div class="form-group"><label class="form-label">Nombre Completo *</label><input type="text"
+              class="form-input" id="adminName" placeholder="Ej: María González" required></div>
+          <div class="form-group"><label class="form-label">Email Corporativo *</label><input type="email"
+              class="form-input" id="adminEmail" placeholder="maria@portalpilot.io" required></div>
+          <div class="form-row">
+            <div class="form-group"><label class="form-label">Rol *</label><select class="form-select" id="adminRole"
+                required>
+                <option value="developer">Desarrollador</option>
+                <option value="devops">DevOps</option>
+                <option value="security">Seguridad</option>
+                <option value="superadmin">Super Admin</option>
+              </select></div>
+            <div class="form-group"><label class="form-label">Acceso 2FA</label><select class="form-select"
+                id="admin2fa">
+                <option value="required">Requerido</option>
+                <option value="optional">Opcional</option>
+                <option value="disabled">Desactivado</option>
+              </select></div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Permisos Especiales</label>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+              <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--gray)"><input
+                  type="checkbox" id="permBilling"> Billing</label>
+              <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--gray)"><input
+                  type="checkbox" id="permTenants"> Tenants</label>
+              <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--gray)"><input
+                  type="checkbox" id="permSystem" checked> Sistema</label>
+              <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--gray)"><input
+                  type="checkbox" id="permLogs"> Logs</label>
+            </div>
+          </div>
+          <div class="form-hint"><i class="fas fa-shield-alt"></i> Este usuario tendrá acceso a configuración global.
+            Usa 2FA obligatorio para roles críticos.</div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="closeModal('addAdminModal')">Cancelar</button>
+        <button class="btn btn-acc" onclick="createAdmin()"><i class="fas fa-plus"></i> Crear Admin</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- DIALOG: CONFIRMAR ELIMINACIÓN -->
+  <div class="confirm-dialog" id="confirmDialog">
+    <div class="confirm-box">
+      <div class="confirm-icon"><i class="fas fa-exclamation-triangle"></i></div>
+      <div class="confirm-title">¿Confirmar eliminación?</div>
+      <div class="confirm-message" id="confirmMessage">Esta acción no se puede deshacer. ¿Estás seguro de continuar?
+      </div>
+      <div class="confirm-actions">
+        <button class="btn btn-ghost" onclick="closeConfirm()">Cancelar</button>
+        <button class="btn btn-danger" id="confirmBtn">Sí, Eliminar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- DASHBOARD PRINCIPAL -->
+  <div class="dashboard">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-logo">
+        <div class="logo-icon"><i class="fas fa-robot"></i></div>PORTAL PILOT
+      </div>
+      <nav class="sidebar-nav">
+        <a href="dashboard.html" class="sidebar-link"><i class="fas fa-home"></i> Dashboard</a>
+        <a href="tenants.html" class="sidebar-link"><i class="fas fa-building"></i> Tenants</a>
+        <a href="usuarios.html" class="sidebar-link"><i class="fas fa-users"></i> Usuarios</a>
+        <a href="#" class="sidebar-link"><i class="fas fa-robot"></i> Bots RPA</a>
+        <a href="#" class="sidebar-link"><i class="fas fa-link"></i> Auditoría</a>
+        <a href="billing_plans.html" class="sidebar-link"><i class="fas fa-credit-card"></i> Billing & Planes</a>
+        <a href="system_health.html" class="sidebar-link"><i class="fas fa-heartbeat"></i> System Health</a>
+        <a href="global_settings.html" class="sidebar-link active"><i class="fas fa-cog"></i> Configuración Global</a>
+      </nav>
+      <div class="sidebar-footer">
+        <a href="#" class="sidebar-link"><i class="fas fa-question-circle"></i> Ayuda</a>
+        <a href="#" class="sidebar-link"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</a>
+        <div class="sidebar-user">
+          <div class="sidebar-avatar">AD</div>
+          <div>
+            <div class="sidebar-username">Admin User</div>
+            <div class="sidebar-role">Super Admin</div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <header class="topbar">
+        <div class="topbar-left">
+          <div class="topbar-title">Configuración <span>Global</span></div>
+          <div class="topbar-search"><i class="fas fa-search"></i><input type="text"
+              placeholder="Buscar ajuste, variable, admin..."></div>
+        </div>
+        <div class="topbar-right">
+          <button class="topbar-btn" title="Notificaciones"><i class="fas fa-bell"></i><span
+              class="badge">1</span></button>
+          <button class="btn btn-success btn-sm" id="saveAllBtn" onclick="saveAllSettings()" style="display:none"><i
+              class="fas fa-save"></i> Guardar Todo</button>
+        </div>
+      </header>
+
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Ajustes del <span>Sistema</span></h1>
+          <p class="page-subtitle">Configuraciones que afectan a toda la plataforma. Cambios aplicados en tiempo real.
+            Usa con precaución.</p>
+        </div>
+        <div class="page-actions">
+          <button class="btn btn-outline btn-sm" onclick="exportSettings()"><i class="fas fa-download"></i> Exportar
+            Config</button>
+          <button class="btn btn-warning btn-sm" onclick="backupSettings()"><i class="fas fa-database"></i> Crear
+            Backup</button>
+        </div>
+      </div>
+
+      <div class="settings-grid">
+        <!-- CARD: MENSAJES GLOBALES -->
+        <div class="settings-card reveal">
+          <div class="settings-card-header">
+            <div class="settings-card-title"><i class="fas fa-bullhorn"></i> Mensajes Globales</div>
+            <span class="settings-card-badge live" id="bannerStatus">Inactivo</span>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Tipo de Banner</label>
+            <select class="form-select" id="bannerType" onchange="updateBannerPreview()">
+              <option value="info">ℹ️ Información</option>
+              <option value="warning">⚠️ Advertencia</option>
+              <option value="danger">🚨 Crítico</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Mensaje</label>
+            <textarea class="form-input form-textarea" id="bannerMessage"
+              placeholder="Ej: Mantenimiento programado el domingo 24 Nov de 02:00 a 04:00 UTC"
+              oninput="updateBannerPreview()"></textarea>
+            <div class="form-hint"><i class="fas fa-info-circle"></i> Se mostrará en la parte superior de todas las
+              páginas para todos los usuarios</div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label class="form-label">Fecha Inicio</label><input type="datetime-local"
+                class="form-input" id="bannerStart"></div>
+            <div class="form-group"><label class="form-label">Fecha Fin</label><input type="datetime-local"
+                class="form-input" id="bannerEnd"></div>
+          </div>
+          <div class="form-group">
+            <label class="form-label" style="display:flex;align-items:center;gap:8px">
+              <label class="form-switch"><input type="checkbox" id="bannerActive" onchange="toggleBanner()"><span
+                  class="form-switch-slider"></span></label>
+              Activar Banner Global
+            </label>
+          </div>
+          <div id="bannerPreviewContainer"></div>
+          <div style="display:flex;gap:8px;margin-top:auto">
+            <button class="btn btn-outline btn-sm" onclick="previewBanner()"><i class="fas fa-eye"></i> Vista
+              Previa</button>
+            <button class="btn btn-acc btn-sm" onclick="publishBanner()"><i class="fas fa-paper-plane"></i>
+              Publicar</button>
+          </div>
+        </div>
+
+        <!-- CARD: VARIABLES DE ENTORNO -->
+        <div class="settings-card reveal" style="transition-delay:.1s">
+          <div class="settings-card-header">
+            <div class="settings-card-title"><i class="fas fa-code"></i> Variables de Entorno</div>
+            <span class="settings-card-badge warning">Producción</span>
+          </div>
+          <div style="overflow-x:auto">
+            <table class="env-table">
+              <thead>
+                <tr>
+                  <th>Variable</th>
+                  <th>Valor</th>
+                  <th>Entorno</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="envTableBody"></tbody>
+            </table>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:auto">
+            <button class="btn btn-outline btn-sm" onclick="addEnvVar()"><i class="fas fa-plus"></i> Nueva
+              Variable</button>
+            <button class="btn btn-warning btn-sm" onclick="syncEnvVars()"><i class="fas fa-sync-alt"></i>
+              Sincronizar</button>
+          </div>
+        </div>
+
+        <!-- CARD: GESTIÓN DE ADMINS (FULL WIDTH) -->
+        <div class="settings-card full reveal">
+          <div class="settings-card-header">
+            <div class="settings-card-title"><i class="fas fa-users-cog"></i> Gestión de Administradores</div>
+            <button class="btn btn-acc btn-sm" onclick="openModal('addAdminModal')"><i class="fas fa-plus"></i> Nuevo
+              Admin</button>
+          </div>
+          <div class="admins-list" id="adminsList"></div>
+        </div>
+
+        <!-- CARD: FEATURE FLAGS -->
+        <div class="settings-card reveal">
+          <div class="settings-card-header">
+            <div class="settings-card-title"><i class="fas fa-toggle-on"></i> Feature Flags</div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <label
+              style="display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--text)"><span>🧪
+                Modo Beta para nuevos features</span><label class="form-switch"><input type="checkbox" checked><span
+                  class="form-switch-slider"></span></label></label>
+            <label
+              style="display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--text)"><span>🔐
+                Requiere 2FA para todos los admins</span><label class="form-switch"><input type="checkbox" checked><span
+                  class="form-switch-slider"></span></label></label>
+            <label
+              style="display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--text)"><span>📊
+                Analytics detallados en dashboard</span><label class="form-switch"><input type="checkbox"><span
+                  class="form-switch-slider"></span></label></label>
+            <label
+              style="display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--text)"><span>🌍
+                Multi-región (CDN global)</span><label class="form-switch"><input type="checkbox"><span
+                  class="form-switch-slider"></span></label></label>
+            <label
+              style="display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--text)"><span>🤖
+                Auto-scaling de bots RPA</span><label class="form-switch"><input type="checkbox" checked><span
+                  class="form-switch-slider"></span></label></label>
+          </div>
+          <div style="margin-top:auto;display:flex;gap:8px">
+            <button class="btn btn-outline btn-sm" onclick="resetFlags()"><i class="fas fa-undo"></i> Resetear</button>
+            <button class="btn btn-acc btn-sm" onclick="saveFlags()"><i class="fas fa-save"></i> Guardar</button>
+          </div>
+        </div>
+
+        <!-- CARD: AUDIT LOG -->
+        <div class="settings-card reveal" style="transition-delay:.1s">
+          <div class="settings-card-header">
+            <div class="settings-card-title"><i class="fas fa-clipboard-list"></i> Últimos Cambios</div>
+            <button class="btn btn-ghost btn-xs" onclick="viewAuditLog()"><i class="fas fa-external-link-alt"></i> Ver
+              todo</button>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:12px;max-height:240px;overflow-y:auto">
+            <div style="display:flex;gap:12px;font-size:12px"><span
+                style="color:var(--gray);min-width:80px">14:32:18</span><span style="color:var(--text)"><strong
+                  style="color:var(--white)">admin@portalpilot.io</strong> actualizó variable <span
+                  class="env-key">API_RATE_LIMIT</span></span></div>
+            <div style="display:flex;gap:12px;font-size:12px"><span
+                style="color:var(--gray);min-width:80px">13:15:42</span><span style="color:var(--text)"><strong
+                  style="color:var(--white)">devops@portalpilot.io</strong> activó feature flag <span
+                  style="color:var(--cyan)">auto_scaling</span></span></div>
+            <div style="display:flex;gap:12px;font-size:12px"><span
+                style="color:var(--gray);min-width:80px">11:08:33</span><span style="color:var(--text)"><strong
+                  style="color:var(--white)">security@portalpilot.io</strong> eliminó admin <span
+                  style="color:var(--red)">ex-employee@company.com</span></span></div>
+            <div style="display:flex;gap:12px;font-size:12px"><span
+                style="color:var(--gray);min-width:80px">09:45:12</span><span style="color:var(--text)"><strong
+                  style="color:var(--white)">admin@portalpilot.io</strong> publicó banner global de mantenimiento</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- ===== JAVASCRIPT ===== -->
+  <script>
+    // ===== CUSTOM CURSOR (solo desktop) =====
+    if (window.innerWidth > 1024) {
+      const dot = document.getElementById('cursor-dot'), ring = document.getElementById('cursor-ring'), glow = document.getElementById('cursor-glow');
+      let mx = 0, my = 0, rx = 0, ry = 0;
+      document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; dot.style.left = mx + 'px'; dot.style.top = my + 'px'; glow.style.left = mx + 'px'; glow.style.top = my + 'px'; });
+      function animRing() { rx += (mx - rx) * 0.12; ry += (my - ry) * 0.12; ring.style.left = rx + 'px'; ring.style.top = ry + 'px'; requestAnimationFrame(animRing); }
+      animRing();
+      document.querySelectorAll('a,button,.sidebar-link,.action-icon-btn,.env-btn,.modal-close').forEach(el => {
+        el.addEventListener('mouseenter', () => { ring.style.width = '50px'; ring.style.height = '50px'; ring.style.opacity = '.5'; });
+        el.addEventListener('mouseleave', () => { ring.style.width = '36px'; ring.style.height = '36px'; ring.style.opacity = '1'; });
+      });
+    }
+
+    // ===== PROGRESS BAR =====
+    window.addEventListener('scroll', () => {
+      const p = (window.scrollY / (document.documentElement.scrollHeight - innerHeight)) * 100;
+      document.getElementById('progress-fill').style.width = p + '%';
+    });
+
+    // ===== REVEAL ON SCROLL =====
+    const obs = new IntersectionObserver(entries => {
+      entries.forEach((e, i) => { if (e.isIntersecting) setTimeout(() => e.target.classList.add('in'), i * 50); });
+    }, { threshold: 0.05 });
+    document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+
+    // ===== SIDEBAR TOGGLE (MÓVIL) =====
+    function toggleSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      const overlay = document.getElementById('sidebarOverlay');
+      sidebar.classList.toggle('active');
+      overlay.classList.toggle('active');
+      document.body.style.overflow = sidebar.classList.contains('active') ? 'hidden' : '';
+    }
+    document.querySelectorAll('.sidebar a').forEach(link => {
+      link.addEventListener('click', () => { if (window.innerWidth <= 1024) toggleSidebar(); });
+    });
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') { const s = document.getElementById('sidebar'); if (s?.classList.contains('active')) toggleSidebar(); }
+    });
+    window.addEventListener('resize', () => {
+      if (window.innerWidth > 1024) {
+        document.getElementById('sidebar')?.classList.remove('active');
+        document.getElementById('sidebarOverlay')?.classList.remove('active');
+        document.body.style.overflow = '';
+      }
+    });
+
+    // ===== BANNER FUNCTIONS =====
+    function updateBannerPreview() {
+      const type = document.getElementById('bannerType').value, msg = document.getElementById('bannerMessage').value, container = document.getElementById('bannerPreviewContainer');
+      if (!msg.trim()) { container.innerHTML = ''; return; }
+      container.innerHTML = '<div class="banner-preview ' + type + '">' + msg + '<button class="close" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button></div>';
+    }
+    function toggleBanner() {
+      const active = document.getElementById('bannerActive').checked;
+      document.getElementById('bannerStatus').textContent = active ? 'Activo' : 'Inactivo';
+      document.getElementById('bannerStatus').className = 'settings-card-badge ' + (active ? 'live' : 'warning');
+      if (active) showToast('✓ Banner activado. Se mostrará a todos los usuarios.', 'success');
+    }
+    function previewBanner() { updateBannerPreview(); if (document.getElementById('bannerMessage').value) showToast('👁️ Vista previa actualizada', 'info'); }
+    function publishBanner() {
+      const msg = document.getElementById('bannerMessage').value;
+      if (!msg.trim()) { showToast('⚠️ Ingresa un mensaje para publicar', 'warning'); return; }
+      document.getElementById('bannerActive').checked = true; toggleBanner();
+      showToast('🚀 Banner publicado globalmente', 'success');
+    }
+
+    // ===== ENV VARIABLES =====
+    const envVars = [
+      { key: 'API_BASE_URL', value: 'https://api.portalpilot.io/v1', env: 'production', sensitive: false },
+      { key: 'OLLAMA_ENDPOINT', value: 'http://localhost:11434', env: 'production', sensitive: false },
+      { key: 'NOCODB_API_KEY', value: 'nc_••••••••••••••••', env: 'production', sensitive: true },
+      { key: 'BLOCKCHAIN_RPC', value: 'https://rpc.portalpilot.chain', env: 'production', sensitive: false },
+      { key: 'STRIPE_SECRET_KEY', value: 'sk_live_••••••••••••', env: 'production', sensitive: true },
+      { key: 'API_RATE_LIMIT', value: '1000', env: 'production', sensitive: false },
+      { key: 'DEBUG_MODE', value: 'false', env: 'production', sensitive: false },
+      { key: 'LOG_LEVEL', value: 'info', env: 'production', sensitive: false }
+    ];
+    function renderEnvVars() {
+      const tbody = document.getElementById('envTableBody'); tbody.innerHTML = '';
+      envVars.forEach(v => {
+        const row = document.createElement('tr');
+        const masked = v.sensitive ? 'masked' : '';
+        const onclickAttr = v.sensitive ? "this.classList.toggle('masked')" : '';
+        row.innerHTML = '<td><span class="env-key">' + v.key + '</span></td>' +
+          '<td><span class="env-value ' + masked + '" onclick="' + onclickAttr + '">' + v.value + '</span></td>' +
+          '<td><span style="padding:2px 8px;border-radius:4px;background:rgba(139,92,246,0.15);color:var(--cyan);font-size:11px;font-weight:600">' + v.env + '</span></td>' +
+          '<td class="env-actions"><button class="env-btn" title="Editar" onclick="editEnvVar(\'' + v.key + '\')"><i class="fas fa-edit"></i></button><button class="env-btn danger" title="Eliminar" onclick="confirmDeleteEnv(\'' + v.key + '\')"><i class="fas fa-trash"></i></button></td>';
+        tbody.appendChild(row);
+      });
+    }
+    function addEnvVar() { showToast('📝 Funcionalidad: Modal para agregar nueva variable', 'info'); }
+    function editEnvVar(key) { showToast('✏️ Editando: ' + key, 'info'); }
+    function confirmDeleteEnv(key) {
+      document.getElementById('confirmMessage').textContent = '¿Eliminar la variable de entorno "' + key + '"? Esta acción puede afectar el funcionamiento de la plataforma.';
+      document.getElementById('confirmBtn').onclick = function () {
+        const i = envVars.findIndex(v => v.key === key); if (i !== -1) { envVars.splice(i, 1); renderEnvVars(); showToast('"' + key + '" eliminada', 'success'); } closeConfirm();
+      };
+      document.getElementById('confirmDialog').classList.add('active');
+    }
+    function syncEnvVars() { const btn = event.currentTarget, orig = btn.innerHTML; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sincronizando...'; btn.disabled = true; setTimeout(() => { btn.innerHTML = orig; btn.disabled = false; showToast('✓ Variables sincronizadas con el servidor', 'success'); }, 1500); }
+
+    // ===== ADMIN MANAGEMENT =====
+    const admins = [
+      { id: 1, name: 'Admin User', email: 'admin@portalpilot.io', role: 'superadmin', lastLogin: 'Hace 2 min', status: 'active' },
+      { id: 2, name: 'DevOps Team', email: 'devops@portalpilot.io', role: 'devops', lastLogin: 'Hace 1h', status: 'active' },
+      { id: 3, name: 'Security Lead', email: 'security@portalpilot.io', role: 'security', lastLogin: 'Hace 3h', status: 'active' },
+      { id: 4, name: 'María González', email: 'maria.g@portalpilot.io', role: 'developer', lastLogin: 'Hace 1d', status: 'active' },
+      { id: 5, name: 'Carlos Ruiz', email: 'carlos.r@portalpilot.io', role: 'developer', lastLogin: 'Hace 5d', status: 'inactive' }
+    ];
+    function renderAdmins() {
+      const list = document.getElementById('adminsList'); list.innerHTML = '';
+      admins.forEach(a => {
+        const initials = a.name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase();
+        const role = a.role.charAt(0).toUpperCase() + a.role.slice(1);
+        const statusColor = a.status === 'active' ? 'var(--green)' : 'var(--gray)';
+        const statusText = a.status === 'active' ? 'Activo' : 'Inactivo';
+        const item = document.createElement('div'); item.className = 'admin-item';
+        item.innerHTML = '<div class="admin-avatar">' + initials + '</div>' +
+          '<div class="admin-info"><div class="admin-name">' + a.name + '</div><div class="admin-email">' + a.email + '</div><span class="admin-role">' + role + '</span></div>' +
+          '<div class="admin-meta"><span><i class="fas fa-clock"></i> ' + a.lastLogin + '</span><span style="color:' + statusColor + '"><i class="fas fa-circle" style="font-size:6px"></i> ' + statusText + '</span></div>' +
+          '<div class="admin-actions"><button class="action-icon-btn" title="Editar" onclick="editAdmin(' + a.id + ')"><i class="fas fa-edit"></i></button><button class="action-icon-btn danger" title="Eliminar" onclick="confirmDeleteAdmin(' + a.id + ', \'' + a.name + '\')"><i class="fas fa-user-minus"></i></button></div>';
+        list.appendChild(item);
+      });
+    }
+    function openModal(id) { document.getElementById(id).classList.add('active'); }
+    function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+    function createAdmin() {
+      const form = document.getElementById('addAdminForm');
+      if (form.checkValidity()) {
+        const name = document.getElementById('adminName').value, email = document.getElementById('adminEmail').value;
+        const btn = form.closest('.modal').querySelector('.btn-acc'), orig = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creando...'; btn.disabled = true;
+        setTimeout(() => {
+          admins.push({ id: Date.now(), name: name, email: email, role: document.getElementById('adminRole').value, lastLogin: 'Ahora', status: 'active' });
+          renderAdmins(); closeModal('addAdminModal'); form.reset(); btn.innerHTML = orig; btn.disabled = false;
+          showToast('✓ Admin "' + name + '" creado exitosamente', 'success');
+        }, 1200);
+      } else form.reportValidity();
+    }
+    function editAdmin(id) { showToast('✏️ Editando admin ID: ' + id, 'info'); }
+    function confirmDeleteAdmin(id, name) {
+      document.getElementById('confirmMessage').textContent = '¿Eliminar al administrador "' + name + '"? Perderá todo acceso a la plataforma. Esta acción no se puede deshacer.';
+      document.getElementById('confirmBtn').onclick = function () {
+        const i = admins.findIndex(a => a.id === id); if (i !== -1) { admins.splice(i, 1); renderAdmins(); showToast('"' + name + '" eliminado', 'success'); } closeConfirm();
+      };
+      document.getElementById('confirmDialog').classList.add('active');
+    }
+    function closeConfirm() { document.getElementById('confirmDialog').classList.remove('active'); }
+
+    // ===== UTILITIES =====
+    function saveFlags() { const btn = event.currentTarget, orig = btn.innerHTML; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...'; btn.disabled = true; setTimeout(() => { btn.innerHTML = orig; btn.disabled = false; showToast('✓ Feature flags actualizados', 'success'); }, 1000); }
+    function resetFlags() { if (confirm('¿Resetear todos los feature flags a valores por defecto?')) { showToast('✓ Flags reseteados', 'info'); } }
+    function showToast(msg, type = 'info') {
+      const icons = { success: 'check-circle', error: 'exclamation-circle', warning: 'exclamation-triangle', info: 'info-circle' };
+      const t = document.createElement('div'); t.className = 'toast ' + type; t.innerHTML = '<i class="fas fa-' + icons[type] + '"></i>' + msg; document.body.appendChild(t);
+      setTimeout(() => { t.style.animation = 'slideOut .3s ease'; setTimeout(() => t.remove(), 300); }, 3000);
+    }
+    function saveAllSettings() { const btn = document.getElementById('saveAllBtn'), orig = btn.innerHTML; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...'; btn.disabled = true; setTimeout(() => { btn.innerHTML = orig; btn.disabled = false; btn.style.display = 'none'; showToast('✓ Todos los ajustes guardados y sincronizados', 'success'); }, 2000); }
+    function exportSettings() { showToast('✓ Exportando configuración a JSON...', 'info'); setTimeout(() => showToast('✓ "portalpilot_config_2026.json" descargado', 'success'), 1500); }
+    function backupSettings() { showToast('🔄 Creando backup de configuración...', 'info'); setTimeout(() => showToast('✓ Backup creado: backup_2026-11-14_1432.enc', 'success'), 2000); }
+    function viewAuditLog() { showToast('📋 Redirigiendo al log de auditoría completo...', 'info'); }
+
+    // Watch for changes
+    let hasChanges = false;
+    document.querySelectorAll('.form-input,.form-select,.form-textarea,.form-switch input').forEach(el => {
+      el.addEventListener('change', () => { if (!hasChanges) { hasChanges = true; document.getElementById('saveAllBtn').style.display = 'inline-flex'; showToast('✏️ Hay cambios sin guardar. Haz clic en "Guardar Todo" para aplicar.', 'warning'); } });
+    });
+
+    // ===== INIT =====
+    window.addEventListener('load', () => {
+      renderEnvVars(); renderAdmins();
+      setTimeout(() => { document.querySelectorAll('.reveal').forEach((el, i) => { setTimeout(() => el.classList.add('in'), i * 50); }); }, 100);
+    });
+    document.querySelectorAll('.modal-overlay,.confirm-dialog').forEach(o => {
+      o.addEventListener('click', e => { if (e.target === o) { o.classList.remove('active'); if (o.id === 'confirmDialog') closeConfirm(); } });
+    });
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') { document.querySelectorAll('.modal-overlay.active,.confirm-dialog.active').forEach(m => m.classList.remove('active')); }
+      if (e.key === '/' && document.activeElement.tagName !== 'INPUT') { e.preventDefault(); document.querySelector('.topbar-search input')?.focus(); }
+      if (e.key === 's' && e.ctrlKey) { e.preventDefault(); if (hasChanges) saveAllSettings(); }
+    });
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Equipo — Portal Pilot</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+/* ─── RESET & TOKENS ────────────────────────────────── */
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;cursor:none}
+:root{
+  --bg:#04040a;--bg2:#07070f;--bg3:#0c0c1a;--card:#0e0e1c;--card2:#111124;
+  --border:rgba(139,92,246,0.1);--border2:rgba(139,92,246,0.22);
+  --accent:#8b5cf6;--accent2:#7c3aed;--accent-glow:rgba(139,92,246,0.35);
+  --cyan:#a78bfa;--white:#fff;--gray:#5d5d7a;--gray2:#9ca3af;
+  --text:#c4c4d4;--green:#34d399;--red:#f87171;--yellow:#fbbf24;
+  --radius:10px;--radius-lg:18px;
+}
+html{scroll-behavior:smooth;font-size:16px}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden;line-height:1.6;-webkit-font-smoothing:antialiased}
+a{text-decoration:none;color:inherit}ul{list-style:none}img{max-width:100%;display:block}button{font-family:inherit;cursor:pointer}
+
+/* ─── CUSTOM CURSOR ──────────────────────────────────── */
+#cursor-dot{width:6px;height:6px;background:#fff;border-radius:50%;position:fixed;pointer-events:none;z-index:10000;transition:transform .1s}
+#cursor-ring{width:36px;height:36px;border:1px solid rgba(139,92,246,0.6);border-radius:50%;position:fixed;pointer-events:none;z-index:9999;transition:transform .15s ease,width .2s,height .2s,opacity .2s;transform:translate(-50%,-50%)}
+#cursor-glow{width:500px;height:500px;background:radial-gradient(circle,rgba(139,92,246,0.12) 0,transparent 70%);position:fixed;pointer-events:none;z-index:0;transform:translate(-50%,-50%);transition:transform .08s}
+
+/* ─── SCROLLBAR & PROGRESS ──────────────────────────── */
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--accent);border-radius:2px}
+#progress{position:fixed;top:0;left:0;right:0;height:2px;z-index:999;background:transparent}
+#progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--cyan));width:0;transition:width .1s linear}
+
+/* ─── BUTTONS ───────────────────────────────────────── */
+.btn{display:inline-flex;align-items:center;gap:8px;padding:11px 24px;border-radius:40px;font-size:13px;font-weight:600;border:none;transition:all .25s;white-space:nowrap;font-family:'DM Sans',sans-serif;cursor:pointer}
+.btn-acc{background:var(--accent);color:#fff}.btn-acc:hover{background:var(--accent2);transform:translateY(-1px);box-shadow:0 8px 28px var(--accent-glow)}
+.btn-ghost{background:rgba(255,255,255,0.05);color:var(--white);border:1px solid var(--border2)}.btn-ghost:hover{background:rgba(139,92,246,0.1);border-color:var(--border2)}
+.btn-outline{background:transparent;color:var(--white);border:1px solid var(--border2)}.btn-outline:hover{background:rgba(139,92,246,0.08)}
+.btn-danger{background:rgba(248,113,113,0.15);color:var(--red);border:1px solid rgba(248,113,113,0.3)}.btn-danger:hover{background:var(--red);color:#fff}
+.btn-success{background:rgba(52,211,153,0.15);color:var(--green);border:1px solid rgba(52,211,153,0.3)}.btn-success:hover{background:var(--green);color:#fff}
+.btn-warning{background:rgba(251,191,36,0.15);color:var(--yellow);border:1px solid rgba(251,191,36,0.3)}.btn-warning:hover{background:var(--yellow);color:#000}
+.btn-sm{padding:8px 18px;font-size:12px}.btn-xs{padding:6px 14px;font-size:11px}
+
+/* ─── DASHBOARD LAYOUT ──────────────────────────────── */
+.dashboard{display:grid;grid-template-columns:240px 1fr;min-height:100vh}
+
+/* ─── SIDEBAR ───────────────────────────────────────── */
+.sidebar{background:var(--bg2);border-right:1px solid var(--border);padding:24px 16px;position:sticky;top:0;height:100vh;display:flex;flex-direction:column;gap:8px;z-index:50}
+.sidebar-logo{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:var(--white);display:flex;align-items:center;gap:10px;padding:8px 12px;margin-bottom:24px;border-radius:var(--radius)}
+.sidebar-logo .logo-icon{width:28px;height:28px;background:var(--accent);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;color:#fff}
+.sidebar-nav{display:flex;flex-direction:column;gap:4px;flex:1}
+.sidebar-link{display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:var(--radius);font-size:13px;font-weight:500;color:var(--gray2);transition:all .2s}
+.sidebar-link:hover,.sidebar-link.active{background:rgba(139,92,246,0.1);color:var(--white)}
+.sidebar-link i{width:18px;text-align:center;font-size:14px}
+.sidebar-link.active{border-left:2px solid var(--accent);padding-left:14px}
+.sidebar-footer{padding-top:16px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:8px}
+.sidebar-user{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:var(--radius);background:var(--card)}
+.sidebar-avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--cyan));display:flex;align-items:center;justify-content:center;font-size:14px;color:#fff;font-weight:600}
+.sidebar-username{font-size:12px;font-weight:600;color:var(--white)}.sidebar-role{font-size:11px;color:var(--gray)}
+
+/* ─── MAIN & TOPBAR ─────────────────────────────────── */
+.main-content{display:flex;flex-direction:column;gap:0}
+.topbar{position:sticky;top:0;z-index:40;background:rgba(4,4,10,0.85);backdrop-filter:blur(24px);border-bottom:1px solid var(--border);padding:0 clamp(16px,4vw,40px);height:64px;display:flex;align-items:center;justify-content:space-between}
+.topbar-left{display:flex;align-items:center;gap:16px}
+.topbar-title{font-family:'Syne',sans-serif;font-size:18px;font-weight:700;color:var(--white)}.topbar-title span{color:var(--accent)}
+.topbar-search{display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--border);border-radius:40px;padding:8px 16px;width:280px}
+.topbar-search input{background:none;border:none;outline:none;color:var(--text);font-size:13px;width:100%}
+.topbar-search input::placeholder{color:var(--gray)}.topbar-search i{color:var(--gray)}
+.topbar-right{display:flex;align-items:center;gap:12px}
+.topbar-btn{width:36px;height:36px;border-radius:50%;background:var(--card);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--gray2);font-size:14px;position:relative;transition:all .2s}
+.topbar-btn:hover{background:rgba(139,92,246,0.1);color:var(--accent);border-color:var(--border2)}
+.topbar-btn .badge{position:absolute;top:-4px;right:-4px;width:16px;height:16px;border-radius:50%;background:var(--red);color:#fff;font-size:9px;display:flex;align-items:center;justify-content:center;font-weight:600}
+
+/* ─── PAGE HEADER ───────────────────────────────────── */
+.page-header{padding:clamp(24px,4vw,40px) clamp(16px,4vw,40px) 24px;display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:16px;border-bottom:1px solid var(--border)}
+.page-title{font-family:'Syne',sans-serif;font-size:clamp(24px,4vw,32px);font-weight:800;color:var(--white);letter-spacing:-1px}.page-title span{color:var(--accent)}
+.page-subtitle{font-size:14px;color:var(--gray);max-width:480px;line-height:1.6}.page-actions{display:flex;gap:12px;flex-wrap:wrap}
+
+/* ─── TEAM STATS BAR ────────────────────────────────── */
+.stats-bar{padding:20px clamp(16px,4vw,40px);display:grid;grid-template-columns:repeat(4,1fr);gap:16px;border-bottom:1px solid var(--border);background:var(--bg2)}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px 20px;display:flex;align-items:center;gap:14px}
+.stat-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.stat-icon.purple{background:rgba(139,92,246,0.15);color:var(--accent)}
+.stat-icon.green{background:rgba(52,211,153,0.15);color:var(--green)}
+.stat-icon.cyan{background:rgba(167,139,250,0.15);color:var(--cyan)}
+.stat-icon.yellow{background:rgba(251,191,36,0.15);color:var(--yellow)}
+.stat-info{flex:1}
+.stat-value{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--white);letter-spacing:-0.5px}
+.stat-label{font-size:12px;color:var(--gray)}
+.stat-bar{width:100%;height:4px;background:var(--card2);border-radius:2px;margin-top:8px;overflow:hidden}
+.stat-bar-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--accent),var(--cyan));transition:width .5s ease}
+.stat-bar-fill.warning{background:linear-gradient(90deg,var(--yellow),var(--red))}
+
+/* ─── FILTERS BAR ───────────────────────────────────── */
+.filters-bar{padding:16px clamp(16px,4vw,40px);display:flex;gap:12px;align-items:center;flex-wrap:wrap;background:var(--bg)}
+.filter-select{padding:8px 14px;border-radius:8px;background:var(--card);border:1px solid var(--border);color:var(--text);font-size:13px;outline:none;cursor:pointer}
+.filter-select option{background:var(--card2)}
+.search-input{flex:1;min-width:200px;padding:8px 14px 8px 36px;border-radius:8px;background:var(--card);border:1px solid var(--border);color:var(--text);font-size:13px;outline:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%235d5d7a' viewBox='0 0 16 16'%3E%3Cpath d='M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:12px center}
+.search-input:focus{border-color:var(--accent)}
+.search-input::placeholder{color:var(--gray)}
+.filter-reset{margin-left:auto;font-size:12px;color:var(--gray);background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:4px;transition:color .2s}
+.filter-reset:hover{color:var(--accent)}
+
+/* ─── TEAM TABLE ─────────────────────────────────────── */
+.table-container{padding:0 clamp(16px,4vw,40px) 24px}
+.team-table{width:100%;border-collapse:separate;border-spacing:0;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden}
+.team-table thead{background:var(--card2);border-bottom:1px solid var(--border)}
+.team-table th{padding:14px 16px;text-align:left;font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--gray)}
+.team-table tbody tr{border-bottom:1px solid var(--border);transition:background .2s}
+.team-table tbody tr:hover{background:rgba(139,92,246,0.04)}
+.team-table tbody tr:last-child{border-bottom:none}
+.team-table td{padding:14px 16px;font-size:13px;color:var(--text)}
+
+.member-info{display:flex;align-items:center;gap:12px}
+.member-avatar{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:13px;color:#fff;font-weight:600;flex-shrink:0}
+.member-avatar.admin{background:linear-gradient(135deg,var(--accent),var(--cyan))}
+.member-avatar.hr{background:linear-gradient(135deg,var(--green),#059669)}
+.member-avatar.employee{background:linear-gradient(135deg,var(--gray),var(--gray2))}
+.member-avatar.owner{background:linear-gradient(135deg,#f59e0b,var(--yellow))}
+.member-name{font-weight:600;color:var(--white);font-size:14px}
+.member-email{font-size:12px;color:var(--gray)}
+
+.role-badge{display:inline-flex;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:600}
+.role-badge.owner{background:rgba(245,158,11,0.15);color:#f59e0b}
+.role-badge.admin{background:rgba(139,92,246,0.15);color:var(--accent)}
+.role-badge.hr{background:rgba(52,211,153,0.15);color:var(--green)}
+.role-badge.employee{background:rgba(156,163,175,0.15);color:var(--gray2)}
+
+.status-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:6px}
+.status-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:600}
+.status-badge.active{background:rgba(52,211,153,0.15);color:var(--green)}
+.status-badge.active .status-dot{background:var(--green)}
+.status-badge.blocked{background:rgba(248,113,113,0.15);color:var(--red)}
+.status-badge.blocked .status-dot{background:var(--red)}
+.status-badge.invited{background:rgba(167,139,250,0.15);color:var(--cyan)}
+.status-badge.invited .status-dot{background:var(--cyan);animation:blink 1.5s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+
+.actions-cell{display:flex;gap:6px}
+.action-btn{width:32px;height:32px;border-radius:8px;background:var(--card2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--gray2);font-size:12px;cursor:pointer;transition:all .2s}
+.action-btn:hover{background:var(--accent);color:#fff;border-color:var(--accent)}
+.action-btn.danger:hover{background:var(--red);border-color:var(--red)}
+.action-btn.success:hover{background:var(--green);border-color:var(--green)}
+
+/* ─── MODALS ─────────────────────────────────────────── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;z-index:1000;opacity:0;pointer-events:none;transition:opacity .3s}
+.modal-overlay.active{opacity:1;pointer-events:auto}
+.modal{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);width:100%;max-width:520px;max-height:90vh;overflow-y:auto;transform:translateY(20px);transition:transform .3s}
+.modal-overlay.active .modal{transform:translateY(0)}
+.modal-header{padding:20px 24px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.modal-title{font-family:'Syne',sans-serif;font-size:18px;font-weight:700;color:var(--white)}
+.modal-close{width:32px;height:32px;border-radius:50%;background:var(--card2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--gray2);font-size:14px;cursor:pointer;transition:all .2s}
+.modal-close:hover{background:var(--red);color:#fff;border-color:var(--red)}
+.modal-body{padding:24px}
+.modal-footer{padding:16px 24px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:12px}
+.form-group{margin-bottom:16px}
+.form-label{display:block;font-size:12px;font-weight:600;color:var(--gray);margin-bottom:8px;letter-spacing:.5px}
+.form-input{width:100%;padding:12px 16px;border-radius:8px;background:var(--card2);border:1px solid var(--border);color:var(--text);font-size:14px;outline:none;transition:border-color .2s}
+.form-input:focus{border-color:var(--accent)}
+.form-input::placeholder{color:var(--gray)}
+.form-textarea{min-height:80px;resize:vertical;font-family:'DM Sans',sans-serif}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.form-select{width:100%;padding:12px 16px;border-radius:8px;background:var(--card2);border:1px solid var(--border);color:var(--text);font-size:14px;outline:none;cursor:pointer}
+.form-select option{background:var(--card2)}
+.form-hint{font-size:11px;color:var(--gray);margin-top:6px;display:flex;align-items:center;gap:4px}.form-hint i{color:var(--accent)}
+.password-gen{display:flex;gap:8px;margin-top:8px}
+.password-gen .form-input{flex:1}
+
+/* ─── CONFIRM DIALOG ────────────────────────────────── */
+.confirm-dialog{position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;z-index:1001;opacity:0;pointer-events:none;transition:opacity .3s}
+.confirm-dialog.active{opacity:1;pointer-events:auto}
+.confirm-box{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);width:100%;max-width:420px;padding:24px}
+.confirm-icon{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;margin:0 auto 16px}
+.confirm-icon.warning{background:rgba(251,191,36,0.15);color:var(--yellow)}
+.confirm-icon.danger{background:rgba(248,113,113,0.15);color:var(--red)}
+.confirm-title{font-family:'Syne',sans-serif;font-size:18px;font-weight:700;color:var(--white);text-align:center;margin-bottom:8px}
+.confirm-message{font-size:14px;color:var(--gray);text-align:center;line-height:1.6;margin-bottom:24px}
+.confirm-actions{display:flex;gap:12px}.confirm-actions .btn{flex:1;justify-content:center}
+
+/* ─── TOAST ─────────────────────────────────────────── */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px 20px;font-size:13px;color:var(--white);z-index:2000;box-shadow:0 8px 32px rgba(0,0,0,0.4);display:flex;align-items:center;gap:10px;animation:slideIn .3s ease}
+.toast.success{border-left:3px solid var(--green)}.toast.error{border-left:3px solid var(--red)}.toast.info{border-left:3px solid var(--cyan)}.toast.warning{border-left:3px solid var(--yellow)}
+@keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+@keyframes slideOut{from{transform:translateX(0);opacity:1}to{transform:translateX(100%);opacity:0}}
+
+/* ─── REVEAL ─────────────────────────────────────────── */
+.reveal{opacity:0;transform:translateY(20px);transition:opacity .6s ease,transform .6s ease}.reveal.in{opacity:1;transform:translateY(0)}
+
+/* ─── RESPONSIVE ────────────────────────────────────── */
+@media(max-width:1200px){.stats-bar{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:900px){
+  .dashboard{grid-template-columns:1fr}
+  .sidebar{position:fixed;left:-240px;top:0;width:240px;transition:left .3s;z-index:100}
+  .sidebar.open{left:0}
+  .sidebar-toggle{display:flex!important}
+  .page-header{flex-direction:column;align-items:flex-start}
+  .form-row{grid-template-columns:1fr}
+  .filters-bar{flex-direction:column;align-items:stretch}
+  .filter-reset{margin-left:0;justify-content:center}
+}
+@media(max-width:600px){
+  .stats-bar{grid-template-columns:1fr}
+  .team-table{font-size:12px}
+  .team-table th,.team-table td{padding:10px 12px}
+  .member-email{display:none}
+  .role-badge{padding:2px 8px;font-size:10px}
+}
+
+/* ─── SIDEBAR TOGGLE ────────────────────────────────── */
+.sidebar-toggle{display:none;position:fixed;top:16px;left:16px;z-index:60;width:40px;height:40px;border-radius:50%;background:var(--card);border:1px solid var(--border);align-items:center;justify-content:center;color:var(--white);font-size:16px}
+</style>
+</head>
+<body>
+
+<!-- PROGRESS & CURSOR -->
+<div id="progress"><div id="progress-fill"></div></div>
+<div id="cursor-dot"></div><div id="cursor-ring"></div><div id="cursor-glow"></div>
+<button class="sidebar-toggle" id="sidebarToggle" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+
+<!-- ADD MEMBER MODAL -->
+<div class="modal-overlay" id="addMemberModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title"><i class="fas fa-user-plus" style="margin-right:8px;color:var(--accent)"></i>Nuevo Miembro del Equipo</div>
+      <button class="modal-close" onclick="closeModal('addMemberModal')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <form id="addMemberForm">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Nombre *</label>
+            <input type="text" class="form-input" id="memberFirstName" placeholder="Ej: María" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Apellido *</label>
+            <input type="text" class="form-input" id="memberLastName" placeholder="Ej: González" required>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email Corporativo *</label>
+          <input type="email" class="form-input" id="memberEmail" placeholder="maria@tuempresa.com" required>
+          <div class="form-hint"><i class="fas fa-info-circle"></i> Se enviarán las credenciales a este email</div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Rol *</label>
+            <select class="form-select" id="memberRole" required>
+              <option value="">Seleccionar rol...</option>
+              <option value="admin">🔧 Admin</option>
+              <option value="hr">👥 Recursos Humanos</option>
+              <option value="employee">👤 Empleado</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Departamento</label>
+            <select class="form-select" id="memberDept">
+              <option value="">Seleccionar...</option>
+              <option value="it">IT & Desarrollo</option>
+              <option value="ops">Operaciones</option>
+              <option value="sales">Ventas</option>
+              <option value="hr">Recursos Humanos</option>
+              <option value="finance">Finanzas</option>
+              <option value="marketing">Marketing</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Contraseña Temporal</label>
+          <div class="password-gen">
+            <input type="text" class="form-input" id="memberPassword" placeholder="Se genera automáticamente" readonly>
+            <button type="button" class="btn btn-outline btn-sm" onclick="generatePassword()"><i class="fas fa-dice"></i> Generar</button>
+          </div>
+          <div class="form-hint"><i class="fas fa-shield-alt"></i> El usuario deberá cambiarla en el primer inicio de sesión</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Mensaje de Invitación</label>
+          <textarea class="form-input form-textarea" id="memberMessage" placeholder="Mensaje opcional que se incluirá en el email de invitación..."></textarea>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('addMemberModal')">Cancelar</button>
+      <button class="btn btn-acc" onclick="addMember()"><i class="fas fa-paper-plane"></i> Enviar Invitación</button>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT MEMBER MODAL -->
+<div class="modal-overlay" id="editMemberModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title"><i class="fas fa-user-edit" style="margin-right:8px;color:var(--accent)"></i>Editar Miembro</div>
+      <button class="modal-close" onclick="closeModal('editMemberModal')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <form id="editMemberForm">
+        <input type="hidden" id="editMemberId">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Nombre</label>
+            <input type="text" class="form-input" id="editFirstName">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Apellido</label>
+            <input type="text" class="form-input" id="editLastName">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input type="email" class="form-input" id="editEmail">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Rol</label>
+            <select class="form-select" id="editRole">
+              <option value="owner">👑 Owner</option>
+              <option value="admin">🔧 Admin</option>
+              <option value="hr">👥 RRHH</option>
+              <option value="employee">👤 Empleado</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Estado</label>
+            <select class="form-select" id="editStatus">
+              <option value="active">✅ Activo</option>
+              <option value="blocked">🚫 Bloqueado</option>
+            </select>
+          </div>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('editMemberModal')">Cancelar</button>
+      <button class="btn btn-acc" onclick="saveEditMember()"><i class="fas fa-save"></i> Guardar Cambios</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM DIALOG -->
+<div class="confirm-dialog" id="confirmDialog">
+  <div class="confirm-box">
+    <div class="confirm-icon" id="confirmIcon"><i class="fas fa-exclamation-triangle"></i></div>
+    <div class="confirm-title" id="confirmTitle">¿Confirmar acción?</div>
+    <div class="confirm-message" id="confirmMessage">Esta acción no se puede deshacer.</div>
+    <div class="confirm-actions">
+      <button class="btn btn-ghost" onclick="closeConfirm()">Cancelar</button>
+      <button class="btn btn-danger" id="confirmBtn">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div class="dashboard">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo"><div class="logo-icon"><i class="fas fa-robot"></i></div>PORTAL PILOT</div>
+    <nav class="sidebar-nav">
+      <a href="dashboard-amy.html" class="sidebar-link"><i class="fas fa-home"></i> <span>Dashboard</span></a>
+      <a href="team-amy.html" class="sidebar-link active"><i class="fas fa-users"></i> <span>Equipo</span></a>
+      <a href="fleet-sofia.html" class="sidebar-link"><i class="fas fa-truck"></i> <span>Flota</span></a>
+      <a href="automation-amy.html" class="sidebar-link"><i class="fas fa-robot"></i> <span>Bots RPA</span></a>
+      <a href="security-sofia.html" class="sidebar-link"><i class="fas fa-shield-alt"></i> <span>Auditoría</span></a>
+    </nav>
+    <div class="sidebar-footer">
+      <a href="#" class="sidebar-link"><i class="fas fa-question-circle"></i> Ayuda</a>
+      <a href="#" class="sidebar-link"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</a>
+      <div class="sidebar-user"><div class="sidebar-avatar">VT</div><div><div class="sidebar-username">Valeria Torres</div><div class="sidebar-role">Admin Principal</div></div></div>
+    </div>
+  </aside>
+
+  <main class="main-content">
+    <header class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-title">Gestión de <span>Equipo</span></div>
+        <div class="topbar-search"><i class="fas fa-search"></i><input type="text" placeholder="Buscar por nombre, email o rol..." oninput="searchMembers(this.value)"></div>
+      </div>
+      <div class="topbar-right">
+        <button class="topbar-btn" title="Notificaciones"><i class="fas fa-bell"></i><span class="badge">1</span></button>
+        <button class="btn btn-acc btn-sm" onclick="openModal('addMemberModal')"><i class="fas fa-plus"></i> Nuevo Miembro</button>
+      </div>
+    </header>
+
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Gestión de <span>Talento Humano</span></h1>
+        <p class="page-subtitle">Administra tu equipo, asigna roles y controla el acceso. Tu plan Enterprise permite hasta 60 miembros.</p>
+      </div>
+      <div class="page-actions">
+        <button class="btn btn-outline btn-sm" onclick="exportTeam()"><i class="fas fa-download"></i> Exportar CSV</button>
+      </div>
+    </div>
+
+    <!-- STATS BAR -->
+    <div class="stats-bar">
+      <div class="stat-card reveal">
+        <div class="stat-icon purple"><i class="fas fa-users"></i></div>
+        <div class="stat-info">
+          <div class="stat-value"><span id="totalMembers">48</span> <span style="font-size:14px;color:var(--gray);font-weight:400">/ 60</span></div>
+          <div class="stat-label">Seats Usados</div>
+          <div class="stat-bar"><div class="stat-bar-fill" id="seatsBar" style="width:80%"></div></div>
+        </div>
+      </div>
+      <div class="stat-card reveal" style="transition-delay:.05s">
+        <div class="stat-icon green"><i class="fas fa-user-check"></i></div>
+        <div class="stat-info">
+          <div class="stat-value" id="activeCount">42</div>
+          <div class="stat-label">Activos</div>
+          <div class="stat-bar"><div class="stat-bar-fill" style="width:87%;background:var(--green)"></div></div>
+        </div>
+      </div>
+      <div class="stat-card reveal" style="transition-delay:.1s">
+        <div class="stat-icon cyan"><i class="fas fa-user-shield"></i></div>
+        <div class="stat-info">
+          <div class="stat-value" id="adminCount">6</div>
+          <div class="stat-label">Administradores</div>
+          <div class="stat-bar"><div class="stat-bar-fill" style="width:100%;background:var(--cyan)"></div></div>
+        </div>
+      </div>
+      <div class="stat-card reveal" style="transition-delay:.15s">
+        <div class="stat-icon yellow"><i class="fas fa-user-clock"></i></div>
+        <div class="stat-info">
+          <div class="stat-value" id="invitedCount">3</div>
+          <div class="stat-label">Invitaciones Pendientes</div>
+          <div class="stat-bar"><div class="stat-bar-fill" style="width:50%;background:var(--yellow)"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FILTERS -->
+    <div class="filters-bar">
+      <select class="filter-select" id="filterRole" onchange="applyFilters()">
+        <option value="">Todos los roles</option>
+        <option value="owner">Owner</option>
+        <option value="admin">Admin</option>
+        <option value="hr">RRHH</option>
+        <option value="employee">Empleado</option>
+      </select>
+      <select class="filter-select" id="filterStatus" onchange="applyFilters()">
+        <option value="">Todos los estados</option>
+        <option value="active">Activo</option>
+        <option value="blocked">Bloqueado</option>
+        <option value="invited">Invitado</option>
+      </select>
+      <select class="filter-select" id="filterDept" onchange="applyFilters()">
+        <option value="">Todos los departamentos</option>
+        <option value="it">IT & Desarrollo</option>
+        <option value="ops">Operaciones</option>
+        <option value="sales">Ventas</option>
+        <option value="hr">RRHH</option>
+        <option value="finance">Finanzas</option>
+        <option value="marketing">Marketing</option>
+      </select>
+      <button class="filter-reset" onclick="resetFilters()"><i class="fas fa-undo"></i> Limpiar filtros</button>
+    </div>
+
+    <!-- TABLE -->
+    <div class="table-container">
+      <table class="team-table">
+        <thead>
+          <tr><th>Miembro</th><th>Rol</th><th>Departamento</th><th>Estado</th><th>Última Conexión</th><th>Acciones</th></tr>
+        </thead>
+        <tbody id="teamTableBody">
+          <!-- Populated by JS -->
+        </tbody>
+      </table>
+    </div>
+
+    <!-- PAGINATION -->
+    <div style="padding:0 clamp(16px,4vw,40px) 24px;display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--border);padding-top:16px">
+      <div style="font-size:12px;color:var(--gray)">Mostrando <strong style="color:var(--white)">1-10</strong> de <strong style="color:var(--white)" id="totalFiltered">48</strong> miembros</div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-ghost btn-xs" disabled><i class="fas fa-chevron-left"></i></button>
+        <button class="btn btn-ghost btn-xs" style="background:var(--accent);color:#fff">1</button>
+        <button class="btn btn-ghost btn-xs">2</button>
+        <button class="btn btn-ghost btn-xs">3</button>
+        <button class="btn btn-ghost btn-xs"><i class="fas fa-chevron-right"></i></button>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+// ── Custom Cursor ────────────────────────────────────
+const dot=document.getElementById('cursor-dot'),ring=document.getElementById('cursor-ring'),glow=document.getElementById('cursor-glow');
+let mx=0,my=0,rx=0,ry=0;
+document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;dot.style.left=mx+'px';dot.style.top=my+'px';glow.style.left=mx+'px';glow.style.top=my+'px'});
+function animRing(){rx+=(mx-rx)*0.12;ry+=(my-ry)*0.12;ring.style.left=rx+'px';ring.style.top=ry+'px';requestAnimationFrame(animRing)}animRing();
+document.querySelectorAll('a,button,.sidebar-link,.action-btn,.modal-close,.filter-select').forEach(el=>{
+  el.addEventListener('mouseenter',()=>{ring.style.width='50px';ring.style.height='50px';ring.style.opacity='.5'});
+  el.addEventListener('mouseleave',()=>{ring.style.width='36px';ring.style.height='36px';ring.style.opacity='1'})});
+
+// ── Scroll Progress ──────────────────────────────────
+window.addEventListener('scroll',()=>{const p=(window.scrollY/(document.documentElement.scrollHeight-innerHeight))*100;document.getElementById('progress-fill').style.width=p+'%'});
+
+// ── Reveal ───────────────────────────────────────────
+const obs=new IntersectionObserver(entries=>{entries.forEach((e,i)=>{if(e.isIntersecting)setTimeout(()=>e.target.classList.add('in'),i*50)})},{threshold:0.05});
+document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
+
+// ── Sidebar ─────────────────────────────────────────
+function toggleSidebar(){document.getElementById('sidebar').classList.toggle('open')}
+document.addEventListener('click',e=>{const sb=document.getElementById('sidebar'),tg=document.getElementById('sidebarToggle');if(window.innerWidth<=900&&sb.classList.contains('open')&&!sb.contains(e.target)&&!tg.contains(e.target))sb.classList.remove('open')});
+
+// ── Team Data ────────────────────────────────────────
+const teamMembers=[
+  {id:1,firstName:'Valeria',lastName:'Torres',email:'valeria@novacore.com',role:'owner',dept:'it',status:'active',lastLogin:'Hace 2 min'},
+  {id:2,firstName:'Daniel',lastName:'Cruz',email:'daniel@novacore.com',role:'hr',dept:'hr',status:'active',lastLogin:'Hace 20 min'},
+  {id:3,firstName:'Andrea',lastName:'López',email:'andrea@novacore.com',role:'employee',dept:'sales',status:'blocked',lastLogin:'Ayer'},
+  {id:4,firstName:'Carlos',lastName:'Mendoza',email:'carlos@novacore.com',role:'admin',dept:'it',status:'active',lastLogin:'Hace 5 min'},
+  {id:5,firstName:'María',lastName:'González',email:'maria@novacore.com',role:'employee',dept:'ops',status:'active',lastLogin:'Hace 1h'},
+  {id:6,firstName:'Roberto',lastName:'Sánchez',email:'roberto@novacore.com',role:'admin',dept:'finance',status:'active',lastLogin:'Hace 3h'},
+  {id:7,firstName:'Lucía',lastName:'Fernández',email:'lucia@novacore.com',role:'employee',dept:'marketing',status:'invited',lastLogin:'Nunca'},
+  {id:8,firstName:'Pedro',lastName:'Ramírez',email:'pedro@novacore.com',role:'employee',dept:'ops',status:'active',lastLogin:'Hace 30 min'},
+  {id:9,firstName:'Ana',lastName:'Martínez',email:'ana@novacore.com',role:'hr',dept:'hr',status:'active',lastLogin:'Hace 2h'},
+  {id:10,firstName:'Javier',lastName:'Ruiz',email:'javier@novacore.com',role:'employee',dept:'it',status:'active',lastLogin:'Hace 15 min'},
+  {id:11,firstName:'Sofía',lastName:'Herrera',email:'sofia@novacore.com',role:'employee',dept:'sales',status:'active',lastLogin:'Hace 4h'},
+  {id:12,firstName:'Diego',lastName:'Vargas',email:'diego@novacore.com',role:'employee',dept:'ops',status:'blocked',lastLogin:'Hace 3 días'}
+];
+
+const deptNames={it:'IT & Desarrollo',ops:'Operaciones',sales:'Ventas',hr:'RRHH',finance:'Finanzas',marketing:'Marketing'};
+const roleNames={owner:'Owner',admin:'Admin',hr:'RRHH',employee:'Empleado'};
+
+// ── Render Table ─────────────────────────────────────
+let filteredMembers=[...teamMembers];
+function renderTable(data=filteredMembers){
+  const tbody=document.getElementById('teamTableBody');tbody.innerHTML='';
+  data.forEach(m=>{
+    const initials=(m.firstName[0]+m.lastName[0]).toUpperCase();
+    const row=document.createElement('tr');
+    row.innerHTML=`
+      <td><div class="member-info"><div class="member-avatar ${m.role}">${initials}</div><div><div class="member-name">${m.firstName} ${m.lastName}</div><div class="member-email">${m.email}</div></div></div></td>
+      <td><span class="role-badge ${m.role}">${roleNames[m.role]}</span></td>
+      <td style="color:var(--gray2)">${deptNames[m.dept]||'—'}</td>
+      <td><span class="status-badge ${m.status}"><span class="status-dot"></span>${m.status==='active'?'Activo':m.status==='blocked'?'Bloqueado':'Invitado'}</span></td>
+      <td style="color:var(--gray);font-size:12px">${m.lastLogin}</td>
+      <td><div class="actions-cell">
+        <button class="action-btn" title="Editar" onclick="editMember(${m.id})"><i class="fas fa-edit"></i></button>
+        ${m.status!=='invited'?`<button class="action-btn success" title="Resetear contraseña" onclick="resetPassword(${m.id})"><i class="fas fa-key"></i></button>`:''}
+        ${m.status==='active'?`<button class="action-btn danger" title="Bloquear" onclick="blockMember(${m.id})"><i class="fas fa-ban"></i></button>`:''}
+        ${m.status==='blocked'?`<button class="action-btn success" title="Desbloquear" onclick="unblockMember(${m.id})"><i class="fas fa-unlock"></i></button>`:''}
+        ${m.role!=='owner'?`<button class="action-btn danger" title="Eliminar" onclick="confirmDelete(${m.id},'${m.firstName} ${m.lastName}')"><i class="fas fa-trash"></i></button>`:''}
+      </div></td>`;
+    tbody.appendChild(row);
+  });
+  document.getElementById('totalFiltered').textContent=data.length;
+}
+
+// ── Filters ─────────────────────────────────────────
+function applyFilters(){
+  const role=document.getElementById('filterRole').value,status=document.getElementById('filterStatus').value,dept=document.getElementById('filterDept').value;
+  filteredMembers=teamMembers.filter(m=>{
+    if(role&&m.role!==role)return false;
+    if(status&&m.status!==status)return false;
+    if(dept&&m.dept!==dept)return false;
+    return true;
+  });
+  renderTable();
+}
+function resetFilters(){
+  document.getElementById('filterRole').value='';
+  document.getElementById('filterStatus').value='';
+  document.getElementById('filterDept').value='';
+  filteredMembers=[...teamMembers];renderTable();
+}
+function searchMembers(query){
+  const q=query.toLowerCase();
+  filteredMembers=teamMembers.filter(m=>m.firstName.toLowerCase().includes(q)||m.lastName.toLowerCase().includes(q)||m.email.toLowerCase().includes(q));
+  renderTable();
+}
+
+// ── Actions ──────────────────────────────────────────
+function editMember(id){
+  const m=teamMembers.find(x=>x.id===id);if(!m)return;
+  document.getElementById('editMemberId').value=m.id;
+  document.getElementById('editFirstName').value=m.firstName;
+  document.getElementById('editLastName').value=m.lastName;
+  document.getElementById('editEmail').value=m.email;
+  document.getElementById('editRole').value=m.role;
+  document.getElementById('editStatus').value=m.status;
+  openModal('editMemberModal');
+}
+function saveEditMember(){
+  const id=parseInt(document.getElementById('editMemberId').value);
+  const m=teamMembers.find(x=>x.id===id);if(!m)return;
+  m.firstName=document.getElementById('editFirstName').value;
+  m.lastName=document.getElementById('editLastName').value;
+  m.email=document.getElementById('editEmail').value;
+  m.role=document.getElementById('editRole').value;
+  m.status=document.getElementById('editStatus').value;
+  closeModal('editMemberModal');renderTable();updateStats();
+  showToast(`✓ ${m.firstName} ${m.lastName} actualizado`,'success');
+}
+function resetPassword(id){
+  const m=teamMembers.find(x=>x.id===id);if(!m)return;
+  document.getElementById('confirmIcon').className='confirm-icon warning';
+  document.getElementById('confirmIcon').innerHTML='<i class="fas fa-key"></i>';
+  document.getElementById('confirmTitle').textContent='¿Resetear contraseña?';
+  document.getElementById('confirmMessage').textContent=`Se enviará una nueva contraseña temporal a ${m.email}. El usuario deberá cambiarla al iniciar sesión.`;
+  document.getElementById('confirmBtn').className='btn btn-warning';
+  document.getElementById('confirmBtn').textContent='Sí, Enviar';
+  document.getElementById('confirmBtn').onclick=function(){
+    closeModal('confirmDialog');
+    showToast(`📧 Contraseña reseteada para ${m.firstName}. Credenciales enviadas por email.`,'success');
+  };
+  document.getElementById('confirmDialog').classList.add('active');
+}
+function blockMember(id){
+  const m=teamMembers.find(x=>x.id===id);if(!m)return;
+  document.getElementById('confirmIcon').className='confirm-icon danger';
+  document.getElementById('confirmIcon').innerHTML='<i class="fas fa-ban"></i>';
+  document.getElementById('confirmTitle').textContent='¿Bloquear acceso?';
+  document.getElementById('confirmMessage').textContent=`${m.firstName} ${m.lastName} perderá acceso inmediato a la plataforma.`;
+  document.getElementById('confirmBtn').className='btn btn-danger';
+  document.getElementById('confirmBtn').textContent='Sí, Bloquear';
+  document.getElementById('confirmBtn').onclick=function(){
+    m.status='blocked';closeModal('confirmDialog');renderTable();updateStats();
+    showToast(`🚫 ${m.firstName} ${m.lastName} bloqueado`,'warning');
+  };
+  document.getElementById('confirmDialog').classList.add('active');
+}
+function unblockMember(id){
+  const m=teamMembers.find(x=>x.id===id);if(!m)return;
+  m.status='active';renderTable();updateStats();
+  showToast(`✅ ${m.firstName} ${m.lastName} desbloqueado`,'success');
+}
+function confirmDelete(id,name){
+  document.getElementById('confirmIcon').className='confirm-icon danger';
+  document.getElementById('confirmIcon').innerHTML='<i class="fas fa-exclamation-triangle"></i>';
+  document.getElementById('confirmTitle').textContent='¿Eliminar miembro?';
+  document.getElementById('confirmMessage').textContent=`¿Eliminar a "${name}"? Esta acción es irreversible y perderá todo acceso a la plataforma.`;
+  document.getElementById('confirmBtn').className='btn btn-danger';
+  document.getElementById('confirmBtn').textContent='Sí, Eliminar';
+  document.getElementById('confirmBtn').onclick=function(){
+    const i=teamMembers.findIndex(x=>x.id===id);if(i!==-1){teamMembers.splice(i,1);renderTable();updateStats();}
+    closeModal('confirmDialog');showToast(`✓ "${name}" eliminado del equipo`,'success');
+  };
+  document.getElementById('confirmDialog').classList.add('active');
+}
+function closeConfirm(){document.getElementById('confirmDialog').classList.remove('active')}
+
+// ── Add Member ───────────────────────────────────────
+function generatePassword(){
+  const chars='ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$';
+  let pwd='';for(let i=0;i<12;i++)pwd+=chars[Math.floor(Math.random()*chars.length)];
+  document.getElementById('memberPassword').value=pwd;
+}
+function addMember(){
+  const form=document.getElementById('addMemberForm');
+  if(!form.checkValidity()){form.reportValidity();return;}
+  if(!document.getElementById('memberPassword').value){showToast('⚠️ Genera una contraseña primero','warning');return;}
+  
+  // Check seat limit
+  const activeCount=teamMembers.filter(m=>m.status==='active').length;
+  if(activeCount>=60){showToast('⚠️ Límite de 60 seats alcanzado. Actualiza tu plan.','warning');return;}
+  
+  const newMember={
+    id:Date.now(),
+    firstName:document.getElementById('memberFirstName').value,
+    lastName:document.getElementById('memberLastName').value,
+    email:document.getElementById('memberEmail').value,
+    role:document.getElementById('memberRole').value,
+    dept:document.getElementById('memberDept').value||'it',
+    status:'invited',
+    lastLogin:'Nunca'
+  };
+  teamMembers.unshift(newMember);
+  closeModal('addMemberModal');form.reset();document.getElementById('memberPassword').value='';
+  renderTable();updateStats();
+  showToast(`✉️ Invitación enviada a ${newMember.firstName} ${newMember.lastName}`,'success');
+}
+
+// ── Stats ────────────────────────────────────────────
+function updateStats(){
+  const total=teamMembers.length;
+  const active=teamMembers.filter(m=>m.status==='active').length;
+  const admins=teamMembers.filter(m=>m.role==='admin'||m.role==='owner').length;
+  const invited=teamMembers.filter(m=>m.status==='invited').length;
+  document.getElementById('totalMembers').textContent=total;
+  document.getElementById('activeCount').textContent=active;
+  document.getElementById('adminCount').textContent=admins;
+  document.getElementById('invitedCount').textContent=invited;
+  const pct=Math.round((total/60)*100);
+  const bar=document.getElementById('seatsBar');
+  bar.style.width=pct+'%';
+  if(pct>=90)bar.className='stat-bar-fill warning';else bar.className='stat-bar-fill';
+}
+
+// ── Modals ───────────────────────────────────────────
+function openModal(id){document.getElementById(id).classList.add('active')}
+function closeModal(id){document.getElementById(id).classList.remove('active')}
+
+// ── Toast ────────────────────────────────────────────
+function showToast(msg,type='success'){
+  const t=document.createElement('div');t.className='toast '+type;
+  t.innerHTML='<i class="fas fa-'+(type==='success'?'check-circle':type==='warning'?'exclamation-triangle':'exclamation-circle')+'"></i>'+msg;
+  document.body.appendChild(t);
+  setTimeout(()=>{t.style.animation='slideOut .3s ease';setTimeout(()=>t.remove(),300)},3000);
+}
+
+// ── Export ───────────────────────────────────────────
+function exportTeam(){
+  let csv='Nombre,Email,Rol,Departamento,Estado,Última Conexión\n';
+  teamMembers.forEach(m=>{csv+=`${m.firstName} ${m.lastName},${m.email},${roleNames[m.role]},${deptNames[m.dept]},${m.status},${m.lastLogin}\n`});
+  const blob=new Blob([csv],{type:'text/csv'});const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download='equipo_novacore.csv';a.click();URL.revokeObjectURL(url);
+  showToast('✓ Exportación completada','success');
+}
+
+// ── Init ─────────────────────────────────────────────
+window.addEventListener('load',()=>{
+  renderTable();updateStats();
+  setTimeout(()=>{document.querySelectorAll('.reveal').forEach((el,i)=>{setTimeout(()=>el.classList.add('in'),i*50)})},100);
+});
+document.querySelectorAll('.modal-overlay,.confirm-dialog').forEach(o=>{o.addEventListener('click',e=>{if(e.target===o){o.classList.remove('active');if(o.id==='confirmDialog')closeConfirm()}})});
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){document.querySelectorAll('.modal-overlay.active,.confirm-dialog.active').forEach(m=>m.classList.remove('active'))}
+  if(e.key==='/'&&document.activeElement.tagName!=='INPUT'){e.preventDefault();document.querySelector('.topbar-search input').focus()}
+  if(e.key==='n'&&e.ctrlKey){e.preventDefault();openModal('addMemberModal')}
+});
+</script>
+<script src="../auth-check.js"></script>
+</body>
+</html>

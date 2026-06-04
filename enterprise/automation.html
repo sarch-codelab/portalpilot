@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Automatización — Portal Pilot</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+/* ─── RESET & TOKENS (MISMOS QUE INDEX) ───────────────── */
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;cursor:none}
+:root{
+  --bg:#04040a;--bg2:#07070f;--bg3:#0c0c1a;--card:#0e0e1c;--card2:#111124;
+  --border:rgba(139,92,246,0.1);--border2:rgba(139,92,246,0.22);
+  --accent:#8b5cf6;--accent2:#7c3aed;--accent-glow:rgba(139,92,246,0.35);
+  --cyan:#a78bfa;--white:#fff;--gray:#5d5d7a;--gray2:#9ca3af;
+  --text:#c4c4d4;--green:#34d399;--red:#f87171;--yellow:#fbbf24;
+  --radius:10px;--radius-lg:18px;
+}
+html{scroll-behavior:smooth;font-size:16px}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden;line-height:1.6;-webkit-font-smoothing:antialiased}
+a{text-decoration:none;color:inherit}ul{list-style:none}img{max-width:100%;display:block}button{font-family:inherit;cursor:pointer}
+
+/* ─── CUSTOM CURSOR ──────────────────────────────────── */
+#cursor-dot{width:6px;height:6px;background:#fff;border-radius:50%;position:fixed;pointer-events:none;z-index:10000;transition:transform .1s}
+#cursor-ring{width:36px;height:36px;border:1px solid rgba(139,92,246,0.6);border-radius:50%;position:fixed;pointer-events:none;z-index:9999;transition:transform .15s ease,width .2s,height .2s,opacity .2s;transform:translate(-50%,-50%)}
+#cursor-glow{width:500px;height:500px;background:radial-gradient(circle,rgba(139,92,246,0.12) 0,transparent 70%);position:fixed;pointer-events:none;z-index:0;transform:translate(-50%,-50%);transition:transform .08s}
+
+/* ─── SCROLLBAR & PROGRESS ──────────────────────────── */
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--accent);border-radius:2px}
+#progress{position:fixed;top:0;left:0;right:0;height:2px;z-index:999;background:transparent}
+#progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--cyan));width:0;transition:width .1s linear}
+
+/* ─── BUTTONS ───────────────────────────────────────── */
+.btn{display:inline-flex;align-items:center;gap:8px;padding:11px 24px;border-radius:40px;font-size:13px;font-weight:600;border:none;transition:all .25s;white-space:nowrap;font-family:'DM Sans',sans-serif;cursor:pointer}
+.btn-acc{background:var(--accent);color:#fff}.btn-acc:hover{background:var(--accent2);transform:translateY(-1px);box-shadow:0 8px 28px var(--accent-glow)}
+.btn-ghost{background:rgba(255,255,255,0.05);color:var(--white);border:1px solid var(--border2)}.btn-ghost:hover{background:rgba(139,92,246,0.1);border-color:var(--border2)}
+.btn-outline{background:transparent;color:var(--white);border:1px solid var(--border2)}.btn-outline:hover{background:rgba(139,92,246,0.08)}
+.btn-danger{background:rgba(248,113,113,0.15);color:var(--red);border:1px solid rgba(248,113,113,0.3)}.btn-danger:hover{background:var(--red);color:#fff}
+.btn-success{background:rgba(52,211,153,0.15);color:var(--green);border:1px solid rgba(52,211,153,0.3)}.btn-success:hover{background:var(--green);color:#fff}
+.btn-sm{padding:8px 18px;font-size:12px}.btn-xs{padding:6px 14px;font-size:11px}
+
+/* ─── DASHBOARD LAYOUT ──────────────────────────────── */
+.dashboard{display:grid;grid-template-columns:240px 1fr;min-height:100vh}
+.sidebar{background:var(--bg2);border-right:1px solid var(--border);padding:24px 16px;position:sticky;top:0;height:100vh;display:flex;flex-direction:column;gap:8px;z-index:50}
+.sidebar-logo{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:var(--white);display:flex;align-items:center;gap:10px;padding:8px 12px;margin-bottom:24px;border-radius:var(--radius)}
+.sidebar-logo .logo-icon{width:28px;height:28px;background:var(--accent);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;color:#fff}
+.sidebar-nav{display:flex;flex-direction:column;gap:4px;flex:1}
+.sidebar-link{display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:var(--radius);font-size:13px;font-weight:500;color:var(--gray2);transition:all .2s}
+.sidebar-link:hover,.sidebar-link.active{background:rgba(139,92,246,0.1);color:var(--white)}
+.sidebar-link i{width:18px;text-align:center;font-size:14px}
+.sidebar-link.active{border-left:2px solid var(--accent);padding-left:14px}
+.sidebar-footer{padding-top:16px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:8px}
+.sidebar-user{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:var(--radius);background:var(--card)}
+.sidebar-avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--cyan));display:flex;align-items:center;justify-content:center;font-size:14px;color:#fff;font-weight:600}
+.sidebar-username{font-size:12px;font-weight:600;color:var(--white)}.sidebar-role{font-size:11px;color:var(--gray)}
+
+/* ─── MAIN & TOPBAR ─────────────────────────────────── */
+.main-content{display:flex;flex-direction:column;gap:0}
+.topbar{position:sticky;top:0;z-index:40;background:rgba(4,4,10,0.85);backdrop-filter:blur(24px);border-bottom:1px solid var(--border);padding:0 clamp(16px,4vw,40px);height:64px;display:flex;align-items:center;justify-content:space-between}
+.topbar-left{display:flex;align-items:center;gap:16px}
+.topbar-title{font-family:'Syne',sans-serif;font-size:18px;font-weight:700;color:var(--white)}.topbar-title span{color:var(--accent)}
+.topbar-search{display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--border);border-radius:40px;padding:8px 16px;width:280px}
+.topbar-search input{background:none;border:none;outline:none;color:var(--text);font-size:13px;width:100%}
+.topbar-search input::placeholder{color:var(--gray)}.topbar-search i{color:var(--gray)}
+.topbar-right{display:flex;align-items:center;gap:12px}
+.topbar-btn{width:36px;height:36px;border-radius:50%;background:var(--card);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--gray2);font-size:14px;position:relative;transition:all .2s}
+.topbar-btn:hover{background:rgba(139,92,246,0.1);color:var(--accent);border-color:var(--border2)}
+.topbar-btn .badge{position:absolute;top:-4px;right:-4px;width:16px;height:16px;border-radius:50%;background:var(--red);color:#fff;font-size:9px;display:flex;align-items:center;justify-content:center;font-weight:600}
+
+/* ─── PAGE HEADER ───────────────────────────────────── */
+.page-header{padding:clamp(24px,4vw,40px) clamp(16px,4vw,40px) 24px;display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:16px;border-bottom:1px solid var(--border)}
+.page-title{font-family:'Syne',sans-serif;font-size:clamp(24px,4vw,32px);font-weight:800;color:var(--white);letter-spacing:-1px}.page-title span{color:var(--accent)}
+.page-subtitle{font-size:14px;color:var(--gray);max-width:480px;line-height:1.6}.page-actions{display:flex;gap:12px;flex-wrap:wrap}
+
+/* ─── METRICS BAR ───────────────────────────────────── */
+.metrics-bar{padding:20px clamp(16px,4vw,40px);display:grid;grid-template-columns:repeat(4,1fr);gap:16px;border-bottom:1px solid var(--border);background:var(--bg2)}
+.metric-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px 20px;display:flex;align-items:center;gap:14px}
+.metric-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.metric-icon.purple{background:rgba(139,92,246,0.15);color:var(--accent)}
+.metric-icon.green{background:rgba(52,211,153,0.15);color:var(--green)}
+.metric-icon.cyan{background:rgba(167,139,250,0.15);color:var(--cyan)}
+.metric-icon.yellow{background:rgba(251,191,36,0.15);color:var(--yellow)}
+.metric-info{flex:1}
+.metric-value{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--white);letter-spacing:-0.5px}
+.metric-label{font-size:12px;color:var(--gray)}
+
+/* ─── MAIN GRID ─────────────────────────────────────── */
+.main-grid{padding:24px clamp(16px,4vw,40px);display:grid;grid-template-columns:1.2fr 1fr;gap:20px}
+.main-grid.full{grid-template-columns:1fr}
+
+/* ─── CARDS ─────────────────────────────────────────── */
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px;display:flex;flex-direction:column;gap:16px}
+.card-header{display:flex;justify-content:space-between;align-items:center;padding-bottom:16px;border-bottom:1px solid var(--border)}
+.card-title{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:var(--white);display:flex;align-items:center;gap:10px}.card-title i{color:var(--accent)}
+.card-badge{padding:4px 10px;border-radius:20px;font-size:10px;font-weight:700;text-transform:uppercase;background:rgba(139,92,246,0.15);color:var(--cyan)}
+
+/* ─── AGENTS GRID ───────────────────────────────────── */
+.agents-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
+.agent-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;position:relative;overflow:hidden;transition:all .3s}
+.agent-card:hover{border-color:var(--border2);transform:translateY(-3px);box-shadow:0 8px 30px rgba(0,0,0,0.4)}
+.agent-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--accent),var(--cyan));opacity:0;transition:opacity .3s}
+.agent-card.active::before{opacity:1}
+.agent-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px}
+.agent-icon{width:40px;height:40px;border-radius:10px;background:rgba(139,92,246,0.12);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;color:var(--accent);font-size:16px}
+.agent-status{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px}
+.agent-status.active{background:rgba(52,211,153,0.15);color:var(--green)}
+.agent-status.inactive{background:rgba(248,113,113,0.15);color:var(--red)}
+.agent-status .dot{width:6px;height:6px;border-radius:50%}
+.agent-status.active .dot{background:var(--green);animation:pulse 2s infinite}
+.agent-status.inactive .dot{background:var(--red)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.agent-name{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:var(--white);margin-bottom:6px}
+.agent-desc{font-size:13px;color:var(--gray);line-height:1.5;margin-bottom:16px}
+.agent-footer{display:flex;justify-content:space-between;align-items:center}
+.agent-stats{display:flex;gap:12px;font-size:11px;color:var(--gray)}
+.agent-stats span{display:flex;align-items:center;gap:4px}
+.agent-toggle{position:relative;width:44px;height:24px;cursor:pointer}
+.agent-toggle input{opacity:0;width:0;height:0}
+.agent-toggle-slider{position:absolute;top:0;left:0;right:0;bottom:0;background:var(--card2);border:1px solid var(--border);transition:.3s;border-radius:24px}
+.agent-toggle-slider:before{content:"";position:absolute;height:18px;width:18px;left:2px;bottom:2px;background:#fff;transition:.3s;border-radius:50%}
+.agent-toggle input:checked+.agent-toggle-slider{background:var(--accent);border-color:var(--accent)}
+.agent-toggle input:checked+.agent-toggle-slider:before{transform:translateX(20px)}
+
+/* ─── FLOW EDITOR ───────────────────────────────────── */
+.flow-pipeline{display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;padding:20px 0}
+.flow-node{background:var(--card2);border:1px solid var(--border);border-radius:var(--radius);padding:14px 18px;display:flex;flex-direction:column;gap:8px;min-width:140px;text-align:center;transition:all .2s;cursor:pointer}
+.flow-node:hover{border-color:var(--accent);background:rgba(139,92,246,0.08)}
+.flow-node.selected{border-color:var(--accent);background:rgba(139,92,246,0.12);box-shadow:0 0 0 2px var(--accent-glow)}
+.flow-node-icon{font-size:20px;color:var(--accent)}
+.flow-node-label{font-size:13px;font-weight:600;color:var(--white)}
+.flow-node-sub{font-size:11px;color:var(--gray)}
+.flow-connector{color:var(--gray);font-size:20px;animation:flowPulse 2s infinite}
+@keyframes flowPulse{0%,100%{opacity:.4}50%{opacity:1}}
+.flow-add{width:44px;height:44px;border-radius:50%;background:var(--card2);border:2px dashed var(--border);display:flex;align-items:center;justify-content:center;color:var(--gray2);font-size:18px;cursor:pointer;transition:all .2s}
+.flow-add:hover{border-color:var(--accent);color:var(--accent);background:rgba(139,92,246,0.08)}
+.flow-options{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-top:12px}
+.flow-option{padding:8px 16px;border-radius:20px;background:var(--card2);border:1px solid var(--border);font-size:12px;color:var(--gray2);cursor:pointer;transition:all .2s}
+.flow-option:hover{border-color:var(--accent);color:var(--white)}
+.flow-option.selected{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+/* ─── AI CONFIG ─────────────────────────────────────── */
+.ai-config-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.ai-config-item{display:flex;flex-direction:column;gap:8px}
+.ai-config-label{font-size:12px;font-weight:600;color:var(--gray)}
+.ai-select{padding:10px 14px;border-radius:8px;background:var(--card2);border:1px solid var(--border);color:var(--text);font-size:13px;outline:none}
+.ai-select:focus{border-color:var(--accent)}
+.ai-range{width:100%;height:6px;-webkit-appearance:none;background:var(--card2);border-radius:3px;outline:none}
+.ai-range::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--accent);cursor:pointer;border:2px solid var(--white)}
+.ai-range-value{font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:600;color:var(--accent)}
+.ai-prompt{width:100%;min-height:100px;padding:12px 14px;border-radius:8px;background:var(--card2);border:1px solid var(--border);color:var(--text);font-family:'JetBrains Mono',monospace;font-size:12px;outline:none;resize:vertical;line-height:1.6}
+.ai-prompt:focus{border-color:var(--accent)}
+
+/* ─── LOG CONSOLE ───────────────────────────────────── */
+.log-console{background:#0a0a14;border:1px solid var(--border);border-radius:var(--radius);font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.7;height:240px;overflow-y:auto;padding:14px;scroll-behavior:smooth}
+.log-entry{display:flex;gap:10px;padding:4px 0;border-bottom:1px dashed rgba(139,92,246,0.08)}
+.log-time{color:var(--gray);min-width:60px;font-size:11px}
+.log-level{padding:2px 6px;border-radius:4px;font-size:10px;font-weight:600;text-transform:uppercase;min-width:50px;text-align:center}
+.log-level.success{background:rgba(52,211,153,0.2);color:var(--green)}
+.log-level.error{background:rgba(248,113,113,0.2);color:var(--red)}
+.log-level.info{background:rgba(167,139,250,0.2);color:var(--cyan)}
+.log-level.warn{background:rgba(251,191,36,0.2);color:var(--yellow)}
+.log-msg{color:var(--text);flex:1;word-break:break-word}
+.log-agent{color:var(--gray);font-size:11px}
+.log-controls{display:flex;gap:8px;justify-content:space-between;align-items:center;margin-top:8px}
+.log-status{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--green)}
+.log-status .live{width:6px;height:6px;border-radius:50%;background:var(--green);animation:blink 1s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+
+/* ─── MODALS ─────────────────────────────────────────── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;z-index:1000;opacity:0;pointer-events:none;transition:opacity .3s}
+.modal-overlay.active{opacity:1;pointer-events:auto}
+.modal{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);width:100%;max-width:480px;max-height:90vh;overflow-y:auto;transform:translateY(20px);transition:transform .3s}
+.modal-overlay.active .modal{transform:translateY(0)}
+.modal-header{padding:20px 24px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.modal-title{font-family:'Syne',sans-serif;font-size:18px;font-weight:700;color:var(--white)}
+.modal-close{width:32px;height:32px;border-radius:50%;background:var(--card2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--gray2);font-size:14px;cursor:pointer;transition:all .2s}
+.modal-close:hover{background:var(--red);color:#fff;border-color:var(--red)}
+.modal-body{padding:24px}.modal-footer{padding:16px 24px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:12px}
+.form-group{margin-bottom:16px}
+.form-label{display:block;font-size:12px;font-weight:600;color:var(--gray);margin-bottom:8px;letter-spacing:.5px}
+.form-input,.form-select,.form-textarea{width:100%;padding:12px 16px;border-radius:8px;background:var(--card2);border:1px solid var(--border);color:var(--text);font-size:14px;outline:none;transition:border-color .2s}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--accent)}
+.form-input::placeholder,.form-textarea::placeholder{color:var(--gray)}
+.form-textarea{min-height:100px;resize:vertical;font-family:'DM Sans',sans-serif}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.form-hint{font-size:11px;color:var(--gray);margin-top:6px;display:flex;align-items:center;gap:4px}.form-hint i{color:var(--accent)}
+
+/* ─── TOAST ─────────────────────────────────────────── */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px 20px;font-size:13px;color:var(--white);z-index:2000;box-shadow:0 8px 32px rgba(0,0,0,0.4);display:flex;align-items:center;gap:10px;animation:slideIn .3s ease}
+.toast.success{border-left:3px solid var(--green)}.toast.error{border-left:3px solid var(--red)}.toast.info{border-left:3px solid var(--cyan)}.toast.warning{border-left:3px solid var(--yellow)}
+@keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+@keyframes slideOut{from{transform:translateX(0);opacity:1}to{transform:translateX(100%);opacity:0}}
+
+/* ─── REVEAL ─────────────────────────────────────────── */
+.reveal{opacity:0;transform:translateY(20px);transition:opacity .6s ease,transform .6s ease}.reveal.in{opacity:1;transform:translateY(0)}
+
+/* ─── RESPONSIVE ────────────────────────────────────── */
+@media(max-width:1200px){.main-grid{grid-template-columns:1fr}.ai-config-grid{grid-template-columns:1fr}}
+@media(max-width:900px){
+  .dashboard{grid-template-columns:1fr}
+  .sidebar{position:fixed;left:-240px;top:0;width:240px;transition:left .3s;z-index:100}
+  .sidebar.open{left:0}
+  .sidebar-toggle{display:flex!important}
+  .metrics-bar{grid-template-columns:1fr 1fr}
+  .page-header{flex-direction:column;align-items:flex-start}
+  .flow-pipeline{flex-direction:column}
+  .flow-connector{transform:rotate(90deg)}
+}
+@media(max-width:600px){.metrics-bar{grid-template-columns:1fr}.agents-grid{grid-template-columns:1fr}}
+
+/* ─── SIDEBAR TOGGLE ────────────────────────────────── */
+.sidebar-toggle{display:none;position:fixed;top:16px;left:16px;z-index:60;width:40px;height:40px;border-radius:50%;background:var(--card);border:1px solid var(--border);align-items:center;justify-content:center;color:var(--white);font-size:16px}
+</style>
+</head>
+<body>
+
+<!-- PROGRESS & CURSOR -->
+<div id="progress"><div id="progress-fill"></div></div>
+<div id="cursor-dot"></div><div id="cursor-ring"></div><div id="cursor-glow"></div>
+<button class="sidebar-toggle" id="sidebarToggle" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+
+<!-- NEW FLOW MODAL -->
+<div class="modal-overlay" id="newFlowModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title"><i class="fas fa-project-diagram" style="margin-right:8px;color:var(--accent)"></i>Nuevo Flujo de Automatización</div>
+      <button class="modal-close" onclick="closeModal('newFlowModal')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <form id="newFlowForm">
+        <div class="form-group">
+          <label class="form-label">Nombre del Agente *</label>
+          <input type="text" class="form-input" id="flowName" placeholder="Ej: Clasificador de Facturas" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Descripción</label>
+          <textarea class="form-textarea" id="flowDesc" placeholder="¿Qué tarea realizará este agente?"></textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Trigger Principal *</label>
+            <select class="form-select" id="flowTrigger" required>
+              <option value="">Seleccionar...</option>
+              <option value="email">📧 Llega Email</option>
+              <option value="webhook">🌐 Webhook Externo</option>
+              <option value="schedule">⏰ Programado (CRON)</option>
+              <option value="manual">🖱️ Manual / API</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Acción IA *</label>
+            <select class="form-select" id="flowAction" required>
+              <option value="">Seleccionar...</option>
+              <option value="reply">💬 Responder Automáticamente</option>
+              <option value="classify">🏷️ Clasificar Documento</option>
+              <option value="extract">📊 Extraer Datos</option>
+              <option value="generate">📝 Generar Reporte</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Modelo IA</label>
+          <select class="form-select" id="flowModel">
+            <option value="gemma3n">🤖 Gemma 3N (Recomendado)</option>
+            <option value="llama3">🦙 Llama 3 Local</option>
+            <option value="mistral">🌪️ Mistral 7B</option>
+          </select>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('newFlowModal')">Cancelar</button>
+      <button class="btn btn-acc" onclick="createFlow()"><i class="fas fa-plus"></i> Crear Agente</button>
+    </div>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div class="dashboard">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo"><div class="logo-icon"><i class="fas fa-robot"></i></div>PORTAL PILOT</div>
+    <nav class="sidebar-nav">
+      <a href="dashboard-amy.html" class="sidebar-link"><i class="fas fa-home"></i> <span>Dashboard</span></a>
+      <a href="team-amy.html" class="sidebar-link"><i class="fas fa-users"></i> <span>Equipo</span></a>
+      <a href="fleet-sofia.html" class="sidebar-link"><i class="fas fa-truck"></i> <span>Flota</span></a>
+      <a href="automation-amy.html" class="sidebar-link active"><i class="fas fa-robot"></i> <span>Bots RPA</span></a>
+      <a href="security-sofia.html" class="sidebar-link"><i class="fas fa-shield-alt"></i> <span>Auditoría</span></a>
+    </nav>
+    <div class="sidebar-footer">
+      <a href="#" class="sidebar-link"><i class="fas fa-question-circle"></i> Ayuda</a>
+      <a href="#" class="sidebar-link"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</a>
+      <div class="sidebar-user"><div class="sidebar-avatar">VT</div><div><div class="sidebar-username">Valeria Torres</div><div class="sidebar-role">Admin Principal</div></div></div>
+    </div>
+  </aside>
+
+  <main class="main-content">
+    <header class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-title">Orquestador de <span>Procesos</span></div>
+        <div class="topbar-search"><i class="fas fa-search"></i><input type="text" placeholder="Buscar agentes, flujos o logs..."></div>
+      </div>
+      <div class="topbar-right">
+        <button class="topbar-btn" title="Notificaciones"><i class="fas fa-bell"></i><span class="badge">2</span></button>
+        <button class="btn btn-acc btn-sm" onclick="openModal('newFlowModal')"><i class="fas fa-plus"></i> Nuevo Agente</button>
+      </div>
+    </header>
+
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Automatización <span>Inteligente</span></h1>
+        <p class="page-subtitle">Configura y monitorea flujos de trabajo impulsados por IA. Control total sobre triggers, acciones y respuestas automáticas.</p>
+      </div>
+      <div class="page-actions">
+        <button class="btn btn-outline btn-sm" onclick="exportFlows()"><i class="fas fa-download"></i> Exportar Flujos</button>
+        <button class="btn btn-ghost btn-sm" onclick="refreshAgents()"><i class="fas fa-sync-alt"></i> Sincronizar</button>
+      </div>
+    </div>
+
+    <!-- METRICS BAR -->
+    <div class="metrics-bar">
+      <div class="metric-card reveal">
+        <div class="metric-icon purple"><i class="fas fa-robot"></i></div>
+        <div class="metric-info"><div class="metric-value" id="totalAgents">12</div><div class="metric-label">Agentes Configurados</div></div>
+      </div>
+      <div class="metric-card reveal" style="transition-delay:.05s">
+        <div class="metric-icon green"><i class="fas fa-check-circle"></i></div>
+        <div class="metric-info"><div class="metric-value" id="tasksToday">847</div><div class="metric-label">Tareas Hoy</div></div>
+      </div>
+      <div class="metric-card reveal" style="transition-delay:.1s">
+        <div class="metric-icon cyan"><i class="fas fa-chart-line"></i></div>
+        <div class="metric-info"><div class="metric-value">98.4%</div><div class="metric-label">Tasa de Éxito</div></div>
+      </div>
+      <div class="metric-card reveal" style="transition-delay:.15s">
+        <div class="metric-icon yellow"><i class="fas fa-bolt"></i></div>
+        <div class="metric-info"><div class="metric-value">1.2s</div><div class="metric-label">Respuesta Promedio IA</div></div>
+      </div>
+    </div>
+
+    <!-- MAIN GRID -->
+    <div class="main-grid">
+      
+      <!-- AGENTS LIST -->
+      <div class="card reveal">
+        <div class="card-header">
+          <div class="card-title"><i class="fas fa-cubes"></i>Agentes Activos</div>
+          <span class="card-badge" id="activeCount">8 Activos</span>
+        </div>
+        <div class="agents-grid" id="agentsGrid">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+
+      <!-- AI CONFIG & FLOW EDITOR -->
+      <div style="display:flex;flex-direction:column;gap:20px">
+        <div class="card reveal">
+          <div class="card-header">
+            <div class="card-title"><i class="fas fa-brain"></i>Configuración IA Global</div>
+            <button class="btn btn-ghost btn-xs" onclick="resetAIConfig()"><i class="fas fa-undo"></i> Resetear</button>
+          </div>
+          <div class="ai-config-grid">
+            <div class="ai-config-item">
+              <span class="ai-config-label">Modelo Principal</span>
+              <select class="ai-select" id="globalModel" onchange="saveAIConfig()">
+                <option value="gemma3n">🤖 Gemma 3N Local</option>
+                <option value="llama3">🦙 Llama 3 8B</option>
+                <option value="mistral">🌪️ Mistral 7B</option>
+              </select>
+            </div>
+            <div class="ai-config-item">
+              <span class="ai-config-label">Temperatura: <span class="ai-range-value" id="tempValue">0.7</span></span>
+              <input type="range" class="ai-range" min="0" max="2" step="0.1" value="0.7" id="tempRange" oninput="updateTemp(this.value)">
+            </div>
+            <div class="ai-config-item" style="grid-column:1/-1">
+              <span class="ai-config-label">Prompt Base del Sistema</span>
+              <textarea class="ai-prompt" id="systemPrompt" placeholder="Eres un asistente empresarial de Portal Pilot...">Eres un asistente empresarial especializado en automatización de procesos. Responde de forma concisa, profesional y en español. Prioriza la precisión sobre la creatividad.</textarea>
+              <div class="form-hint"><i class="fas fa-shield-alt"></i> Este prompt se aplica a todos los agentes como contexto base</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card reveal" style="transition-delay:.1s">
+          <div class="card-header">
+            <div class="card-title"><i class="fas fa-diagram-project"></i>Editor de Flujo Rápido</div>
+          </div>
+          <div class="flow-pipeline" id="flowPipeline">
+            <div class="flow-node selected" onclick="selectFlowNode(this)">
+              <div class="flow-node-icon"><i class="fas fa-envelope"></i></div>
+              <div class="flow-node-label">Trigger</div>
+              <div class="flow-node-sub">Llega Email</div>
+            </div>
+            <div class="flow-connector"><i class="fas fa-arrow-right"></i></div>
+            <div class="flow-node" onclick="selectFlowNode(this)">
+              <div class="flow-node-icon"><i class="fas fa-brain"></i></div>
+              <div class="flow-node-label">Procesar IA</div>
+              <div class="flow-node-sub">Clasificar Intento</div>
+            </div>
+            <div class="flow-connector"><i class="fas fa-arrow-right"></i></div>
+            <div class="flow-node" onclick="selectFlowNode(this)">
+              <div class="flow-node-icon"><i class="fas fa-paper-plane"></i></div>
+              <div class="flow-node-label">Acción</div>
+              <div class="flow-node-sub">Responder Auto</div>
+            </div>
+          </div>
+          <div class="flow-options">
+            <span style="font-size:12px;color:var(--gray);margin-right:8px">Agregar:</span>
+            <div class="flow-option" onclick="addFlowStep('condición')"><i class="fas fa-code-branch"></i> Condición</div>
+            <div class="flow-option" onclick="addFlowStep('delay')"><i class="fas fa-clock"></i> Delay</div>
+            <div class="flow-option" onclick="addFlowStep('webhook')"><i class="fas fa-globe"></i> Webhook</div>
+            <div class="flow-option" onclick="addFlowStep('db')"><i class="fas fa-database"></i> Guardar DB</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LOG CONSOLE -->
+    <div class="card full reveal" style="margin-top:0">
+      <div class="card-header">
+        <div class="card-title"><i class="fas fa-terminal"></i>Monitor de Ejecución en Vivo</div>
+        <div class="log-status"><span class="live"></span> action_service conectado</div>
+      </div>
+      <div class="log-console" id="logConsole">
+        <!-- Logs populated by JS -->
+      </div>
+      <div class="log-controls">
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-ghost btn-xs" onclick="filterLogs('all')"><i class="fas fa-list"></i> Todos</button>
+          <button class="btn btn-ghost btn-xs" onclick="filterLogs('success')"><i class="fas fa-check" style="color:var(--green)"></i> Éxito</button>
+          <button class="btn btn-ghost btn-xs" onclick="filterLogs('error')"><i class="fas fa-times" style="color:var(--red)"></i> Errores</button>
+        </div>
+        <button class="btn btn-ghost btn-xs" onclick="clearLogs()"><i class="fas fa-trash"></i> Limpiar</button>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+// ── Custom Cursor ────────────────────────────────────
+const dot=document.getElementById('cursor-dot'),ring=document.getElementById('cursor-ring'),glow=document.getElementById('cursor-glow');
+let mx=0,my=0,rx=0,ry=0;
+document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;dot.style.left=mx+'px';dot.style.top=my+'px';glow.style.left=mx+'px';glow.style.top=my+'px'});
+function animRing(){rx+=(mx-rx)*0.12;ry+=(my-ry)*0.12;ring.style.left=rx+'px';ring.style.top=ry+'px';requestAnimationFrame(animRing)}animRing();
+document.querySelectorAll('a,button,.sidebar-link,.agent-toggle,.flow-node,.flow-option,.modal-close').forEach(el=>{
+  el.addEventListener('mouseenter',()=>{ring.style.width='50px';ring.style.height='50px';ring.style.opacity='.5'});
+  el.addEventListener('mouseleave',()=>{ring.style.width='36px';ring.style.height='36px';ring.style.opacity='1'})});
+
+// ── Scroll Progress ──────────────────────────────────
+window.addEventListener('scroll',()=>{const p=(window.scrollY/(document.documentElement.scrollHeight-innerHeight))*100;document.getElementById('progress-fill').style.width=p+'%'});
+
+// ── Reveal ───────────────────────────────────────────
+const obs=new IntersectionObserver(entries=>{entries.forEach((e,i)=>{if(e.isIntersecting)setTimeout(()=>e.target.classList.add('in'),i*50)})},{threshold:0.05});
+document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
+
+// ── Sidebar ────────────────────────────────────────
+function toggleSidebar(){document.getElementById('sidebar').classList.toggle('open')}
+document.addEventListener('click',e=>{const sb=document.getElementById('sidebar'),tg=document.getElementById('sidebarToggle');if(window.innerWidth<=900&&sb.classList.contains('open')&&!sb.contains(e.target)&&!tg.contains(e.target))sb.classList.remove('open')});
+
+// ── Agents Data & Render ─────────────────────────────
+const agents=[
+  {id:1,name:'Soporte N1',icon:'fa-headset',desc:'Clasifica y responde tickets de soporte automáticamente',status:'active',tasks:234,success:98},
+  {id:2,name:'Clasificador Facturas',icon:'fa-file-invoice',desc:'Extrae datos de facturas y las registra en NocoDB',status:'active',tasks:156,success:99},
+  {id:3,name:'Monitor Inventario',icon:'fa-boxes-stacked',desc:'Alerta cuando stock baja del umbral mínimo',status:'inactive',tasks:0,success:0},
+  {id:4,name:'Reporte Semanal',icon:'fa-chart-bar',desc:'Genera y envía reporte de métricas cada lunes',status:'active',tasks:12,success:100},
+  {id:5,name:'Validador KYC',icon:'fa-user-shield',desc:'Verifica documentos de identidad con Cyberyx',status:'active',tasks:89,success:97},
+  {id:6,name:'Sincronizador CRM',icon:'fa-rotate',desc:'Sincroniza contactos entre Portal Pilot y Salesforce',status:'active',tasks:445,success:96}
+];
+
+function renderAgents(){
+  const grid=document.getElementById('agentsGrid');grid.innerHTML='';
+  let activeCount=0;
+  agents.forEach(a=>{
+    if(a.status==='active')activeCount++;
+    const card=document.createElement('div');
+    card.className=`agent-card ${a.status}`;
+    card.innerHTML=`
+      <div class="agent-header">
+        <div class="agent-icon"><i class="fas ${a.icon}"></i></div>
+        <div class="agent-status ${a.status}"><span class="dot"></span>${a.status==='active'?'Activo':'Inactivo'}</div>
+      </div>
+      <div class="agent-name">${a.name}</div>
+      <div class="agent-desc">${a.desc}</div>
+      <div class="agent-footer">
+        <div class="agent-stats">
+          <span><i class="fas fa-bolt"></i> ${a.tasks} tareas</span>
+          <span><i class="fas fa-check-circle"></i> ${a.success}% éxito</span>
+        </div>
+        <label class="agent-toggle">
+          <input type="checkbox" ${a.status==='active'?'checked':''} onchange="toggleAgent(${a.id},this.checked)">
+          <span class="agent-toggle-slider"></span>
+        </label>
+      </div>`;
+    grid.appendChild(card);
+  });
+  document.getElementById('activeCount').textContent=activeCount+' Activos';
+  document.getElementById('totalAgents').textContent=agents.length;
+}
+
+function toggleAgent(id,active){
+  const a=agents.find(x=>x.id===id);if(!a)return;
+  a.status=active?'active':'inactive';a.tasks=active?a.tasks:0;
+  renderAgents();
+  showToast(`${a.name} ${active?'activado':'desactivado'}`,active?'success':'warning');
+  addLog(active?'success':'warn',`Agente "${a.name}" ${active?'iniciado':'detenido'} por admin`);
+}
+
+// ── AI Config ────────────────────────────────────────
+function updateTemp(val){document.getElementById('tempValue').textContent=parseFloat(val).toFixed(1)}
+function saveAIConfig(){showToast('✓ Configuración IA actualizada','success')}
+function resetAIConfig(){
+  document.getElementById('globalModel').value='gemma3n';
+  document.getElementById('tempRange').value=0.7;updateTemp(0.7);
+  document.getElementById('systemPrompt').value='Eres un asistente empresarial especializado en automatización de procesos. Responde de forma concisa, profesional y en español. Prioriza la precisión sobre la creatividad.';
+  showToast('↩️ Configuración reseteada a valores por defecto','info');
+}
+
+// ── Flow Editor ──────────────────────────────────────
+function selectFlowNode(node){
+  document.querySelectorAll('.flow-node').forEach(n=>n.classList.remove('selected'));
+  node.classList.add('selected');
+}
+function addFlowStep(type){
+  const pipeline=document.getElementById('flowPipeline');
+  const names={condición:'Condición',delay:'Delay 5m',webhook:'Webhook POST',db:'Guardar NocoDB'};
+  const icons={condición:'fa-code-branch',delay:'fa-clock',webhook:'fa-globe',db:'fa-database'};
+  const newNode=document.createElement('div');newNode.className='flow-node';
+  newNode.onclick=()=>selectFlowNode(newNode);
+  newNode.innerHTML=`<div class="flow-node-icon"><i class="fas ${icons[type]}"></i></div><div class="flow-node-label">${names[type]}</div><div class="flow-node-sub">Paso nuevo</div>`;
+  const connector=document.createElement('div');connector.className='flow-connector';connector.innerHTML='<i class="fas fa-arrow-right"></i>';
+  pipeline.insertBefore(connector,pipeline.lastElementChild);
+  pipeline.insertBefore(newNode,pipeline.lastElementChild);
+  showToast(`➕ Paso "${names[type]}" agregado al flujo`,'info');
+}
+
+// ── Log Console ──────────────────────────────────────
+const logData=[];
+const sampleAgents=['Soporte N1','Clasificador Facturas','Reporte Semanal','Validador KYC','Sincronizador CRM'];
+const sampleMsgs=[
+  'Ticket #4921 clasificado: Facturación',
+  'Datos extraídos: Total $1,240.00 · IVA 16%',
+  'Reporte mensual generado y enviado a dirección@empresa.com',
+  'Documento KYC verificado: Match 98.7%',
+  'Sincronización completada: 45 contactos actualizados',
+  'Error de conexión con NocoDB: Timeout después de 5s',
+  'Trigger ejecutado: Webhook recibido de Shopify',
+  'IA procesando: Temperatura 0.7 · Modelo Gemma 3N',
+  'Acción fallida: Email no válido en campo destinatario',
+  'Flujo pausado: Límite de rate-limit alcanzado'
+];
+
+function addLog(level,msg,agent='Sistema'){
+  const now=new Date();const time=now.toTimeString().slice(0,8);
+  const log={time,level,msg,agent};logData.push(log);
+  renderLogs();
+  const console=document.getElementById('logConsole');
+  console.scrollTop=console.scrollHeight;
+}
+
+function renderLogs(filter='all'){
+  const console=document.getElementById('logConsole');console.innerHTML='';
+  const filtered=filter==='all'?logData:logData.filter(l=>l.level===filter);
+  filtered.forEach(l=>{
+    const entry=document.createElement('div');entry.className='log-entry';
+    entry.innerHTML=`<span class="log-time">${l.time}</span><span class="log-level ${l.level}">${l.level}</span><span class="log-msg">${l.msg}</span><span class="log-agent">[${l.agent}]</span>`;
+    console.appendChild(entry);
+  });
+}
+
+function filterLogs(level){renderLogs(level)}
+function clearLogs(){logData.length=0;renderLogs();showToast('🗑️ Consola limpiada','info')}
+
+// Simulate live logs
+let logInterval;
+function startLogSimulation(){
+  logInterval=setInterval(()=>{
+    if(Math.random()>0.6){
+      const levels=['success','success','success','info','warn','error'];
+      const level=levels[Math.floor(Math.random()*levels.length)];
+      const msg=sampleMsgs[Math.floor(Math.random()*sampleMsgs.length)];
+      const agent=sampleAgents[Math.floor(Math.random()*sampleAgents.length)];
+      addLog(level,msg,agent);
+    }
+  },3500);
+}
+
+// ── New Flow ─────────────────────────────────────────
+function openModal(id){document.getElementById(id).classList.add('active')}
+function closeModal(id){document.getElementById(id).classList.remove('active')}
+function createFlow(){
+  const form=document.getElementById('newFlowForm');
+  if(!form.checkValidity()){form.reportValidity();return}
+  const name=document.getElementById('flowName').value;
+  agents.unshift({id:Date.now(),name:name,icon:'fa-robot',desc:document.getElementById('flowDesc').value||'Nuevo agente automatizado',status:'active',tasks:0,success:0});
+  closeModal('newFlowModal');form.reset();renderAgents();
+  showToast(`🚀 Agente "${name}" creado y activado`,'success');
+  addLog('success',`Nuevo agente "${name}" configurado y puesto en marcha`,'Admin');
+}
+
+// ── Toast ────────────────────────────────────────────
+function showToast(msg,type='success'){
+  const t=document.createElement('div');t.className='toast '+type;
+  t.innerHTML='<i class="fas fa-'+(type==='success'?'check-circle':type==='warning'?'exclamation-triangle':'info-circle')+'"></i>'+msg;
+  document.body.appendChild(t);
+  setTimeout(()=>{t.style.animation='slideOut .3s ease';setTimeout(()=>t.remove(),300)},3000);
+}
+
+// ── Utilities ────────────────────────────────────────
+function exportFlows(){showToast('📦 Exportando configuración de flujos a JSON...','info');setTimeout(()=>showToast('✓ "automation_flows_2026.json" descargado','success'),1200)}
+function refreshAgents(){showToast('🔄 Sincronizando estado de agentes...','info');setTimeout(()=>{renderAgents();showToast('✓ Todos los agentes actualizados','success')},800)}
+
+// ── Init ────────────────────────────────────────────
+window.addEventListener('load',()=>{
+  renderAgents();renderLogs();startLogSimulation();
+  setTimeout(()=>{document.querySelectorAll('.reveal').forEach((el,i)=>{setTimeout(()=>el.classList.add('in'),i*50)})},100);
+});
+document.querySelectorAll('.modal-overlay').forEach(o=>{o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('active')})});
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape')document.querySelectorAll('.modal-overlay.active').forEach(m=>m.classList.remove('active'));
+  if(e.key==='/'&&document.activeElement.tagName!=='INPUT'){e.preventDefault();document.querySelector('.topbar-search input').focus()}
+  if(e.key==='n'&&e.ctrlKey){e.preventDefault();openModal('newFlowModal')}
+});
+</script>
+<script src="../auth-check.js"></script>
+</body>
+</html>

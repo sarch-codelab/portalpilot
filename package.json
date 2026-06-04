@@ -1,0 +1,21 @@
+{
+  "name": "portal-pilot-web",
+  "version": "1.0.0",
+  "description": "Portal Pilot - Enterprise Management Platform",
+  "main": "backend/server.js",
+  "scripts": {
+    "start": "node backend/server.js",
+    "dev": "node backend/server.js"
+  },
+  "dependencies": {
+    "axios": "^1.16.1",
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "express-rate-limit": "^7.0.0",
+    "helmet": "^7.0.0",
+    "jsonwebtoken": "^9.0.0",
+    "nodemailer": "^8.0.10"
+  }
+}

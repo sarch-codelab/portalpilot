@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acceso Temporal - Portal Pilot</title>
+</head>
+
+<body
+    style="margin: 0; padding: 0; background-color: #04010a; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+
+    <table width="100%" border="0" cellspacing="0" cellpadding="0"
+        style="background-color: #04010a; padding: 40px 20px;">
+        <tr>
+            <td align="center">
+
+                <table width="100%" id="email-container" border="0" cellspacing="0" cellpadding="0"
+                    style="max-width: 550px; background-color: #0b0518; border: 1px solid #221431; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+
+                    <tr>
+                        <td align="center" style="padding: 35px 20px 20px 20px; border-bottom: 1px solid #1c0e29;">
+                            <h1
+                                style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 700; letter-spacing: -0.5px;">
+                                Portal <span
+                                    style="color: #a855f7; text-shadow: 0 0 10px rgba(168,85,247,0.4);">Pilot</span>
+                            </h1>
+                            <p
+                                style="color: #71717a; font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; margin: 5px 0 0 0;">
+                                Enterprise AI Standard
+                            </p>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td style="padding: 40px 35px; color: #e4e4e7;">
+
+                            <h2
+                                style="margin-top: 0; color: #ffffff; font-size: 20px; font-weight: 600; text-align: center;">
+                                Verificación de Acceso - {{TENANT_NAME}}
+                            </h2>
+
+                            <p
+                                style="font-size: 14px; line-height: 1.6; color: #a1a1aa; text-align: center; margin-bottom: 10px;">
+                                Hola <strong style="color: #a855f7;">{{USER_EMAIL}}</strong>,
+                            </p>
+
+                            <p
+                                style="font-size: 14px; line-height: 1.6; color: #a1a1aa; text-align: center; margin-bottom: 30px;">
+                                Se ha generado con éxito una cuenta en <strong>{{TENANT_NAME}}</strong> a través de Portal Pilot. Utiliza las
+                                siguientes credenciales para tu primer inicio de sesión seguro.
+                            </p>
+
+                            <table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin: 25px 0;">
+                                <tr>
+                                    <td align="center"
+                                        style="background-color: #120725; border: 1px solid #4c1d95; border-radius: 10px; padding: 22px;">
+                                        <span
+                                            style="font-size: 12px; color: #a855f7; display: block; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600;">
+                                            Contraseña Temporal
+                                        </span>
+                                        <span
+                                            style="font-family: 'Courier New', Courier, monospace; font-size: 26px; font-weight: bold; color: #ffffff; letter-spacing: 4px;">
+                                            {{TEMP_PASSWORD}}
+                                        </span>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <p
+                                style="font-size: 13px; line-height: 1.5; color: #71717a; margin-bottom: 35px; text-align: center;">
+                                🔒 Por normativas de seguridad, esta clave expirará tras el primer ingreso y se te
+                                solicitará configurar una nueva.
+                            </p>
+
+                            <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                                <tr>
+                                    <td align="center">
+                                        <a href="https://portal-pilot.vercel.app" target="_blank"
+                                            style="background-color: #7c3aed; color: #ffffff; padding: 14px 32px; font-size: 14px; font-weight: 600; text-decoration: none; border-radius: 8px; display: inline-block; box-shadow: 0 4px 15px rgba(124,58,237,0.3);">
+                                            Ir a la Consola AI
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td align="center"
+                            style="padding: 30px 20px; background-color: #070310; border-top: 1px solid #1c0e29;">
+                            <p style="margin: 0 0 15px 0; font-size: 13px;">
+                                <a href="https://portal-pilot.vercel.app"
+                                    style="color: #a855f7; text-decoration: none; margin: 0 10px;">Consola</a> •
+                                <a href="#"
+                                    style="color: #71717a; text-decoration: none; margin: 0 10px;">Documentación</a> •
+                                <a href="#" style="color: #71717a; text-decoration: none; margin: 0 10px;">Soporte</a>
+                            </p>
+                            <p style="margin: 0 0 10px 0; font-size: 12px; color: #52525b;">
+                                Este es un mensaje transaccional cifrado enviado por Portal Pilot Enterprise.
+                            </p>
+                            <p style="margin: 0; font-size: 12px; color: #71717a;">
+                                &copy; 2026 <strong>Portal Pilot</strong>. Todos los derechos reservados.
+                            </p>
+                        </td>
+                    </tr>
+
+                </table>
+
+            </td>
+        </tr>
+    </table>
+
+</body>
+
+</html>

@@ -1,0 +1,1540 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portal Pilot — Acceso</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    *,
+    *::before,
+    *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg: #04040a;
+      --bg2: #07070f;
+      --bg3: #0c0c1a;
+      --card: #0e0e1c;
+      --card2: #111124;
+      --border: rgba(139, 92, 246, 0.1);
+      --border2: rgba(139, 92, 246, 0.22);
+      --accent: #8b5cf6;
+      --accent2: #7c3aed;
+      --accent-glow: rgba(139, 92, 246, 0.35);
+      --cyan: #a78bfa;
+      --white: #ffffff;
+      --gray: #5d5d7a;
+      --gray2: #9ca3af;
+      --text: #c4c4d4;
+      --green: #34d399;
+      --red: #f87171;
+      --radius: 10px;
+      --radius-lg: 18px;
+    }
+
+    html,
+    body {
+      height: 100%;
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* BG grid + orbs */
+    .page-bg {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .grid-layer {
+      position: absolute;
+      inset: 0;
+      background-image: linear-gradient(rgba(139, 92, 246, .03) 1px, transparent 1px), linear-gradient(90deg, rgba(139, 92, 246, .03) 1px, transparent 1px);
+      background-size: 60px 60px;
+      mask-image: radial-gradient(ellipse at center, black 30%, transparent 75%);
+    }
+
+    .orb-tl {
+      position: absolute;
+      top: -200px;
+      left: -200px;
+      width: 600px;
+      height: 600px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(139, 92, 246, .13) 0%, transparent 65%);
+    }
+
+    .orb-br {
+      position: absolute;
+      bottom: -200px;
+      right: -200px;
+      width: 500px;
+      height: 500px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(167, 139, 250, .09) 0%, transparent 65%);
+    }
+
+    /* Login message */
+    .login-message {
+      padding: 12px 16px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      font-size: 14px;
+      text-align: center;
+      animation: slideDown 0.3s ease;
+    }
+
+    .login-message.error {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      color: #ef4444;
+      display: block;
+    }
+
+    .login-message.success {
+      background: rgba(34, 197, 94, 0.1);
+      border: 1px solid rgba(34, 197, 94, 0.3);
+      color: #22c55e;
+      display: block;
+    }
+
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+
+    /* LAYOUT */
+    .page-wrap {
+      position: relative;
+      z-index: 1;
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+    }
+
+    /* LEFT PANEL */
+    .panel-left {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: clamp(32px, 4vw, 56px);
+      border-right: 1px solid var(--border);
+      background: rgba(4, 4, 10, 0.6);
+      backdrop-filter: blur(10px);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: auto;
+    }
+
+    .brand-icon {
+      width: 40px;
+      height: 40px;
+      background: var(--accent);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      color: #fff;
+      box-shadow: 0 0 28px var(--accent-glow);
+    }
+
+    .brand-name {
+      font-family: 'Syne', sans-serif;
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--white);
+      letter-spacing: -.5px;
+    }
+
+    .left-hero {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 40px 0;
+    }
+
+    .left-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(139, 92, 246, 0.08);
+      border: 1px solid var(--border2);
+      border-radius: 40px;
+      padding: 6px 16px;
+      font-size: 11px;
+      color: var(--cyan);
+      font-weight: 600;
+      letter-spacing: .3px;
+      margin-bottom: 28px;
+      width: fit-content;
+    }
+
+    .left-badge .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--green);
+      animation: blink 2s infinite;
+    }
+
+    @keyframes blink {
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: .3;
+      }
+    }
+
+    .left-title {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(36px, 5vw, 58px);
+      font-weight: 800;
+      line-height: .95;
+      letter-spacing: -2.5px;
+      color: var(--white);
+      margin-bottom: 18px;
+    }
+
+    .left-title .grad {
+      background: linear-gradient(135deg, var(--white) 30%, var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .left-sub {
+      font-size: 14px;
+      color: var(--gray);
+      line-height: 1.8;
+      max-width: 340px;
+      margin-bottom: 36px;
+    }
+
+    /* Feature pills */
+    .feat-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .feat-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: rgba(139, 92, 246, 0.05);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 16px;
+      transition: border-color .2s;
+    }
+
+    .feat-item:hover {
+      border-color: var(--border2);
+    }
+
+    .feat-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      background: rgba(139, 92, 246, 0.12);
+      border: 1px solid var(--border2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      color: var(--accent);
+      flex-shrink: 0;
+    }
+
+    .feat-text {
+      font-size: 13px;
+      color: var(--gray2);
+      line-height: 1.5;
+    }
+
+    .feat-text strong {
+      color: var(--white);
+      font-weight: 500;
+      display: block;
+      font-size: 13px;
+    }
+
+    .left-footer {
+      font-size: 11px;
+      color: var(--gray);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .left-footer .sep {
+      color: var(--border2);
+    }
+
+    /* RIGHT PANEL */
+    .panel-right {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: clamp(24px, 4vw, 56px);
+      background: rgba(7, 7, 15, 0.5);
+    }
+
+    .auth-box {
+      width: 100%;
+      max-width: 440px;
+    }
+
+    /* Tab switcher */
+    .tab-row {
+      display: flex;
+      background: var(--card2);
+      border: 1px solid var(--border);
+      border-radius: 40px;
+      padding: 4px;
+      margin-bottom: 32px;
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 10px;
+      border-radius: 36px;
+      font-size: 13px;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      background: none;
+      color: var(--gray2);
+      transition: all .25s;
+      font-family: 'DM Sans', sans-serif;
+    }
+
+    .tab-btn.active {
+      background: var(--accent);
+      color: #fff;
+      box-shadow: 0 4px 16px var(--accent-glow);
+    }
+
+    /* Form title */
+    .form-heading {
+      margin-bottom: 24px;
+    }
+
+    .form-heading h2 {
+      font-family: 'Syne', sans-serif;
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--white);
+      letter-spacing: -.5px;
+      margin-bottom: 6px;
+    }
+
+    .form-heading p {
+      font-size: 13px;
+      color: var(--gray);
+    }
+
+    /* Fields */
+    .field {
+      margin-bottom: 16px;
+    }
+
+    .field label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--gray2);
+      margin-bottom: 7px;
+      letter-spacing: .3px;
+    }
+
+    .input-wrap {
+      position: relative;
+    }
+
+    .input-wrap i {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 15px;
+      color: var(--gray);
+      pointer-events: none;
+      transition: color .2s;
+    }
+
+    .input-wrap input {
+      width: 100%;
+      background: var(--card2);
+      border: 1px solid var(--border2);
+      border-radius: var(--radius);
+      padding: 12px 14px 12px 40px;
+      font-size: 14px;
+      color: var(--white);
+      font-family: 'DM Sans', sans-serif;
+      outline: none;
+      transition: border-color .2s, box-shadow .2s;
+    }
+
+    .input-wrap input::placeholder {
+      color: var(--gray);
+    }
+
+    .input-wrap input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15);
+    }
+
+    .input-wrap input:focus+i,
+    .input-wrap i:has(~input:focus) {
+      color: var(--accent);
+    }
+
+    .input-wrap .toggle-pw {
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: var(--gray);
+      font-size: 14px;
+      cursor: pointer;
+      padding: 0;
+      transition: color .2s;
+    }
+
+    .input-wrap .toggle-pw:hover {
+      color: var(--white);
+    }
+
+    /* Strength bar */
+    .strength-wrap {
+      margin-top: 8px;
+      display: none;
+    }
+
+    .strength-bar {
+      height: 3px;
+      border-radius: 2px;
+      background: rgba(255, 255, 255, .06);
+      margin-bottom: 5px;
+    }
+
+    .strength-fill {
+      height: 100%;
+      border-radius: 2px;
+      width: 0;
+      transition: width .3s, background .3s;
+    }
+
+    .strength-label {
+      font-size: 11px;
+      color: var(--gray);
+    }
+
+    /* Row */
+    .field-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    /* Options row */
+    .options-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .check-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+    }
+
+    .check-label input[type=checkbox] {
+      width: 16px;
+      height: 16px;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+
+    .check-label span {
+      font-size: 12px;
+      color: var(--gray2);
+    }
+
+    .forgot-link {
+      font-size: 12px;
+      color: var(--accent);
+      text-decoration: none;
+      transition: color .2s;
+    }
+
+    .forgot-link:hover {
+      color: var(--cyan);
+    }
+
+    /* Submit */
+    .btn-submit {
+      width: 100%;
+      padding: 13px;
+      border-radius: 40px;
+      border: none;
+      cursor: pointer;
+      background: var(--accent);
+      color: #fff;
+      font-size: 14px;
+      font-weight: 700;
+      font-family: 'DM Sans', sans-serif;
+      letter-spacing: .2px;
+      transition: all .25s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .btn-submit:hover {
+      background: var(--accent2);
+      transform: translateY(-1px);
+      box-shadow: 0 8px 28px var(--accent-glow);
+    }
+
+    .btn-submit:active {
+      transform: translateY(0);
+    }
+
+    /* Divider */
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 20px 0;
+    }
+
+    .divider::before,
+    .divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    .divider span {
+      font-size: 11px;
+      color: var(--gray);
+      font-weight: 500;
+      letter-spacing: .5px;
+    }
+
+    /* SSO */
+    .sso-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .btn-sso {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 11px;
+      border-radius: var(--radius);
+      background: var(--card2);
+      border: 1px solid var(--border2);
+      color: var(--gray2);
+      font-size: 13px;
+      font-weight: 500;
+      font-family: 'DM Sans', sans-serif;
+      cursor: pointer;
+      transition: all .2s;
+    }
+
+    .btn-sso:hover {
+      border-color: var(--accent);
+      color: var(--white);
+    }
+
+    /* Terms */
+    .terms-note {
+      font-size: 11px;
+      color: var(--gray);
+      text-align: center;
+      margin-top: 16px;
+      line-height: 1.7;
+    }
+
+    .terms-note a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .terms-note a:hover {
+      text-decoration: underline;
+    }
+
+    /* Alert */
+    .alert {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      border-radius: var(--radius);
+      font-size: 12px;
+      margin-bottom: 16px;
+      animation: fadeIn .3s ease;
+    }
+
+    .alert-err {
+      background: rgba(248, 113, 113, 0.08);
+      border: 1px solid rgba(248, 113, 113, 0.2);
+      color: var(--red);
+    }
+
+    .alert-ok {
+      background: rgba(52, 211, 153, 0.08);
+      border: 1px solid rgba(52, 211, 153, 0.2);
+      color: var(--green);
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(-6px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Biometric strip */
+    .biometric-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+      background: rgba(139, 92, 246, 0.06);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 10px 14px;
+    }
+
+    .bio-icon {
+      font-size: 18px;
+      color: var(--accent);
+    }
+
+    .bio-text {
+      font-size: 12px;
+      color: var(--gray2);
+      line-height: 1.5;
+    }
+
+    .bio-text strong {
+      color: var(--cyan);
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .btn-bio {
+      margin-left: auto;
+      padding: 6px 14px;
+      border-radius: 20px;
+      background: rgba(139, 92, 246, 0.15);
+      border: 1px solid var(--border2);
+      color: var(--accent);
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all .2s;
+      white-space: nowrap;
+      font-family: 'DM Sans', sans-serif;
+    }
+
+    .btn-bio:hover {
+      background: rgba(139, 92, 246, 0.25);
+    }
+
+    /* Panel visibility */
+    .form-panel {
+      display: none;
+    }
+
+    .form-panel.active {
+      display: block;
+    }
+
+    /* Progress steps (register) */
+    .steps-row {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      margin-bottom: 28px;
+    }
+
+    .step-dot {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: 1px solid var(--border2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--gray);
+      transition: all .3s;
+      font-family: 'Syne', sans-serif;
+      flex-shrink: 0;
+    }
+
+    .step-dot.done {
+      background: var(--green);
+      border-color: var(--green);
+      color: #000;
+    }
+
+    .step-dot.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+      box-shadow: 0 0 12px var(--accent-glow);
+    }
+
+    .step-line {
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+      transition: background .3s;
+    }
+
+    .step-line.done {
+      background: var(--green);
+    }
+
+    .step-label {
+      font-size: 10px;
+      color: var(--gray);
+      text-align: center;
+      margin-top: 5px;
+    }
+
+    /* Responsive */
+    @media(max-width:800px) {
+      .page-wrap {
+        grid-template-columns: 1fr;
+      }
+
+      .panel-left {
+        display: none;
+      }
+
+      .panel-right {
+        min-height: 100vh;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="page-bg">
+    <div class="grid-layer"></div>
+    <div class="orb-tl"></div>
+    <div class="orb-br"></div>
+  </div>
+
+  <div class="page-wrap">
+
+    <!-- ── LEFT PANEL ─────────────────────────────── -->
+    <div class="panel-left">
+      <div class="brand">
+        <div class="brand-icon"><i class="fas fa-robot"></i></div>
+        <div class="brand-name">PORTAL PILOT</div>
+      </div>
+
+      <div class="left-hero">
+        <div class="left-badge">
+          <div class="dot"></div>
+          <i class="fas fa-microchip"></i>&nbsp; AI MODEL: GEMMA 3N LOCAL
+        </div>
+        <h1 class="left-title">
+          Enterprise<br>AI <span class="grad">simplificado.</span>
+        </h1>
+        <p class="left-sub">Accede a tu portal corporativo y gestiona todos tus procesos automatizados, auditorías y
+          bots RPA desde un solo lugar.</p>
+
+        <div class="feat-list">
+          <div class="feat-item">
+            <div class="feat-icon"><i class="fas fa-brain"></i></div>
+            <div class="feat-text">
+              <strong>IA Local Offline</strong>
+              Gemma 3N en tu infraestructura. Sin telemetría externa.
+            </div>
+          </div>
+          <div class="feat-item">
+            <div class="feat-icon"><i class="fas fa-link"></i></div>
+            <div class="feat-text">
+              <strong>Auditoría Blockchain</strong>
+              Cada acción queda registrada con hash inmutable verificable.
+            </div>
+          </div>
+          <div class="feat-item">
+            <div class="feat-icon"><i class="fas fa-shield-halved"></i></div>
+            <div class="feat-text">
+              <strong>Cyberyx Vantage</strong>
+              Autenticación de Dos Factores (2FA) integrada.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="left-footer">
+        <span>© 2026 Portal Pilot</span>
+        <span class="sep">·</span>
+        <span>Cyberyx Vantage</span>
+        <span class="sep">·</span>
+        <a href="#" style="color:var(--accent);text-decoration:none;">Privacidad</a>
+      </div>
+    </div>
+
+    <!-- ── RIGHT PANEL ────────────────────────────── -->
+    <div class="panel-right">
+      <div class="auth-box">
+
+        <!-- Tab switcher -->
+        <div class="tab-row">
+          <button class="tab-btn active" id="tabLogin" onclick="switchTab('login')">
+            <i class="fas fa-right-to-bracket" style="margin-right:7px;"></i>Iniciar Sesión
+          </button>
+          <button class="tab-btn" id="tabRegister" onclick="switchTab('register')">
+            <i class="fas fa-user-plus" style="margin-right:7px;"></i>Crear Cuenta
+          </button>
+        </div>
+
+        <!-- ─── LOGIN PANEL ────────── -->
+        <div class="form-panel active" id="panelLogin">
+
+          <div class="form-heading">
+            <h2>Bienvenido de vuelta</h2>
+            <p>Accede a tu portal corporativo seguro</p>
+          </div>
+
+          <div id="loginMessage" class="login-message" style="display: none;"></div>
+
+
+          <!-- Biometric strip -->
+          <div class="biometric-row">
+            <div class="bio-icon"><i class="fas fa-mobile-screen"></i></div>
+            <div class="bio-text">
+              <strong>2FA DISPONIBLE</strong><br>
+              Autenticación de dos factores en tu cuenta
+            </div>
+            <button class="btn-bio" onclick="trigger2FA()">
+              <i class="fas fa-key" style="margin-right:5px;"></i>Usar
+            </button>
+          </div>
+
+          <form id="loginForm">
+            <div class="field">
+              <label>CORREO CORPORATIVO</label>
+              <div class="input-wrap">
+                <i class="fas fa-envelope"></i>
+                <input type="email" id="loginEmail" name="email" placeholder="tu@empresa.com" autocomplete="email"
+                  required>
+              </div>
+            </div>
+
+            <div class="field">
+              <label>CONTRASEÑA</label>
+              <div class="input-wrap">
+                <i class="fas fa-lock"></i>
+                <input type="password" id="loginPass" name="password" placeholder="••••••••"
+                  autocomplete="current-password" required>
+                <button type="button" class="toggle-pw" onclick="togglePw('loginPass', this)" tabindex="-1">
+                  <i class="fas fa-eye"></i>
+                </button>
+              </div>
+            </div>
+
+            <div class="options-row">
+              <label class="check-label">
+                <input type="checkbox" id="rememberMe">
+                <span>Recordar sesión</span>
+              </label>
+              <a href="#" class="forgot-link" onclick="forgotPw(event)">¿Olvidaste tu contraseña?</a>
+            </div>
+
+            <button type="submit" class="btn-submit">
+              <i class="fas fa-right-to-bracket"></i> Entrar al Portal
+            </button>
+          </form>
+
+          <div class="divider"><span>O CONTINÚA CON</span></div>
+          <div class="sso-row">
+            <button class="btn-sso" onclick="ssoClick('Microsoft')">
+              <i class="fab fa-microsoft" style="color:#00A4EF;font-size:16px;"></i> Microsoft
+            </button>
+            <button class="btn-sso" onclick="ssoClick('Google')">
+              <i class="fab fa-google" style="color:#EA4335;font-size:16px;"></i> Google
+            </button>
+          </div>
+
+          <div class="terms-note" style="margin-top:20px;">
+            ¿No tienes cuenta? <a href="#" onclick="switchTab('register');return false;">Regístrate gratis</a>
+          </div>
+        </div>
+
+        <!-- ─── REGISTER PANEL ─────── -->
+        <div class="form-panel" id="panelRegister">
+
+          <div class="form-heading">
+            <h2>Crear cuenta enterprise</h2>
+            <p>Configura tu portal corporativo en minutos</p>
+          </div>
+
+          <!-- Step progress -->
+          <div>
+            <div class="steps-row" id="stepsRow">
+              <div class="step-dot active" id="sdot1">1</div>
+              <div class="step-line" id="sline1"></div>
+              <div class="step-dot" id="sdot2">2</div>
+              <div class="step-line" id="sline2"></div>
+              <div class="step-dot" id="sdot3">3</div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0;text-align:center;margin-bottom:24px;">
+              <div class="step-label" id="slabel1" style="color:var(--accent);">Empresa</div>
+              <div class="step-label" id="slabel2">Cuenta</div>
+              <div class="step-label" id="slabel3">Seguridad</div>
+            </div>
+          </div>
+
+          <div id="registerAlert"></div>
+
+          <!-- Step 1 -->
+          <div id="regStep1">
+            <div class="field">
+              <label>NOMBRE DE LA EMPRESA</label>
+              <div class="input-wrap">
+                <i class="fas fa-building"></i>
+                <input type="text" id="regCompany" placeholder="TechCorp Enterprise S.A.">
+              </div>
+            </div>
+            <div class="field">
+              <label>CÓDIGO DE EMPRESA (asignado)</label>
+              <div class="input-wrap">
+                <i class="fas fa-hashtag"></i>
+                <input type="text" id="regCode" placeholder="PP-XXXX-CORP"
+                  style="font-family:monospace;letter-spacing:1px;">
+              </div>
+            </div>
+            <div class="field">
+              <label>SECTOR CORPORATIVO</label>
+              <div class="input-wrap" style="position:relative;">
+                <i class="fas fa-briefcase"></i>
+                <select id="regSector"
+                  style="width:100%;background:var(--card2);border:1px solid var(--border2);border-radius:var(--radius);padding:12px 14px 12px 40px;font-size:14px;color:var(--white);font-family:'DM Sans',sans-serif;outline:none;appearance:none;cursor:pointer;">
+                  <option value="" style="background:var(--card2);">Seleccionar sector...</option>
+                  <option style="background:var(--card2);">Tecnología</option>
+                  <option style="background:var(--card2);">Manufactura</option>
+                  <option style="background:var(--card2);">Retail & E-commerce</option>
+                  <option style="background:var(--card2);">Salud & Farmacéutica</option>
+                  <option style="background:var(--card2);">Finanzas & Banca</option>
+                  <option style="background:var(--card2);">Logística</option>
+                  <option style="background:var(--card2);">Otro</option>
+                </select>
+                <i class="fas fa-chevron-down"
+                  style="position:absolute;right:14px;top:50%;transform:translateY(-50%);pointer-events:none;font-size:12px;color:var(--gray);"></i>
+              </div>
+            </div>
+            <button class="btn-submit" onclick="goStep(2)">
+              Continuar <i class="fas fa-arrow-right"></i>
+            </button>
+          </div>
+
+          <!-- Step 2 -->
+          <div id="regStep2" style="display:none;">
+            <div class="field-row">
+              <div class="field">
+                <label>NOMBRE</label>
+                <div class="input-wrap">
+                  <i class="fas fa-user"></i>
+                  <input type="text" id="regFirst" placeholder="Carlos">
+                </div>
+              </div>
+              <div class="field">
+                <label>APELLIDO</label>
+                <div class="input-wrap">
+                  <i class="fas fa-user"></i>
+                  <input type="text" id="regLast" placeholder="Mendoza">
+                </div>
+              </div>
+            </div>
+            <div class="field">
+              <label>CORREO CORPORATIVO</label>
+              <div class="input-wrap">
+                <i class="fas fa-envelope"></i>
+                <input type="email" id="regEmail" placeholder="carlos@empresa.com">
+              </div>
+            </div>
+            <div class="field">
+              <label>ROL EN LA EMPRESA</label>
+              <div class="input-wrap" style="position:relative;">
+                <i class="fas fa-id-badge"></i>
+                <select id="regRole"
+                  style="width:100%;background:var(--card2);border:1px solid var(--border2);border-radius:var(--radius);padding:12px 14px 12px 40px;font-size:14px;color:var(--white);font-family:'DM Sans',sans-serif;outline:none;appearance:none;cursor:pointer;">
+                  <option value="" style="background:var(--card2);">Seleccionar rol...</option>
+                  <option style="background:var(--card2);">CEO / Director General</option>
+                  <option style="background:var(--card2);">CTO / Director Tecnología</option>
+                  <option style="background:var(--card2);">COO / Director Operaciones</option>
+                  <option style="background:var(--card2);">Gerente de Área</option>
+                  <option style="background:var(--card2);">Analista</option>
+                  <option style="background:var(--card2);">Otro</option>
+                </select>
+                <i class="fas fa-chevron-down"
+                  style="position:absolute;right:14px;top:50%;transform:translateY(-50%);pointer-events:none;font-size:12px;color:var(--gray);"></i>
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+              <button class="btn-submit"
+                style="background:rgba(255,255,255,0.04);border:1px solid var(--border2);box-shadow:none;"
+                onclick="goStep(1)">
+                <i class="fas fa-arrow-left"></i> Atrás
+              </button>
+              <button class="btn-submit" onclick="goStep(3)">
+                Continuar <i class="fas fa-arrow-right"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Step 3 -->
+          <div id="regStep3" style="display:none;">
+            <div class="field">
+              <label>CONTRASEÑA</label>
+              <div class="input-wrap">
+                <i class="fas fa-lock"></i>
+                <input type="password" id="regPass" placeholder="Mínimo 8 caracteres" oninput="checkStrength(this)"
+                  autocomplete="new-password">
+                <button class="toggle-pw" onclick="togglePw('regPass',this)" tabindex="-1">
+                  <i class="fas fa-eye"></i>
+                </button>
+              </div>
+              <div class="strength-wrap" id="strengthWrap">
+                <div class="strength-bar">
+                  <div class="strength-fill" id="strengthFill"></div>
+                </div>
+                <div class="strength-label" id="strengthLabel">Contraseña débil</div>
+              </div>
+            </div>
+            <div class="field">
+              <label>CONFIRMAR CONTRASEÑA</label>
+              <div class="input-wrap">
+                <i class="fas fa-lock-open"></i>
+                <input type="password" id="regPass2" placeholder="Repite la contraseña" autocomplete="new-password">
+                <button class="toggle-pw" onclick="togglePw('regPass2',this)" tabindex="-1">
+                  <i class="fas fa-eye"></i>
+                </button>
+              </div>
+            </div>
+
+            <div class="biometric-row" style="margin-bottom:20px;">
+              <div class="bio-icon"><i class="fas fa-mobile-screen"></i></div>
+              <div class="bio-text">
+                <strong>SEGURIDAD 2FA</strong><br>
+                Activa autenticación de dos factores
+              </div>
+              <button class="btn-bio" onclick="toggle2FAEnroll(this)">
+                Activar
+              </button>
+            </div>
+
+            <label class="check-label" style="margin-bottom:18px;">
+              <input type="checkbox" id="acceptTerms">
+              <span style="font-size:12px;">Acepto los <a href="#"
+                  style="color:var(--accent);text-decoration:none;">Términos de Servicio</a> y la <a href="#"
+                  style="color:var(--accent);text-decoration:none;">Política de Privacidad</a></span>
+            </label>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+              <button class="btn-submit"
+                style="background:rgba(255,255,255,0.04);border:1px solid var(--border2);box-shadow:none;"
+                onclick="goStep(2)">
+                <i class="fas fa-arrow-left"></i> Atrás
+              </button>
+              <button class="btn-submit" onclick="doRegister()">
+                <i class="fas fa-rocket"></i> Crear Cuenta
+              </button>
+            </div>
+
+            <div class="terms-note">
+              ¿Ya tienes cuenta? <a href="#" onclick="switchTab('login');return false;">Iniciar sesión</a>
+            </div>
+          </div>
+
+        </div><!-- /panelRegister -->
+
+      </div><!-- /auth-box -->
+    </div><!-- /panel-right -->
+
+  </div><!-- /page-wrap -->
+
+  <script>
+    // Toggle ver/ocultar contraseña
+    function togglePw(inputId, btn) {
+      const input = document.getElementById(inputId);
+      const icon = btn.querySelector('i');
+      if (input.type === 'password') {
+        input.type = 'text';
+        icon.classList.remove('fa-eye');
+        icon.classList.add('fa-eye-slash');
+      } else {
+        input.type = 'password';
+        icon.classList.remove('fa-eye-slash');
+        icon.classList.add('fa-eye');
+      }
+    }
+
+    // Cambiar entre tabs Login/Registro
+    function switchTab(tab) {
+      document.getElementById('panelLogin').classList.toggle('active', tab === 'login');
+      document.getElementById('panelRegister').classList.toggle('active', tab === 'register');
+      document.getElementById('tabLogin').classList.toggle('active', tab === 'login');
+      document.getElementById('tabRegister').classList.toggle('active', tab === 'register');
+    }
+
+    // Mostrar mensajes en el DOM (NO alert)
+    function showMessage(text, type) {
+      const msgDiv = document.getElementById('loginMessage');
+      if (!msgDiv) return;
+      msgDiv.textContent = text;
+      msgDiv.className = 'login-message ' + type;
+      msgDiv.style.display = 'block';
+      setTimeout(() => { msgDiv.style.display = 'none'; }, 5000);
+    }
+
+    // Variables para el registro
+    let regStep = 1;
+
+    // Ir al siguiente paso del registro
+    function goStep(n) {
+      if (n === 2 && regStep === 1) {
+        const c = document.getElementById('regCompany').value.trim();
+        const code = document.getElementById('regCode').value.trim();
+        if (!c || !code) { showMessage('Completa el nombre y código de empresa.', 'error'); return; }
+      }
+      if (n === 3 && regStep === 2) {
+        const e = document.getElementById('regEmail').value.trim();
+        const f = document.getElementById('regFirst').value.trim();
+        if (!f || !e) { showMessage('Completa nombre y correo corporativo.', 'error'); return; }
+        if (!e.includes('@')) { showMessage('Ingresa un correo válido.', 'error'); return; }
+      }
+      document.getElementById('regStep' + regStep).style.display = 'none';
+      regStep = n;
+      document.getElementById('regStep' + regStep).style.display = 'block';
+      updateSteps();
+    }
+
+    // Actualizar indicadores de pasos
+    function updateSteps() {
+      [1, 2, 3].forEach(i => {
+        const dot = document.getElementById('sdot' + i);
+        const lbl = document.getElementById('slabel' + i);
+        if (i < regStep) { dot.className = 'step-dot done'; dot.innerHTML = '<i class="fas fa-check" style="font-size:11px;"></i>'; }
+        else if (i === regStep) { dot.className = 'step-dot active'; dot.textContent = i; lbl.style.color = 'var(--accent)'; }
+        else { dot.className = 'step-dot'; dot.textContent = i; lbl.style.color = 'var(--gray)'; }
+      });
+      [1, 2].forEach(i => {
+        const line = document.getElementById('sline' + i);
+        line.className = 'step-line' + (i < regStep ? ' done' : '');
+      });
+    }
+
+    // Verificar fuerza de contraseña
+    function checkStrength(inp) {
+      const v = inp.value;
+      const w = document.getElementById('strengthWrap');
+      const fill = document.getElementById('strengthFill');
+      const lbl = document.getElementById('strengthLabel');
+      if (!v) { w.style.display = 'none'; return; }
+      w.style.display = 'block';
+      let score = 0;
+      if (v.length >= 8) score++;
+      if (/[A-Z]/.test(v)) score++;
+      if (/[0-9]/.test(v)) score++;
+      if (/[^A-Za-z0-9]/.test(v)) score++;
+      const levels = [
+        { pct: '25%', bg: '#f87171', txt: 'Contraseña débil' },
+        { pct: '50%', bg: '#fb923c', txt: 'Contraseña regular' },
+        { pct: '75%', bg: '#facc15', txt: 'Contraseña buena' },
+        { pct: '100%', bg: '#34d399', txt: 'Contraseña fuerte' }
+      ];
+      const l = levels[Math.max(0, score - 1)];
+      fill.style.width = l.pct; fill.style.background = l.bg; lbl.textContent = l.txt; lbl.style.color = l.bg;
+    }
+
+    // Registro de usuario
+    async function doRegister() {
+      const p = document.getElementById('regPass').value;
+      const p2 = document.getElementById('regPass2').value;
+      const terms = document.getElementById('acceptTerms').checked;
+      if (!p || !p2) { showMessage('Ingresa y confirma tu contraseña.', 'error'); return; }
+      if (p !== p2) { showMessage('Las contraseñas no coinciden.', 'error'); return; }
+      if (p.length < 8) { showMessage('La contraseña debe tener al menos 8 caracteres.', 'error'); return; }
+      if (!terms) { showMessage('Debes aceptar los términos y condiciones.', 'error'); return; }
+
+      const payload = {
+        empresaNombre: document.getElementById('regCompany').value.trim(),
+        empresaCodigo: document.getElementById('regCode').value.trim(),
+        empresaSector: document.getElementById('regSector').value,
+        usuarioNombre: document.getElementById('regFirst').value.trim(),
+        usuarioApellido: document.getElementById('regLast').value.trim(),
+        email: document.getElementById('regEmail').value.trim(),
+        rol: document.getElementById('regRole').value,
+        password: p,
+        dosFaActivo: document.querySelector('#panelRegister .btn-bio').textContent.includes('Activo'),
+        terminosAceptados: terms
+      };
+
+      const btns = document.querySelectorAll('#regStep3 .btn-submit');
+      btns[1].innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creando cuenta...'; btns[1].disabled = true;
+
+      try {
+        const res = await fetch('/api/registro', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        btns[1].innerHTML = '<i class="fas fa-rocket"></i> Crear Cuenta'; btns[1].disabled = false;
+
+        if (!res.ok) {
+          showMessage(data.error || 'Error al crear la cuenta', 'error');
+        } else {
+          showMessage('¡Cuenta creada! Inicia sesión para continuar.', 'success');
+          setTimeout(() => switchTab('login'), 2000);
+        }
+      } catch (error) {
+        btns[1].innerHTML = '<i class="fas fa-rocket"></i> Crear Cuenta'; btns[1].disabled = false;
+        showMessage('Error de conexión con el servidor.', 'error');
+      }
+    }
+
+    // 2FA y otros helpers
+    function trigger2FA() {
+      const strip = document.querySelector('#panelLogin .biometric-row .bio-text');
+      const btn = document.querySelector('#panelLogin .btn-bio');
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+      setTimeout(() => {
+        btn.innerHTML = '<i class="fas fa-check"></i> Listo';
+        btn.style.background = 'rgba(52,211,153,0.15)'; btn.style.color = 'var(--green)'; btn.style.borderColor = 'rgba(52,211,153,0.3)';
+        strip.innerHTML = '<strong style="color:var(--green);">2FA VERIFICADO</strong><br>Redirigiendo al dashboard...';
+      }, 2200);
+    }
+
+    function toggle2FAEnroll(btn) {
+      if (btn.textContent.trim() === 'Activar') {
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        setTimeout(() => {
+          btn.innerHTML = '<i class="fas fa-check"></i> Activo';
+          btn.style.background = 'rgba(52,211,153,0.15)'; btn.style.color = 'var(--green)'; btn.style.borderColor = 'rgba(52,211,153,0.3)';
+        }, 1500);
+      }
+    }
+
+    function ssoClick(p) {
+      showMessage(`Redirigiendo a inicio de sesión con ${p}...`, 'success');
+    }
+
+    function forgotPw(e) {
+      e.preventDefault();
+      document.getElementById('recoveryModal').style.display = 'flex';
+      document.getElementById('recStepEmail').style.display = 'block';
+      document.getElementById('recStepVerify').style.display = 'none';
+      const email = document.getElementById('loginEmail').value.trim();
+      if (email) {
+        document.getElementById('recoveryEmailInput').value = email;
+      }
+    }
+
+    function closeRecoveryModal() {
+      document.getElementById('recoveryModal').style.display = 'none';
+    }
+
+    async function requestRecoveryCode() {
+      const email = document.getElementById('recoveryEmailInput').value.trim();
+      const msgDiv = document.getElementById('recEmailMessage');
+      if (!email || !email.includes('@')) {
+        msgDiv.textContent = 'Ingresa un correo electrónico válido.';
+        msgDiv.className = 'login-message error';
+        msgDiv.style.display = 'block';
+        return;
+      }
+      
+      const btn = document.querySelector('#recStepEmail .btn-submit');
+      const orig = btn.innerHTML;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
+      btn.disabled = true;
+      
+      try {
+        const res = await fetch('/api/recuperacion', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email })
+        });
+        const data = await res.json();
+        
+        btn.innerHTML = orig;
+        btn.disabled = false;
+        
+        if (res.ok) {
+          document.getElementById('recStepEmail').style.display = 'none';
+          document.getElementById('recStepVerify').style.display = 'block';
+          const verifyMsgDiv = document.getElementById('recVerifyMessage');
+          verifyMsgDiv.textContent = 'Si tu correo está registrado, se ha enviado un código de recuperación.';
+          verifyMsgDiv.className = 'login-message success';
+          verifyMsgDiv.style.display = 'block';
+        } else {
+          msgDiv.textContent = data.error || 'Error al enviar código.';
+          msgDiv.className = 'login-message error';
+          msgDiv.style.display = 'block';
+        }
+      } catch (err) {
+        btn.innerHTML = orig;
+        btn.disabled = false;
+        msgDiv.textContent = 'Error de conexión con el servidor.';
+        msgDiv.className = 'login-message error';
+        msgDiv.style.display = 'block';
+      }
+    }
+
+    async function verifyRecoveryAndChange() {
+      const email = document.getElementById('recoveryEmailInput').value.trim();
+      const code = document.getElementById('recoveryCodeInput').value.trim();
+      const newPassword = document.getElementById('recoveryNewPassInput').value;
+      const msgDiv = document.getElementById('recVerifyMessage');
+      
+      if (!code || code.length !== 6) {
+        msgDiv.textContent = 'Introduce el código de 6 dígitos.';
+        msgDiv.className = 'login-message error';
+        msgDiv.style.display = 'block';
+        return;
+      }
+      
+      if (!newPassword || newPassword.length < 8) {
+        msgDiv.textContent = 'La nueva contraseña debe tener al menos 8 caracteres.';
+        msgDiv.className = 'login-message error';
+        msgDiv.style.display = 'block';
+        return;
+      }
+      
+      const btn = document.querySelector('#recStepVerify .btn-submit');
+      const orig = btn.innerHTML;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Restableciendo...';
+      btn.disabled = true;
+      
+      try {
+        const res = await fetch('/api/recuperacion/verificar', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, code, newPassword })
+        });
+        const data = await res.json();
+        
+        btn.innerHTML = orig;
+        btn.disabled = false;
+        
+        if (res.ok) {
+          msgDiv.textContent = '✓ Contraseña restablecida con éxito. Inicia sesión.';
+          msgDiv.className = 'login-message success';
+          msgDiv.style.display = 'block';
+          setTimeout(() => {
+            closeRecoveryModal();
+            switchTab('login');
+          }, 2000);
+        } else {
+          msgDiv.textContent = data.error || 'Código incorrecto o expirado.';
+          msgDiv.className = 'login-message error';
+          msgDiv.style.display = 'block';
+        }
+      } catch (err) {
+        btn.innerHTML = orig;
+        btn.disabled = false;
+        msgDiv.textContent = 'Error de conexión con el servidor.';
+        msgDiv.className = 'login-message error';
+        msgDiv.style.display = 'block';
+      }
+    }
+
+    // ==========================================
+    // LOGIN FUNCIONAL (SIN ALERTS)
+    // ==========================================
+    document.getElementById('loginForm').addEventListener('submit', async function (e) {
+      e.preventDefault();
+
+      const email = document.getElementById('loginEmail').value;
+      const password = document.getElementById('loginPass').value;
+      const btn = document.querySelector('#panelLogin .btn-submit');
+
+      if (!email || !password) {
+        showMessage('Por favor, completa correo y contraseña', 'error');
+        return;
+      }
+
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verificando...';
+      btn.disabled = true;
+
+      try {
+        const response = await fetch('/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+
+        const data = await response.json();
+
+          if (response.ok) {
+          // Guardar token y datos
+            // Normalizar y guardar datos localmente
+            const normalizedEmpresa = (data.user.empresa_codigo || '').toString().trim().toUpperCase();
+            localStorage.setItem('token', data.token);
+            localStorage.setItem('userRole', data.user.rol);
+            localStorage.setItem('userName', data.user.nombre);
+            localStorage.setItem('userEmail', data.user.email);
+            localStorage.setItem('empresaCodigo', normalizedEmpresa);
+            localStorage.setItem('currentAccountId', data.user.id);
+
+            if (data.accounts && data.accounts.length > 1) {
+              const normAccounts = data.accounts.map(a => ({ ...a, empresa_codigo: (a.empresa_codigo||'').toString().trim().toUpperCase() }));
+              localStorage.setItem('linkedAccounts', JSON.stringify(normAccounts));
+            } else {
+              localStorage.removeItem('linkedAccounts');
+            }
+
+          console.log('✅ Login exitoso - Token guardado');
+
+          const userStatus = (data.user.status || '').toString().toLowerCase();
+          const pendingStates = ['pending', 'pendiente', 'pending_activation', 'pendiente_activacion', 'pendiente-activacion', 'first_access', 'primer_acceso', 'pending-first-access'];
+          if (pendingStates.includes(userStatus)) {
+            localStorage.setItem('pendingUserId', data.user.id);
+            localStorage.setItem('pendingEmail', data.user.email);
+            localStorage.setItem('currentAccountId', data.user.id);
+            showMessage('Primer acceso detectado. Ve a cambiar tu contraseña.', 'success');
+            setTimeout(() => {
+              window.location.href = `primer_acceso.html?email=${encodeURIComponent(data.user.email)}`;
+            }, 1000);
+          } else {
+            localStorage.removeItem('pendingUserId');
+            localStorage.removeItem('pendingEmail');
+            showMessage('Acceso concedido. Redirigiendo...', 'success');
+            setTimeout(() => {
+              const normalizedEmpresa = (data.user.empresa_codigo || '').toString().trim().toUpperCase();
+              const targetPage = normalizedEmpresa && normalizedEmpresa !== 'ROOT' ? 'enterprise/inicio.html' : 'inicio.html';
+              window.location.href = targetPage;
+            }, 1000);
+          }
+        } else {
+          showMessage(data.error || 'Credenciales inválidas', 'error');
+          btn.innerHTML = '<i class="fas fa-right-to-bracket"></i> Entrar al Portal';
+          btn.disabled = false;
+        }
+      } catch (error) {
+        console.error('❌ Error de conexión:', error);
+        showMessage('Error de conexión. Verifica que el servidor esté corriendo.', 'error');
+        btn.innerHTML = '<i class="fas fa-right-to-bracket"></i> Entrar al Portal';
+        btn.disabled = false;
+      }
+    });
+  </script>
+
+  <!-- RECOVERY MODAL -->
+  <div class="modal-overlay" id="recoveryModal" style="position:fixed;inset:0;background:rgba(4,4,10,0.85);backdrop-filter:blur(10px);z-index:9999;display:none;align-items:center;justify-content:center;">
+    <div class="modal-box" style="background:#0e0e1c;border:1px solid rgba(139, 92, 246, 0.2);border-radius:18px;padding:32px;width:100%;max-width:440px;box-shadow:0 10px 40px rgba(0,0,0,0.5);position:relative;">
+      <button onclick="closeRecoveryModal()" style="position:absolute;top:16px;right:16px;background:none;border:none;color:var(--gray);font-size:18px;cursor:pointer;"><i class="fas fa-times"></i></button>
+      
+      <!-- Paso 1: Solicitar Código -->
+      <div id="recStepEmail">
+        <h3 style="font-family:'Syne',sans-serif;font-size:22px;color:var(--white);margin-bottom:8px;">Recuperar Contraseña</h3>
+        <p style="font-size:13px;color:var(--gray);margin-bottom:24px;">Introduce tu correo para recibir un código de verificación de 6 dígitos.</p>
+        
+        <div id="recEmailMessage" class="login-message" style="display:none;"></div>
+        
+        <div class="field" style="margin-bottom:20px;">
+          <label>CORREO CORPORATIVO</label>
+          <div class="input-wrap">
+            <i class="fas fa-envelope"></i>
+            <input type="email" id="recoveryEmailInput" placeholder="tu@empresa.com" required style="width: 100%; background: var(--card2); border: 1px solid var(--border2); border-radius: var(--radius); padding: 12px 14px 12px 40px; color: var(--white); font-family: 'DM Sans', sans-serif; outline: none;">
+          </div>
+        </div>
+        <button class="btn-submit" onclick="requestRecoveryCode()" style="width:100%;">
+          Enviar Código <i class="fas fa-paper-plane"></i>
+        </button>
+      </div>
+
+      <!-- Paso 2: Verificar y Cambiar -->
+      <div id="recStepVerify" style="display:none;">
+        <h3 style="font-family:'Syne',sans-serif;font-size:22px;color:var(--white);margin-bottom:8px;">Verificar Código</h3>
+        <p style="font-size:13px;color:var(--gray);margin-bottom:24px;">Hemos enviado un código a tu correo. Introduce el código y tu nueva contraseña.</p>
+        
+        <div id="recVerifyMessage" class="login-message" style="display:none;"></div>
+        
+        <div class="field" style="margin-bottom:16px;">
+          <label>CÓDIGO DE 6 DÍGITOS</label>
+          <div class="input-wrap">
+            <i class="fas fa-key"></i>
+            <input type="text" id="recoveryCodeInput" placeholder="123456" maxlength="6" style="width: 100%; background: var(--card2); border: 1px solid var(--border2); border-radius: var(--radius); padding: 12px 14px 12px 40px; color: var(--white); font-family: 'DM Sans', sans-serif; outline: none; letter-spacing: 4px; text-align: center;">
+          </div>
+        </div>
+        
+        <div class="field" style="margin-bottom:20px;">
+          <label>NUEVA CONTRASEÑA</label>
+          <div class="input-wrap">
+            <i class="fas fa-lock"></i>
+            <input type="password" id="recoveryNewPassInput" placeholder="••••••••" style="width: 100%; background: var(--card2); border: 1px solid var(--border2); border-radius: var(--radius); padding: 12px 14px 12px 40px; color: var(--white); font-family: 'DM Sans', sans-serif; outline: none;">
+          </div>
+        </div>
+        <button class="btn-submit" onclick="verifyRecoveryAndChange()" style="width:100%;">
+          Restablecer Contraseña <i class="fas fa-check"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+</body>
+
+</html>

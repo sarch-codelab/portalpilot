@@ -1,0 +1,1053 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inicio — Portal Pilot</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    :root {
+      /* 🎨 Purple Theme Palette */
+      --bg: #04040a;
+      --bg-gradient: linear-gradient(135deg, #0a0a1a 0%, #04040a 50%, #0f0a1a 100%);
+      --card: rgba(20, 15, 35, 0.7);
+      --card-hover: rgba(35, 25, 55, 0.85);
+      --border: rgba(168, 120, 255, 0.25);
+      --border-glow: rgba(168, 120, 255, 0.5);
+
+      --accent: #a78bfa;
+      --accent-primary: #8b5cf6;
+      --accent-secondary: #7c3aed;
+      --accent-tertiary: #6d28d9;
+      --accent-glow: rgba(139, 92, 246, 0.4);
+      --accent-glow-strong: rgba(168, 120, 255, 0.6);
+
+      --white: #ffffff;
+      --text: #e2e2f0;
+      --text-muted: #9ca3af;
+      --gray: #6b7280;
+
+      --radius-lg: 24px;
+      --radius-md: 16px;
+      --radius-sm: 12px;
+
+      --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.3);
+      --shadow-md: 0 8px 32px rgba(139, 92, 246, 0.25);
+      --shadow-lg: 0 16px 64px rgba(139, 92, 246, 0.35);
+      --shadow-glow: 0 0 40px rgba(168, 120, 255, 0.3);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      cursor: none
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg-gradient);
+      color: var(--text);
+      overflow-x: hidden;
+      min-height: 100vh;
+      position: relative;
+    }
+
+    /* ✨ Animated Background Gradient Overlay */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(ellipse at 20% 80%, rgba(139, 92, 246, 0.08) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 20%, rgba(168, 120, 255, 0.08) 0%, transparent 50%),
+        radial-gradient(ellipse at 50% 50%, rgba(124, 58, 237, 0.05) 0%, transparent 70%);
+      z-index: -2;
+      animation: gradientShift 20s ease-in-out infinite;
+      pointer-events: none;
+    }
+
+    @keyframes gradientShift {
+
+      0%,
+      100% {
+        opacity: 1;
+        transform: scale(1)
+      }
+
+      50% {
+        opacity: 0.8;
+        transform: scale(1.05)
+      }
+    }
+
+    /* ─── CUSTOM CURSOR ──────────────────────────────────── */
+    #cursor-dot {
+      width: 8px;
+      height: 8px;
+      background: var(--accent);
+      border-radius: 50%;
+      position: fixed;
+      z-index: 10000;
+      pointer-events: none;
+      transform: translate(-50%, -50%);
+      transition: transform 0.1s ease, background 0.2s;
+      box-shadow: 0 0 12px var(--accent-glow);
+    }
+
+    #cursor-ring {
+      width: 40px;
+      height: 40px;
+      border: 2px solid var(--border-glow);
+      border-radius: 50%;
+      position: fixed;
+      z-index: 9999;
+      pointer-events: none;
+      transform: translate(-50%, -50%);
+      transition: all 0.15s ease-out;
+      box-shadow: 0 0 20px var(--accent-glow);
+    }
+
+    #cursor-ring.hover {
+      width: 60px;
+      height: 60px;
+      border-color: var(--accent);
+      background: rgba(139, 92, 246, 0.08);
+      opacity: 0.8;
+    }
+
+    #cursor-ring.click {
+      width: 20px;
+      height: 20px;
+      opacity: 0.3;
+      transition: all 0.1s;
+    }
+
+    /* ─── MATRIX RAIN BACKGROUND (PURPLE) ───────────────── */
+    #matrix-bg {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      opacity: 0.4;
+    }
+
+    #matrix-bg canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    /* ─── HEADER ─────────────────────────────────────────── */
+    .top-header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      padding: 18px 48px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 100;
+      background: rgba(8, 6, 20, 0.7);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      transition: all 0.3s ease;
+    }
+
+    .top-header.scrolled {
+      padding: 12px 48px;
+      background: rgba(8, 6, 20, 0.9);
+      box-shadow: var(--shadow-md);
+    }
+
+    .brand-left,
+    .brand-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo-icon,
+    .company-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      color: #fff;
+      flex-shrink: 0;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .logo-icon {
+      background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+      box-shadow: 0 4px 20px rgba(139, 92, 246, 0.4);
+    }
+
+    .logo-icon::after {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(255, 255, 255, 0.3) 0%, transparent 70%);
+      animation: shine 3s infinite;
+      opacity: 0.5;
+    }
+
+    @keyframes shine {
+      0% {
+        transform: rotate(0deg)
+      }
+
+      100% {
+        transform: rotate(360deg)
+      }
+    }
+
+    .company-icon {
+      background: linear-gradient(135deg, #10b981, #059669);
+      box-shadow: 0 4px 20px rgba(16, 185, 129, 0.3);
+    }
+
+    .brand-left span,
+    .brand-right .company-name {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      color: var(--white);
+      font-size: 18px;
+      white-space: nowrap;
+      letter-spacing: -0.3px;
+    }
+
+    .brand-right .company-name {
+      background: linear-gradient(135deg, var(--white), var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    /* ─── MAIN CONTENT ───────────────────────────────────── */
+    .main-content {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 120px 20px 60px;
+      position: relative;
+    }
+
+    .welcome-section {
+      max-width: 720px;
+      width: 100%;
+      text-align: center;
+      position: relative;
+      z-index: 10;
+    }
+
+    /* Profile Circle */
+    .profile-circle-large {
+      width: 90px;
+      height: 90px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary), var(--accent-tertiary));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 32px;
+      font-weight: 700;
+      margin: 0 auto 28px;
+      border: 3px solid rgba(255, 255, 255, 0.15);
+      box-shadow: var(--shadow-glow), 0 0 60px rgba(124, 58, 237, 0.25);
+      animation: fadeUp 0.8s ease, pulse 4s ease-in-out infinite;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .profile-circle-large::before {
+      content: '';
+      position: absolute;
+      inset: -2px;
+      border-radius: 50%;
+      background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+      animation: rotate 3s linear infinite;
+    }
+
+    @keyframes rotate {
+      0% {
+        transform: rotate(0deg)
+      }
+
+      100% {
+        transform: rotate(360deg)
+      }
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        box-shadow: var(--shadow-glow), 0 0 60px rgba(124, 58, 237, 0.25)
+      }
+
+      50% {
+        box-shadow: var(--shadow-glow), 0 0 80px rgba(168, 120, 255, 0.4)
+      }
+    }
+
+    @keyframes fadeUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px)
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0)
+      }
+    }
+
+    .welcome-section h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(32px, 6vw, 52px);
+      font-weight: 800;
+      color: var(--white);
+      margin-bottom: 16px;
+      letter-spacing: -1.5px;
+      line-height: 1.1;
+      animation: fadeUp 0.8s ease 0.1s backwards;
+    }
+
+    .welcome-section h1 span {
+      background: linear-gradient(135deg, var(--white) 20%, var(--accent), var(--accent-secondary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      position: relative;
+    }
+
+    .welcome-section h1 span::after {
+      content: '';
+      position: absolute;
+      bottom: 4px;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--accent-glow), transparent);
+      opacity: 0.6;
+    }
+
+    .subtext {
+      font-size: 18px;
+      color: var(--text-muted);
+      margin-bottom: 42px;
+      line-height: 1.7;
+      animation: fadeUp 0.8s ease 0.2s backwards;
+      max-width: 580px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    /* Search Box */
+    .search-container {
+      margin-bottom: 32px;
+      animation: fadeUp 0.8s ease 0.3s backwards;
+    }
+
+    .search-box {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 60px;
+      padding: 16px 28px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      transition: all 0.35s ease;
+      max-width: 540px;
+      margin: 0 auto;
+      backdrop-filter: blur(16px);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .search-box::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, transparent, rgba(168, 120, 255, 0.05), transparent);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .search-box:focus-within,
+    .search-box:hover {
+      border-color: var(--accent);
+      box-shadow: 0 0 32px var(--accent-glow-strong);
+      transform: translateY(-2px);
+    }
+
+    .search-box:focus-within::before,
+    .search-box:hover::before {
+      opacity: 1;
+    }
+
+    .search-box i {
+      color: var(--accent);
+      font-size: 18px;
+      transition: all 0.3s;
+    }
+
+    .search-box:focus-within i {
+      animation: sparkle 1s ease infinite;
+    }
+
+    @keyframes sparkle {
+
+      0%,
+      100% {
+        transform: scale(1);
+        opacity: 1
+      }
+
+      50% {
+        transform: scale(1.2);
+        opacity: 0.8
+      }
+    }
+
+    .search-box input {
+      background: none;
+      border: none;
+      outline: none;
+      color: var(--white);
+      font-size: 16px;
+      width: 100%;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 500;
+    }
+
+    .search-box input::placeholder {
+      color: var(--gray);
+      font-weight: 400;
+    }
+
+    /* Button Ingresar */
+    .btn-ingresar {
+      background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+      color: #fff;
+      border: none;
+      padding: 16px 44px;
+      border-radius: 50px;
+      font-size: 16px;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      transition: all 0.35s ease;
+      font-family: 'DM Sans', sans-serif;
+      animation: fadeUp 0.8s ease 0.4s backwards;
+      position: relative;
+      overflow: hidden;
+      text-decoration: none;
+      box-shadow: var(--shadow-md);
+    }
+
+    .btn-ingresar::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, var(--accent-secondary), var(--accent-tertiary));
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .btn-ingresar:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-lg), 0 0 50px var(--accent-glow-strong);
+    }
+
+    .btn-ingresar:hover::before {
+      opacity: 1;
+    }
+
+    .btn-ingresar i {
+      transition: transform 0.3s;
+    }
+
+    .btn-ingresar:hover i {
+      transform: translateX(4px);
+    }
+
+    /* ─── AREAS SECTION ──────────────────────────────────── */
+    .areas-section {
+      margin-top: 56px;
+      width: 100%;
+      max-width: 880px;
+      animation: fadeUp 0.8s ease 0.5s backwards;
+    }
+
+    .areas-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--white);
+      text-align: center;
+      margin-bottom: 28px;
+      position: relative;
+      display: inline-block;
+      width: 100%;
+    }
+
+    .areas-title::after {
+      content: '';
+      display: block;
+      width: 70px;
+      height: 4px;
+      background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+      margin: 10px auto 0;
+      border-radius: 3px;
+      box-shadow: 0 0 16px var(--accent-glow);
+    }
+
+    .areas-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+    }
+
+    .area-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 28px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      text-align: center;
+      backdrop-filter: blur(16px);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .area-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .area-card:hover {
+      border-color: var(--accent);
+      transform: translateY(-8px);
+      box-shadow: var(--shadow-lg);
+      background: var(--card-hover);
+    }
+
+    .area-card:hover::before {
+      opacity: 1;
+    }
+
+    .area-icon {
+      width: 60px;
+      height: 60px;
+      border-radius: 18px;
+      background: linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(168, 120, 255, 0.1));
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      color: var(--accent);
+      transition: all 0.4s ease;
+      position: relative;
+    }
+
+    .area-card:hover .area-icon {
+      background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+      color: #fff;
+      transform: scale(1.15) rotate(5deg);
+      box-shadow: 0 0 30px var(--accent-glow);
+      border-color: transparent;
+    }
+
+    .area-card h3 {
+      font-family: 'Syne', sans-serif;
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--white);
+      margin-top: 4px;
+    }
+
+    .btn-acceder {
+      margin-top: 8px;
+      padding: 10px 22px;
+      border-radius: 24px;
+      background: rgba(139, 92, 246, 0.12);
+      border: 1px solid var(--border);
+      color: var(--accent);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      width: 100%;
+      font-family: 'DM Sans', sans-serif;
+    }
+
+    .btn-acceder:hover {
+      background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+      color: #fff;
+      border-color: transparent;
+      box-shadow: 0 8px 24px var(--accent-glow);
+      transform: translateY(-2px);
+    }
+
+    /* ─── FLOATING PARTICLES (Extra Polish) ─────────────── */
+    .particles {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1;
+      overflow: hidden;
+    }
+
+    .particle {
+      position: absolute;
+      width: 4px;
+      height: 4px;
+      background: var(--accent);
+      border-radius: 50%;
+      opacity: 0.6;
+      animation: float 15s infinite linear;
+      box-shadow: 0 0 10px var(--accent-glow);
+    }
+
+    @keyframes float {
+      0% {
+        transform: translateY(100vh) rotate(0deg);
+        opacity: 0;
+      }
+
+      10% {
+        opacity: 0.6
+      }
+
+      90% {
+        opacity: 0.6
+      }
+
+      100% {
+        transform: translateY(-100px) rotate(720deg);
+        opacity: 0;
+      }
+    }
+
+    /* ─── RESPONSIVE ────────────────────────────────────── */
+    @media(max-width:1100px) {
+      .areas-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 18px
+      }
+    }
+
+    @media(max-width:768px) {
+      .top-header {
+        padding: 14px 24px
+      }
+
+      .top-header.scrolled {
+        padding: 10px 24px
+      }
+
+      .brand-right .company-name {
+        display: none
+      }
+
+      .areas-grid {
+        grid-template-columns: repeat(2, 1fr)
+      }
+
+      .welcome-section h1 {
+        font-size: 36px
+      }
+
+      .subtext {
+        font-size: 16px
+      }
+
+      .profile-circle-large {
+        width: 75px;
+        height: 75px;
+        font-size: 26px
+      }
+    }
+
+    @media(max-width:480px) {
+      .areas-grid {
+        grid-template-columns: 1fr
+      }
+
+      .welcome-section h1 {
+        font-size: 32px
+      }
+
+      .search-box {
+        padding: 14px 22px
+      }
+
+      .btn-ingresar {
+        padding: 14px 36px;
+        font-size: 15px
+      }
+
+      .area-card {
+        padding: 24px 18px
+      }
+    }
+
+    /* ─── ACCESSIBILITY / REDUCED MOTION ───────────────── */
+    @media(prefers-reduced-motion:reduce) {
+
+      *,
+      *::before,
+      *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+
+      #cursor-dot,
+      #cursor-ring {
+        display: none
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Floating Particles -->
+  <div class="particles" id="particles"></div>
+
+  <!-- Matrix Rain Background -->
+  <div id="matrix-bg"><canvas id="matrixCanvas"></canvas></div>
+
+  <!-- Custom Cursor -->
+  <div id="cursor-dot"></div>
+  <div id="cursor-ring"></div>
+
+  <!-- Header -->
+  <header class="top-header">
+    <div class="brand-left">
+      <div class="logo-icon"><i class="fas fa-robot"></i></div>
+      <span>Portal Pilot</span>
+    </div>
+    <div class="brand-right">
+      <span class="company-name">InfiniMex</span>
+      <div class="company-icon"><i class="fas fa-infinity"></i></div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <div class="welcome-section">
+
+      <!-- Profile Circle -->
+      <div class="profile-circle-large">VT</div>
+
+      <!-- Greeting -->
+      <h1 id="greeting">Cargando...</h1>
+      <p class="subtext">Bienvenido a tu espacio digital. Explora las herramientas diseñadas para potenciar tu
+        productividad.</p>
+
+      <!-- Search Box -->
+      <div class="search-container">
+        <div class="search-box">
+          <i class="fas fa-sparkles"></i>
+          <input type="text" placeholder="Chatea con Monica o busca una función...">
+        </div>
+      </div>
+
+      <!-- Ingresar Button -->
+      <a href="dashboard.html" class="btn-ingresar">
+        <i class="fas fa-arrow-right"></i> Ingresar al Panel
+      </a>
+
+      <!-- Areas Section -->
+      <div class="areas-section">
+        <h2 class="areas-title">Áreas de Trabajo</h2>
+        <div class="areas-grid">
+          <div class="area-card">
+            <div class="area-icon"><i class="fas fa-calculator"></i></div>
+            <h3>Contabilidad</h3>
+            <button class="btn-acceder" onclick="navigateTo('contabilidad')">
+              <i class="fas fa-arrow-right"></i> Acceder
+            </button>
+          </div>
+          <div class="area-card">
+            <div class="area-icon"><i class="fas fa-palette"></i></div>
+            <h3>Diseño Gráfico</h3>
+            <button class="btn-acceder" onclick="navigateTo('diseno')">
+              <i class="fas fa-arrow-right"></i> Acceder
+            </button>
+          </div>
+          <div class="area-card">
+            <div class="area-icon"><i class="fas fa-code"></i></div>
+            <h3>Programación</h3>
+            <button class="btn-acceder" onclick="navigateTo('programacion')">
+              <i class="fas fa-arrow-right"></i> Acceder
+            </button>
+          </div>
+          <div class="area-card">
+            <div class="area-icon"><i class="fas fa-users"></i></div>
+            <h3>Recursos Humanos</h3>
+            <button class="btn-acceder" onclick="navigateTo('rrhh')">
+              <i class="fas fa-arrow-right"></i> Acceder
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <script>
+    // ─── Greeting Logic ───────────────────────────────────
+    const hour = new Date().getHours();
+    const greetingEl = document.getElementById('greeting');
+    let timeGreeting = 'Buenas noches';
+    if (hour >= 5 && hour < 12) timeGreeting = 'Buenos días';
+    else if (hour >= 12 && hour < 19) timeGreeting = 'Buenas tardes';
+    greetingEl.innerHTML = `${timeGreeting}, <span>Administrador</span><br><span style="opacity:.5;font-weight:400;font-size:0.65em;display:block;margin-top:6px">ROL: SUPERVISOR</span>`;
+
+    // ─── Header Scroll Effect ─────────────────────────────
+    window.addEventListener('scroll', () => {
+      const header = document.querySelector('.top-header');
+      if (window.scrollY > 50) {
+        header.classList.add('scrolled');
+      } else {
+        header.classList.remove('scrolled');
+      }
+    });
+
+    // ─── Custom Cursor ────────────────────────────────────
+    const dot = document.getElementById('cursor-dot');
+    const ring = document.getElementById('cursor-ring');
+
+    let mouseX = 0, mouseY = 0;
+    let cursorX = 0, cursorY = 0;
+
+    document.addEventListener('mousemove', e => {
+      mouseX = e.clientX;
+      mouseY = e.clientY;
+    });
+
+    function animateCursor() {
+      cursorX += (mouseX - cursorX) * 0.15;
+      cursorY += (mouseY - cursorY) * 0.15;
+
+      dot.style.left = cursorX + 'px';
+      dot.style.top = cursorY + 'px';
+      ring.style.left = cursorX + 'px';
+      ring.style.top = cursorY + 'px';
+
+      requestAnimationFrame(animateCursor);
+    }
+    animateCursor();
+
+    // Interactive elements
+    const interactiveElements = document.querySelectorAll('button, a, .area-card, .search-box, input');
+    interactiveElements.forEach(el => {
+      el.addEventListener('mouseenter', () => ring.classList.add('hover'));
+      el.addEventListener('mouseleave', () => {
+        ring.classList.remove('hover');
+        ring.classList.remove('click');
+      });
+      el.addEventListener('mousedown', () => ring.classList.add('click'));
+      el.addEventListener('mouseup', () => ring.classList.remove('click'));
+    });
+
+    // ─── Matrix Rain Background (PURPLE THEME) ────────────
+    (function () {
+      const canvas = document.getElementById('matrixCanvas');
+      const ctx = canvas.getContext('2d');
+      let w, h, columns, drops;
+
+      function init() {
+        w = canvas.width = window.innerWidth;
+        h = canvas.height = window.innerHeight;
+        const fontSize = 14;
+        columns = Math.floor(w / fontSize);
+        drops = Array.from({ length: columns }, () => Math.random() * -100);
+      }
+
+      // Purple matrix characters
+      const chars = '01ABXYZΦΨΩαβγ△◊★☆✦✧♦♢♤♡♧♨✄☏☐☑☒☛☞✓✔✕✖✗✘⚡⚛✿❀❁❃❋❖✪✫✬✭✮✯✰';
+
+      function draw() {
+        // Fade effect for trail
+        ctx.fillStyle = 'rgba(4, 4, 10, 0.06)';
+        ctx.fillRect(0, 0, w, h);
+
+        const fontSize = 14;
+        ctx.font = `600 ${fontSize}px monospace`;
+        ctx.textAlign = 'center';
+
+        for (let i = 0; i < columns; i++) {
+          const char = chars[Math.floor(Math.random() * chars.length)];
+          const x = i * fontSize + fontSize / 2;
+          const y = drops[i] * fontSize;
+
+          // Purple gradient effect: bright head, fading trail
+          const progress = drops[i] / (h / fontSize);
+          const brightness = Math.max(0.3, 1 - progress * 0.7);
+          const opacity = Math.max(0.1, brightness);
+
+          // Purple color variation
+          const hue = 260 + Math.random() * 20; // 260-280 = purple range
+          const saturation = 80 + Math.random() * 20;
+          const lightness = 50 + brightness * 30;
+
+          ctx.fillStyle = `hsla(${hue}, ${saturation}%, ${lightness}%, ${opacity})`;
+          ctx.fillText(char, x, y);
+
+          // Reset drop randomly
+          if (y > h && Math.random() > 0.975) {
+            drops[i] = 0;
+          }
+          drops[i] += 0.8 + Math.random() * 0.4;
+        }
+      }
+
+      init();
+      window.addEventListener('resize', init);
+      setInterval(draw, 35);
+    })();
+
+    // ─── Floating Particles ───────────────────────────────
+    function createParticles() {
+      const container = document.getElementById('particles');
+      const particleCount = Math.min(30, Math.floor(window.innerWidth / 40));
+
+      for (let i = 0; i < particleCount; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'particle';
+
+        // Random properties
+        const size = 2 + Math.random() * 4;
+        const left = Math.random() * 100;
+        const delay = Math.random() * 15;
+        const duration = 12 + Math.random() * 18;
+
+        particle.style.width = `${size}px`;
+        particle.style.height = `${size}px`;
+        particle.style.left = `${left}%`;
+        particle.style.animationDelay = `${delay}s`;
+        particle.style.animationDuration = `${duration}s`;
+
+        // Random purple shade
+        const hue = 255 + Math.random() * 30;
+        particle.style.background = `hsl(${hue}, 80%, 70%)`;
+        particle.style.boxShadow = `0 0 ${8 + Math.random() * 12}px hsla(${hue}, 80%, 60%, 0.6)`;
+
+        container.appendChild(particle);
+      }
+    }
+    createParticles();
+
+    // ─── Navigation Helper ────────────────────────────────
+    function navigateTo(area) {
+      // Add click animation
+      const btn = event.currentTarget;
+      btn.style.transform = 'scale(0.95)';
+      setTimeout(() => {
+        btn.style.transform = '';
+        // Show feedback
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-check"></i> Redirigiendo...';
+        btn.style.background = 'linear-gradient(135deg, #10b981, #059669)';
+        btn.style.borderColor = 'transparent';
+
+        setTimeout(() => {
+          alert(`🔐 Accediendo al módulo de ${area.charAt(0).toUpperCase() + area.slice(1)}...\n\nEn producción, esto redirigiría a: /dashboard/${area}`);
+          btn.innerHTML = originalText;
+          btn.style.background = '';
+          btn.style.borderColor = '';
+        }, 1200);
+      }, 150);
+    }
+
+    // ─── Search Box Enhancement ───────────────────────────
+    const searchInput = document.querySelector('.search-box input');
+    searchInput.addEventListener('focus', function () {
+      this.parentElement.style.borderColor = 'var(--accent)';
+    });
+    searchInput.addEventListener('blur', function () {
+      this.parentElement.style.borderColor = 'var(--border)';
+    });
+
+    // Allow Enter key to trigger "search"
+    searchInput.addEventListener('keypress', function (e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        const query = this.value.trim();
+        if (query) {
+          this.value = '';
+          alert(`🔍 Buscando: "${query}"\n\nEn producción, esto activaría el asistente Monica.`);
+        }
+      }
+    });
+
+    // ─── Smooth Scroll for Anchor Links ───────────────────
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    });
+
+    // ─── Initialize ───────────────────────────────────────
+    window.addEventListener('load', () => {
+      document.body.style.opacity = '1';
+      // Add subtle entrance animation to cards on load
+      document.querySelectorAll('.area-card').forEach((card, i) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(20px)';
+        card.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+        setTimeout(() => {
+          card.style.opacity = '1';
+          card.style.transform = 'translateY(0)';
+        }, 600 + i * 100);
+      });
+    });
+  </script>
+</body>
+
+</html>

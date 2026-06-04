@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard — Portal Pilot</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;cursor:none}
+:root{
+  --bg:#04040a;--bg2:#07070f;--bg3:#0c0c1a;--card:#0e0e1c;--card2:#111124;
+  --border:rgba(139,92,246,0.1);--border2:rgba(139,92,246,0.22);
+  --accent:#8b5cf6;--accent2:#7c3aed;--accent-glow:rgba(139,92,246,0.35);
+  --cyan:#a78bfa;--white:#fff;--gray:#5d5d7a;--gray2:#9ca3af;
+  --text:#c4c4d4;--green:#34d399;--red:#f87171;--yellow:#fbbf24;
+  --radius:10px;--radius-lg:18px;
+}
+html{scroll-behavior:smooth;font-size:16px}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden;line-height:1.6}
+a{text-decoration:none;color:inherit}ul{list-style:none}img{max-width:100%;display:block}button{font-family:inherit;cursor:pointer}
+
+/* CURSOR */
+#cursor-dot{width:6px;height:6px;background:#fff;border-radius:50%;position:fixed;pointer-events:none;z-index:10000}
+#cursor-ring{width:36px;height:36px;border:1px solid rgba(139,92,246,0.6);border-radius:50%;position:fixed;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);transition:transform .15s}
+#cursor-glow{width:500px;height:500px;background:radial-gradient(circle,rgba(139,92,246,0.12) 0,transparent 70%);position:fixed;pointer-events:none;z-index:0;transform:translate(-50%,-50%)}
+
+/* LAYOUT */
+.dashboard{display:grid;grid-template-columns:240px 1fr;min-height:100vh}
+.sidebar{background:var(--bg2);border-right:1px solid var(--border);padding:24px 16px;position:sticky;top:0;height:100vh;display:flex;flex-direction:column;gap:8px}
+.sidebar-logo{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:var(--white);display:flex;align-items:center;gap:10px;padding:8px 12px;margin-bottom:24px;border-radius:var(--radius)}
+.sidebar-logo .logo-icon{width:28px;height:28px;background:var(--accent);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;color:#fff}
+.sidebar-nav{display:flex;flex-direction:column;gap:4px;flex:1}
+.sidebar-link{display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:var(--radius);font-size:13px;font-weight:500;color:var(--gray2);transition:all .2s}
+.sidebar-link:hover,.sidebar-link.active{background:rgba(139,92,246,0.1);color:var(--white)}
+.sidebar-link i{width:18px;text-align:center}
+.sidebar-link.active{border-left:2px solid var(--accent);padding-left:14px}
+.sidebar-footer{padding-top:16px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:8px}
+.sidebar-user{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:var(--radius);background:var(--card)}
+.sidebar-avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--cyan));display:flex;align-items:center;justify-content:center;font-size:14px;color:#fff;font-weight:600}
+.sidebar-username{font-size:12px;font-weight:600;color:var(--white)}
+.sidebar-role{font-size:11px;color:var(--gray)}
+
+.main-content{display:flex;flex-direction:column}
+.topbar{position:sticky;top:0;z-index:40;background:rgba(4,4,10,0.85);backdrop-filter:blur(24px);border-bottom:1px solid var(--border);padding:0 40px;height:64px;display:flex;align-items:center;justify-content:space-between}
+.topbar-left{display:flex;align-items:center;gap:16px}
+.topbar-title{font-family:'Syne',sans-serif;font-size:18px;font-weight:700;color:var(--white)}
+.topbar-title span{color:var(--accent)}
+.topbar-period{display:flex;gap:4px;background:var(--card);border:1px solid var(--border);border-radius:40px;padding:4px}
+.period-btn{padding:6px 16px;border-radius:36px;font-size:12px;font-weight:500;color:var(--gray2);background:none;border:none;cursor:pointer}
+.period-btn.active{background:var(--accent);color:#fff}
+.topbar-right{display:flex;align-items:center;gap:12px}
+.topbar-btn{width:36px;height:36px;border-radius:50%;background:var(--card);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--gray2);position:relative}
+.topbar-btn .badge{position:absolute;top:-4px;right:-4px;width:16px;height:16px;border-radius:50%;background:var(--red);color:#fff;font-size:9px;display:flex;align-items:center;justify-content:center}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:11px 24px;border-radius:40px;font-size:13px;font-weight:600;border:none;cursor:pointer;transition:all .25s}
+.btn-acc{background:var(--accent);color:#fff}.btn-acc:hover{background:var(--accent2)}
+.btn-ghost{background:rgba(255,255,255,0.05);color:var(--white);border:1px solid var(--border2)}.btn-ghost:hover{background:rgba(139,92,246,0.1)}
+.btn-sm{padding:8px 18px;font-size:12px}
+
+.page-header{padding:40px 40px 24px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start}
+.page-title{font-family:'Syne',sans-serif;font-size:32px;font-weight:800;color:var(--white);letter-spacing:-1px;margin-bottom:8px}
+.page-title span{color:var(--accent)}
+.page-subtitle{font-size:14px;color:var(--gray);max-width:600px}
+.page-actions{display:flex;gap:12px}
+
+.dash-grid{padding:24px 40px;display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
+.kpi-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px}
+.kpi-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px}
+.kpi-icon{width:40px;height:40px;border-radius:10px;background:rgba(139,92,246,0.12);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;color:var(--accent);font-size:16px}
+.kpi-trend{font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;background:rgba(52,211,153,0.15);color:var(--green)}
+.kpi-value{font-family:'Syne',sans-serif;font-size:32px;font-weight:800;color:var(--white);letter-spacing:-1px;margin-bottom:4px}
+.kpi-label{font-size:13px;color:var(--gray);margin-bottom:8px}
+.kpi-footer{font-size:11px;color:var(--gray);display:flex;align-items:center;gap:6px}
+.status-dot{width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block}
+
+.chart-card{grid-column:span 2;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px}
+.chart-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+.chart-title{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:var(--white)}
+.chart-container{height:220px;position:relative}
+
+.panel-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px}
+.panel-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--border)}
+.panel-title{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:var(--white);display:flex;align-items:center;gap:8px}
+.panel-title i{color:var(--accent)}
+
+.activity-list{display:flex;flex-direction:column;gap:12px}
+.activity-item{display:flex;gap:12px;padding:12px;background:var(--card2);border-radius:var(--radius);border-left:3px solid var(--border)}
+.activity-item.security{border-left-color:var(--cyan)}
+.activity-item.success{border-left-color:var(--green)}
+.activity-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;background:rgba(139,92,246,0.15);color:var(--accent)}
+.activity-content{flex:1}
+.activity-text{font-size:13px;color:var(--text);font-weight:500}
+.activity-time{font-size:11px;color:var(--gray);margin-top:4px}
+
+.alert-item{display:flex;gap:12px;padding:14px;background:var(--card2);border-radius:var(--radius);border-left:3px solid var(--red);margin-bottom:10px}
+.alert-icon{width:28px;height:28px;border-radius:8px;background:rgba(248,113,113,0.15);color:var(--red);display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0}
+.alert-content{flex:1}
+.alert-title{font-size:13px;font-weight:600;color:var(--white);margin-bottom:4px}
+.alert-desc{font-size:12px;color:var(--gray);line-height:1.5}
+
+@media(max-width:1200px){.dash-grid{grid-template-columns:repeat(2,1fr)}.chart-card{grid-column:span 2}}
+@media(max-width:900px){.dashboard{grid-template-columns:1fr}.sidebar{display:none}.dash-grid{grid-template-columns:1fr}.chart-card{grid-column:span 1}}
+</style>
+</head>
+<body>
+<div id="cursor-dot"></div><div id="cursor-ring"></div><div id="cursor-glow"></div>
+
+<div class="dashboard">
+  <aside class="sidebar">
+    <div class="sidebar-logo"><div class="logo-icon"><i class="fas fa-robot"></i></div>PORTAL PILOT</div>
+    <nav class="sidebar-nav">
+      <a href="dashboard-amy.html" class="sidebar-link active"><i class="fas fa-home"></i> <span>Dashboard</span></a>
+      <a href="team-amy.html" class="sidebar-link"><i class="fas fa-users"></i> <span>Equipo</span></a>
+      <a href="fleet-sofia.html" class="sidebar-link"><i class="fas fa-truck"></i> <span>Flota</span></a>
+      <a href="automation-amy.html" class="sidebar-link"><i class="fas fa-robot"></i> <span>Bots RPA</span></a>
+      <a href="security-sofia.html" class="sidebar-link"><i class="fas fa-shield-alt"></i> <span>Auditoría</span></a>
+    </nav>
+    <div class="sidebar-footer">
+      <a href="#" class="sidebar-link"><i class="fas fa-question-circle"></i> Ayuda</a>
+      <a href="#" class="sidebar-link"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</a>
+      <div class="sidebar-user"><div class="sidebar-avatar">VT</div><div><div class="sidebar-username">Valeria Torres</div><div class="sidebar-role">Admin Principal</div></div></div>
+    </div>
+  </aside>
+
+  <main class="main-content">
+    <header class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-title">Centro de <span>Mando</span></div>
+        <div class="topbar-period">
+          <button class="period-btn" onclick="setPeriod('today',this)">Hoy</button>
+          <button class="period-btn active" onclick="setPeriod('week',this)">Semana</button>
+          <button class="period-btn" onclick="setPeriod('month',this)">Mes</button>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <button class="topbar-btn"><i class="fas fa-bell"></i><span class="badge">3</span></button>
+        <button class="btn btn-acc btn-sm" onclick="showToast('🚀 Creando automatización...')"><i class="fas fa-plus"></i> Nueva Automatización</button>
+      </div>
+    </header>
+
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Bienvenido, <span>Valeria</span> 👋</h1>
+        <p class="page-subtitle">Centro de mando empresarial en tiempo real. Monitorea métricas clave y toma decisiones informadas.</p>
+      </div>
+      <div class="page-actions">
+        <button class="btn btn-ghost btn-sm" onclick="showToast('📊 Exportando reporte...')"><i class="fas fa-download"></i> Exportar Reporte</button>
+        <button class="btn btn-ghost btn-sm" onclick="showToast('✓ Datos actualizados')"><i class="fas fa-sync-alt"></i> Actualizar</button>
+      </div>
+    </div>
+
+    <div class="dash-grid">
+      <div class="kpi-card">
+        <div class="kpi-header">
+          <div class="kpi-icon"><i class="fas fa-users"></i></div>
+          <span class="kpi-trend">+12%</span>
+        </div>
+        <div class="kpi-value">248</div>
+        <div class="kpi-label">Usuarios Activos</div>
+        <div class="kpi-footer"><span class="status-dot"></span>142 online ahora</div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-header">
+          <div class="kpi-icon"><i class="fas fa-wallet"></i></div>
+          <span class="kpi-trend" style="background:rgba(248,113,113,0.15);color:var(--red)">-3%</span>
+        </div>
+        <div class="kpi-value">$45K</div>
+        <div class="kpi-label">Costo Operativo Mes</div>
+        <div class="kpi-footer"><i class="fas fa-check-circle" style="color:var(--green);font-size:6px"></i> Dentro del presupuesto</div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-header">
+          <div class="kpi-icon"><i class="fas fa-check-circle"></i></div>
+          <span class="kpi-trend">+28%</span>
+        </div>
+        <div class="kpi-value">1,230</div>
+        <div class="kpi-label">Tareas Completadas</div>
+        <div class="kpi-footer"><i class="fas fa-check-circle" style="color:var(--green);font-size:6px"></i> 98% éxito</div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-header">
+          <div class="kpi-icon"><i class="fas fa-crown"></i></div>
+          <span class="kpi-trend" style="background:rgba(167,139,250,0.15);color:var(--cyan)">Activa</span>
+        </div>
+        <div class="kpi-value">Enterprise</div>
+        <div class="kpi-label">Estado de Suscripción</div>
+        <div class="kpi-footer"><span class="status-dot"></span>Renovación: 15 Dic 2026</div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-header">
+          <div class="chart-title"><i class="fas fa-chart-line" style="margin-right:8px;color:var(--accent)"></i>Uso de IA vs Tiempo</div>
+        </div>
+        <div class="chart-container"><canvas id="usageChart"></canvas></div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-header">
+          <div class="chart-title"><i class="fas fa-chart-pie" style="margin-right:8px;color:var(--accent)"></i>Distribución de Roles</div>
+        </div>
+        <div class="chart-container"><canvas id="rolesChart"></canvas></div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-header">
+          <div class="chart-title"><i class="fas fa-chart-bar" style="margin-right:8px;color:var(--accent)"></i>Gastos por Departamento</div>
+        </div>
+        <div class="chart-container"><canvas id="spendingChart"></canvas></div>
+      </div>
+
+      <div class="panel-card">
+        <div class="panel-header">
+          <div class="panel-title"><i class="fas fa-history"></i>Actividad Reciente</div>
+        </div>
+        <div class="activity-list">
+          <div class="activity-item security"><div class="activity-icon"><i class="fas fa-fingerprint"></i></div><div class="activity-content"><div class="activity-text">2FA validado para Admin Principal</div><div class="activity-time">Hace 2 min</div></div></div>
+          <div class="activity-item success"><div class="activity-icon"><i class="fas fa-user-plus"></i></div><div class="activity-content"><div class="activity-text">Nuevo usuario agregado: María G.</div><div class="activity-time">Hace 18 min</div></div></div>
+          <div class="activity-item success"><div class="activity-icon"><i class="fas fa-robot"></i></div><div class="activity-content"><div class="activity-text">Automatización ejecutada: "Cotización proveedores"</div><div class="activity-time">Hace 1h</div></div></div>
+          <div class="activity-item security"><div class="activity-icon"><i class="fas fa-key"></i></div><div class="activity-content"><div class="activity-text">Cambio de contraseña realizado</div><div class="activity-time">Hace 3h</div></div></div>
+        </div>
+      </div>
+
+      <div class="panel-card">
+        <div class="panel-header">
+          <div class="panel-title"><i class="fas fa-exclamation-triangle" style="color:var(--yellow)"></i>Alertas</div>
+        </div>
+        <div class="alert-item">
+          <div class="alert-icon"><i class="fas fa-credit-card"></i></div>
+          <div class="alert-content">
+            <div class="alert-title">Pago pendiente en módulo Billing</div>
+            <div class="alert-desc">Factura #INV-2026-1147 de $899 vence en 3 días</div>
+          </div>
+        </div>
+        <div class="alert-item">
+          <div class="alert-icon"><i class="fas fa-tachometer-alt"></i></div>
+          <div class="alert-content">
+            <div class="alert-title">80% del límite de IA alcanzado</div>
+            <div class="alert-desc">Has usado 4,000 de 5,000 tokens mensuales</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="../auth-check.js"></script>
+<script>
+// Cursor
+const dot=document.getElementById('cursor-dot'),ring=document.getElementById('cursor-ring'),glow=document.getElementById('cursor-glow');
+document.addEventListener('mousemove',e=>{dot.style.left=e.clientX+'px';dot.style.top=e.clientY+'px';glow.style.left=e.clientX+'px';glow.style.top=e.clientY+'px'});
+document.addEventListener('mouseenter',e=>{if(e.target.tagName==='A'||e.target.tagName==='BUTTON'){ring.style.width='50px';ring.style.height='50px'}},{capture:true});
+document.addEventListener('mouseleave',e=>{if(e.target.tagName==='A'||e.target.tagName==='BUTTON'){ring.style.width='36px';ring.style.height='36px'}},{capture:true});
+document.addEventListener('mousemove',e=>{ring.style.left=e.clientX+'px';ring.style.top=e.clientY+'px'});
+
+// Charts
+function initCharts(){
+  try{
+    new Chart(document.getElementById('usageChart'),{
+      type:'line',
+      data:{labels:['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'],datasets:[{label:'Requests',data:[120,190,150,220,180,95,140],borderColor:'#8b5cf6',backgroundColor:'rgba(139,92,246,0.1)',tension:0.4,fill:true}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:'rgba(139,92,246,0.1)'},ticks:{color:'#5d5d7a'}},y:{grid:{color:'rgba(139,92,246,0.1)'},ticks:{color:'#5d5d7a'},beginAtZero:true}}}
+    });
+    new Chart(document.getElementById('rolesChart'),{
+      type:'doughnut',
+      data:{labels:['Admins','Empleados','Invitados'],datasets:[{data:[15,210,23],backgroundColor:['#8b5cf6','#a78bfa','rgba(167,139,250,0.3)'],borderWidth:0}]},
+      options:{responsive:true,maintainAspectRatio:false,cutout:'70%',plugins:{legend:{position:'bottom',labels:{color:'#5d5d7a',padding:20}}}}
+    });
+    new Chart(document.getElementById('spendingChart'),{
+      type:'bar',
+      data:{labels:['IT','Operaciones','Ventas','RH','Finanzas'],datasets:[{label:'Gastos',data:[18500,12300,8900,3200,2100],backgroundColor:'rgba(139,92,246,0.6)',borderRadius:6}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:'#5d5d7a'}},y:{grid:{color:'rgba(139,92,246,0.1)'},ticks:{color:'#5d5d7a'},beginAtZero:true}}}
+    });
+  }catch(e){console.error('Chart error:',e)}
+}
+
+function setPeriod(p,btn){
+  document.querySelectorAll('.period-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  showToast('📊 Datos actualizados: '+p);
+}
+
+function showToast(msg){
+  const t=document.createElement('div');
+  t.style.cssText='position:fixed;bottom:24px;right:24px;background:#0e0e1c;border:1px solid rgba(139,92,246,0.2);border-radius:10px;padding:14px 20px;font-size:13px;color:#fff;z-index:9999;animation:slideIn .3s';
+  t.textContent=msg;document.body.appendChild(t);
+  setTimeout(()=>{t.style.animation='slideOut .3s';setTimeout(()=>t.remove(),300)},3000);
+}
+
+window.addEventListener('load',initCharts);
+</script>
+
+<script src="../auth-check.js"></script>
+</body>
+</html>

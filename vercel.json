@@ -1,0 +1,75 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "backend/server.js",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "**/*.html",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "backend/server.js"
+    },
+    {
+      "src": "/(.*\\.html)",
+      "dest": "/$1"
+    },
+    {
+      "src": "/(.*\\.js)",
+      "dest": "/$1"
+    },
+    {
+      "src": "/(.*\\.css)",
+      "dest": "/$1"
+    },
+    {
+      "src": "/login",
+      "dest": "/login.html"
+    },
+    {
+      "src": "/tenants",
+      "dest": "/tenants.html"
+    },
+    {
+      "src": "/dashboard",
+      "dest": "/dashboard.html"
+    },
+    {
+      "src": "/usuarios",
+      "dest": "/usuarios.html"
+    },
+    {
+      "src": "/global_settings",
+      "dest": "/global_settings.html"
+    },
+    {
+      "src": "/billing_plans",
+      "dest": "/billing_plans.html"
+    },
+    {
+      "src": "/perfil",
+      "dest": "/perfil.html"
+    },
+    {
+      "src": "/primer_acceso",
+      "dest": "/primer_acceso.html"
+    },
+    {
+      "src": "/inicio",
+      "dest": "/inicio.html"
+    },
+    {
+      "src": "^/$",
+      "dest": "/index.html"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/$1"
+    }
+  ]
+}

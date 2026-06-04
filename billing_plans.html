@@ -1,0 +1,2028 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Planes & Billing — Portal Pilot</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    /* ─── RESET & TOKENS ────────────────────────────────── */
+    *,
+    *::before,
+    *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      cursor: none;
+    }
+
+    :root {
+      --bg: #04040a;
+      --bg2: #07070f;
+      --bg3: #0c0c1a;
+      --card: #0e0e1c;
+      --card2: #111124;
+      --border: rgba(139, 92, 246, 0.1);
+      --border2: rgba(139, 92, 246, 0.22);
+      --accent: #8b5cf6;
+      --accent2: #7c3aed;
+      --accent-glow: rgba(139, 92, 246, 0.35);
+      --cyan: #a78bfa;
+      --white: #ffffff;
+      --gray: #5d5d7a;
+      --gray2: #9ca3af;
+      --text: #c4c4d4;
+      --green: #34d399;
+      --red: #f87171;
+      --yellow: #fbbf24;
+      --radius: 10px;
+      --radius-lg: 18px;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      font-size: 16px;
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow-x: hidden;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    a {
+      text-decoration: none;
+      color: inherit;
+    }
+
+    ul {
+      list-style: none;
+    }
+
+    img {
+      max-width: 100%;
+      display: block;
+    }
+
+    button {
+      font-family: inherit;
+      cursor: pointer;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 clamp(16px, 4vw, 40px);
+    }
+
+    /* ─── CUSTOM CURSOR ──────────────────────────────────── */
+    #cursor-dot {
+      width: 6px;
+      height: 6px;
+      background: #fff;
+      border-radius: 50%;
+      position: fixed;
+      pointer-events: none;
+      z-index: 10000;
+      transition: transform 0.1s;
+    }
+
+    #cursor-ring {
+      width: 36px;
+      height: 36px;
+      border: 1px solid rgba(139, 92, 246, 0.6);
+      border-radius: 50%;
+      position: fixed;
+      pointer-events: none;
+      z-index: 9999;
+      transition: transform 0.15s ease, width 0.2s, height 0.2s, opacity 0.2s;
+      transform: translate(-50%, -50%);
+    }
+
+    #cursor-glow {
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, rgba(139, 92, 246, 0.12) 0%, transparent 70%);
+      position: fixed;
+      pointer-events: none;
+      z-index: 0;
+      transform: translate(-50%, -50%);
+      transition: transform 0.08s;
+    }
+
+    /* ─── SCROLLBAR ─────────────────────────────────────── */
+    ::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: var(--bg);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--accent);
+      border-radius: 2px;
+    }
+
+    /* ─── PROGRESS BAR ──────────────────────────────────── */
+    #progress {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      z-index: 999;
+      background: transparent;
+    }
+
+    #progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--cyan));
+      width: 0;
+      transition: width .1s linear;
+    }
+
+    /* ─── BUTTONS ───────────────────────────────────────── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 11px 24px;
+      border-radius: 40px;
+      font-size: 13px;
+      font-weight: 600;
+      border: none;
+      transition: all .25s;
+      white-space: nowrap;
+      font-family: 'DM Sans', sans-serif;
+    }
+
+    .btn-acc {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .btn-acc:hover {
+      background: var(--accent2);
+      transform: translateY(-1px);
+      box-shadow: 0 8px 28px var(--accent-glow);
+    }
+
+    .btn-ghost {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--white);
+      border: 1px solid var(--border2);
+    }
+
+    .btn-ghost:hover {
+      background: rgba(139, 92, 246, 0.1);
+      border-color: var(--border2);
+    }
+
+    .btn-white {
+      background: #fff;
+      color: #000;
+    }
+
+    .btn-white:hover {
+      transform: scale(1.04);
+      box-shadow: 0 0 30px rgba(255, 255, 255, 0.2);
+    }
+
+    .btn-outline {
+      background: transparent;
+      color: var(--white);
+      border: 1px solid var(--border2);
+    }
+
+    .btn-outline:hover {
+      background: rgba(139, 92, 246, 0.08);
+    }
+
+    .btn-danger {
+      background: rgba(248, 113, 113, 0.15);
+      color: var(--red);
+      border: 1px solid rgba(248, 113, 113, 0.3);
+    }
+
+    .btn-danger:hover {
+      background: var(--red);
+      color: #fff;
+    }
+
+    .btn-success {
+      background: rgba(52, 211, 153, 0.15);
+      color: var(--green);
+      border: 1px solid rgba(52, 211, 153, 0.3);
+    }
+
+    .btn-success:hover {
+      background: var(--green);
+      color: #fff;
+    }
+
+    .btn-sm {
+      padding: 8px 18px;
+      font-size: 12px;
+    }
+
+    .btn-xs {
+      padding: 6px 14px;
+      font-size: 11px;
+    }
+
+    /* ─── ICON ACTION BUTTONS (CORREGIDO) ───────────────── */
+    .action-icon-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: var(--card2);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--gray2);
+      font-size: 12px;
+      cursor: pointer;
+      transition: all .2s;
+      margin-right: 4px;
+    }
+
+    .action-icon-btn:hover {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+
+    .action-icon-btn.danger:hover {
+      background: var(--red);
+      border-color: var(--red);
+    }
+
+    /* ─── DASHBOARD LAYOUT ──────────────────────────────── */
+    .dashboard {
+      display: grid;
+      grid-template-columns: 240px 1fr;
+      min-height: 100vh;
+    }
+
+    /* ─── SIDEBAR ───────────────────────────────────────── */
+    .sidebar {
+      background: var(--bg2);
+      border-right: 1px solid var(--border);
+      padding: 24px 16px;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      z-index: 50;
+    }
+
+    .sidebar-logo {
+      font-family: 'Syne', sans-serif;
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--white);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      margin-bottom: 24px;
+      border-radius: var(--radius);
+    }
+
+    .sidebar-logo .logo-icon {
+      width: 28px;
+      height: 28px;
+      background: var(--accent);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      color: #fff;
+    }
+
+    .sidebar-nav {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      flex: 1;
+    }
+
+    .sidebar-link {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      border-radius: var(--radius);
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--gray2);
+      transition: all .2s;
+    }
+
+    .sidebar-link:hover,
+    .sidebar-link.active {
+      background: rgba(139, 92, 246, 0.1);
+      color: var(--white);
+    }
+
+    .sidebar-link i {
+      width: 18px;
+      text-align: center;
+      font-size: 14px;
+    }
+
+    .sidebar-link.active {
+      border-left: 2px solid var(--accent);
+      padding-left: 14px;
+    }
+
+    .sidebar-footer {
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .sidebar-user {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: var(--radius);
+      background: var(--card);
+    }
+
+    .sidebar-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--cyan));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      color: #fff;
+      font-weight: 600;
+    }
+
+    .sidebar-username {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--white);
+    }
+
+    .sidebar-role {
+      font-size: 11px;
+      color: var(--gray);
+    }
+
+    /* ─── MAIN CONTENT ──────────────────────────────────── */
+    .main-content {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    /* ─── TOP BAR ───────────────────────────────────────── */
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      background: rgba(4, 4, 10, 0.85);
+      backdrop-filter: blur(24px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 clamp(16px, 4vw, 40px);
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .topbar-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .topbar-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--white);
+    }
+
+    .topbar-title span {
+      color: var(--accent);
+    }
+
+    .topbar-search {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 40px;
+      padding: 8px 16px;
+      width: 280px;
+    }
+
+    .topbar-search input {
+      background: none;
+      border: none;
+      outline: none;
+      color: var(--text);
+      font-size: 13px;
+      width: 100%;
+    }
+
+    .topbar-search input::placeholder {
+      color: var(--gray);
+    }
+
+    .topbar-search i {
+      color: var(--gray);
+    }
+
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .topbar-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--card);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--gray2);
+      font-size: 14px;
+      position: relative;
+      transition: all .2s;
+    }
+
+    .topbar-btn:hover {
+      background: rgba(139, 92, 246, 0.1);
+      color: var(--accent);
+      border-color: var(--border2);
+    }
+
+    .topbar-btn .badge {
+      position: absolute;
+      top: -4px;
+      right: -4px;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--red);
+      color: #fff;
+      font-size: 9px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+    }
+
+    /* ─── PAGE HEADER ───────────────────────────────────── */
+    .page-header {
+      padding: clamp(24px, 4vw, 40px) clamp(16px, 4vw, 40px) 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      gap: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .page-title {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(24px, 4vw, 32px);
+      font-weight: 800;
+      color: var(--white);
+      letter-spacing: -1px;
+    }
+
+    .page-title span {
+      color: var(--accent);
+    }
+
+    .page-subtitle {
+      font-size: 14px;
+      color: var(--gray);
+      max-width: 480px;
+      line-height: 1.6;
+    }
+
+    .page-actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    /* ─── TABS NAVIGATION ───────────────────────────────── */
+    .tabs-nav {
+      padding: 0 clamp(16px, 4vw, 40px);
+      display: flex;
+      gap: 4px;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg2);
+    }
+
+    .tab-btn {
+      padding: 14px 24px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--gray2);
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      cursor: pointer;
+      transition: all .2s;
+      position: relative;
+    }
+
+    .tab-btn:hover {
+      color: var(--white);
+    }
+
+    .tab-btn.active {
+      color: var(--white);
+      border-bottom-color: var(--accent);
+    }
+
+    .tab-btn.active::after {
+      content: '';
+      position: absolute;
+      bottom: -1px;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: var(--accent);
+      border-radius: 2px 2px 0 0;
+    }
+
+    /* ─── TAB CONTENT ───────────────────────────────────── */
+    .tab-content {
+      display: none;
+      padding: 24px clamp(16px, 4vw, 40px);
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    /* ─── PLAN EDITOR GRID ──────────────────────────────── */
+    .plans-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+
+    .plan-card {
+      background: var(--card);
+      border: 2px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      transition: border-color .3s;
+    }
+
+    .plan-card.featured {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px var(--accent-glow);
+    }
+
+    .plan-card.editing {
+      border-color: var(--cyan);
+    }
+
+    .plan-header {
+      padding: 20px;
+      border-bottom: 1px solid var(--border);
+      background: var(--card2);
+      text-align: center;
+    }
+
+    .plan-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+
+    .plan-badge.free {
+      background: rgba(167, 139, 250, 0.15);
+      color: var(--cyan);
+    }
+
+    .plan-badge.pro {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .plan-badge.enterprise {
+      background: linear-gradient(135deg, var(--accent), var(--cyan));
+      color: #fff;
+    }
+
+    .plan-name {
+      font-family: 'Syne', sans-serif;
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--white);
+      margin-bottom: 4px;
+    }
+
+    .plan-price {
+      font-family: 'Syne', sans-serif;
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--accent);
+      letter-spacing: -1px;
+    }
+
+    .plan-price span {
+      font-size: 14px;
+      font-weight: 400;
+      color: var(--gray);
+    }
+
+    .plan-period {
+      font-size: 12px;
+      color: var(--gray2);
+    }
+
+    .plan-body {
+      padding: 20px;
+    }
+
+    .plan-feature {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px dashed var(--border);
+    }
+
+    .plan-feature:last-child {
+      border-bottom: none;
+    }
+
+    .plan-feature-label {
+      font-size: 13px;
+      color: var(--text);
+    }
+
+    .plan-feature-input {
+      width: 100px;
+      padding: 6px 10px;
+      border-radius: 6px;
+      background: var(--card2);
+      border: 1px solid var(--border);
+      color: var(--white);
+      font-size: 12px;
+      text-align: right;
+    }
+
+    .plan-feature-input:focus {
+      border-color: var(--accent);
+      outline: none;
+    }
+
+    .plan-feature-toggle {
+      width: 40px;
+      height: 22px;
+      border-radius: 11px;
+      background: var(--card2);
+      border: 1px solid var(--border);
+      position: relative;
+      cursor: pointer;
+      transition: background .2s;
+    }
+
+    .plan-feature-toggle.active {
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+
+    .plan-feature-toggle::after {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #fff;
+      transition: left .2s;
+    }
+
+    .plan-feature-toggle.active::after {
+      left: 22px;
+    }
+
+    .plan-footer {
+      padding: 16px 20px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+    }
+
+    /* ─── PAYMENTS TABLE ────────────────────────────────── */
+    .payments-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .filters-group {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .filter-select {
+      padding: 8px 14px;
+      border-radius: 8px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-size: 13px;
+      outline: none;
+    }
+
+    .filter-select option {
+      background: var(--card2);
+    }
+
+    .date-range {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .date-input {
+      padding: 8px 12px;
+      border-radius: 8px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-size: 13px;
+    }
+
+    .payments-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+
+    .payments-table thead {
+      background: var(--card2);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .payments-table th {
+      padding: 14px 16px;
+      text-align: left;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--gray);
+    }
+
+    .payments-table tbody tr {
+      border-bottom: 1px solid var(--border);
+      transition: background .2s;
+    }
+
+    .payments-table tbody tr:hover {
+      background: rgba(139, 92, 246, 0.06);
+    }
+
+    .payments-table td {
+      padding: 14px 16px;
+      font-size: 13px;
+      color: var(--text);
+    }
+
+    .payment-tenant {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .payment-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, var(--accent), var(--cyan));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      color: #fff;
+      font-weight: 600;
+    }
+
+    .payment-name {
+      font-weight: 500;
+      color: var(--white);
+    }
+
+    .payment-id {
+      font-size: 11px;
+      color: var(--gray);
+      font-family: monospace;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .status-pill.success {
+      background: rgba(52, 211, 153, 0.15);
+      color: var(--green);
+    }
+
+    .status-pill.failed {
+      background: rgba(248, 113, 113, 0.15);
+      color: var(--red);
+    }
+
+    .status-pill.pending {
+      background: rgba(251, 191, 36, 0.15);
+      color: var(--yellow);
+    }
+
+    .status-pill.refunded {
+      background: rgba(167, 139, 250, 0.15);
+      color: var(--cyan);
+    }
+
+    .status-pill .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+    }
+
+    .status-pill.success .dot {
+      background: var(--green);
+    }
+
+    .status-pill.failed .dot {
+      background: var(--red);
+    }
+
+    .status-pill.pending .dot {
+      background: var(--yellow);
+    }
+
+    .status-pill.refunded .dot {
+      background: var(--cyan);
+    }
+
+    .payment-method {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .payment-method i {
+      font-size: 16px;
+    }
+
+    .payment-method.visa {
+      color: #1a1f71;
+    }
+
+    .payment-method.mastercard {
+      color: #eb001b;
+    }
+
+    .payment-method.paypal {
+      color: #00457c;
+    }
+
+    /* ─── PROMO CODES SECTION ───────────────────────────── */
+    .promo-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .promo-stats {
+      display: flex;
+      gap: 16px;
+    }
+
+    .promo-stat {
+      text-align: center;
+      padding: 12px 20px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+    }
+
+    .promo-stat-value {
+      font-family: 'Syne', sans-serif;
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--accent);
+    }
+
+    .promo-stat-label {
+      font-size: 11px;
+      color: var(--gray);
+    }
+
+    .promo-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+
+    .promo-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .promo-code-display {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px;
+      background: var(--card2);
+      border-radius: var(--radius);
+      border: 1px dashed var(--border);
+    }
+
+    .promo-code {
+      font-family: monospace;
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--white);
+      letter-spacing: 2px;
+      flex: 1;
+    }
+
+    .promo-copy-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      background: var(--accent);
+      border: none;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all .2s;
+    }
+
+    .promo-copy-btn:hover {
+      background: var(--accent2);
+    }
+
+    .promo-details {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .promo-detail {
+      padding: 10px;
+      background: var(--card2);
+      border-radius: 8px;
+      font-size: 12px;
+    }
+
+    .promo-detail-label {
+      color: var(--gray);
+      margin-bottom: 4px;
+    }
+
+    .promo-detail-value {
+      font-weight: 600;
+      color: var(--white);
+    }
+
+    .promo-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: auto;
+    }
+
+    .promo-actions .btn {
+      flex: 1;
+      justify-content: center;
+    }
+
+    /* ─── CREATE PROMO MODAL ────────────────────────────── */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .3s;
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      width: 100%;
+      max-width: 480px;
+      max-height: 90vh;
+      overflow-y: auto;
+      transform: translateY(20px);
+      transition: transform .3s;
+    }
+
+    .modal-overlay.active .modal {
+      transform: translateY(0);
+    }
+
+    .modal-header {
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--white);
+    }
+
+    .modal-close {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--card2);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--gray2);
+      font-size: 14px;
+      cursor: pointer;
+      transition: all .2s;
+    }
+
+    .modal-close:hover {
+      background: var(--red);
+      color: #fff;
+      border-color: var(--red);
+    }
+
+    .modal-body {
+      padding: 24px;
+    }
+
+    .modal-footer {
+      padding: 16px 24px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--gray);
+      margin-bottom: 8px;
+      letter-spacing: .5px;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 12px 16px;
+      border-radius: 8px;
+      background: var(--card2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-size: 14px;
+      outline: none;
+      transition: border-color .2s;
+    }
+
+    .form-input:focus {
+      border-color: var(--accent);
+    }
+
+    .form-input::placeholder {
+      color: var(--gray);
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .form-select {
+      width: 100%;
+      padding: 12px 16px;
+      border-radius: 8px;
+      background: var(--card2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-size: 14px;
+      outline: none;
+      cursor: pointer;
+    }
+
+    .form-select option {
+      background: var(--card2);
+    }
+
+    .form-hint {
+      font-size: 11px;
+      color: var(--gray);
+      margin-top: 6px;
+    }
+
+    /* ─── PAGINATION ────────────────────────────────────── */
+    .pagination {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 0;
+      border-top: 1px solid var(--border);
+    }
+
+    .pagination-info {
+      font-size: 12px;
+      color: var(--gray);
+    }
+
+    .pagination-btns {
+      display: flex;
+      gap: 8px;
+    }
+
+    .pagination-btn {
+      padding: 8px 16px;
+      border-radius: 8px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-size: 12px;
+      transition: all .2s;
+    }
+
+    .pagination-btn:hover:not(:disabled) {
+      background: rgba(139, 92, 246, 0.1);
+      border-color: var(--border2);
+    }
+
+    .pagination-btn:disabled {
+      opacity: .5;
+      cursor: not-allowed;
+    }
+
+    .pagination-btn.active {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+
+    /* ─── REVEAL ANIMATIONS ─────────────────────────────── */
+    .reveal {
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity .6s ease, transform .6s ease;
+    }
+
+    .reveal.in {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ─── RESPONSIVE ────────────────────────────────────── */
+    @media(max-width:1200px) {
+      .plans-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .promo-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .promo-details {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media(max-width:900px) {
+      .dashboard {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        position: fixed;
+        left: -240px;
+        top: 0;
+        width: 240px;
+        transition: left .3s;
+        z-index: 100;
+      }
+
+      .sidebar.open {
+        left: 0;
+      }
+
+      .sidebar-toggle {
+        display: flex !important;
+      }
+
+      .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .payments-header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .filters-group {
+        width: 100%;
+        justify-content: space-between;
+      }
+    }
+
+    @media(max-width:600px) {
+      .tabs-nav {
+        overflow-x: auto;
+        white-space: nowrap;
+        padding-bottom: 4px;
+      }
+
+      .tab-btn {
+        padding: 14px 16px;
+      }
+
+      .plan-feature {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+      }
+
+      .plan-feature-input {
+        width: 100%;
+      }
+    }
+
+    /* ─── SIDEBAR TOGGLE (MOBILE) ───────────────────────── */
+    .sidebar-toggle {
+      display: none;
+      position: fixed;
+      top: 16px;
+      left: 16px;
+      z-index: 60;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--card);
+      border: 1px solid var(--border);
+      align-items: center;
+      justify-content: center;
+      color: var(--white);
+      font-size: 16px;
+    }
+
+    /* ─── TOAST NOTIFICATIONS ───────────────────────────── */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 20px;
+      font-size: 13px;
+      color: var(--white);
+      z-index: 2000;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      animation: slideIn .3s ease;
+    }
+
+    .toast.success {
+      border-left: 3px solid var(--green);
+    }
+
+    .toast.error {
+      border-left: 3px solid var(--red);
+    }
+
+    .toast.info {
+      border-left: 3px solid var(--cyan);
+    }
+
+    @keyframes slideIn {
+      from {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+
+    @keyframes slideOut {
+      from {
+        transform: translateX(0);
+        opacity: 1;
+      }
+
+      to {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- PROGRESS -->
+  <div id="progress">
+    <div id="progress-fill"></div>
+  </div>
+  <!-- CURSOR -->
+  <div id="cursor-dot"></div>
+  <div id="cursor-ring"></div>
+  <div id="cursor-glow"></div>
+  <!-- SIDEBAR TOGGLE -->
+  <button class="sidebar-toggle" id="sidebarToggle" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+
+  <!-- CREATE PROMO MODAL -->
+  <div class="modal-overlay" id="createPromoModal">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title"><i class="fas fa-gift" style="margin-right:8px;color:var(--accent);"></i>Nuevo Código
+          Promo</div>
+        <button class="modal-close" onclick="closeModal('createPromoModal')"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="modal-body">
+        <form id="createPromoForm">
+          <div class="form-group">
+            <label class="form-label">Código *</label>
+            <input type="text" class="form-input" id="promoCode" placeholder="Ej: BLACKFRIDAY2026" required>
+            <div class="form-hint"><i class="fas fa-info-circle"></i> Solo letras mayúsculas, números y guiones</div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Tipo de Descuento *</label>
+              <select class="form-select" id="promoType" required>
+                <option value="percent">Porcentaje (%)</option>
+                <option value="fixed">Monto Fijo ($)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Valor *</label>
+              <input type="number" class="form-input" id="promoValue" placeholder="Ej: 20" min="1" max="100" required>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Usos Máximos</label>
+              <input type="number" class="form-input" id="promoUses" placeholder="Ilimitado" min="1">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Plan Aplicable</label>
+              <select class="form-select" id="promoPlan">
+                <option value="all">Todos los planes</option>
+                <option value="free">Free</option>
+                <option value="pro">Pro</option>
+                <option value="enterprise">Enterprise</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Fecha Inicio *</label>
+              <input type="date" class="form-input" id="promoStart" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Fecha Fin *</label>
+              <input type="date" class="form-input" id="promoEnd" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Descripción</label>
+            <textarea class="form-input" rows="3" placeholder="Detalles del descuento..."></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="closeModal('createPromoModal')">Cancelar</button>
+        <button class="btn btn-acc" onclick="createPromoCode()"><i class="fas fa-plus"></i> Crear Código</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div class="dashboard">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-logo">
+        <div class="logo-icon"><i class="fas fa-robot"></i></div>PORTAL PILOT
+      </div>
+      <nav class="sidebar-nav">
+        <a href="dashboard.html" class="sidebar-link"><i class="fas fa-home"></i> Dashboard</a>
+        <a href="tenants.html" class="sidebar-link"><i class="fas fa-building"></i> Tenants</a>
+        <a href="usuarios.html" class="sidebar-link"><i class="fas fa-users"></i> Usuarios</a>
+        <a href="#" class="sidebar-link"><i class="fas fa-robot"></i> Bots RPA</a>
+        <a href="#" class="sidebar-link"><i class="fas fa-link"></i> Auditoría</a>
+        <a href="billing_plans.html" class="sidebar-link active"><i class="fas fa-credit-card"></i> Billing & Planes</a>
+        <a href="system_health.html" class="sidebar-link"><i class="fas fa-heartbeat"></i> System Health</a>
+        <a href="#" class="sidebar-link"><i class="fas fa-cog"></i> Configuración</a>
+      </nav>
+      <div class="sidebar-footer">
+        <a href="#" class="sidebar-link"><i class="fas fa-question-circle"></i> Ayuda</a>
+        <a href="#" class="sidebar-link"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</a>
+        <div class="sidebar-user">
+          <div class="sidebar-avatar">AD</div>
+          <div>
+            <div class="sidebar-username">Admin User</div>
+            <div class="sidebar-role">Billing Manager</div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <header class="topbar">
+        <div class="topbar-left">
+          <div class="topbar-title">Configuración <span>Comercial</span></div>
+          <div class="topbar-search"><i class="fas fa-search"></i><input type="text"
+              placeholder="Buscar transacción, tenant, código..."></div>
+        </div>
+        <div class="topbar-right">
+          <button class="topbar-btn" title="Notificaciones"><i class="fas fa-bell"></i><span
+              class="badge">2</span></button>
+          <button class="btn btn-acc btn-sm" onclick="openModal('createPromoModal')"><i class="fas fa-gift"></i> Nuevo
+            Promo</button>
+        </div>
+      </header>
+
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Planes & <span>Billing</span></h1>
+          <p class="page-subtitle">Gestiona tus planes comerciales, revisa el historial de pagos y crea códigos
+            promocionales. Sin tocar código, sin riesgos.</p>
+        </div>
+        <div class="page-actions">
+          <button class="btn btn-outline btn-sm" onclick="exportBilling()"><i class="fas fa-download"></i> Exportar
+            Reporte</button>
+          <button class="btn btn-success btn-sm" id="saveChangesBtn" onclick="saveAllChanges()" style="display:none;"><i
+              class="fas fa-save"></i> Guardar Cambios</button>
+        </div>
+      </div>
+
+      <div class="tabs-nav">
+        <button class="tab-btn active" data-tab="plans" onclick="switchTab('plans')"><i class="fas fa-layer-group"
+            style="margin-right:6px;"></i>Editor de Planes</button>
+        <button class="tab-btn" data-tab="payments" onclick="switchTab('payments')"><i class="fas fa-history"
+            style="margin-right:6px;"></i>Historial de Pagos</button>
+        <button class="tab-btn" data-tab="promos" onclick="switchTab('promos')"><i class="fas fa-gift"
+            style="margin-right:6px;"></i>Códigos Promo</button>
+      </div>
+
+      <!-- TAB: PLAN EDITOR -->
+      <div class="tab-content active" id="tab-plans">
+        <div class="plans-grid">
+          <!-- FREE PLAN -->
+          <div class="plan-card reveal" data-plan="free">
+            <div class="plan-header">
+              <span class="plan-badge free">Free</span>
+              <div class="plan-name">Starter</div>
+              <div class="plan-price">$0 <span>/mes</span></div>
+              <div class="plan-period">Para pruebas y pequeños proyectos</div>
+            </div>
+            <div class="plan-body">
+              <div class="plan-feature"><span class="plan-feature-label">Precio Mensual</span><input type="number"
+                  class="plan-feature-input" value="0" data-field="price" disabled></div>
+              <div class="plan-feature"><span class="plan-feature-label">Precio Anual</span><input type="number"
+                  class="plan-feature-input" value="0" data-field="price_year" disabled></div>
+              <div class="plan-feature"><span class="plan-feature-label">Mensajes IA/mes</span><input type="number"
+                  class="plan-feature-input" value="100" data-field="ai_messages"></div>
+              <div class="plan-feature"><span class="plan-feature-label">Bots RPA simultáneos</span><input type="number"
+                  class="plan-feature-input" value="2" data-field="rpa_bots"></div>
+              <div class="plan-feature"><span class="plan-feature-label">Auditoría Blockchain</span>
+                <div class="plan-feature-toggle" onclick="toggleFeature(this)" data-feature="blockchain"></div>
+              </div>
+              <div class="plan-feature"><span class="plan-feature-label">Soporte Prioritario</span>
+                <div class="plan-feature-toggle" onclick="toggleFeature(this)" data-feature="priority_support"></div>
+              </div>
+              <div class="plan-feature"><span class="plan-feature-label">Multi-empresa</span>
+                <div class="plan-feature-toggle" onclick="toggleFeature(this)" data-feature="multi_tenant"></div>
+              </div>
+            </div>
+            <div class="plan-footer">
+              <button class="btn btn-outline btn-sm" onclick="editPlan('free')"><i class="fas fa-edit"></i>
+                Editar</button>
+              <button class="btn btn-ghost btn-sm" onclick="previewPlan('free')"><i class="fas fa-eye"></i>
+                Vista</button>
+            </div>
+          </div>
+          <!-- PRO PLAN -->
+          <div class="plan-card featured reveal" data-plan="pro" style="transition-delay:.1s;">
+            <div class="plan-header">
+              <span class="plan-badge pro">Popular</span>
+              <div class="plan-name">Professional</div>
+              <div class="plan-price">$299 <span>/mes</span></div>
+              <div class="plan-period">Para equipos en crecimiento</div>
+            </div>
+            <div class="plan-body">
+              <div class="plan-feature"><span class="plan-feature-label">Precio Mensual</span><input type="number"
+                  class="plan-feature-input" value="299" data-field="price"></div>
+              <div class="plan-feature"><span class="plan-feature-label">Precio Anual</span><input type="number"
+                  class="plan-feature-input" value="2870" data-field="price_year"></div>
+              <div class="plan-feature"><span class="plan-feature-label">Mensajes IA/mes</span><input type="number"
+                  class="plan-feature-input" value="5000" data-field="ai_messages"></div>
+              <div class="plan-feature"><span class="plan-feature-label">Bots RPA simultáneos</span><input type="number"
+                  class="plan-feature-input" value="15" data-field="rpa_bots"></div>
+              <div class="plan-feature"><span class="plan-feature-label">Auditoría Blockchain</span>
+                <div class="plan-feature-toggle active" onclick="toggleFeature(this)" data-feature="blockchain"></div>
+              </div>
+              <div class="plan-feature"><span class="plan-feature-label">Soporte Prioritario</span>
+                <div class="plan-feature-toggle active" onclick="toggleFeature(this)" data-feature="priority_support">
+                </div>
+              </div>
+              <div class="plan-feature"><span class="plan-feature-label">Multi-empresa (hasta 3)</span>
+                <div class="plan-feature-toggle active" onclick="toggleFeature(this)" data-feature="multi_tenant"></div>
+              </div>
+            </div>
+            <div class="plan-footer">
+              <button class="btn btn-outline btn-sm" onclick="editPlan('pro')"><i class="fas fa-edit"></i>
+                Editar</button>
+              <button class="btn btn-ghost btn-sm" onclick="previewPlan('pro')"><i class="fas fa-eye"></i>
+                Vista</button>
+            </div>
+          </div>
+          <!-- ENTERPRISE PLAN -->
+          <div class="plan-card reveal" data-plan="enterprise" style="transition-delay:.2s;">
+            <div class="plan-header">
+              <span class="plan-badge enterprise">Enterprise</span>
+              <div class="plan-name">Corporativo</div>
+              <div class="plan-price">Custom <span></span></div>
+              <div class="plan-period">Para organizaciones grandes</div>
+            </div>
+            <div class="plan-body">
+              <div class="plan-feature"><span class="plan-feature-label">Precio Mensual</span><input type="text"
+                  class="plan-feature-input" value="Custom" data-field="price" style="text-align:center;" disabled>
+              </div>
+              <div class="plan-feature"><span class="plan-feature-label">Precio Anual</span><input type="text"
+                  class="plan-feature-input" value="Custom" data-field="price_year" style="text-align:center;" disabled>
+              </div>
+              <div class="plan-feature"><span class="plan-feature-label">Mensajes IA/mes</span><input type="text"
+                  class="plan-feature-input" value="Ilimitado" data-field="ai_messages" style="text-align:center;"
+                  disabled></div>
+              <div class="plan-feature"><span class="plan-feature-label">Bots RPA simultáneos</span><input type="text"
+                  class="plan-feature-input" value="Ilimitado" data-field="rpa_bots" style="text-align:center;"
+                  disabled></div>
+              <div class="plan-feature"><span class="plan-feature-label">Auditoría Blockchain Privada</span>
+                <div class="plan-feature-toggle active" onclick="toggleFeature(this)" data-feature="blockchain"></div>
+              </div>
+              <div class="plan-feature"><span class="plan-feature-label">Soporte 24/7 Dedicado</span>
+                <div class="plan-feature-toggle active" onclick="toggleFeature(this)" data-feature="priority_support">
+                </div>
+              </div>
+              <div class="plan-feature"><span class="plan-feature-label">Multi-empresa Ilimitado</span>
+                <div class="plan-feature-toggle active" onclick="toggleFeature(this)" data-feature="multi_tenant"></div>
+              </div>
+            </div>
+            <div class="plan-footer">
+              <button class="btn btn-outline btn-sm" onclick="editPlan('enterprise')"><i class="fas fa-edit"></i>
+                Editar</button>
+              <button class="btn btn-ghost btn-sm" onclick="previewPlan('enterprise')"><i class="fas fa-eye"></i>
+                Vista</button>
+            </div>
+          </div>
+        </div>
+        <div
+          style="margin-top:24px;padding:16px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);font-size:13px;color:var(--gray);">
+          <i class="fas fa-info-circle" style="color:var(--accent);margin-right:8px;"></i>
+          <strong>Nota:</strong> Los cambios en los planes se aplicarán a nuevos registros. Los tenants existentes
+          mantendrán su configuración actual hasta su próxima renovación.
+        </div>
+      </div>
+
+      <!-- TAB: PAYMENT HISTORY -->
+      <div class="tab-content" id="tab-payments">
+        <div class="payments-header">
+          <div class="filters-group">
+            <select class="filter-select" id="filterStatus" onchange="filterPayments()">
+              <option value="">Todos los estados</option>
+              <option value="success">✓ Exitosos</option>
+              <option value="failed">✗ Fallidos</option>
+              <option value="pending">⏳ Pendientes</option>
+              <option value="refunded">↩ Reembolsados</option>
+            </select>
+            <select class="filter-select" id="filterPlan" onchange="filterPayments()">
+              <option value="">Todos los planes</option>
+              <option value="free">Free</option>
+              <option value="pro">Pro</option>
+              <option value="enterprise">Enterprise</option>
+            </select>
+            <div class="date-range">
+              <input type="date" class="date-input" id="dateFrom" placeholder="Desde">
+              <span style="color:var(--gray);">-</span>
+              <input type="date" class="date-input" id="dateTo" placeholder="Hasta">
+            </div>
+          </div>
+          <button class="btn btn-ghost btn-sm" onclick="resetPaymentFilters()"><i class="fas fa-undo"></i> Limpiar
+            Filtros</button>
+        </div>
+        <table class="payments-table">
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Tenant</th>
+              <th>Plan</th>
+              <th>Monto</th>
+              <th>Método</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="paymentsBody"></tbody>
+        </table>
+        <div class="pagination">
+          <div class="pagination-info">Mostrando <strong>1-10</strong> de <strong>1,247</strong> transacciones</div>
+          <div class="pagination-btns">
+            <button class="pagination-btn" disabled><i class="fas fa-chevron-left"></i></button>
+            <button class="pagination-btn active">1</button>
+            <button class="pagination-btn">2</button>
+            <button class="pagination-btn">3</button>
+            <span style="color:var(--gray);">...</span>
+            <button class="pagination-btn">125</button>
+            <button class="pagination-btn"><i class="fas fa-chevron-right"></i></button>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB: PROMO CODES -->
+      <div class="tab-content" id="tab-promos">
+        <div class="promo-header">
+          <div class="promo-stats">
+            <div class="promo-stat">
+              <div class="promo-stat-value" id="activePromos">12</div>
+              <div class="promo-stat-label">Activos</div>
+            </div>
+            <div class="promo-stat">
+              <div class="promo-stat-value" id="usedPromos">847</div>
+              <div class="promo-stat-label">Usos Totales</div>
+            </div>
+            <div class="promo-stat">
+              <div class="promo-stat-value">$24.3K</div>
+              <div class="promo-stat-label">Descuentos Aplicados</div>
+            </div>
+          </div>
+          <button class="btn btn-acc btn-sm" onclick="openModal('createPromoModal')"><i class="fas fa-plus"></i> Crear
+            Código</button>
+        </div>
+        <div class="promo-grid">
+          <!-- PROMO 1 -->
+          <div class="promo-card reveal">
+            <div style="display:flex;justify-content:space-between;align-items:start;">
+              <div><span class="plan-badge pro" style="margin-bottom:8px;">Activo</span>
+                <div class="promo-code-display"><span class="promo-code">WELCOME20</span><button class="promo-copy-btn"
+                    onclick="copyCode('WELCOME20')" title="Copiar"><i class="fas fa-copy"></i></button></div>
+              </div>
+              <div class="plan-feature-toggle active" onclick="togglePromoStatus(this)" style="margin:0;"></div>
+            </div>
+            <div class="promo-details">
+              <div class="promo-detail">
+                <div class="promo-detail-label">Tipo</div>
+                <div class="promo-detail-value">20% descuento</div>
+              </div>
+              <div class="promo-detail">
+                <div class="promo-detail-label">Usos</div>
+                <div class="promo-detail-value">234 / ∞</div>
+              </div>
+              <div class="promo-detail">
+                <div class="promo-detail-label">Plan</div>
+                <div class="promo-detail-value">Todos</div>
+              </div>
+              <div class="promo-detail">
+                <div class="promo-detail-label">Vence</div>
+                <div class="promo-detail-value">31 Dic 2026</div>
+              </div>
+            </div>
+            <div class="promo-actions">
+              <button class="btn btn-outline btn-sm" onclick="editPromo('WELCOME20')"><i class="fas fa-edit"></i>
+                Editar</button>
+              <button class="btn btn-danger btn-sm" onclick="invalidatePromo('WELCOME20')"><i class="fas fa-ban"></i>
+                Invalidar</button>
+            </div>
+          </div>
+          <!-- PROMO 2 -->
+          <div class="promo-card reveal" style="transition-delay:.1s;">
+            <div style="display:flex;justify-content:space-between;align-items:start;">
+              <div><span class="plan-badge"
+                  style="background:rgba(248,113,113,0.15);color:var(--red);margin-bottom:8px;">Inactivo</span>
+                <div class="promo-code-display"><span class="promo-code" style="opacity:.6;">BLACKFRI25</span><button
+                    class="promo-copy-btn" onclick="copyCode('BLACKFRI25')" title="Copiar" style="opacity:.6;"><i
+                      class="fas fa-copy"></i></button></div>
+              </div>
+              <div class="plan-feature-toggle" onclick="togglePromoStatus(this)" style="margin:0;"></div>
+            </div>
+            <div class="promo-details">
+              <div class="promo-detail">
+                <div class="promo-detail-label">Tipo</div>
+                <div class="promo-detail-value">$50 fijo</div>
+              </div>
+              <div class="promo-detail">
+                <div class="promo-detail-label">Usos</div>
+                <div class="promo-detail-value">500 / 500</div>
+              </div>
+              <div class="promo-detail">
+                <div class="promo-detail-label">Plan</div>
+                <div class="promo-detail-value">Pro, Enterprise</div>
+              </div>
+              <div class="promo-detail">
+                <div class="promo-detail-label">Vence</div>
+                <div class="promo-detail-value">30 Nov 2025</div>
+              </div>
+            </div>
+            <div class="promo-actions">
+              <button class="btn btn-outline btn-sm" onclick="editPromo('BLACKFRI25')"><i class="fas fa-edit"></i>
+                Editar</button>
+              <button class="btn btn-ghost btn-sm" onclick="deletePromo('BLACKFRI25')"><i class="fas fa-trash"></i>
+                Eliminar</button>
+            </div>
+          </div>
+          <!-- PROMO 3 -->
+          <div class="promo-card reveal" style="transition-delay:.2s;">
+            <div style="display:flex;justify-content:space-between;align-items:start;">
+              <div><span class="plan-badge pro" style="margin-bottom:8px;">Activo</span>
+                <div class="promo-code-display"><span class="promo-code">EARLYBIRD</span><button class="promo-copy-btn"
+                    onclick="copyCode('EARLYBIRD')" title="Copiar"><i class="fas fa-copy"></i></button></div>
+              </div>
+              <div class="plan-feature-toggle active" onclick="togglePromoStatus(this)" style="margin:0;"></div>
+            </div>
+            <div class="promo-details">
+              <div class="promo-detail">
+                <div class="promo-detail-label">Tipo</div>
+                <div class="promo-detail-value">15% descuento</div>
+              </div>
+              <div class="promo-detail">
+                <div class="promo-detail-label">Usos</div>
+                <div class="promo-detail-value">89 / 200</div>
+              </div>
+              <div class="promo-detail">
+                <div class="promo-detail-label">Plan</div>
+                <div class="promo-detail-value">Enterprise</div>
+              </div>
+              <div class="promo-detail">
+                <div class="promo-detail-label">Vence</div>
+                <div class="promo-detail-value">15 Mar 2027</div>
+              </div>
+            </div>
+            <div class="promo-actions">
+              <button class="btn btn-outline btn-sm" onclick="editPromo('EARLYBIRD')"><i class="fas fa-edit"></i>
+                Editar</button>
+              <button class="btn btn-danger btn-sm" onclick="invalidatePromo('EARLYBIRD')"><i class="fas fa-ban"></i>
+                Invalidar</button>
+            </div>
+          </div>
+          <!-- ADD NEW -->
+          <div class="promo-card reveal"
+            style="border-style:dashed;justify-content:center;align-items:center;min-height:280px;transition-delay:.3s;cursor:pointer;"
+            onclick="openModal('createPromoModal')">
+            <div style="text-align:center;color:var(--gray);">
+              <i class="fas fa-plus-circle" style="font-size:32px;color:var(--accent);margin-bottom:12px;"></i>
+              <div style="font-weight:600;color:var(--white);margin-bottom:4px;">Crear Nuevo Código</div>
+              <div style="font-size:12px;">Genera cupones de descuento personalizados</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="auth-check.js"></script>
+  <script>
+    // ── Custom Cursor ────────────────────────────────────
+    const dot = document.getElementById('cursor-dot'), ring = document.getElementById('cursor-ring'), glow = document.getElementById('cursor-glow');
+    let mx = 0, my = 0, rx = 0, ry = 0;
+    document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; dot.style.left = mx + 'px'; dot.style.top = my + 'px'; glow.style.left = mx + 'px'; glow.style.top = my + 'px'; });
+    function animRing() { rx += (mx - rx) * 0.12; ry += (my - ry) * 0.12; ring.style.left = rx + 'px'; ring.style.top = ry + 'px'; requestAnimationFrame(animRing); }
+    animRing();
+    document.querySelectorAll('a,button,.sidebar-link,.plan-feature-toggle,.promo-copy-btn,.tab-btn').forEach(el => {
+      el.addEventListener('mouseenter', () => { ring.style.width = '50px'; ring.style.height = '50px'; ring.style.opacity = '.5'; });
+      el.addEventListener('mouseleave', () => { ring.style.width = '36px'; ring.style.height = '36px'; ring.style.opacity = '1'; });
+    });
+
+    // ── Scroll Progress ──────────────────────────────────
+    window.addEventListener('scroll', () => { const p = (window.scrollY / (document.documentElement.scrollHeight - innerHeight)) * 100; document.getElementById('progress-fill').style.width = p + '%'; });
+
+    // ── Reveal ───────────────────────────────────────────
+    const obs = new IntersectionObserver(entries => { entries.forEach((e, i) => { if (e.isIntersecting) setTimeout(() => e.target.classList.add('in'), i * 50); }); }, { threshold: 0.05 });
+    document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+
+    // ── Sidebar Toggle ───────────────────────────────────
+    function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
+    document.addEventListener('click', e => { const sb = document.getElementById('sidebar'), tg = document.getElementById('sidebarToggle'); if (window.innerWidth <= 900 && sb.classList.contains('open') && !sb.contains(e.target) && !tg.contains(e.target)) sb.classList.remove('open'); });
+
+    // ── Tabs ─────────────────────────────────────────────
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelector(`.tab-btn[data-tab="${tabId}"]`).classList.add('active');
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      document.getElementById(`tab-${tabId}`).classList.add('active');
+      if (tabId === 'payments') renderPayments(); if (tabId === 'promos') updatePromoStats();
+    }
+
+    // ── Plan Editor ──────────────────────────────────────
+    let editedPlans = new Set();
+    function editPlan(pid) {
+      const card = document.querySelector(`.plan-card[data-plan="${pid}"]`); card.classList.add('editing');
+      card.querySelectorAll('.plan-feature-input').forEach(i => { if (!i.disabled) i.disabled = false; });
+      document.getElementById('saveChangesBtn').style.display = 'inline-flex'; editedPlans.add(pid);
+      showToast(`Editando plan ${pid.toUpperCase()}`, 'info');
+    }
+    function toggleFeature(el) { if (el.closest('.plan-card').classList.contains('editing')) { el.classList.toggle('active'); editedPlans.add(el.closest('.plan-card').dataset.plan); document.getElementById('saveChangesBtn').style.display = 'inline-flex'; } }
+    function previewPlan(pid) { showToast(`Vista previa del plan ${pid.toUpperCase()}`, 'info'); }
+    function saveAllChanges() {
+      if (editedPlans.size === 0) return;
+      const btn = document.getElementById('saveChangesBtn'), orig = btn.innerHTML;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...'; btn.disabled = true;
+      setTimeout(() => {
+        document.querySelectorAll('.plan-card.editing').forEach(c => { c.classList.remove('editing'); c.querySelectorAll('.plan-feature-input').forEach(i => i.disabled = true); });
+        editedPlans.clear(); document.getElementById('saveChangesBtn').style.display = 'none'; btn.innerHTML = orig; btn.disabled = false;
+        showToast('✓ Cambios guardados', 'success');
+      }, 1500);
+    }
+
+    // ── Payments ─────────────────────────────────────────
+    const payments = [
+      { id: 'TXN-8472', date: '2026-11-14', tenant: 'TechCorp Solutions', plan: 'enterprise', amount: '$2,499', method: 'visa', status: 'success' },
+      { id: 'TXN-8471', date: '2026-11-14', tenant: 'HealthSys Medical', plan: 'pro', amount: '$299', method: 'mastercard', status: 'success' },
+      { id: 'TXN-8470', date: '2026-11-13', tenant: 'RetailPlus Chain', plan: 'pro', amount: '$299', method: 'paypal', status: 'failed' },
+      { id: 'TXN-8469', date: '2026-11-13', tenant: 'FinanceLab Analytics', plan: 'enterprise', amount: '$2,499', method: 'visa', status: 'success' },
+      { id: 'TXN-8468', date: '2026-11-12', tenant: 'LogiSoft Transport', plan: 'free', amount: '$0', method: 'visa', status: 'success' },
+      { id: 'TXN-8467', date: '2026-11-12', tenant: 'Infinihon Corp', plan: 'pro', amount: '$299', method: 'mastercard', status: 'pending' },
+      { id: 'TXN-8466', date: '2026-11-11', tenant: 'EduPlatform Global', plan: 'free', amount: '$0', method: 'paypal', status: 'success' },
+      { id: 'TXN-8465', date: '2026-11-11', tenant: 'ManufacturaFlex', plan: 'enterprise', amount: '$2,499', method: 'visa', status: 'refunded' },
+      { id: 'TXN-8464', date: '2026-11-10', tenant: 'AgroTech Innovations', plan: 'pro', amount: '$299', method: 'mastercard', status: 'success' },
+      { id: 'TXN-8463', date: '2026-11-10', tenant: 'CyberSecure Ltd', plan: 'enterprise', amount: '$2,499', method: 'visa', status: 'success' }
+    ];
+    function renderPayments(data = payments) {
+      const tbody = document.getElementById('paymentsBody'); tbody.innerHTML = '';
+      data.forEach(p => {
+        const row = document.createElement('tr');
+        row.innerHTML = `<td>${new Date(p.date).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
+      <td><div class="payment-tenant"><div class="payment-avatar">${p.tenant.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()}</div><div><div class="payment-name">${p.tenant}</div><div class="payment-id">${p.id}</div></div></div></td>
+      <td><span class="plan-badge ${p.plan}">${p.plan.charAt(0).toUpperCase() + p.plan.slice(1)}</span></td>
+      <td style="font-weight:600;color:var(--white);">${p.amount}</td>
+      <td><div class="payment-method ${p.method}"><i class="fab fa-${p.method === 'visa' ? 'cc-visa' : p.method === 'mastercard' ? 'cc-mastercard' : 'paypal'}"></i><span style="text-transform:capitalize;">${p.method}</span></div></td>
+      <td><span class="status-pill ${p.status}"><span class="status-dot"></span>${p.status.charAt(0).toUpperCase() + p.status.slice(1)}</span></td>
+      <td><button class="action-icon-btn" title="Ver detalle" onclick="viewPayment('${p.id}')"><i class="fas fa-eye"></i></button>${p.status === 'failed' ? '<button class="action-icon-btn" title="Reintentar" onclick="retryPayment(\'' + p.id + '\')"><i class="fas fa-redo"></i></button>' : ''}${p.status === 'success' ? '<button class="action-icon-btn" title="Reembolsar" onclick="refundPayment(\'' + p.id + '\')"><i class="fas fa-undo"></i></button>' : ''}</td>`;
+        tbody.appendChild(row);
+      });
+    }
+    function filterPayments() {
+      const s = document.getElementById('filterStatus').value, pl = document.getElementById('filterPlan').value, f = document.getElementById('dateFrom').value, t = document.getElementById('dateTo').value;
+      let d = [...payments]; if (s) d = d.filter(p => p.status === s); if (pl) d = d.filter(p => p.plan === pl); if (f) d = d.filter(p => p.date >= f); if (t) d = d.filter(p => p.date <= t);
+      renderPayments(d);
+    }
+    function resetPaymentFilters() { document.getElementById('filterStatus').value = ''; document.getElementById('filterPlan').value = ''; document.getElementById('dateFrom').value = ''; document.getElementById('dateTo').value = ''; renderPayments(); }
+    function viewPayment(id) { showToast(`Detalle: ${id}`, 'info'); }
+    function retryPayment(id) { if (confirm('¿Reintentar cobro?')) showToast('✓ Reintento programado', 'success'); }
+    function refundPayment(id) { if (confirm('¿Procesar reembolso?')) showToast('✓ Reembolso procesado', 'success'); }
+
+    // ── Promo Codes ──────────────────────────────────────
+    const promoCodes = [
+      { code: 'WELCOME20', type: 'percent', value: 20, uses: 234, maxUses: Infinity, plan: 'all', active: true, endDate: '2026-12-31' },
+      { code: 'BLACKFRI25', type: 'fixed', value: 50, uses: 500, maxUses: 500, plan: 'pro,enterprise', active: false, endDate: '2025-11-30' },
+      { code: 'EARLYBIRD', type: 'percent', value: 15, uses: 89, maxUses: 200, plan: 'enterprise', active: true, endDate: '2027-03-15' }
+    ];
+    function updatePromoStats() {
+      document.getElementById('activePromos').textContent = promoCodes.filter(p => p.active).length;
+      document.getElementById('usedPromos').textContent = promoCodes.reduce((s, p) => s + p.uses, 0).toLocaleString();
+    }
+    function openModal(id) { document.getElementById(id).classList.add('active'); }
+    function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+    function createPromoCode() {
+      const form = document.getElementById('createPromoForm');
+      if (form.checkValidity()) {
+        const code = document.getElementById('promoCode').value.toUpperCase(), btn = form.closest('.modal').querySelector('.btn-acc'), orig = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creando...'; btn.disabled = true;
+        setTimeout(() => {
+          promoCodes.push({ code: code, type: document.getElementById('promoType').value, value: parseInt(document.getElementById('promoValue').value), uses: 0, maxUses: document.getElementById('promoUses').value || Infinity, plan: document.getElementById('promoPlan').value, active: true, endDate: document.getElementById('promoEnd').value });
+          closeModal('createPromoModal'); form.reset(); btn.innerHTML = orig; btn.disabled = false; updatePromoStats(); showToast(`✓ Código ${code} creado`, 'success');
+        }, 1200);
+      } else form.reportValidity();
+    }
+    function copyCode(code) { navigator.clipboard.writeText(code); showToast(`✓ "${code}" copiado`, 'success'); }
+    function togglePromoStatus(el) {
+      const card = el.closest('.promo-card'), code = card.querySelector('.promo-code').textContent, promo = promoCodes.find(p => p.code === code);
+      if (promo) {
+        promo.active = !promo.active; el.classList.toggle('active');
+        const badge = card.querySelector('.plan-badge');
+        badge.className = `plan-badge ${promo.active ? 'pro' : ''}`; badge.textContent = promo.active ? 'Activo' : 'Inactivo';
+        if (promo.active) { badge.style.background = 'var(--accent)'; badge.style.color = '#fff'; }
+        else { badge.style.background = 'rgba(248,113,113,0.15)'; badge.style.color = 'var(--red)'; }
+        showToast(`${promo.active ? '✓ Activado' : '○ Desactivado'}: ${code}`, promo.active ? 'success' : 'info'); updatePromoStats();
+      }
+    }
+    function editPromo(code) { showToast(`Editando: ${code}`, 'info'); }
+    function invalidatePromo(code) { if (confirm(`¿Invalidar "${code}"?`)) { const p = promoCodes.find(x => x.code === code); if (p) { p.active = false; showToast(`✓ "${code}" invalidado`, 'success'); updatePromoStats(); } } }
+    function deletePromo(code) { if (confirm(`¿Eliminar "${code}"?`)) { const i = promoCodes.findIndex(p => p.code === code); if (i !== -1) { promoCodes.splice(i, 1); showToast(`✓ "${code}" eliminado`, 'success'); updatePromoStats(); } } }
+
+    // ── Utilities ────────────────────────────────────────
+    function showToast(msg, type = 'info') {
+      const t = document.createElement('div'); t.className = `toast ${type}`;
+      t.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>${msg}`;
+      document.body.appendChild(t); setTimeout(() => { t.style.animation = 'slideOut .3s ease'; setTimeout(() => t.remove(), 300); }, 3000);
+    }
+    function exportBilling() { showToast('✓ Generando reporte...', 'info'); setTimeout(() => showToast('✓ Reporte descargado', 'success'), 1500); }
+
+    // ── Init ─────────────────────────────────────────────
+    window.addEventListener('load', () => {
+      renderPayments(); updatePromoStats();
+      document.getElementById('dateTo').value = new Date().toISOString().split('T')[0];
+      setTimeout(() => { document.querySelectorAll('.reveal').forEach((el, i) => { setTimeout(() => el.classList.add('in'), i * 50); }); }, 100);
+    });
+    document.querySelectorAll('.modal-overlay').forEach(o => { o.addEventListener('click', e => { if (e.target === o) o.classList.remove('active'); }); });
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') document.querySelectorAll('.modal-overlay.active').forEach(m => m.classList.remove('active'));
+      if (e.key === '/' && document.activeElement.tagName !== 'INPUT') { e.preventDefault(); document.querySelector('.topbar-search input').focus(); }
+      if (e.key === 's' && e.ctrlKey) { e.preventDefault(); if (editedPlans.size > 0) saveAllChanges(); }
+    });
+  </script>
+</body>
+
+</html>

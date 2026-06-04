@@ -1,0 +1,94 @@
+# Plan de Implementación - Seguridad, NocoDB y Dinamismo
+
+Este plan describe las modificaciones necesarias en el proyecto **Portal Pilot WEB** para robustecer la seguridad perimetral (autenticación obligatoria), habilitar la persistencia dinámica de datos (NocoDB) y hacer funcionales los correos y páginas corporativas.
+
+## User Review Required
+
+> [!IMPORTANT]
+> **Autenticación en Frontend:** Para evitar fugas de información, se agregará un script de verificación inmediata (`auth-check.js`) que validará la presencia del token JWT y su expiración antes de renderizar cualquier vista privada. Si no es válido, se redirigirá automáticamente a `login.html`.
+>
+> **Consistencia de Datos:** Las variables de entorno de producción están configuradas en el archivo `.env`. Mantendremos estas credenciales seguras.
+
+## Open Questions
+
+> [!NOTE]
+> **Gestión de Sesión:** ¿Deseas que cuando la sesión expire el sistema muestre una alerta o simplemente redirija de forma silenciosa al `login.html`? Por defecto, implementaremos una redirección directa para una experiencia limpia.
+
+## Proposed Changes
+
+---
+
+### Componente: Backend (Node.js & Express)
+
+#### [MODIFY] [server.js](file:///c:/Users/DELL/Downloads/Portal-Pilot-WEB/backend/server.js)
+- Corregir las rutas de las plantillas de correo en las funciones `enviarAlertaNuevoAcceso` y `enviarAlertaActivacionCuenta` para apuntar a `EMAIL PORTAL PILOT` en lugar de `EMAIL` (que no existe).
+- Implementar los endpoints seguros de administración de usuarios en NocoDB:
+  - `GET /api/users` (Con autenticación JWT, lista usuarios).
+  - `POST /api/users` (Con autenticación JWT, hashea contraseña y guarda en NocoDB).
+  - `PUT /api/users/:id` (Con autenticación JWT, actualiza datos de usuario en NocoDB).
+  - `DELETE /api/users/:id` (Con autenticación JWT, elimina usuario de NocoDB).
+- Implementar el endpoint `POST /api/recuperacion` que:
+  - Busque si existe el email en `USUARIOS_TABLE`.
+  - Genere un código temporal de 6 dígitos.
+  - Almacene el código en memoria con expiración de 10 minutos.
+  - Envíe el correo usando la plantilla `EMAIL PORTAL PILOT/Recuperación de Cuenta.html` reemplazando el código estático.
+- Implementar el endpoint `POST /api/recuperacion/verificar` para validar el código enviado y permitir la actualización de la contraseña.
+- Integrar el envío del correo de Onboarding (`Onboarding.html`) cuando se realice un registro exitoso en `/api/registro`.
+
+---
+
+### Componente: Seguridad y Dinamismo (Frontend)
+
+#### [NEW] [auth-check.js](file:///c:/Users/DELL/Downloads/Portal-Pilot-WEB/auth-check.js)
+Crear un script global para controlar la autenticación en el cliente y poblar elementos dinámicos:
+- Validar existencia y expiración del JWT en `localStorage`. Redirigir a `login.html` si no es válido.
+- En el evento `DOMContentLoaded`:
+  - Modificar los elementos de la interfaz de usuario que muestran el nombre del usuario logueado (`.sidebar-username`, `.profile-info .name`, `.avatar`, `.profile-circle-large`, saludos personalizados en `inicio.html`, etc.) basándose en el JWT.
+  - Mostrar el código de empresa (`empresaCodigo` o nombre) en lugar de valores estáticos como `InfiniMex` o `Valeria Torres`.
+  - Escuchar los eventos de cierre de sesión (`#logoutBtn` o enlaces de cerrar sesión) para limpiar `localStorage` y redirigir.
+
+---
+
+### Componente: Páginas HTML
+
+#### [MODIFY] [login.html](file:///c:/Users/DELL/Downloads/Portal-Pilot-WEB/login.html)
+- Conectar el formulario de recuperación de contraseña con el endpoint `/api/recuperacion` para enviar el email con el código dinámico.
+
+#### [MODIFY] Páginas del Sistema Admin (Raíz)
+- [inicio.html](file:///c:/Users/DELL/Downloads/Portal-Pilot-WEB/inicio.html)
+- [dashboard.html](file:///c:/Users/DELL/Downloads/Portal-Pilot-WEB/dashboard.html)
+- [tenants.html](file:///c:/Users/DELL/Downloads/Portal-Pilot-WEB/tenants.html)
+- [usuarios.html](file:///c:/Users/DELL/Downloads/Portal-Pilot-WEB/usuarios.html)
+- [tenant_detail.html](file:///c:/Users/DELL/Downloads/Portal-Pilot-WEB/tenant_detail.html)
+- [global_settings.html](file:///c:/Users/DELL/Downloads/Portal-Pilot-WEB/global_settings.html)
+- [billing_plans.html](file:///c:/Users/DELL/Downloads/Portal-Pilot-WEB/billing_plans.html)
+
+*Cambios:*
+- Incluir en la cabecera `<head>`: `<script src="auth-check.js"></script>` para bloquear renderizado si no hay sesión activa.
+- Conectar las operaciones (ej. cargar y guardar usuarios de `usuarios.html`, cargar tenants de `tenants.html`) con los endpoints correspondientes del backend en lugar de simulaciones offline (mock data).
+- Reemplazar nombres y roles estáticos por selectores que sean actualizados automáticamente por `auth-check.js`.
+
+#### [MODIFY] Páginas de Compañeros (enterprise/)
+- [enterprise/dashboard-amy.html](file:///c:/Users/DELL/Downloads/Portal-Pilot-WEB/enterprise/dashboard-amy.html)
+- [enterprise/team-amy.html](file:///c:/Users/DELL/Downloads/Portal-Pilot-WEB/enterprise/team-amy.html)
+- [enterprise/fleet-sofia.html](file:///c:/Users/DELL/Downloads/Portal-Pilot-WEB/enterprise/fleet-sofia.html)
+- [enterprise/security-sofia.html](file:///c:/Users/DELL/Downloads/Portal-Pilot-WEB/enterprise/security-sofia.html)
+- [enterprise/automation-amy.html](file:///c:/Users/DELL/Downloads/Portal-Pilot-WEB/enterprise/automation-amy.html)
+
+*Cambios:*
+- Incluir en la cabecera `<head>`: `<script src="../auth-check.js"></script>` para validar sesión.
+- Actualizar elementos del perfil del sidebar de forma dinámica con la sesión activa (nombre de usuario, rol, iniciales del avatar).
+- Configurar el enlace de "Cerrar Sesión" del sidebar para ejecutar la limpieza de la sesión mediante el ID/Clase correspondientes o un atributo inline.
+
+## Verification Plan
+
+### Automated Tests
+- Validar las respuestas HTTP del backend en rutas seguras enviando tokens inválidos/vacíos.
+- Validar los flujos de correo de nodemailer configurados en el `.env`.
+
+### Manual Verification
+1. Acceder directamente a `inicio.html` o `enterprise/dashboard-amy.html` sin haber iniciado sesión; verificar que redirige de inmediato a `login.html`.
+2. Iniciar sesión, verificar el correo de alerta de acceso en la bandeja del destinatario.
+3. Comprobar que en `inicio.html` y en todas las páginas de `enterprise/` el nombre del usuario y el rol coinciden con los guardados en `localStorage` tras el login.
+4. Crear/Modificar usuarios en `usuarios.html` y validar que los registros se actualizan de forma real en la base de datos de NocoDB.
+5. Presionar el botón "Cerrar Sesión" en cualquier página y verificar la eliminación de datos de almacenamiento local y la redirección.

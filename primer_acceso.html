@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Primer Acceso — Portal Pilot</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    /* ─── RESET & TOKENS ───────────────── */
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --bg: #04040a; --bg2: #07070f; --bg3: #0c0c1a; --card: #0e0e1c; --card2: #111124;
+      --border: rgba(139, 92, 246, 0.1); --border2: rgba(139, 92, 246, 0.22);
+      --accent: #8b5cf6; --accent2: #7c3aed; --accent-glow: rgba(139, 92, 246, 0.35);
+      --cyan: #a78bfa; --white: #ffffff; --gray: #5d5d7a; --gray2: #9ca3af;
+      --text: #c4c4d4; --green: #34d399; --red: #f87171; --yellow: #fbbf24;
+      --radius: 10px; --radius-lg: 18px;
+    }
+    html, body { height: 100%; font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); overflow-x: hidden; -webkit-font-smoothing: antialiased; }
+    
+    /* BG Effects */
+    .page-bg { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
+    .grid-layer { position: absolute; inset: 0; background-image: linear-gradient(rgba(139,92,246,.03) 1px, transparent 1px), linear-gradient(90deg, rgba(139,92,246,.03) 1px, transparent 1px); background-size: 60px 60px; mask-image: radial-gradient(ellipse at center, black 30%, transparent 75%); }
+    .orb-tl { position: absolute; top: -200px; left: -200px; width: 600px; height: 600px; border-radius: 50%; background: radial-gradient(circle, rgba(139,92,246,.13) 0%, transparent 65%); }
+    .orb-br { position: absolute; bottom: -200px; right: -200px; width: 500px; height: 500px; border-radius: 50%; background: radial-gradient(circle, rgba(167,139,250,.09) 0%, transparent 65%); }
+
+    /* LAYOUT */
+    .page-wrap { position: relative; z-index: 1; min-height: 100vh; display: grid; grid-template-columns: 1fr 1fr; }
+    
+    /* LEFT PANEL */
+    .panel-left { display: flex; flex-direction: column; justify-content: space-between; padding: clamp(32px,4vw,56px); border-right: 1px solid var(--border); background: rgba(4,4,10,0.6); backdrop-filter: blur(10px); }
+    .brand { display: flex; align-items: center; gap: 12px; margin-bottom: auto; }
+    .brand-icon { width: 40px; height: 40px; background: var(--accent); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; color: #fff; box-shadow: 0 0 28px var(--accent-glow); }
+    .brand-name { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 800; color: var(--white); letter-spacing: -.5px; }
+    
+    .left-hero { flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 40px 0; }
+    .left-badge { display: inline-flex; align-items: center; gap: 8px; background: rgba(139,92,246,0.08); border: 1px solid var(--border2); border-radius: 40px; padding: 6px 16px; font-size: 11px; color: var(--cyan); font-weight: 600; letter-spacing: .3px; margin-bottom: 28px; width: fit-content; }
+    .left-badge .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: blink 2s infinite; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+    
+    .left-title { font-family: 'Syne', sans-serif; font-size: clamp(32px,4vw,48px); font-weight: 800; line-height: 1.1; letter-spacing: -2px; color: var(--white); margin-bottom: 16px; }
+    .left-title .grad { background: linear-gradient(135deg, var(--white) 30%, var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .left-sub { font-size: 14px; color: var(--gray); line-height: 1.7; max-width: 320px; }
+    
+    .security-tips { margin-top: 32px; padding: 16px; background: rgba(139,92,246,0.05); border: 1px solid var(--border); border-radius: var(--radius); }
+    .security-tips-title { font-size: 12px; font-weight: 600; color: var(--white); margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+    .security-tips-list { list-style: none; font-size: 11px; color: var(--gray); line-height: 1.8; }
+    .security-tips-list li { display: flex; align-items: flex-start; gap: 6px; }
+    .security-tips-list li::before { content: '✓'; color: var(--green); font-weight: 700; margin-top: 2px; }
+    
+    .left-footer { font-size: 11px; color: var(--gray); display: flex; align-items: center; gap: 6px; }
+    .left-footer .sep { color: var(--border2); }
+
+    /* RIGHT PANEL */
+    .panel-right { display: flex; align-items: center; justify-content: center; padding: clamp(24px,4vw,56px); background: rgba(7,7,15,0.5); }
+    .auth-box { width: 100%; max-width: 480px; }
+    
+    /* Progress Steps */
+    .progress-steps { display: flex; align-items: center; gap: 0; margin-bottom: 32px; }
+    .step { display: flex; flex-direction: column; align-items: center; flex: 1; position: relative; }
+    .step-num { width: 32px; height: 32px; border-radius: 50%; border: 2px solid var(--border2); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: var(--gray); background: var(--card2); transition: all .3s; font-family: 'Syne', sans-serif; z-index: 2; }
+    .step.active .step-num { border-color: var(--accent); background: var(--accent); color: #fff; box-shadow: 0 0 16px var(--accent-glow); }
+    .step.done .step-num { border-color: var(--green); background: var(--green); color: #000; }
+    .step-line { position: absolute; top: 16px; left: 50%; right: -50%; height: 2px; background: var(--border); z-index: 1; }
+    .step.done .step-line { background: var(--green); }
+    .step:last-child .step-line { display: none; }
+    .step-label { font-size: 10px; color: var(--gray); margin-top: 8px; text-align: center; }
+    .step.active .step-label { color: var(--accent); font-weight: 600; }
+
+    /* Form Header */
+    .form-header { text-align: center; margin-bottom: 28px; }
+    .form-header-icon { width: 56px; height: 56px; border-radius: 50%; background: rgba(139,92,246,0.12); border: 2px solid var(--accent); display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; font-size: 22px; color: var(--accent); }
+    .form-header h2 { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 800; color: var(--white); margin-bottom: 6px; }
+    .form-header p { font-size: 13px; color: var(--gray); }
+    .user-badge { display: inline-flex; align-items: center; gap: 6px; background: var(--card2); border: 1px solid var(--border); border-radius: 20px; padding: 4px 12px; font-size: 11px; color: var(--gray2); margin-top: 12px; }
+    .user-badge i { color: var(--cyan); }
+
+    /* Form Fields */
+    .form-panel { display: none; animation: fadeIn .3s ease; }
+    .form-panel.active { display: block; }
+    @keyframes fadeIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+    
+    .field { margin-bottom: 18px; }
+    .field label { display: block; font-size: 12px; font-weight: 600; color: var(--gray2); margin-bottom: 7px; letter-spacing: .3px; }
+    .input-wrap { position: relative; }
+    .input-wrap i { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-size: 15px; color: var(--gray); pointer-events: none; transition: color .2s; }
+    .input-wrap input { width: 100%; background: var(--card2); border: 1px solid var(--border2); border-radius: var(--radius); padding: 12px 14px 12px 40px; font-size: 14px; color: var(--white); font-family: 'DM Sans', sans-serif; outline: none; transition: border-color .2s, box-shadow .2s; }
+    .input-wrap input::placeholder { color: var(--gray); }
+    .input-wrap input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(139,92,246,0.15); }
+    .input-wrap input:focus+i { color: var(--accent); }
+    
+    /* FIXED: Toggle password button */
+    .input-wrap .toggle-pw { 
+      position: absolute; 
+      right: 14px; 
+      top: 50%; 
+      transform: translateY(-50%); 
+      background: none; 
+      border: none; 
+      color: var(--gray); 
+      font-size: 14px; 
+      cursor: pointer; 
+      padding: 4px; 
+      transition: color .2s;
+      z-index: 3;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .input-wrap .toggle-pw:hover { color: var(--white); }
+    .input-wrap .toggle-pw:active { transform: translateY(-50%) scale(0.95); }
+
+    /* Password Strength */
+    .strength-wrap { margin-top: 8px; }
+    .strength-bar { height: 4px; border-radius: 2px; background: rgba(255,255,255,.06); margin-bottom: 6px; overflow: hidden; }
+    .strength-fill { height: 100%; border-radius: 2px; width: 0; transition: width .3s, background .3s; }
+    .strength-label { font-size: 11px; display: flex; justify-content: space-between; }
+    .strength-requirements { margin-top: 12px; padding: 10px 12px; background: var(--card2); border: 1px solid var(--border); border-radius: var(--radius); font-size: 11px; color: var(--gray); }
+    .strength-requirements ul { list-style: none; margin: 0; padding: 0; }
+    .strength-requirements li { display: flex; align-items: center; gap: 6px; margin: 4px 0; transition: color .2s; }
+    .strength-requirements li::before { content: '○'; color: var(--gray); font-size: 10px; min-width: 12px; }
+    .strength-requirements li.valid::before { content: '✓'; color: var(--green); font-weight: 700; }
+    .strength-requirements li.valid { color: var(--green); }
+
+    /* Password Match */
+    .match-status { font-size: 11px; margin-top: 6px; display: flex; align-items: center; gap: 4px; min-height: 18px; }
+    .match-status.match { color: var(--green); }
+    .match-status.no-match { color: var(--red); }
+
+    /* Buttons */
+    .btn-primary { width: 100%; padding: 13px; border-radius: 40px; border: none; cursor: pointer; background: var(--accent); color: #fff; font-size: 14px; font-weight: 700; font-family: 'DM Sans', sans-serif; letter-spacing: .2px; transition: all .25s; display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 8px; }
+    .btn-primary:hover:not(:disabled) { background: var(--accent2); transform: translateY(-1px); box-shadow: 0 8px 28px var(--accent-glow); }
+    .btn-primary:disabled { opacity: .5; cursor: not-allowed; transform: none; box-shadow: none; }
+    .btn-secondary { width: 100%; padding: 13px; border-radius: 40px; border: 1px solid var(--border2); background: transparent; color: var(--gray2); font-size: 14px; font-weight: 600; font-family: 'DM Sans', sans-serif; cursor: pointer; transition: all .2s; margin-top: 12px; }
+    .btn-secondary:hover { border-color: var(--accent); color: var(--white); }
+
+    /* Messages */
+    .message { padding: 12px 16px; border-radius: var(--radius); margin-bottom: 20px; font-size: 13px; animation: slideDown .3s ease; }
+    .message.error { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: #ef4444; }
+    .message.success { background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.3); color: #22c55e; }
+    .message.info { background: rgba(139,92,246,0.1); border: 1px solid var(--border2); color: var(--cyan); }
+    @keyframes slideDown { from{opacity:0;transform:translateY(-8px)} to{opacity:1;transform:translateY(0)} }
+
+    /* Security Notice */
+    .security-notice { background: rgba(251,191,36,0.08); border: 1px solid rgba(251,191,36,0.2); border-left: 3px solid var(--yellow); padding: 12px 16px; border-radius: var(--radius); margin-bottom: 24px; font-size: 12px; color: var(--gray); display: flex; gap: 10px; align-items: flex-start; }
+    .security-notice i { color: var(--yellow); font-size: 16px; margin-top: 2px; flex-shrink: 0; }
+
+    /* Success State */
+    .success-state { text-align: center; padding: 20px 0; }
+    .success-icon { width: 80px; height: 80px; border-radius: 50%; background: rgba(52,211,153,0.12); border: 2px solid var(--green); display: flex; align-items: center; justify-content: center; margin: 0 auto 24px; font-size: 32px; color: var(--green); animation: popIn .4s ease; }
+    @keyframes popIn { 0%{transform:scale(0)} 70%{transform:scale(1.1)} 100%{transform:scale(1)} }
+    .success-state h3 { font-family: 'Syne', sans-serif; font-size: 20px; color: var(--white); margin-bottom: 8px; }
+    .success-state p { font-size: 13px; color: var(--gray); margin-bottom: 24px; }
+    .redirect-timer { font-size: 11px; color: var(--gray); }
+    .redirect-timer span { color: var(--accent); font-weight: 600; }
+
+    /* Responsive */
+    @media(max-width:900px) {
+      .page-wrap { grid-template-columns: 1fr; }
+      .panel-left { display: none; }
+      .panel-right { min-height: 100vh; padding: 24px; }
+      .auth-box { max-width: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- BG Effects -->
+  <div class="page-bg">
+    <div class="grid-layer"></div>
+    <div class="orb-tl"></div>
+    <div class="orb-br"></div>
+  </div>
+
+  <div class="page-wrap">
+    
+    <!-- LEFT PANEL -->
+    <div class="panel-left">
+      <div class="brand">
+        <div class="brand-icon"><i class="fas fa-robot"></i></div>
+        <div class="brand-name">PORTAL PILOT</div>
+      </div>
+
+      <div class="left-hero">
+        <div class="left-badge">
+          <div class="dot"></div>
+          <i class="fas fa-shield-alt"></i>&nbsp; SEGURIDAD EMPRESARIAL
+        </div>
+        <h1 class="left-title">Tu cuenta está <span class="grad">protegida</span></h1>
+        <p class="left-sub">Este es tu primer acceso. Por seguridad, debes establecer una contraseña permanente antes de continuar.</p>
+
+        <div class="security-tips">
+          <div class="security-tips-title"><i class="fas fa-lightbulb"></i> Consejos de seguridad</div>
+          <ul class="security-tips-list">
+            <li>Usa al menos 12 caracteres con mayúsculas, números y símbolos</li>
+            <li>No reutilices contraseñas de otros servicios</li>
+            <li>Activa 2FA en tu perfil después de este paso</li>
+            <li>Guarda tu contraseña en un gestor seguro</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="left-footer">
+        <span>© 2026 Portal Pilot</span><span class="sep">·</span><span>Cyberyx Vantage</span><span class="sep">·</span>
+        <a href="#" style="color:var(--accent);text-decoration:none;">Soporte</a>
+      </div>
+    </div>
+
+    <!-- RIGHT PANEL: Form -->
+    <div class="panel-right">
+      <div class="auth-box">
+
+        <!-- Progress Steps -->
+        <div class="progress-steps">
+          <div class="step active" id="step1">
+            <div class="step-num">1</div><div class="step-line"></div><div class="step-label">Verificar</div>
+          </div>
+          <div class="step" id="step2">
+            <div class="step-num">2</div><div class="step-line"></div><div class="step-label">Nueva</div>
+          </div>
+          <div class="step" id="step3">
+            <div class="step-num">3</div><div class="step-label">Confirmar</div>
+          </div>
+        </div>
+
+        <!-- Form Header -->
+        <div class="form-header">
+          <div class="form-header-icon"><i class="fas fa-key"></i></div>
+          <h2>Cambiar Contraseña Temporal</h2>
+          <p>Establece una contraseña segura para tu cuenta</p>
+          <div class="user-badge"><i class="fas fa-user"></i> <span id="displayEmail">usuario@empresa.com</span></div>
+        </div>
+
+        <!-- Messages -->
+        <div id="formMessage" class="message" style="display:none;"></div>
+
+        <!-- Security Notice -->
+        <div class="security-notice">
+          <i class="fas fa-exclamation-triangle"></i>
+          <div><strong>Contraseña temporal detectada</strong><br>Por políticas de seguridad, es obligatorio cambiar tu contraseña en el primer acceso.</div>
+        </div>
+
+        <!-- STEP 1: Verify Temp Password -->
+        <div class="form-panel active" id="panelStep1">
+          <form id="verifyForm">
+            <div class="field">
+              <label>CONTRASEÑA TEMPORAL ACTUAL</label>
+              <div class="input-wrap">
+                <i class="fas fa-lock"></i>
+                <input type="password" id="tempPass" placeholder="Ingresa la contraseña temporal" autocomplete="current-password" required>
+                <button type="button" class="toggle-pw" data-target="tempPass" aria-label="Mostrar contraseña"><i class="fas fa-eye"></i></button>
+              </div>
+            </div>
+            <button type="submit" class="btn-primary" id="btnVerify">
+              Verificar y Continuar <i class="fas fa-arrow-right"></i>
+            </button>
+          </form>
+          <button class="btn-secondary" onclick="resendTempPass()">
+            <i class="fas fa-redo"></i> ¿No recibiste la contraseña? Reenviar
+          </button>
+        </div>
+
+        <!-- STEP 2: New Password -->
+        <div class="form-panel" id="panelStep2">
+          <div class="field">
+            <label>NUEVA CONTRASEÑA</label>
+            <div class="input-wrap">
+              <i class="fas fa-lock"></i>
+              <input type="password" id="newPass" placeholder="Mínimo 12 caracteres" autocomplete="new-password" required>
+              <button type="button" class="toggle-pw" data-target="newPass" aria-label="Mostrar contraseña"><i class="fas fa-eye"></i></button>
+            </div>
+            <div class="strength-wrap">
+              <div class="strength-bar"><div class="strength-fill" id="strengthFill"></div></div>
+              <div class="strength-label"><span id="strengthText">Contraseña débil</span><span id="strengthPercent">0%</span></div>
+            </div>
+            <div class="strength-requirements">
+              <ul>
+                <li id="req-len">Mínimo 12 caracteres</li>
+                <li id="req-upper">Al menos 1 mayúscula (A-Z)</li>
+                <li id="req-lower">Al menos 1 minúscula (a-z)</li>
+                <li id="req-num">Al menos 1 número (0-9)</li>
+                <li id="req-symbol">Al menos 1 símbolo (!@#$%^&*)</li>
+              </ul>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <button class="btn-secondary" onclick="goToStep(1)"><i class="fas fa-arrow-left"></i> Atrás</button>
+            <button class="btn-primary" id="btnStep2" onclick="goToStep(3)" disabled>Continuar <i class="fas fa-arrow-right"></i></button>
+          </div>
+        </div>
+
+        <!-- STEP 3: Confirm Password -->
+        <div class="form-panel" id="panelStep3">
+          <div class="field">
+            <label>CONFIRMAR NUEVA CONTRASEÑA</label>
+            <div class="input-wrap">
+              <i class="fas fa-lock-open"></i>
+              <input type="password" id="confirmPass" placeholder="Repite tu nueva contraseña" autocomplete="new-password" required>
+              <button type="button" class="toggle-pw" data-target="confirmPass" aria-label="Mostrar contraseña"><i class="fas fa-eye"></i></button>
+            </div>
+            <div class="match-status" id="matchStatus"></div>
+          </div>
+          
+          <label class="check-label" style="display:flex;align-items:flex-start;gap:8px;margin:20px 0;cursor:pointer;">
+            <input type="checkbox" id="savePass" style="width:16px;height:16px;accent-color:var(--accent);margin-top:2px;">
+            <span style="font-size:12px;color:var(--gray2);line-height:1.5;"><strong style="color:var(--white);">Recomendación:</strong> Guarda esta contraseña en un gestor seguro. Portal Pilot nunca te pedirá esta contraseña por email.</span>
+          </label>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <button class="btn-secondary" onclick="goToStep(2)"><i class="fas fa-arrow-left"></i> Atrás</button>
+            <button class="btn-primary" id="btnStep3" onclick="completeSetup()" disabled><i class="fas fa-check-circle"></i> Finalizar y Acceder</button>
+          </div>
+        </div>
+
+        <!-- SUCCESS STATE -->
+        <div class="form-panel" id="panelSuccess">
+          <div class="success-state">
+            <div class="success-icon"><i class="fas fa-check"></i></div>
+            <h3>¡Contraseña actualizada!</h3>
+            <p>Tu cuenta está ahora protegida con tu nueva contraseña. Serás redirigido al dashboard en breve.</p>
+            <div class="redirect-timer">Redirigiendo en <span id="countdown">5</span> segundos...</div>
+          </div>
+          <button class="btn-primary" onclick="redirectToDashboard()" style="margin-top:16px;">Ir al Dashboard Ahora <i class="fas fa-arrow-right"></i></button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ── FIXED: Toggle Password Visibility ─────────────────
+    function togglePw(inputId, btn) {
+      const input = document.getElementById(inputId);
+      const icon = btn.querySelector('i');
+      if (!input || !icon) return;
+      
+      if (input.type === 'password') {
+        input.type = 'text';
+        icon.classList.remove('fa-eye');
+        icon.classList.add('fa-eye-slash');
+      } else {
+        input.type = 'password';
+        icon.classList.remove('fa-eye-slash');
+        icon.classList.add('fa-eye');
+      }
+      input.focus();
+    }
+
+    // Attach toggle events using data attributes (more reliable)
+    document.querySelectorAll('.toggle-pw').forEach(btn => {
+      btn.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        const targetId = this.getAttribute('data-target');
+        togglePw(targetId, this);
+      });
+    });
+
+    // ── Step Navigation (FIXED) ─────────────────
+    let currentStep = 1;
+    let isProcessing = false;
+
+    function goToStep(n, skipValidation = false) {
+      if (isProcessing) return;
+
+      // Validation (skip when called programmatically after verification)
+      if (!skipValidation) {
+        if (n === 2 && currentStep === 1) {
+          const tempPass = document.getElementById('tempPass').value.trim();
+          if (!tempPass) { showMessage('Ingresa tu contraseña temporal', 'error'); return; }
+          verifyTempPassword(tempPass);
+          return;
+        }
+        if (n === 3 && currentStep === 2) {
+          const newPass = document.getElementById('newPass').value;
+          if (!validatePassword(newPass)) { 
+            showMessage('La contraseña no cumple los requisitos', 'error'); 
+            return; 
+          }
+        }
+      }
+      
+      // Switch panels
+      document.getElementById('panelStep' + currentStep).classList.remove('active');
+      currentStep = n;
+      document.getElementById('panelStep' + currentStep).classList.add('active');
+      updateProgress();
+      
+      // Focus first input of new step
+      const newPanel = document.getElementById('panelStep' + currentStep);
+      const firstInput = newPanel.querySelector('input');
+      if (firstInput) setTimeout(() => firstInput.focus(), 100);
+    }
+
+    function updateProgress() {
+      [1,2,3].forEach(i => {
+        const step = document.getElementById('step'+i);
+        const num = step.querySelector('.step-num');
+        if (i < currentStep) {
+          step.classList.add('done');
+          step.classList.remove('active');
+          num.innerHTML = '<i class="fas fa-check" style="font-size:11px;"></i>';
+        } else if (i === currentStep) {
+          step.classList.add('active');
+          step.classList.remove('done');
+          num.textContent = i;
+        } else {
+          step.classList.remove('active', 'done');
+          num.textContent = i;
+        }
+      });
+    }
+
+    // ── Verify Temp Password ─────────────────
+    async function verifyTempPassword(tempPass) {
+      if (isProcessing) return;
+      isProcessing = true;
+      
+      const btn = document.getElementById('btnVerify');
+      const orig = btn.innerHTML;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verificando...';
+      btn.disabled = true;
+
+      try {
+        if (!tempPass) throw new Error('Ingresa tu contraseña temporal');
+
+        const email = document.getElementById('displayEmail')?.textContent || new URLSearchParams(window.location.search).get('email');
+        if (!email) throw new Error('No se encontró el correo del usuario. Vuelve a iniciar sesión.');
+
+        const response = await fetch('/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password: tempPass })
+        });
+
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.error || 'Contraseña temporal incorrecta');
+        }
+
+        const userStatus = (data.user.status || '').toString().toLowerCase();
+        const pendingStates = ['pending', 'pendiente', 'pending_activation', 'pendiente_activacion', 'pendiente-activacion', 'first_access', 'primer_acceso', 'pending-first-access'];
+        if (!pendingStates.includes(userStatus)) {
+          throw new Error('Tu cuenta ya está activa o no requiere primer acceso. Inicia sesión de nuevo.');
+        }
+
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('currentAccountId', data.user.id);
+        localStorage.setItem('pendingUserId', data.user.id);
+        localStorage.setItem('pendingEmail', data.user.email);
+        if (data.accounts) localStorage.setItem('linkedAccounts', JSON.stringify(data.accounts));
+
+        showMessage('Contraseña verificada ✓', 'success');
+        setTimeout(() => {
+          isProcessing = false;
+          try { btn.innerHTML = orig; btn.disabled = false; } catch(e) {}
+          goToStep(2, true);
+        }, 600);
+      } catch(err) {
+        showMessage(err.message || 'Error de conexión. Intenta de nuevo.', 'error');
+        btn.innerHTML = orig;
+        btn.disabled = false;
+        isProcessing = false;
+      }
+    }
+
+    // ── Password Strength Checker ─────────────────
+    function checkStrength(input) {
+      const val = input.value;
+      const fill = document.getElementById('strengthFill');
+      const text = document.getElementById('strengthText');
+      const percent = document.getElementById('strengthPercent');
+      const btn = document.getElementById('btnStep2');
+      
+      const checks = {
+        len: val.length >= 12,
+        upper: /[A-Z]/.test(val),
+        lower: /[a-z]/.test(val),
+        num: /[0-9]/.test(val),
+        symbol: /[^A-Za-z0-9]/.test(val)
+      };
+      
+      Object.entries(checks).forEach(([key, valid]) => {
+        const el = document.getElementById('req-' + key);
+        if (el) el.classList.toggle('valid', valid);
+      });
+      
+      let score = 0;
+      if (checks.len) score += 25;
+      if (checks.upper) score += 15;
+      if (checks.lower) score += 15;
+      if (checks.num) score += 20;
+      if (checks.symbol) score += 25;
+      
+      fill.style.width = score + '%';
+      percent.textContent = score + '%';
+      
+      if (score < 40) {
+        fill.style.background = 'var(--red)';
+        text.textContent = 'Contraseña débil';
+        text.style.color = 'var(--red)';
+      } else if (score < 70) {
+        fill.style.background = 'var(--yellow)';
+        text.textContent = 'Contraseña regular';
+        text.style.color = 'var(--yellow)';
+      } else {
+        fill.style.background = 'var(--green)';
+        text.textContent = 'Contraseña fuerte';
+        text.style.color = 'var(--green)';
+      }
+      
+      btn.disabled = score < 70 || !Object.values(checks).every(v => v);
+    }
+
+    function validatePassword(pwd) {
+      return pwd && pwd.length >= 12 && /[A-Z]/.test(pwd) && /[a-z]/.test(pwd) && /[0-9]/.test(pwd) && /[^A-Za-z0-9]/.test(pwd);
+    }
+
+    // ── Password Match Checker ─────────────────
+    function checkMatch() {
+      const newPass = document.getElementById('newPass').value;
+      const confirmPass = document.getElementById('confirmPass').value;
+      const status = document.getElementById('matchStatus');
+      const btn = document.getElementById('btnStep3');
+      
+      if (!confirmPass) {
+        status.textContent = '';
+        btn.disabled = true;
+        return;
+      }
+      
+      if (newPass === confirmPass) {
+        status.innerHTML = '<i class="fas fa-check-circle"></i> Las contraseñas coinciden';
+        status.className = 'match-status match';
+        btn.disabled = false;
+      } else {
+        status.innerHTML = '<i class="fas fa-times-circle"></i> Las contraseñas no coinciden';
+        status.className = 'match-status no-match';
+        btn.disabled = true;
+      }
+    }
+
+    // ── Complete Setup ─────────────────
+    async function completeSetup() {
+      if (isProcessing) return;
+      
+      const newPass = document.getElementById('newPass').value;
+      const confirmPass = document.getElementById('confirmPass').value;
+      
+      if (newPass !== confirmPass) {
+        showMessage('Las contraseñas no coinciden', 'error');
+        return;
+      }
+      if (!validatePassword(newPass)) {
+        showMessage('La nueva contraseña no cumple los requisitos mínimos', 'error');
+        return;
+      }
+
+      // Compatibilidad con keys establecidas por el flujo de login
+      const userId = localStorage.getItem('pendingUserId') || localStorage.getItem('currentAccountId') || new URLSearchParams(window.location.search).get('userId');
+      const token = localStorage.getItem('token');
+      if (!userId || !token) {
+        showMessage('No se encontró sesión válida. Vuelve a iniciar sesión.', 'error');
+        setTimeout(() => { window.location.href = 'login.html'; }, 2000);
+        return;
+      }
+      
+      isProcessing = true;
+      const btn = document.getElementById('btnStep3');
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+      btn.disabled = true;
+      
+      try {
+        const response = await fetch(`/api/users/${encodeURIComponent(userId)}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ password: newPass, status: 'active' })
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          // Si el token es inválido o expirado, redirigimos al login conservando email
+          if (response.status === 401 || response.status === 403) {
+            showMessage('Sesión inválida o expirada. Redirigiendo al login...', 'error');
+            localStorage.removeItem('token');
+            localStorage.removeItem('pendingUserId');
+            setTimeout(() => { window.location.href = `login.html?email=${encodeURIComponent(email)}`; }, 1200);
+            return;
+          }
+          throw new Error(errorData.error || 'Error al actualizar la contraseña.');
+        }
+
+        localStorage.removeItem('pendingUserId');
+        localStorage.removeItem('pendingEmail');
+        document.getElementById('panelStep3').classList.remove('active');
+        document.getElementById('panelSuccess').classList.add('active');
+        startCountdown();
+      } catch(err) {
+        showMessage(err.message || 'Error al guardar. Intenta de nuevo.', 'error');
+        btn.innerHTML = '<i class="fas fa-check-circle"></i> Finalizar y Acceder';
+        btn.disabled = false;
+        isProcessing = false;
+      }
+    }
+
+    function startCountdown() {
+      let seconds = 5;
+      const el = document.getElementById('countdown');
+      const timer = setInterval(() => {
+        seconds--;
+        el.textContent = seconds;
+        if (seconds <= 0) {
+          clearInterval(timer);
+          redirectToDashboard();
+        }
+      }, 1000);
+    }
+
+    function redirectToDashboard() {
+      showMessage('Redirigiendo al inicio...', 'success');
+      setTimeout(() => {
+        window.location.href = 'inicio.html';
+      }, 500);
+    }
+
+    // ── Utility Functions ─────────────────
+    function showMessage(text, type) {
+      const msg = document.getElementById('formMessage');
+      if (!msg) return;
+      msg.textContent = text;
+      msg.className = 'message ' + type;
+      msg.style.display = 'block';
+      setTimeout(() => { msg.style.display = 'none'; }, 4000);
+    }
+
+    function resendTempPass() {
+      const email = document.getElementById('displayEmail').textContent;
+      showMessage(`Enviando a ${email}...`, 'info');
+      setTimeout(() => showMessage('✓ Reenviado. Revisa tu correo.', 'success'), 1200);
+    }
+
+    // ── Initialize ─────────────────
+    window.addEventListener('load', () => {
+      const params = new URLSearchParams(window.location.search);
+      // Compatibilidad: login.html guarda `userEmail` / `currentAccountId` / `token`
+      const emailParam = params.get('email');
+
+      // Sólo usar token desde localStorage (evitar tokens en URL por seguridad)
+      const tokenRaw = localStorage.getItem('token');
+      if (tokenRaw && (!localStorage.getItem('pendingUserId') && !localStorage.getItem('currentAccountId'))) {
+        try {
+          const base64Url = tokenRaw.split('.')[1] || '';
+          const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+          const jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function (c) {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+          }).join(''));
+          const payload = JSON.parse(jsonPayload || '{}');
+          if (payload.sub) {
+            localStorage.setItem('pendingUserId', payload.sub.toString());
+            localStorage.setItem('currentAccountId', payload.sub.toString());
+          }
+          if (payload.empresa_codigo) localStorage.setItem('empresaCodigo', payload.empresa_codigo.toString());
+          if (payload.rol) localStorage.setItem('userRole', payload.rol.toString());
+          // Persistir token en localStorage para peticiones posteriores
+          localStorage.setItem('token', tokenRaw);
+        } catch (e) {
+          // ignorar si no se puede decodificar
+        }
+      }
+
+      const email = emailParam || localStorage.getItem('pendingEmail') || localStorage.getItem('userEmail') || 'usuario@empresa.com';
+      document.getElementById('displayEmail').textContent = email;
+      document.getElementById('tempPass')?.focus();
+      
+      // Live validation listeners
+      const newPass = document.getElementById('newPass');
+      const confirmPass = document.getElementById('confirmPass');
+      if (newPass) newPass.addEventListener('input', () => { checkStrength(newPass); checkMatch(); });
+      if (confirmPass) confirmPass.addEventListener('input', checkMatch);
+    });
+
+    // Form submission
+    document.getElementById('verifyForm')?.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const tempPass = document.getElementById('tempPass').value.trim();
+      verifyTempPassword(tempPass);
+    });
+
+    // Keyboard navigation
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !isProcessing && currentStep < 3) {
+        const activePanel = document.getElementById('panelStep' + currentStep);
+        const btn = activePanel?.querySelector('.btn-primary:not(:disabled)');
+        if (btn) { e.preventDefault(); btn.click(); }
+      }
+    });
+  </script>
+</body>
+</html>

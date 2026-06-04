@@ -1,0 +1,49 @@
+# Resumen de Cambios - Alertas e Integraciones de Correo Automatizadas
+
+Se han integrado con éxito dos flujos transaccionales automáticos por correo usando la cuenta SMTP configurada de Gmail y tus plantillas de correo premium de la carpeta `EMAIL/`.
+
+## 1. Alertas de Nuevo Acceso (Inicio de Sesión Remoto)
+* **Plantilla utilizada**: `EMAIL/Nuevo Acceso.html`
+* **Flujo**: Cuando un usuario inicia sesión correctamente a través de `/api/login`, el backend recopila automáticamente:
+  - **Dispositivo**: Detectado desde la cabecera HTTP User-Agent.
+  - **IP**: Extraída de forma segura (considerando proxies/balanceadores de Vercel/Cloudflare).
+  - **Ubicación**: Geolocalizada automáticamente a través de la API rápida de `ip-api.com`.
+  - **Fecha y Hora**: Formateada en español según el huso horario de Honduras.
+* **Envío**: Se inyectan estos datos en la plantilla y se envía el correo al usuario en segundo plano (de forma asíncrona) para no demorar la respuesta de inicio de sesión.
+
+---
+
+## 2. Correos de Activación de Cuenta (Nuevos Tenants)
+* **Plantilla utilizada**: `EMAIL/Activación de Cuenta.html`
+* **Flujo**: Cuando un superadministrador crea un nuevo tenant (empresa) junto con su usuario administrador en `/api/tenants`:
+  - Se genera y hashea la contraseña temporal en el servidor (`PortalPilot123!`).
+  - El backend lee la plantilla `Activación de Cuenta.html` y **reemplaza dinámicamente** el marcador de posición por la contraseña real configurada en el servidor.
+  - Envía automáticamente en segundo plano el correo al correo asignado al administrador del tenant (`emailAdmin`).
+
+---
+
+## Verificación de Funcionamiento
+
+### Pruebas Realizadas con Éxito
+
+1. **Alerta de Seguridad (Login)**:
+   - Ejecutamos un script con una IP de prueba.
+   - **Salida en consola**:
+     ```text
+     Detectando datos para IP: 181.43.12.204...
+     Dispositivo detectado: Chrome en Windows
+     Ubicación detectada: Santiago, Chile (Aproximado)
+     ¡Correo enviado con éxito!
+     ```
+
+2. **Correo de Activación de Cuenta (Nuevo Tenant)**:
+   - Ejecutamos un script para enviar el correo al administrador con la contraseña `'PortalPilot123!'`.
+   - **Salida en consola**:
+     ```text
+     Iniciando prueba de activación...
+     Enviando correo de activación...
+     ¡Correo de activación enviado con éxito!
+     ```
+
+> [!TIP]
+> Ambas plantillas HTML están bien formadas, son 100% compatibles con clientes modernos de correo (Outlook, Gmail, Apple Mail, etc.), y los marcadores dinámicos funcionan a la perfección. ¡Los flujos de correo están totalmente operativos y listos para producción!

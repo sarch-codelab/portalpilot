@@ -1,0 +1,15 @@
+Digamos que esta carpeta llamada enterprise es como si fuera un tenant 
+pero directo de la empresa en el manejo de la misma en que y como funciona:
+en si es un gestor de paginas web pero el usuario es el administrador de su 
+propia empresa y solo vera los datos de su propio tenant 
+
+Hay archivos con nombres como: Amy, Sofia y si de vez en cuando podria haber 
+un caleb pero si no esta pues ni modo. 
+
+Los archivos que quedan en -amy.html, -sofia.html, -caleb.html, pues son los
+archivos de mis compañeros de trabajo que me ayudaron con el front-end.
+
+En estos htm ya son parte fuera de portal pilot porque este es el sistema admin 
+de las empresas por ejemplo ya este are de enterprise de ejemplo InfiniMex ya la 
+carpeta enterprise es la que usa el administrador de la empresa y no el usuario
+normal de portal pilot.

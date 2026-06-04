@@ -1,0 +1,1422 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flota — Portal Pilot</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        /* ─── RESET & TOKENS ───────────────── */
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            cursor: none;
+        }
+
+        :root {
+            --bg: #04040a;
+            --bg2: #07070f;
+            --bg3: #0c0c1a;
+            --card: #0e0e1c;
+            --card2: #111124;
+            --border: rgba(139, 92, 246, 0.1);
+            --border2: rgba(139, 92, 246, 0.22);
+            --accent: #8b5cf6;
+            --accent2: #7c3aed;
+            --accent-glow: rgba(139, 92, 246, 0.35);
+            --cyan: #a78bfa;
+            --white: #fff;
+            --gray: #5d5d7a;
+            --gray2: #9ca3af;
+            --text: #c4c4d4;
+            --green: #34d399;
+            --red: #f87171;
+            --yellow: #fbbf24;
+            --radius: 10px;
+            --radius-lg: 18px;
+            --sidebar-width: 260px;
+            --sidebar-collapsed: 72px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        html {
+            scroll-behavior: smooth;
+            font-size: 16px;
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            overflow-x: hidden;
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        ul {
+            list-style: none;
+        }
+
+        img {
+            max-width: 100%;
+            display: block;
+        }
+
+        button {
+            font-family: inherit;
+            cursor: pointer;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 100%;
+            margin: 0;
+            padding: 0 clamp(12px, 3vw, 32px);
+        }
+
+        /* ─── CUSTOM CURSOR ───────────────── */
+        #cursor-dot {
+            width: 6px;
+            height: 6px;
+            background: #fff;
+            border-radius: 50%;
+            position: fixed;
+            pointer-events: none;
+            z-index: 10000;
+            transition: transform .1s;
+        }
+
+        #cursor-ring {
+            width: 36px;
+            height: 36px;
+            border: 1px solid rgba(139, 92, 246, 0.6);
+            border-radius: 50%;
+            position: fixed;
+            pointer-events: none;
+            z-index: 9999;
+            transition: transform .15s ease, width .2s, height .2s, opacity .2s;
+            transform: translate(-50%, -50%);
+        }
+
+        #cursor-glow {
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(139, 92, 246, 0.12) 0%, transparent 70%);
+            position: fixed;
+            pointer-events: none;
+            z-index: 0;
+            transform: translate(-50%, -50%);
+            transition: transform .08s;
+        }
+
+        /* ─── SCROLLBAR & PROGRESS ───────── */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg2);
+            border-left: 1px solid var(--border);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, var(--accent), var(--accent2));
+            border-radius: 5px;
+            border: 1px solid var(--bg2);
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(180deg, var(--accent2), var(--cyan));
+            box-shadow: 0 0 10px var(--accent-glow);
+        }
+
+        * {
+            scrollbar-width: thin;
+            scrollbar-color: var(--accent) var(--bg2);
+        }
+
+        #progress {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            z-index: 999;
+            background: transparent;
+        }
+
+        #progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent), var(--cyan));
+            width: 0;
+            transition: width .1s linear;
+        }
+
+        /* ─── BUTTONS ─────────────────────── */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 11px 24px;
+            border-radius: 40px;
+            font-size: 13px;
+            font-weight: 600;
+            border: none;
+            transition: all .25s;
+            white-space: nowrap;
+            font-family: 'DM Sans', sans-serif;
+        }
+
+        .btn-acc {
+            background: var(--accent);
+            color: #fff;
+        }
+
+        .btn-acc:hover {
+            background: var(--accent2);
+            transform: translateY(-1px);
+            box-shadow: 0 8px 28px var(--accent-glow);
+        }
+
+        .btn-ghost {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--white);
+            border: 1px solid var(--border2);
+        }
+
+        .btn-ghost:hover {
+            background: rgba(139, 92, 246, 0.1);
+            border-color: var(--border2);
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--white);
+            border: 1px solid var(--border2);
+        }
+
+        .btn-outline:hover {
+            background: rgba(139, 92, 246, 0.08);
+        }
+
+        .btn-danger {
+            background: rgba(248, 113, 113, 0.15);
+            color: var(--red);
+            border: 1px solid rgba(248, 113, 113, 0.3);
+        }
+
+        .btn-danger:hover {
+            background: var(--red);
+            color: #fff;
+        }
+
+        .btn-sm {
+            padding: 8px 18px;
+            font-size: 12px;
+        }
+
+        .btn-xs {
+            padding: 6px 14px;
+            font-size: 11px;
+        }
+
+        /* ─── LAYOUT ──────────────────────── */
+        .dashboard {
+            display: grid;
+            grid-template-columns: var(--sidebar-width) 1fr;
+            min-height: 100vh;
+            transition: grid-template-columns 0.3s ease;
+            width: 100vw;
+        }
+
+        .dashboard.sidebar-collapsed {
+            grid-template-columns: var(--sidebar-collapsed) 1fr;
+        }
+
+        /* ─── SIDEBAR ─────────────────────── */
+        .sidebar {
+            background: var(--bg2);
+            border-right: 1px solid var(--border);
+            padding: 20px 16px;
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            z-index: 50;
+            transition: width 0.3s ease;
+            width: var(--sidebar-width);
+            overflow: visible;
+        }
+
+        .sidebar.collapsed {
+            width: var(--sidebar-collapsed);
+            padding: 20px 8px;
+        }
+
+        .sidebar-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .logo {
+            font-family: 'Syne', sans-serif;
+            font-size: 15px;
+            font-weight: 800;
+            color: var(--white);
+            white-space: nowrap;
+        }
+
+        .toggle-btn {
+            position: absolute;
+            right: -16px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: var(--card);
+            border: 1px solid var(--border);
+            color: var(--white);
+            font-size: 12px;
+            padding: 8px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            z-index: 60;
+            transition: background 0.25s, border-color 0.25s;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .toggle-btn:hover {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+
+        .toggle-btn i {
+            transition: transform 0.3s ease;
+            display: block;
+        }
+
+        .sidebar.collapsed .toggle-btn i {
+            transform: rotate(180deg);
+        }
+
+        .toggle-btn::before,
+        .toggle-btn::after {
+            content: '';
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 1px;
+            height: 180px;
+            background: linear-gradient(to bottom, transparent 0%, transparent 15%, var(--accent) 45%, var(--accent) 55%, transparent 85%, transparent 100%);
+            opacity: 0.5;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            box-shadow: 0 0 8px var(--accent-glow);
+        }
+
+        .toggle-btn::before {
+            top: -185px;
+        }
+
+        .toggle-btn::after {
+            bottom: -185px;
+        }
+
+        .sidebar.collapsed .toggle-btn::before,
+        .sidebar.collapsed .toggle-btn::after {
+            opacity: 0.25;
+        }
+
+        /* Profile Section */
+        .profile-section {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            border-radius: var(--radius);
+            background: var(--card);
+            margin-bottom: 16px;
+            transition: var(--transition);
+        }
+
+        .sidebar.collapsed .profile-section {
+            justify-content: center;
+            padding: 8px;
+        }
+
+        .avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--accent);
+            flex-shrink: 0;
+        }
+
+        .profile-info {
+            display: flex;
+            flex-direction: column;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+
+        .name {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--white);
+        }
+
+        .role {
+            font-size: 10px;
+            color: var(--gray);
+        }
+
+        /* Nav Links */
+        .sidebar-nav {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .sidebar-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 11px 14px;
+            border-radius: var(--radius);
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--gray2);
+            transition: var(--transition);
+            white-space: nowrap;
+            text-decoration: none;
+        }
+
+        .sidebar-link:hover,
+        .sidebar-link.active {
+            background: rgba(139, 92, 246, 0.1);
+            color: var(--white);
+        }
+
+        .sidebar-link.active {
+            border-left: 2px solid var(--accent);
+            padding-left: 12px;
+        }
+
+        .sidebar-link i {
+            width: 18px;
+            text-align: center;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        .sidebar.collapsed .logo,
+        .sidebar.collapsed .profile-info,
+        .sidebar.collapsed .sidebar-link span,
+        .sidebar.collapsed .footer-btn span {
+            display: none;
+        }
+
+        .sidebar.collapsed .sidebar-link {
+            justify-content: center;
+            padding: 11px;
+        }
+
+        .sidebar.collapsed .sidebar-link.active {
+            padding-left: 11px;
+            border-left: none;
+            border-bottom: 2px solid var(--accent);
+        }
+
+        /* Footer */
+        .sidebar-footer {
+            padding-top: 12px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .footer-btn {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 11px 14px;
+            border-radius: var(--radius);
+            background: transparent;
+            border: none;
+            color: var(--gray2);
+            font-size: 13px;
+            font-weight: 500;
+            transition: var(--transition);
+            width: 100%;
+            text-align: left;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .footer-btn:hover {
+            background: rgba(139, 92, 246, 0.1);
+            color: var(--white);
+        }
+
+        .footer-btn.logout:hover {
+            color: var(--red);
+            background: rgba(248, 113, 113, 0.1);
+        }
+
+        .sidebar.collapsed .footer-btn {
+            justify-content: center;
+            padding: 11px;
+        }
+
+        .footer-btn i {
+            width: 18px;
+            text-align: center;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        /* ─── MAIN CONTENT ────────────────── */
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            min-width: 0;
+            transition: all 0.3s ease;
+        }
+
+        /* ─── TOP BAR ─────────────────────── */
+        .topbar {
+            position: sticky;
+            top: 0;
+            z-index: 40;
+            background: rgba(4, 4, 10, 0.85);
+            backdrop-filter: blur(24px);
+            border-bottom: 1px solid var(--border);
+            padding: 0 clamp(12px, 3vw, 32px);
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+        }
+
+        .topbar-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            min-width: 0;
+        }
+
+        .topbar-title {
+            font-family: 'Syne', sans-serif;
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--white);
+        }
+
+        .topbar-title span {
+            color: var(--accent);
+        }
+
+        .topbar-search {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 40px;
+            padding: 8px 16px;
+            width: 280px;
+            max-width: 100%;
+        }
+
+        .topbar-search input {
+            background: none;
+            border: none;
+            outline: none;
+            color: var(--text);
+            font-size: 13px;
+            width: 100%;
+            min-width: 0;
+        }
+
+        .topbar-search input::placeholder {
+            color: var(--gray);
+        }
+
+        .topbar-search i {
+            color: var(--gray);
+            flex-shrink: 0;
+        }
+
+        .topbar-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-shrink: 0;
+        }
+
+        .topbar-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--card);
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--gray2);
+            font-size: 14px;
+            position: relative;
+            transition: all .2s;
+            flex-shrink: 0;
+        }
+
+        .topbar-btn:hover {
+            background: rgba(139, 92, 246, 0.1);
+            color: var(--accent);
+            border-color: var(--border2);
+        }
+
+        .topbar-btn .badge {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--red);
+            color: #fff;
+            font-size: 9px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+        }
+
+        /* ─── PAGE HEADER ───────── */
+        .page-header {
+            padding: clamp(24px, 4vw, 40px) clamp(12px, 3vw, 32px) 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            gap: 16px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .page-title {
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(24px, 4vw, 32px);
+            font-weight: 800;
+            color: var(--white);
+            letter-spacing: -1px;
+        }
+
+        .page-title span {
+            color: var(--accent);
+        }
+
+        .page-subtitle {
+            font-size: 14px;
+            color: var(--gray);
+            max-width: 520px;
+            line-height: 1.6;
+        }
+
+        .page-actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        /* ─── FLEET LAYOUT ───────── */
+        .fleet-layout {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 24px;
+            padding: 0 clamp(12px, 3vw, 32px) 24px;
+        }
+
+        @media(max-width:1200px) {
+            .fleet-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* ─── KPI BANNER ───────── */
+        .kpi-banner {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            padding: 0 clamp(12px, 3vw, 32px);
+            margin-bottom: 24px;
+        }
+
+        .kpi-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            border-left: 4px solid var(--accent);
+        }
+
+        .kpi-card.alert {
+            border-left-color: var(--red);
+        }
+
+        .kpi-value {
+            font-family: 'Syne', sans-serif;
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--white);
+        }
+
+        .kpi-card.alert .kpi-value {
+            color: var(--red);
+        }
+
+        .kpi-label {
+            font-size: 11px;
+            color: var(--gray);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* ─── CARDS ───────────────── */
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            margin-bottom: 24px;
+            min-width: 0;
+        }
+
+        .card-title {
+            font-family: 'Syne', sans-serif;
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--white);
+            margin: 0 0 20px;
+            padding-left: 12px;
+            border-left: 3px solid var(--accent);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card-title i {
+            color: var(--accent);
+        }
+
+        /* Fleet Grid */
+        .fleet-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 16px;
+        }
+
+        /* Asset Card */
+        .asset-card {
+            background: var(--card2);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 16px;
+            position: relative;
+            transition: all .2s;
+        }
+
+        .asset-card:hover {
+            border-color: var(--border2);
+            transform: translateY(-2px);
+        }
+
+        .asset-card.maintenance {
+            border-color: var(--red);
+        }
+
+        .maintenance-badge {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 600;
+        }
+
+        .maintenance-badge.critical {
+            background: var(--red);
+            color: #fff;
+        }
+
+        .maintenance-badge.workshop {
+            background: var(--yellow);
+            color: #14213D;
+        }
+
+        .asset-plate {
+            font-weight: 700;
+            color: var(--accent);
+            font-size: 15px;
+            margin-bottom: 8px;
+            font-family: monospace;
+        }
+
+        .asset-meta {
+            font-size: 12px;
+            color: var(--gray);
+            line-height: 1.5;
+            margin-bottom: 12px;
+        }
+
+        .asset-meta b {
+            color: var(--text);
+        }
+
+        .fuel-label {
+            font-size: 11px;
+            color: var(--gray);
+            margin-bottom: 4px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .fuel-bar {
+            height: 6px;
+            background: var(--bg3);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .fuel-fill {
+            height: 100%;
+            background: var(--accent);
+            border-radius: 3px;
+            transition: width .3s ease;
+        }
+
+        .fuel-fill.low {
+            background: var(--red);
+        }
+
+        .fuel-fill.medium {
+            background: var(--yellow);
+        }
+
+        /* Timeline */
+        .timeline {
+            position: relative;
+            padding-left: 24px;
+            border-left: 2px solid var(--border);
+        }
+
+        .timeline-item {
+            position: relative;
+            padding-bottom: 20px;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -29px;
+            top: 4px;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--accent);
+            border: 2px solid var(--bg2);
+        }
+
+        .timeline-item.alert::before {
+            background: var(--red);
+        }
+
+        .timeline-time {
+            font-size: 11px;
+            color: var(--cyan);
+            font-weight: 600;
+            margin-bottom: 4px;
+            display: block;
+        }
+
+        .timeline-text {
+            font-size: 12px;
+            color: var(--text);
+            line-height: 1.5;
+        }
+
+        .timeline-text b {
+            color: var(--white);
+        }
+
+        /* AI Panel */
+        .ai-panel {
+            background: linear-gradient(135deg, var(--card2), var(--bg3));
+            border: 1px dashed var(--accent);
+            border-radius: var(--radius-lg);
+            padding: 20px;
+        }
+
+        .ai-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .ai-avatar {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: var(--accent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: #fff;
+            font-weight: 700;
+        }
+
+        .ai-name {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--white);
+        }
+
+        .ai-status {
+            font-size: 10px;
+            color: var(--green);
+            margin-left: 6px;
+        }
+
+        .ai-message {
+            font-size: 12px;
+            color: var(--gray);
+            line-height: 1.5;
+        }
+
+        .ai-message b {
+            color: var(--text);
+        }
+
+        /* ─── ANIMATIONS & UTILS ───── */
+        .reveal {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity .6s ease, transform .6s ease;
+        }
+
+        .reveal.in {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 45;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s;
+            backdrop-filter: blur(2px);
+        }
+
+        .overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        /* ─── RESPONSIVE ───────────── */
+        @media(max-width:900px) {
+            .dashboard {
+                grid-template-columns: 1fr !important;
+            }
+
+            .sidebar {
+                position: fixed;
+                left: -260px;
+                top: 0;
+                width: 260px !important;
+                transition: left .3s;
+                z-index: 100;
+            }
+
+            .sidebar.active {
+                left: 0;
+            }
+
+            .sidebar.collapsed {
+                width: 260px !important;
+            }
+
+            .sidebar.collapsed .logo,
+            .sidebar.collapsed .profile-info,
+            .sidebar.collapsed .sidebar-link span,
+            .sidebar.collapsed .footer-btn span {
+                display: block;
+            }
+
+            .sidebar.collapsed .sidebar-link {
+                justify-content: flex-start;
+                padding: 11px 14px;
+            }
+
+            .sidebar.collapsed .sidebar-link.active {
+                padding-left: 12px;
+                border-left: 2px solid var(--accent);
+                border-bottom: none;
+            }
+
+            .toggle-btn {
+                right: -40px;
+            }
+
+            .topbar-search {
+                display: none;
+            }
+
+            .fleet-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .kpi-banner {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media(max-width:600px) {
+            .topbar-title {
+                font-size: 16px;
+            }
+
+            .kpi-banner {
+                grid-template-columns: 1fr;
+            }
+
+            .fleet-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Light Mode */
+        body.light-mode {
+            --bg: #f8fafc;
+            --bg2: #ffffff;
+            --bg3: #f1f5f9;
+            --card: #ffffff;
+            --card2: #f8fafc;
+            --border: rgba(15, 23, 42, 0.1);
+            --border2: rgba(15, 23, 42, 0.2);
+            --text: #334155;
+            --gray: #64748b;
+            --gray2: #475569;
+            --white: #0f172a;
+        }
+
+        body.light-mode .topbar {
+            background: rgba(248, 250, 252, 0.85);
+        }
+
+        body.light-mode .card:hover,
+        body.light-mode .asset-card:hover,
+        body.light-mode .sidebar-link:hover {
+            box-shadow: 0 4px 20px rgba(139, 92, 246, 0.15);
+        }
+
+        body.light-mode .toggle-btn {
+            background: #fff;
+            border-color: var(--border);
+            color: var(--gray2);
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- PROGRESS & CURSOR -->
+    <div id="progress">
+        <div id="progress-fill"></div>
+    </div>
+    <div id="cursor-dot"></div>
+    <div id="cursor-ring"></div>
+    <div id="cursor-glow"></div>
+    <div class="overlay" id="overlay"></div>
+
+    <div class="dashboard" id="dashboard">
+
+        <!-- SIDEBAR -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h2 class="logo">PORTAL PILOT</h2>
+            </div>
+
+            <!-- Profile -->
+            <div class="profile-section">
+                <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80"
+                    alt="Perfil" class="avatar">
+                <div class="profile-info"><span class="name">Ajendra S.</span><span class="role">Fleet Manager</span>
+                </div>
+            </div>
+
+            <!-- Nav -->
+            <nav class="sidebar-nav">
+                <a href="dashboard-amy.html" class="sidebar-link"><i class="fas fa-home"></i> <span>Dashboard</span></a>
+                <a href="team-amy.html" class="sidebar-link"><i class="fas fa-users"></i> <span>Equipo</span></a>
+                <a href="fleet-sofia.html" class="sidebar-link active"><i class="fas fa-truck"></i> <span>Flota</span></a>
+                <a href="automation-amy.html" class="sidebar-link"><i class="fas fa-robot"></i> <span>Bots RPA</span></a>
+                <a href="security-sofia.html" class="sidebar-link"><i class="fas fa-shield-alt"></i> <span>Auditoría</span></a>
+            </nav>
+
+            <!-- Footer -->
+            <div class="sidebar-footer">
+                <button class="footer-btn" id="darkModeToggle"><i class="fas fa-moon"></i> <span>Dark
+                        Mode</span></button>
+                <button class="footer-btn logout" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> <span>Cerrar
+                        Sesión</span></button>
+            </div>
+
+            <!-- Toggle Button -->
+            <button class="toggle-btn" id="toggleSidebar" aria-label="Toggle Sidebar"><i
+                    class="fas fa-chevron-right"></i></button>
+        </aside>
+
+        <!-- MAIN CONTENT -->
+        <main class="main-content">
+
+            <!-- TOP BAR -->
+            <header class="topbar">
+                <div class="topbar-left">
+                    <div class="topbar-title">Gestión de <span>Flota</span></div>
+                    <div class="topbar-search"><i class="fas fa-search"></i><input type="text" id="fleetSearch"
+                            placeholder="Buscar placa, chofer, ruta..." onkeyup="filterFleet()"></div>
+                </div>
+                <div class="topbar-right">
+                    <button class="topbar-btn" title="Alertas"><i class="fas fa-bell"></i><span
+                            class="badge">5</span></button>
+                    <button class="btn btn-acc btn-sm" onclick="addNewVehicle()"><i class="fas fa-plus"></i> Nuevo
+                        Vehículo</button>
+                </div>
+            </header>
+
+            <!-- PAGE HEADER -->
+            <div class="page-header">
+                <div>
+                    <h1 class="page-title">Activos <span>en Tiempo Real</span></h1>
+                    <p class="page-subtitle">Monitorea tu flota de vehículos con telemetría IoT. Visualiza ubicación,
+                        combustible, estado mecánico y recibe alertas predictivas de mantenimiento.</p>
+                </div>
+                <div class="page-actions">
+                    <button class="btn btn-outline btn-sm" onclick="exportFleetReport()"><i
+                            class="fas fa-file-export"></i> Exportar Reporte</button>
+                    <button class="btn btn-ghost btn-sm" onclick="refreshFleet()"><i class="fas fa-sync-alt"></i>
+                        Actualizar</button>
+                </div>
+            </div>
+
+            <!-- KPI BANNER -->
+            <div class="kpi-banner">
+                <div class="kpi-card reveal">
+                    <div class="kpi-value">15</div>
+                    <div class="kpi-label">Total Vehículos</div>
+                </div>
+                <div class="kpi-card reveal">
+                    <div class="kpi-value">10 / 5</div>
+                    <div class="kpi-label">Camiones / Vans</div>
+                </div>
+                <div class="kpi-card reveal">
+                    <div class="kpi-value">13</div>
+                    <div class="kpi-label">En Ruta / Operativos</div>
+                </div>
+                <div class="kpi-card alert reveal">
+                    <div class="kpi-value">2</div>
+                    <div class="kpi-label">Requieren Mantenimiento</div>
+                </div>
+            </div>
+
+            <!-- FLEET LAYOUT -->
+            <div class="fleet-layout">
+
+                <!-- LEFT: Fleet Grid -->
+                <div class="main-column">
+                    <div class="card reveal">
+                        <h2 class="card-title"><i class="fas fa-th-large"></i> Matriz de Activos</h2>
+
+                        <div class="fleet-grid" id="fleetGrid">
+                            <!-- Asset 1 -->
+                            <div class="asset-card" data-plate="NVA-2026-A" data-status="en-ruta"
+                                data-driver="Chofer 1">
+                                <div class="asset-plate">NVA-2026-A</div>
+                                <div class="asset-meta">
+                                    <b>Tipo:</b> Camión Pesado (Carga)<br>
+                                    <b>Asignado:</b> Chofer 1<br>
+                                    <b>Estado:</b> En Ruta (Monterrey → Saltillo)
+                                </div>
+                                <div class="fuel-label"><span>Combustible</span><span>82%</span></div>
+                                <div class="fuel-bar">
+                                    <div class="fuel-fill" style="width:82%"></div>
+                                </div>
+                            </div>
+
+                            <!-- Asset 2 - Critical -->
+                            <div class="asset-card maintenance" data-plate="NVA-2026-F" data-status="alerta"
+                                data-driver="Chofer 5">
+                                <span class="maintenance-badge critical">CRÍTICO</span>
+                                <div class="asset-plate">NVA-2026-F</div>
+                                <div class="asset-meta">
+                                    <b>Tipo:</b> Van Ligera (Mensajería)<br>
+                                    <b>Asignado:</b> Chofer 5<br>
+                                    <b>Estado:</b> ⚠️ Alerta: Sobrecalentamiento
+                                </div>
+                                <div class="fuel-label"><span>Combustible</span><span
+                                        style="color:var(--red)">15%</span></div>
+                                <div class="fuel-bar">
+                                    <div class="fuel-fill low" style="width:15%"></div>
+                                </div>
+                            </div>
+
+                            <!-- Asset 3 -->
+                            <div class="asset-card" data-plate="NVA-2026-K" data-status="disponible"
+                                data-driver="Chofer 12">
+                                <div class="asset-plate">NVA-2026-K</div>
+                                <div class="asset-meta">
+                                    <b>Tipo:</b> Camión Pesado (Carga)<br>
+                                    <b>Asignado:</b> Chofer 12<br>
+                                    <b>Estado:</b> Disponible en Base Centro
+                                </div>
+                                <div class="fuel-label"><span>Combustible</span><span>95%</span></div>
+                                <div class="fuel-bar">
+                                    <div class="fuel-fill" style="width:95%"></div>
+                                </div>
+                            </div>
+
+                            <!-- Asset 4 - Workshop -->
+                            <div class="asset-card maintenance" data-plate="NVA-2026-L" data-status="taller"
+                                data-driver="Sin asignar">
+                                <span class="maintenance-badge workshop">TALLER</span>
+                                <div class="asset-plate">NVA-2026-L</div>
+                                <div class="asset-meta">
+                                    <b>Tipo:</b> Van Ligera (Distribución)<br>
+                                    <b>Asignado:</b> Sin asignar<br>
+                                    <b>Estado:</b> 🔧 Mantenimiento Preventivo
+                                </div>
+                                <div class="fuel-label"><span>Combustible</span><span>45%</span></div>
+                                <div class="fuel-bar">
+                                    <div class="fuel-fill medium" style="width:45%;background:var(--yellow)"></div>
+                                </div>
+                            </div>
+
+                            <!-- Asset 5 -->
+                            <div class="asset-card" data-plate="NVA-2026-M" data-status="en-ruta"
+                                data-driver="Chofer 8">
+                                <div class="asset-plate">NVA-2026-M</div>
+                                <div class="asset-meta">
+                                    <b>Tipo:</b> Camión Pesado (Carga)<br>
+                                    <b>Asignado:</b> Chofer 8<br>
+                                    <b>Estado:</b> En Ruta (Guadalajara → CDMX)
+                                </div>
+                                <div class="fuel-label"><span>Combustible</span><span>67%</span></div>
+                                <div class="fuel-bar">
+                                    <div class="fuel-fill" style="width:67%"></div>
+                                </div>
+                            </div>
+
+                            <!-- Asset 6 -->
+                            <div class="asset-card" data-plate="NVA-2026-P" data-status="disponible"
+                                data-driver="Chofer 3">
+                                <div class="asset-plate">NVA-2026-P</div>
+                                <div class="asset-meta">
+                                    <b>Tipo:</b> Van Ligera (Mensajería)<br>
+                                    <b>Asignado:</b> Chofer 3<br>
+                                    <b>Estado:</b> Disponible en Base Norte
+                                </div>
+                                <div class="fuel-label"><span>Combustible</span><span>88%</span></div>
+                                <div class="fuel-bar">
+                                    <div class="fuel-fill" style="width:88%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- RIGHT: Timeline & AI -->
+                <div class="sidebar-column">
+
+                    <!-- IoT Timeline -->
+                    <div class="card reveal">
+                        <h2 class="card-title"><i class="fas fa-satellite"></i> Eventos IoT en Tiempo Real</h2>
+                        <div class="timeline">
+                            <div class="timeline-item">
+                                <span class="timeline-time">10:12 PM</span>
+                                <div class="timeline-text"><b>NVA-2026-A:</b> Cruzó geocerca en caseta Saltillo. Ruta:
+                                    Estable ✅</div>
+                            </div>
+                            <div class="timeline-item alert">
+                                <span class="timeline-time">08:45 PM</span>
+                                <div class="timeline-text"><b>NVA-2026-F:</b> ⚠️ Alerta telemetría — Código motor:
+                                    Sobrecalentamiento detectado</div>
+                            </div>
+                            <div class="timeline-item">
+                                <span class="timeline-time">06:21 PM</span>
+                                <div class="timeline-text"><b>NVA-2026-K:</b> Descarga completada en CEDIS Monterrey.
+                                    Estado: Disponible</div>
+                            </div>
+                            <div class="timeline-item">
+                                <span class="timeline-time">04:30 PM</span>
+                                <div class="timeline-text"><b>NVA-2026-M:</b> Actualización de ruta óptima por tráfico
+                                    en autopista</div>
+                            </div>
+                            <div class="timeline-item">
+                                <span class="timeline-time">02:15 PM</span>
+                                <div class="timeline-text"><b>NVA-2026-L:</b> Ingreso a taller programado. Mantenimiento
+                                    preventivo iniciado</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- AI Assistant Panel -->
+                    <div class="ai-panel reveal">
+                        <div class="ai-header">
+                            <div class="ai-avatar">🤖</div>
+                            <div class="ai-name">Astraea Agent <span class="ai-status">● Activo</span></div>
+                        </div>
+                        <p class="ai-message">
+                            He detectado que la unidad <b>NVA-2026-F</b> requiere mantenimiento inmediato por
+                            sobrecalentamiento.
+                            He generado de forma preventiva:
+                            <br><br>
+                            • 📋 Orden de taller en borrador<br>
+                            • 📄 Reporte técnico preliminar<br>
+                            • 🔔 Notificación a Carlos Mendoza (Owner)
+                            <br><br>
+                            <i style="color:var(--cyan)">¿Deseas aprobar y enviar la orden de servicio?</i>
+                        </p>
+                        <div style="display:flex;gap:8px;margin-top:16px;">
+                            <button class="btn btn-acc btn-sm" style="flex:1;justify-content:center;"
+                                onclick="approveMaintenance()"><i class="fas fa-check"></i> Aprobar</button>
+                            <button class="btn btn-ghost btn-sm" style="flex:1;justify-content:center;"
+                                onclick="dismissAI()"><i class="fas fa-times"></i> Descartar</button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <script>
+        // ── Custom Cursor ─────────────────
+        const dot = document.getElementById('cursor-dot'), ring = document.getElementById('cursor-ring'), glow = document.getElementById('cursor-glow');
+        let mx = 0, my = 0, rx = 0, ry = 0;
+        document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; dot.style.left = mx + 'px'; dot.style.top = my + 'px'; glow.style.left = mx + 'px'; glow.style.top = my + 'px'; });
+        function animRing() { rx += (mx - rx) * 0.12; ry += (my - ry) * 0.12; ring.style.left = rx + 'px'; ring.style.top = ry + 'px'; requestAnimationFrame(animRing); }
+        animRing();
+        document.querySelectorAll('a,button,.sidebar-link,.asset-card,.topbar-btn').forEach(el => {
+            el.addEventListener('mouseenter', () => { ring.style.width = '50px'; ring.style.height = '50px'; ring.style.opacity = '.5'; });
+            el.addEventListener('mouseleave', () => { ring.style.width = '36px'; ring.style.height = '36px'; ring.style.opacity = '1'; });
+        });
+
+        // ── Scroll Progress ──────────────
+        window.addEventListener('scroll', () => { const p = (window.scrollY / (document.documentElement.scrollHeight - innerHeight)) * 100; document.getElementById('progress-fill').style.width = Math.min(100, Math.max(0, p)) + '%'; });
+
+        // ── Reveal on Scroll ─────────────
+        const obs = new IntersectionObserver(entries => { entries.forEach((e, i) => { if (e.isIntersecting) setTimeout(() => e.target.classList.add('in'), i * 50); }); }, { threshold: 0.05 });
+        document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+
+        // ── Sidebar Toggle ───────────────
+        const sidebar = document.getElementById('sidebar'), toggleBtn = document.getElementById('toggleSidebar'), overlay = document.getElementById('overlay'), dashboard = document.getElementById('dashboard');
+        let isMobile = window.innerWidth <= 900;
+        function updateLayout() {
+            isMobile = window.innerWidth <= 900;
+            if (isMobile) { sidebar.style.position = 'fixed'; sidebar.style.left = sidebar.classList.contains('active') ? '0' : '-260px'; dashboard.classList.remove('sidebar-collapsed'); }
+            else { sidebar.style.position = 'sticky'; sidebar.style.left = 'auto'; sidebar.classList.remove('active'); overlay.classList.remove('active'); if (sidebar.classList.contains('collapsed')) { dashboard.classList.add('sidebar-collapsed'); } else { dashboard.classList.remove('sidebar-collapsed'); } }
+        }
+        window.addEventListener('resize', () => { updateLayout(); setTimeout(() => { window.dispatchEvent(new Event('resize')); }, 300); });
+        updateLayout();
+        toggleBtn.addEventListener('click', () => { if (isMobile) { sidebar.classList.toggle('active'); overlay.classList.toggle('active'); } else { sidebar.classList.toggle('collapsed'); dashboard.classList.toggle('sidebar-collapsed'); } updateLayout(); });
+        overlay.addEventListener('click', () => { sidebar.classList.remove('active'); overlay.classList.remove('active'); });
+
+        // ── Dark Mode ────────────────────
+        const darkModeBtn = document.getElementById('darkModeToggle');
+        darkModeBtn.addEventListener('click', () => { document.body.classList.toggle('light-mode'); const isLight = document.body.classList.contains('light-mode'); darkModeBtn.innerHTML = isLight ? '<i class="fas fa-sun"></i> <span>Light Mode</span>' : '<i class="fas fa-moon"></i> <span>Dark Mode</span>'; });
+
+        // ── Logout Modal ─────────────────
+        const logoutBtn = document.getElementById('logoutBtn'), logoutModal = document.getElementById('logoutModal'), modalCancel = document.getElementById('modalCancel'), modalConfirm = document.getElementById('modalConfirm');
+        logoutBtn.addEventListener('click', (e) => { e.preventDefault(); logoutModal.classList.add('active'); });
+        modalCancel.addEventListener('click', () => { logoutModal.classList.remove('active'); });
+        modalConfirm.addEventListener('click', () => { logoutModal.classList.remove('active'); alert('Sesión cerrada. Redirigiendo...'); });
+        logoutModal.addEventListener('click', (e) => { if (e.target === logoutModal) { logoutModal.classList.remove('active'); } });
+
+        // ── Fleet Functions ──────────────
+        function filterFleet() {
+            const query = document.getElementById('fleetSearch').value.toLowerCase();
+            const cards = document.querySelectorAll('.asset-card');
+            cards.forEach(card => {
+                const plate = card.dataset.plate.toLowerCase();
+                const driver = card.dataset.driver.toLowerCase();
+                const status = card.dataset.status.toLowerCase();
+                const match = plate.includes(query) || driver.includes(query) || status.includes(query);
+                card.style.display = match ? 'block' : 'none';
+            });
+        }
+
+        function addNewVehicle() {
+            alert('🚛 Nuevo Vehículo\n\nFormulario de registro:\n• Placa / VIN\n• Tipo de unidad\n• Asignación de chofer\n• Configuración de telemetría IoT\n\n✓ Integración automática con módulo de Auditoría Blockchain');
+        }
+
+        function exportFleetReport() {
+            alert('📊 Reporte de Flota Generado\n\nIncluye:\n• Estado actual de 15 vehículos\n• Historial de mantenimiento (últimos 90 días)\n• Consumo de combustible por unidad\n• Alertas predictivas de IA\n\n🔐 Firmado criptográficamente para auditoría');
+        }
+
+        async function refreshFleet() {
+            const btn = document.querySelector('.page-actions .btn-ghost'), icon = btn?.querySelector('i');
+            if (icon) icon.classList.add('fa-spin');
+            await new Promise(r => setTimeout(r, 800));
+            if (icon) icon.classList.remove('fa-spin');
+            alert('✓ Flota actualizada con datos en tiempo real');
+        }
+
+        function approveMaintenance() {
+            alert('✅ Orden de Mantenimiento Aprobada\n\n• NVA-2026-F agendada para servicio inmediato\n• Notificación enviada a taller autorizado\n• Reporte técnico adjunto en blockchain\n• Chofer 5 reasignado temporalmente');
+        }
+
+        function dismissAI() {
+            alert('🤖 Sugerencia de Astraea descartada\n\nPuedes volver a activar las recomendaciones de IA en Configuración > Automatización');
+        }
+
+        // ── Initialize ──────────────────
+        window.addEventListener('load', () => {
+            setTimeout(() => document.querySelectorAll('.reveal').forEach((el, i) => setTimeout(() => el.classList.add('in'), i * 50)), 100);
+        });
+    </script>
+<script src="../auth-check.js"></script>
+</body>
+
+</html>

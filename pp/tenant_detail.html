@@ -1,0 +1,1646 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tenant Detail — Portal Pilot</title>
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="css/tenant_detail.css">
+</head>
+
+<body>
+
+    <div id="progress">
+        <div id="progress-fill"></div>
+    </div>
+    <div id="cursor-dot"></div>
+    <div id="cursor-ring"></div>
+    <div class="overlay" id="overlay"></div>
+
+    <!-- LOGOUT MODAL -->
+    <div class="modal-overlay" id="logoutModal">
+        <div class="modal">
+            <div class="modal-icon"><i class="fas fa-sign-out-alt"></i></div>
+            <h3 class="modal-title">¿Cerrar sesión?</h3>
+            <p class="modal-desc">Estás a punto de cerrar tu sesión en Portal Pilot. ¿Deseas continuar?</p>
+            <div class="modal-actions">
+                <button class="modal-btn cancel" id="modalCancel">Cancelar</button>
+                <button class="modal-btn confirm" id="modalConfirm">Sí, cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOAST CONTAINER -->
+    <div id="toastContainer"></div>
+
+    <!-- MODAL: ADD USER -->
+    <div class="modal-overlay" id="addUserModal">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-title"><i class="fas fa-user-plus"
+                        style="margin-right:8px;color:var(--accent);"></i>Invitar Usuario</div>
+                <button class="modal-close" onclick="closeModal('addUserModal')"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <form id="addUserForm">
+                    <div class="form-group">
+                        <label class="form-label"><i class="fas fa-envelope"></i> Email *</label>
+                        <input type="email" id="inviteEmail" class="form-input" placeholder="usuario@empresa.com"
+                            required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label"><i class="fas fa-user-tag"></i> Rol *</label>
+                        <select id="inviteRole" class="form-select" required>
+                            <option value="">Seleccionar...</option>
+                            <option value="Administrador">Administrador</option>
+                            <option value="Operador" selected>Operador</option>
+                            <option value="Visualizador">Visualizador</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label"><i class="fas fa-comment"></i> Mensaje (opcional)</label>
+                        <textarea id="inviteMessage" class="form-textarea"
+                            placeholder="Mensaje personalizado..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-ghost" onclick="closeModal('addUserModal')">Cancelar</button>
+                <button class="btn btn-acc" id="sendInviteBtn" onclick="inviteUser(event)"><i
+                        class="fas fa-paper-plane"></i> Enviar Invitación</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: EDIT USER -->
+    <div class="modal-overlay" id="editUserModal">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-title"><i class="fas fa-user-edit"
+                        style="margin-right:8px;color:var(--accent);"></i>Editar Usuario</div>
+                <button class="modal-close" onclick="closeModal('editUserModal')"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="edit-user-profile">
+                    <div class="edit-user-avatar" id="editUserAvatar">AM</div>
+                    <div>
+                        <div class="edit-user-name" id="editUserName">Ana Martínez</div>
+                        <div class="edit-user-email" id="editUserEmail">ana@techcorp.portalpilot.io</div>
+                    </div>
+                </div>
+                <form id="editUserForm">
+                    <div class="form-group">
+                        <label class="form-label"><i class="fas fa-user-tag"></i> Rol</label>
+                        <select id="editUserRole" class="form-select">
+                            <option value="Administrador">Administrador</option>
+                            <option value="Operador">Operador</option>
+                            <option value="Visualizador">Visualizador</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label"><i class="fas fa-toggle-on"></i> Estado</label>
+                        <select id="editUserStatus" class="form-select">
+                            <option value="Activo">Activo</option>
+                            <option value="Inactivo">Inactivo</option>
+                            <option value="Suspendido">Suspendido</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label"><i class="fas fa-comment"></i> Notas</label>
+                        <textarea id="editUserNotes" class="form-textarea" placeholder="Notas internas..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-ghost" onclick="closeModal('editUserModal')">Cancelar</button>
+                <button class="btn btn-acc" onclick="saveUserEdit()"><i class="fas fa-save"></i> Guardar
+                    Cambios</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: DELETE USER -->
+    <div class="modal-overlay" id="deleteUserModal">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-title" style="color:var(--red);"><i class="fas fa-user-times"
+                        style="margin-right:8px;"></i>Eliminar Usuario</div>
+                <button class="modal-close" onclick="closeModal('deleteUserModal')"><i
+                        class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <div style="text-align:center;padding:20px 0;">
+                    <div
+                        style="width:64px;height:64px;border-radius:50%;background:rgba(248,113,113,0.15);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:24px;color:var(--red);">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <h3 style="color:var(--white);margin-bottom:8px;">¿Estás seguro?</h3>
+                    <p style="color:var(--gray);font-size:13px;line-height:1.6;">
+                        Estás a punto de eliminar a <strong id="deleteUserName" style="color:var(--white);">Ana
+                            Martínez</strong> del tenant.
+                        <br><br>
+                        <span style="color:var(--yellow);font-size:12px;">
+                            <i class="fas fa-info-circle"></i> Esta acción eliminará todos los datos relacionados con
+                            este tenant.
+                        </span>
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-ghost" onclick="closeModal('deleteUserModal')">Cancelar</button>
+                <button class="btn btn-danger" onclick="confirmDeleteUser()"><i class="fas fa-trash"></i>
+                    Eliminar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: API KEY -->
+    <div class="modal-overlay" id="apiKeyModal">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-title"><i class="fas fa-key" style="margin-right:8px;color:var(--accent);"></i>Nueva
+                    API Key</div>
+                <button class="modal-close" onclick="closeModal('apiKeyModal')"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Nombre de la Key *</label>
+                    <input type="text" id="keyName" class="form-input" placeholder="Ej: Producción - Backend" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Permisos</label>
+                    <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px;">
+                        <label class="form-switch">
+                            <input type="checkbox" checked>
+                            <span class="switch-slider"></span>
+                            <span style="font-size:13px;">Lectura de datos</span>
+                        </label>
+                        <label class="form-switch">
+                            <input type="checkbox" checked>
+                            <span class="switch-slider"></span>
+                            <span style="font-size:13px;">Ejecución de bots RPA</span>
+                        </label>
+                        <label class="form-switch">
+                            <input type="checkbox">
+                            <span class="switch-slider"></span>
+                            <span style="font-size:13px;">Gestión de usuarios</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-ghost" onclick="closeModal('apiKeyModal')">Cancelar</button>
+                <button class="btn btn-acc" onclick="generateApiKey()"><i class="fas fa-magic"></i> Generar Key</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: SUSPEND -->
+    <div class="modal-overlay" id="suspendModal">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-title"><i class="fas fa-pause-circle"
+                        style="margin-right:8px;color:var(--yellow);"></i>Suspender Tenant</div>
+                <button class="modal-close" onclick="closeModal('suspendModal')"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <p style="color:var(--text);line-height:1.6;">¿Estás seguro de suspender este tenant?</p>
+                <div
+                    style="margin-top:16px;padding:12px;background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.3);border-radius:8px;font-size:12px;color:var(--yellow);">
+                    <i class="fas fa-exclamation-triangle"></i> Esta acción puede revertirse.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-ghost" onclick="closeModal('suspendModal')">Cancelar</button>
+                <button class="btn btn-warning" onclick="executeSuspend()"><i class="fas fa-pause"></i>
+                    Suspender</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: BOT CONFIG -->
+    <div class="modal-overlay" id="botConfigModal">
+        <div class="modal" style="max-width:600px;">
+            <div class="modal-header">
+                <div class="modal-title"><i class="fas fa-cog"
+                        style="margin-right:8px;color:var(--accent);"></i>Configurar Bot</div>
+                <button class="modal-close" onclick="closeModal('botConfigModal')"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label"><i class="fas fa-robot"></i> Nombre del Bot</label>
+                    <input type="text" id="botConfigName" class="form-input" value="Procesar Facturas Proveedor">
+                </div>
+                <div class="form-group">
+                    <label class="form-label"><i class="fas fa-align-left"></i> Descripción</label>
+                    <textarea id="botConfigDesc"
+                        class="form-textarea">Extrae datos de PDFs de facturas y los registra en SAP.</textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label"><i class="fas fa-clock"></i> Programación</label>
+                    <select class="form-select">
+                        <option>Cada hora</option>
+                        <option selected>Cada 4 horas</option>
+                        <option>Diariamente a las 00:00</option>
+                        <option>Manual</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label"><i class="fas fa-bell"></i> Notificaciones</label>
+                    <label class="form-switch">
+                        <input type="checkbox" checked>
+                        <span class="switch-slider"></span>
+                        <span style="font-size:13px;">Alertar por email al completar</span>
+                    </label>
+                    <label class="form-switch">
+                        <input type="checkbox" checked>
+                        <span class="switch-slider"></span>
+                        <span style="font-size:13px;">Alertar en Slack si hay error</span>
+                    </label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-ghost" onclick="closeModal('botConfigModal')">Cancelar</button>
+                <button class="btn btn-acc" onclick="saveBotConfig()"><i class="fas fa-save"></i> Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: BOT LOGS -->
+    <div class="modal-overlay" id="botLogsModal">
+        <div class="modal" style="max-width:700px;">
+            <div class="modal-header">
+                <div class="modal-title"><i class="fas fa-history"
+                        style="margin-right:8px;color:var(--accent);"></i>Logs del Bot</div>
+                <button class="modal-close" onclick="closeModal('botLogsModal')"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="bot-logs-list">
+                    <div class="bot-log-item success">
+                        <div class="bot-log-status"><i class="fas fa-check-circle"></i></div>
+                        <div class="bot-log-info">
+                            <div class="bot-log-title">Ejecución completada</div>
+                            <div class="bot-log-meta">Hace 2 horas · 4m 32s · 128 documentos</div>
+                        </div>
+                        <button class="btn btn-ghost btn-xs"><i class="fas fa-eye"></i></button>
+                    </div>
+                    <div class="bot-log-item success">
+                        <div class="bot-log-status"><i class="fas fa-check-circle"></i></div>
+                        <div class="bot-log-info">
+                            <div class="bot-log-title">Ejecución completada</div>
+                            <div class="bot-log-meta">Hace 6 horas · 3m 18s · 94 documentos</div>
+                        </div>
+                        <button class="btn btn-ghost btn-xs"><i class="fas fa-eye"></i></button>
+                    </div>
+                    <div class="bot-log-item error">
+                        <div class="bot-log-status"><i class="fas fa-times-circle"></i></div>
+                        <div class="bot-log-info">
+                            <div class="bot-log-title">Error: Timeout excedido</div>
+                            <div class="bot-log-meta">Ayer, 14:20 · 5m 00s · Error en línea 42</div>
+                        </div>
+                        <button class="btn btn-ghost btn-xs"><i class="fas fa-eye"></i></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: NEW BOT -->
+    <div class="modal-overlay" id="newBotModal">
+        <div class="modal" style="max-width:600px;">
+            <div class="modal-header">
+                <div class="modal-title"><i class="fas fa-plus-circle"
+                        style="margin-right:8px;color:var(--accent);"></i>Nuevo Bot RPA</div>
+                <button class="modal-close" onclick="closeModal('newBotModal')"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label"><i class="fas fa-robot"></i> Nombre del Bot *</label>
+                    <input type="text" class="form-input" placeholder="Ej: Procesar Facturas" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label"><i class="fas fa-align-left"></i> Descripción</label>
+                    <textarea class="form-textarea" placeholder="Describe qué hará este bot..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label"><i class="fas fa-cogs"></i> Tipo de Bot</label>
+                    <select class="form-select">
+                        <option>Procesamiento de documentos</option>
+                        <option>Sincronización de datos</option>
+                        <option>Respuestas automáticas</option>
+                        <option>Scraping web</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label"><i class="fas fa-clock"></i> Programación</label>
+                    <select class="form-select">
+                        <option>Manual (bajo demanda)</option>
+                        <option>Cada hora</option>
+                        <option>Cada 4 horas</option>
+                        <option>Diariamente</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-ghost" onclick="closeModal('newBotModal')">Cancelar</button>
+                <button class="btn btn-acc" onclick="createNewBot()"><i class="fas fa-plus"></i> Crear Bot</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: ACTIVITY HISTORY -->
+    <div class="modal-overlay" id="activityHistoryModal">
+        <div class="modal" style="max-width:700px;">
+            <div class="modal-header">
+                <div class="modal-title"><i class="fas fa-history"
+                        style="margin-right:8px;color:var(--accent);"></i>Historial Completo</div>
+                <button class="modal-close" onclick="closeModal('activityHistoryModal')"><i
+                        class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="timeline" id="fullActivityTimeline">
+                    <div class="timeline-item">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-time">Hace 2 horas</div>
+                        <div class="timeline-action"><strong>Bot ejecutado:</strong> "Procesar facturas proveedor"</div>
+                        <div class="timeline-details">Completado en 4m 32s · 128 documentos</div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-time">Hace 5 horas</div>
+                        <div class="timeline-action"><strong>Nuevo usuario:</strong> carlos@techcorp.com</div>
+                        <div class="timeline-details">Rol: Operador · Invitado por ana@techcorp.com</div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-time">Ayer, 14:30</div>
+                        <div class="timeline-action"><strong>Actualización de plan:</strong> Business → Enterprise</div>
+                        <div class="timeline-details">Límite de tokens aumentado a 5M/mes</div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-time">Ayer, 09:15</div>
+                        <div class="timeline-action"><strong>API Key creada:</strong> "Producción - Backend"</div>
+                        <div class="timeline-details">Permisos: Lectura, Ejecución RPA</div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-time">Hace 2 días</div>
+                        <div class="timeline-action"><strong>Bot detenido:</strong> "Sincronizar Inventario"</div>
+                        <div class="timeline-details">Motivo: Error de conexión</div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-time">Hace 3 días</div>
+                        <div class="timeline-action"><strong>Configuración actualizada:</strong> Zona horaria</div>
+                        <div class="timeline-details">Cambiado de GMT-5 a GMT-6</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: BILLING HISTORY -->
+    <div class="modal-overlay" id="billingHistoryModal">
+        <div class="modal" style="max-width:600px;">
+            <div class="modal-header">
+                <div class="modal-title"><i class="fas fa-file-invoice"
+                        style="margin-right:8px;color:var(--accent);"></i>Historial de Facturación</div>
+                <button class="modal-close" onclick="closeModal('billingHistoryModal')"><i
+                        class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="billing-history-list">
+                    <div class="billing-history-item">
+                        <div>
+                            <div style="font-weight:600;color:var(--white);">Factura #INV-2026-003</div>
+                            <div style="font-size:11px;color:var(--gray);">15 Mar 2026 · Plan Business</div>
+                        </div>
+                        <div style="text-align:right;">
+                            <div style="font-weight:700;color:var(--accent);">$299.00</div>
+                            <div style="font-size:11px;color:var(--green);"><i class="fas fa-check"></i> Pagada</div>
+                        </div>
+                        <button class="btn btn-ghost btn-xs"><i class="fas fa-download"></i></button>
+                    </div>
+                    <div class="billing-history-item">
+                        <div>
+                            <div style="font-weight:600;color:var(--white);">Factura #INV-2026-002</div>
+                            <div style="font-size:11px;color:var(--gray);">15 Feb 2026 · Plan Business</div>
+                        </div>
+                        <div style="text-align:right;">
+                            <div style="font-weight:700;color:var(--accent);">$299.00</div>
+                            <div style="font-size:11px;color:var(--green);"><i class="fas fa-check"></i> Pagada</div>
+                        </div>
+                        <button class="btn btn-ghost btn-xs"><i class="fas fa-download"></i></button>
+                    </div>
+                    <div class="billing-history-item">
+                        <div>
+                            <div style="font-weight:600;color:var(--white);">Factura #INV-2026-001</div>
+                            <div style="font-size:11px;color:var(--gray);">15 Ene 2026 · Plan Startup</div>
+                        </div>
+                        <div style="text-align:right;">
+                            <div style="font-weight:700;color:var(--accent);">$99.00</div>
+                            <div style="font-size:11px;color:var(--green);"><i class="fas fa-check"></i> Pagada</div>
+                        </div>
+                        <button class="btn btn-ghost btn-xs"><i class="fas fa-download"></i></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: ADD PAYMENT -->
+    <div class="modal-overlay" id="addPaymentModal">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-title"><i class="fas fa-credit-card"
+                        style="margin-right:8px;color:var(--accent);"></i>Agregar Método de Pago</div>
+                <button class="modal-close" onclick="closeModal('addPaymentModal')"><i
+                        class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Número de Tarjeta</label>
+                    <input type="text" class="form-input" placeholder="1234 5678 9012 3456" maxlength="19">
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                    <div class="form-group">
+                        <label class="form-label">Fecha de Expiración</label>
+                        <input type="text" class="form-input" placeholder="MM/AA" maxlength="5">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">CVC</label>
+                        <input type="text" class="form-input" placeholder="123" maxlength="4">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Nombre en la Tarjeta</label>
+                    <input type="text" class="form-input" placeholder="NOMBRE APELLIDO">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-ghost" onclick="closeModal('addPaymentModal')">Cancelar</button>
+                <button class="btn btn-acc" onclick="addPaymentMethod()"><i class="fas fa-plus"></i> Agregar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: LOG DETAIL -->
+    <div class="modal-overlay" id="logDetailModal">
+        <div class="modal" style="max-width:700px;">
+            <div class="modal-header">
+                <div class="modal-title"><i class="fas fa-file-code"
+                        style="margin-right:8px;color:var(--accent);"></i>Detalle del Log</div>
+                <button class="modal-close" onclick="closeModal('logDetailModal')"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <div
+                    style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:16px;font-family:monospace;font-size:12px;color:var(--text);max-height:400px;overflow-y:auto;">
+                    <div style="color:var(--green);">[2026-03-24 09:24:15] INFO: Iniciando ejecución</div>
+                    <div style="color:var(--text);">[2026-03-24 09:24:16] INFO: Conectando con SAP...</div>
+                    <div style="color:var(--text);">[2026-03-24 09:24:18] INFO: Conexión establecida</div>
+                    <div style="color:var(--text);">[2026-03-24 09:24:22] INFO: 128 archivos PDF encontrados</div>
+                    <div style="color:var(--green);">[2026-03-24 09:28:47] SUCCESS: 128 documentos procesados</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="dashboard" id="dashboard">
+
+        <!-- SIDEBAR -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h2 class="logo">PORTAL PILOT</h2>
+            </div>
+
+            <div class="profile-section">
+                <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80"
+                    alt="Perfil" class="avatar">
+                <div class="profile-info">
+                    <span class="name">Ajendra S.</span>
+                    <span class="role">UI/UX Designer</span>
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <a href="dashboard.html" class="sidebar-link"><i class="fas fa-home"></i> <span>Dashboard</span></a>
+                <a href="tenants.html" class="sidebar-link active"><i class="fas fa-building"></i>
+                    <span>Tenants</span></a>
+                <a href="usuarios.html" class="sidebar-link"><i class="fas fa-users"></i> <span>Usuarios</span></a>
+                <a href="#" class="sidebar-link"><i class="fas fa-robot"></i> <span>Bots RPA</span></a>
+                <a href="#" class="sidebar-link"><i class="fas fa-link"></i> <span>Auditoría</span></a>
+                <a href="#" class="sidebar-link"><i class="fas fa-chart-line"></i> <span>Analytics</span></a>
+                <a href="global_settings.html" class="sidebar-link"><i class="fas fa-cog"></i> <span>Configuración
+                        Global</span></a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <button class="footer-btn" id="darkModeToggle"><i class="fas fa-moon"></i> <span>Dark
+                        Mode</span></button>
+                <button class="footer-btn logout" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> <span>Cerrar
+                        Sesión</span></button>
+            </div>
+
+            <button class="toggle-btn" id="toggleSidebar" aria-label="Toggle Sidebar">
+                <i class="fas fa-chevron-right"></i>
+            </button>
+        </aside>
+
+        <!-- MAIN -->
+        <main class="main-content">
+
+            <header class="topbar">
+                <div class="topbar-left">
+                    <button class="topbar-btn" id="backBtn" style="display:none;"
+                        onclick="window.location.href='tenants.html'">
+                        <i class="fas fa-arrow-left"></i>
+                    </button>
+                    <div class="topbar-title">Tenant: <span id="tenantNameDisplay">Cargando la Central NERV</span></div>
+                </div>
+                <div class="topbar-right">
+                    <button class="topbar-btn" title="Notificaciones">
+                        <i class="fas fa-bell"></i>
+                        <span class="badge">3</span>
+                    </button>
+                    <button class="btn btn-outline btn-sm" onclick="openTenantPortal()">
+                        <i class="fas fa-external-link-alt"></i> Abrir Portal
+                    </button>
+                </div>
+            </header>
+
+            <!-- TENANT HEADER -->
+            <header class="tenant-header">
+                <div class="tenant-header-bg"></div>
+                <div class="tenant-banner">
+                    <div class="tenant-banner-top">
+                        <div class="tenant-logo">
+                            <img src="img/logo-tenant.png" alt="Logo"
+                                onerror="this.style.display='none';this.parentElement.innerHTML='Logo'">
+                        </div>
+                        <div class="tenant-badges">
+                            <span id="tenant-status" class="status-badge active">
+                                <span class="status-dot"></span>
+                                Activo
+                            </span>
+                            <span id="tenant-plan" class="plan-badge business"><i class="fas fa-crown"></i> plan</span>
+                        </div>
+                    </div>
+                    <h1 id="tenant-name" class="tenant-name">Conectando Terminal Dogma...</h1>
+                    <span id="tenant-domain" class="tenant-domain">empresa.portalpilot.ia</span>
+                    <div class="tenant-meta">
+                        <div class="tenant-meta-item"><i class="fas fa-calendar"></i> Registrado: <span
+                                id="tenant-registered">29 Marzo 2009</span></div>
+                        <div class="tenant-meta-item"><i class="fas fa-map-marker-alt"></i> <span
+                                id="tenant-country">México</span> (<span id="tenant-timezone">GMT-6</span>)</div>
+                        <div class="tenant-meta-item"><i class="fas fa-id-card"></i> ID: <span
+                                id="tenant-id">PP-123456</span></div>
+                    </div>
+                    <div class="tenant-actions-bar">
+                        <button class="btn btn-acc btn-sm" onclick="openModal('addUserModal')"><i
+                                class="fas fa-user-plus"></i> Invitar Usuario</button>
+                        <button id="openPortalBtn" class="btn btn-outline btn-sm" onclick="openTenantPortal()"><i
+                                class="fas fa-external-link-alt"></i> Abrir Portal</button>
+                        <button class="btn btn-outline btn-sm"><i class="fas fa-cog"></i> Configurar</button>
+                        <button class="btn btn-ghost btn-sm"><i class="fas fa-download"></i> Exportar</button>
+                        <button class="btn btn-danger btn-sm" style="margin-left:auto;"
+                            onclick="openModal('suspendModal')"><i class="fas fa-pause-circle"></i> Suspender</button>
+                    </div>
+                </div>
+            </header>
+
+            <!-- STATS -->
+            <div class="stats-grid">
+                <div class="stat-card reveal" id="usersStatCard">
+                    <div class="stat-card-icon"><i class="fas fa-users"></i></div>
+                    <div class="stat-card-value" id="usersStatValue">24</div>
+                    <div class="stat-card-label" id="usersStatLabel">Usuarios Activos</div>
+                    <div class="stat-card-trend up" id="usersStatTrend"><i class="fas fa-arrow-up"></i> +12% este mes
+                    </div>
+                </div>
+                <div class="stat-card reveal">
+                    <div class="stat-card-icon"><i class="fas fa-robot"></i></div>
+                    <div class="stat-card-value">8</div>
+                    <div class="stat-card-label">Bots RPA Activos</div>
+                    <div class="stat-card-trend up"><i class="fas fa-arrow-up"></i> +2 nuevos</div>
+                </div>
+                <div class="stat-card reveal">
+                    <div class="stat-card-icon"><i class="fas fa-brain"></i></div>
+                    <div class="stat-card-value">1.2M</div>
+                    <div class="stat-card-label">Tokens IA este mes</div>
+                    <div class="stat-card-trend up"><i class="fas fa-arrow-up"></i> +34%</div>
+                </div>
+                <div class="stat-card reveal">
+                    <div class="stat-card-icon"><i class="fas fa-server"></i></div>
+                    <div class="stat-card-value">99.98%</div>
+                    <div class="stat-card-label">Uptime SLA</div>
+                    <div class="stat-card-trend"><i class="fas fa-check" style="color:var(--green)"></i> Dentro de SLA
+                    </div>
+                </div>
+                <div class="stat-card reveal">
+                    <div class="stat-card-icon"><i class="fas fa-dollar-sign"></i></div>
+                    <div class="stat-card-value">$299</div>
+                    <div class="stat-card-label">Facturación Mensual</div>
+                    <div class="stat-card-trend"><i class="fas fa-calendar"></i> Renueva: 15 Abr</div>
+                </div>
+                <div class="stat-card reveal">
+                    <div class="stat-card-icon"><i class="fas fa-bolt"></i></div>
+                    <div class="stat-card-value">12.4K</div>
+                    <div class="stat-card-label">Ejecuciones RPA</div>
+                    <div class="stat-card-trend up"><i class="fas fa-arrow-up"></i> +18%</div>
+                </div>
+            </div>
+
+            <!-- TABS -->
+            <nav class="tabs-nav">
+                <button class="tab-btn active" data-tab="overview"><i class="fas fa-chart-pie"></i>Overview</button>
+                <button class="tab-btn" data-tab="users"><i class="fas fa-users"></i>Usuarios</button>
+                <button class="tab-btn" data-tab="bots"><i class="fas fa-robot"></i>Bots RPA</button>
+                <button class="tab-btn" data-tab="api"><i class="fas fa-key"></i>API</button>
+                <button class="tab-btn" data-tab="billing"><i
+                        class="fas fa-file-invoice-dollar"></i>Facturación</button>
+                <button class="tab-btn" data-tab="logs"><i class="fas fa-history"></i>Logs</button>
+                <button class="tab-btn" data-tab="settings"><i class="fas fa-sliders-h"></i>Configuración</button>
+            </nav>
+
+            <!-- TAB: OVERVIEW -->
+            <div class="tab-content active" id="overview">
+                <div style="display:grid;grid-template-columns:2fr 1fr;gap:20px;">
+                    <div>
+                        <div class="section-card reveal">
+                            <div class="section-header">
+                                <div class="section-title"><i class="fas fa-chart-area"></i>Uso de Recursos</div>
+                                <div style="display:flex;gap:8px;align-items:center;">
+                                    <select class="filter-select" id="chartPeriodSelect"
+                                        style="width:auto;padding:6px 12px;font-size:12px;">
+                                        <option>Últimos 7 días</option>
+                                        <option selected>Últimos 30 días</option>
+                                        <option>Últimos 90 días</option>
+                                    </select>
+                                    <button class="btn btn-ghost btn-xs" onclick="refreshCharts()"><i
+                                            class="fas fa-sync-alt"></i></button>
+                                </div>
+                            </div>
+                            <div class="section-body">
+                                <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                                    <div>
+                                        <div style="font-size:12px;color:var(--gray);margin-bottom:8px;"><i
+                                                class="fas fa-brain" style="color:var(--accent);"></i> Tokens IA</div>
+                                        <div style="height:200px;position:relative;">
+                                            <canvas id="tokensChart"></canvas>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div style="font-size:12px;color:var(--gray);margin-bottom:8px;"><i
+                                                class="fas fa-bolt" style="color:var(--cyan);"></i> Ejecuciones RPA
+                                        </div>
+                                        <div style="height:200px;position:relative;">
+                                            <canvas id="rpaChart"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="section-card reveal">
+                            <div class="section-header">
+                                <div class="section-title"><i class="fas fa-tasks"></i>Actividad Reciente</div>
+                                <button class="btn btn-ghost btn-xs" onclick="openModal('activityHistoryModal')"><i
+                                        class="fas fa-history"></i> Ver Historial</button>
+                            </div>
+                            <div class="section-body">
+                                <div class="timeline" id="recentActivityTimeline">
+                                    <div class="timeline-item">
+                                        <div class="timeline-dot"></div>
+                                        <div class="timeline-time">Hace 2 horas</div>
+                                        <div class="timeline-action"><strong>Bot ejecutado:</strong> "Procesar facturas
+                                            proveedor"</div>
+                                        <div class="timeline-details">Completado en 4m 32s · 128 documentos</div>
+                                    </div>
+                                    <div class="timeline-item">
+                                        <div class="timeline-dot"></div>
+                                        <div class="timeline-time">Hace 5 horas</div>
+                                        <div class="timeline-action"><strong>Nuevo usuario:</strong> carlos@techcorp.com
+                                        </div>
+                                        <div class="timeline-details">Rol: Operador · Invitado por ana@techcorp.com
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="section-card reveal">
+                            <div class="section-header">
+                                <div class="section-title"><i class="fas fa-info-circle"></i>Información del Tenant
+                                </div>
+                            </div>
+                            <div class="section-body" style="display:flex;flex-direction:column;gap:16px;">
+                                <div style="display:flex;justify-content:space-between;">
+                                    <span style="color:var(--gray);">Plan Actual</span>
+                                    <strong style="color:var(--white);">Business <i class="fas fa-crown"
+                                            style="color:var(--yellow);margin-left:4px;"></i></strong>
+                                </div>
+                                <div style="display:flex;justify-content:space-between;">
+                                    <span style="color:var(--gray);">Límite Usuarios</span>
+                                    <strong style="color:var(--white);">50 <span
+                                            style="color:var(--gray);font-weight:400;">(24 usados)</span></strong>
+                                </div>
+                                <div style="display:flex;justify-content:space-between;">
+                                    <span style="color:var(--gray);">Tokens IA / mes</span>
+                                    <strong style="color:var(--white);">2,000,000</strong>
+                                </div>
+                                <div style="display:flex;justify-content:space-between;">
+                                    <span style="color:var(--gray);">Bots RPA</span>
+                                    <strong style="color:var(--white);">15 <span
+                                            style="color:var(--gray);font-weight:400;">(8 activos)</span></strong>
+                                </div>
+                                <div style="display:flex;justify-content:space-between;">
+                                    <span style="color:var(--gray);">Almacenamiento</span>
+                                    <strong style="color:var(--white);">100 GB</strong>
+                                </div>
+                                <hr style="border-color:var(--border);margin:8px 0;">
+                                <div style="display:flex;justify-content:space-between;">
+                                    <span style="color:var(--gray);">Soporte</span>
+                                    <strong style="color:var(--green);"><i class="fas fa-headset"></i> Priority
+                                        24/7</strong>
+                                </div>
+                                <div style="display:flex;justify-content:space-between;">
+                                    <span style="color:var(--gray);">SLA Uptime</span>
+                                    <strong style="color:var(--white);">99.9%</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB: USERS -->
+            <div class="tab-content" id="users">
+                <div class="section-card reveal">
+                    <div class="section-header">
+                        <div class="section-title"><i class="fas fa-users"></i>Usuarios del Tenant</div>
+                        <div style="display:flex;gap:8px;align-items:center;">
+                            <div class="user-search-box" id="userSearchBox">
+                                <i class="fas fa-search"></i>
+                                <input type="text" id="userSearchInput" placeholder="Buscar... (Ctrl+B)">
+                            </div>
+                            <button class="btn btn-acc btn-sm" onclick="openModal('addUserModal')"><i
+                                    class="fas fa-plus"></i> Invitar</button>
+                        </div>
+                    </div>
+                    <div class="section-body" style="overflow-x:auto;">
+                        <table class="user-table">
+                            <thead>
+                                <tr>
+                                    <th>Usuario</th>
+                                    <th>Rol</th>
+                                    <th>Estado</th>
+                                    <th>Último Acceso</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="usersTableBody">
+                                <tr data-user-name="Ana Martínez" data-user-email="ana@techcorp.portalpilot.io"
+                                    data-user-role="Administrador" data-user-status="Activo">
+                                    <td>
+                                        <div class="user-info-cell">
+                                            <div class="user-avatar-sm">AM</div>
+                                            <div>
+                                                <div class="user-name-cell">Ana Martínez</div>
+                                                <div class="user-email-cell">ana@techcorp.portalpilot.io</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td><span class="role-badge admin">Admin</span></td>
+                                    <td><span style="color:var(--green);font-size:12px;"><span class="status-dot"
+                                                style="background:var(--green);"></span>Activo</span></td>
+                                    <td>Hoy, 09:24</td>
+                                    <td>
+                                        <button class="btn btn-ghost btn-xs" onclick="editUser(this)"><i
+                                                class="fas fa-edit"></i></button>
+                                        <button class="btn btn-danger btn-xs" onclick="deleteUser(this)"><i
+                                                class="fas fa-trash"></i></button>
+                                    </td>
+                                </tr>
+                                <tr data-user-name="Juan Rodríguez" data-user-email="juan@techcorp.portalpilot.io"
+                                    data-user-role="Operador" data-user-status="Activo">
+                                    <td>
+                                        <div class="user-info-cell">
+                                            <div class="user-avatar-sm">JR</div>
+                                            <div>
+                                                <div class="user-name-cell">Juan Rodríguez</div>
+                                                <div class="user-email-cell">juan@techcorp.portalpilot.io</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td><span class="role-badge operator">Operador</span></td>
+                                    <td><span style="color:var(--green);font-size:12px;"><span class="status-dot"
+                                                style="background:var(--green);"></span>Activo</span></td>
+                                    <td>Ayer, 16:45</td>
+                                    <td>
+                                        <button class="btn btn-ghost btn-xs" onclick="editUser(this)"><i
+                                                class="fas fa-edit"></i></button>
+                                        <button class="btn btn-danger btn-xs" onclick="deleteUser(this)"><i
+                                                class="fas fa-trash"></i></button>
+                                    </td>
+                                </tr>
+                                <tr data-user-name="Laura Sánchez" data-user-email="laura@techcorp.portalpilot.io"
+                                    data-user-role="Visualizador" data-user-status="Inactivo">
+                                    <td>
+                                        <div class="user-info-cell">
+                                            <div class="user-avatar-sm">LS</div>
+                                            <div>
+                                                <div class="user-name-cell">Laura Sánchez</div>
+                                                <div class="user-email-cell">laura@techcorp.portalpilot.io</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td><span class="role-badge viewer">Viewer</span></td>
+                                    <td><span style="color:var(--yellow);font-size:12px;"><span class="status-dot"
+                                                style="background:var(--yellow);"></span>Inactivo</span></td>
+                                    <td>5 Mar, 11:20</td>
+                                    <td>
+                                        <button class="btn btn-ghost btn-xs" onclick="editUser(this)"><i
+                                                class="fas fa-edit"></i></button>
+                                        <button class="btn btn-danger btn-xs" onclick="deleteUser(this)"><i
+                                                class="fas fa-trash"></i></button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB: BOTS -->
+            <div class="tab-content" id="bots">
+                <div class="section-card reveal">
+                    <div class="section-header">
+                        <div class="section-title"><i class="fas fa-robot"></i>Bots RPA Activos</div>
+                        <button class="btn btn-acc btn-sm" onclick="openModal('newBotModal')"><i
+                                class="fas fa-plus"></i> Nuevo Bot</button>
+                    </div>
+                    <div class="section-body">
+                        <div class="bots-grid">
+                            <div class="bot-card">
+                                <div class="bot-card-header">
+                                    <div class="bot-icon"><i class="fas fa-file-invoice"></i></div>
+                                    <span class="bot-status running"><i class="fas fa-play"></i> Ejecutando</span>
+                                </div>
+                                <div class="bot-name">Procesar Facturas Proveedor</div>
+                                <div class="bot-desc">Extrae datos de PDFs de facturas y los registra en SAP.</div>
+                                <div class="bot-stats">
+                                    <span class="bot-stat"><strong>128</strong> ejecuciones hoy</span>
+                                    <span class="bot-stat"><strong>4.2m</strong> promedio</span>
+                                </div>
+                                <div style="display:flex;gap:8px;margin-top:auto;">
+                                    <button class="btn btn-ghost btn-xs" style="flex:1;justify-content:center;"
+                                        onclick="openModal('botConfigModal')"><i class="fas fa-cog"></i>
+                                        Configurar</button>
+                                    <button class="btn btn-outline btn-xs" style="flex:1;justify-content:center;"
+                                        onclick="openModal('botLogsModal')"><i class="fas fa-chart-bar"></i>
+                                        Logs</button>
+                                </div>
+                            </div>
+
+                            <div class="bot-card">
+                                <div class="bot-card-header">
+                                    <div class="bot-icon"><i class="fas fa-shopping-cart"></i></div>
+                                    <span class="bot-status idle"><i class="fas fa-pause"></i> En espera</span>
+                                </div>
+                                <div class="bot-name">Sincronizar Inventario</div>
+                                <div class="bot-desc">Conecta WooCommerce con inventario interno cada 4h.</div>
+                                <div class="bot-stats">
+                                    <span class="bot-stat"><strong>6</strong> ejecuciones hoy</span>
+                                    <span class="bot-stat"><strong>1.8m</strong> promedio</span>
+                                </div>
+                                <div style="display:flex;gap:8px;margin-top:auto;">
+                                    <button class="btn btn-ghost btn-xs" style="flex:1;justify-content:center;"
+                                        onclick="openModal('botConfigModal')"><i class="fas fa-cog"></i>
+                                        Configurar</button>
+                                    <button class="btn btn-outline btn-xs" style="flex:1;justify-content:center;"><i
+                                            class="fas fa-play"></i> Ejecutar</button>
+                                </div>
+                            </div>
+
+                            <div class="bot-card">
+                                <div class="bot-card-header">
+                                    <div class="bot-icon"><i class="fas fa-envelope"></i></div>
+                                    <span class="bot-status running"><i class="fas fa-play"></i> Ejecutando</span>
+                                </div>
+                                <div class="bot-name">Respuestas Automáticas Email</div>
+                                <div class="bot-desc">Clasifica y responde emails de soporte con IA.</div>
+                                <div class="bot-stats">
+                                    <span class="bot-stat"><strong>342</strong> emails procesados</span>
+                                    <span class="bot-stat"><strong>94%</strong> satisfacción</span>
+                                </div>
+                                <div style="display:flex;gap:8px;margin-top:auto;">
+                                    <button class="btn btn-ghost btn-xs" style="flex:1;justify-content:center;"
+                                        onclick="openModal('botConfigModal')"><i class="fas fa-cog"></i>
+                                        Configurar</button>
+                                    <button class="btn btn-outline btn-xs" style="flex:1;justify-content:center;"
+                                        onclick="openModal('botLogsModal')"><i class="fas fa-chart-bar"></i>
+                                        Analytics</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB: API -->
+            <div class="tab-content" id="api">
+                <div class="section-card reveal">
+                    <div class="section-header">
+                        <div class="section-title"><i class="fas fa-key"></i>API Keys Activas</div>
+                        <button class="btn btn-acc btn-sm" onclick="openModal('apiKeyModal')"><i
+                                class="fas fa-plus"></i> Nueva Key</button>
+                    </div>
+                    <div class="section-body" id="apiKeysContainer">
+                        <div class="api-key-item">
+                            <div>
+                                <div class="api-key-name">Producción - Backend</div>
+                                <div class="api-key-value">pk_live_8x9k••••••2m4p</div>
+                                <div class="api-key-meta">Creada: 12 Mar 2026 · Última usada: Hoy, 09:24</div>
+                            </div>
+                            <div class="api-key-actions">
+                                <button class="btn btn-ghost btn-xs"
+                                    onclick="copyApiKey(this, 'pk_live_8x9k_full_key_2m4p')"><i class="fas fa-copy"></i>
+                                    Copiar</button>
+                                <button class="btn btn-outline btn-xs" onclick="editApiKey(this)"><i
+                                        class="fas fa-edit"></i> Editar</button>
+                                <button class="btn btn-danger btn-xs" onclick="deleteApiKey(this)"><i
+                                        class="fas fa-trash"></i></button>
+                            </div>
+                        </div>
+                        <div class="api-key-item">
+                            <div>
+                                <div class="api-key-name">Desarrollo - Testing</div>
+                                <div class="api-key-value">pk_test_3a7b••••••9k1m</div>
+                                <div class="api-key-meta">Creada: 28 Feb 2026 · Última usada: Ayer, 14:30</div>
+                            </div>
+                            <div class="api-key-actions">
+                                <button class="btn btn-ghost btn-xs"
+                                    onclick="copyApiKey(this, 'pk_test_3a7b_full_key_9k1m')"><i class="fas fa-copy"></i>
+                                    Copiar</button>
+                                <button class="btn btn-outline btn-xs" onclick="editApiKey(this)"><i
+                                        class="fas fa-edit"></i> Editar</button>
+                                <button class="btn btn-danger btn-xs" onclick="deleteApiKey(this)"><i
+                                        class="fas fa-trash"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section-card reveal">
+                    <div class="section-header">
+                        <div class="section-title"><i class="fas fa-plug"></i>Integraciones Conectadas</div>
+                    </div>
+                    <div class="section-body"
+                        style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;">
+                        <div class="integration-card connected">
+                            <i class="fab fa-salesforce" style="font-size:32px;color:#00A1E0;margin-bottom:8px;"></i>
+                            <div style="font-weight:600;color:var(--white);">Salesforce</div>
+                            <div style="font-size:11px;color:var(--green);margin-top:4px;"><i
+                                    class="fas fa-check-circle"></i> Conectado</div>
+                            <button class="btn btn-ghost btn-xs"
+                                style="margin-top:8px;width:100%;justify-content:center;"
+                                onclick="disconnectIntegration('Salesforce')"><i class="fas fa-unlink"></i>
+                                Desconectar</button>
+                        </div>
+                        <div class="integration-card connected">
+                            <i class="fab fa-slack" style="font-size:32px;color:#4A154B;margin-bottom:8px;"></i>
+                            <div style="font-weight:600;color:var(--white);">Slack</div>
+                            <div style="font-size:11px;color:var(--green);margin-top:4px;"><i
+                                    class="fas fa-check-circle"></i> Conectado</div>
+                            <button class="btn btn-ghost btn-xs"
+                                style="margin-top:8px;width:100%;justify-content:center;"
+                                onclick="disconnectIntegration('Slack')"><i class="fas fa-unlink"></i>
+                                Desconectar</button>
+                        </div>
+                        <div class="integration-card connected">
+                            <i class="fas fa-database" style="font-size:32px;color:var(--cyan);margin-bottom:8px;"></i>
+                            <div style="font-weight:600;color:var(--white);">PostgreSQL</div>
+                            <div style="font-size:11px;color:var(--green);margin-top:4px;"><i
+                                    class="fas fa-check-circle"></i> Conectado</div>
+                            <button class="btn btn-ghost btn-xs"
+                                style="margin-top:8px;width:100%;justify-content:center;"
+                                onclick="disconnectIntegration('PostgreSQL')"><i class="fas fa-unlink"></i>
+                                Desconectar</button>
+                        </div>
+                        <div class="integration-card add-new" onclick="connectNewIntegration()">
+                            <i class="fas fa-plus" style="font-size:24px;color:var(--yellow);margin-bottom:8px;"></i>
+                            <div style="font-weight:500;color:var(--gray2);">+ Conectar</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB: BILLING -->
+            <div class="tab-content" id="billing">
+                <div style="display:grid;grid-template-columns:2fr 1fr;gap:20px;">
+                    <div>
+                        <div class="section-card reveal">
+                            <div class="section-header">
+                                <div class="section-title"><i class="fas fa-file-invoice"></i>Factura Actual</div>
+                                <span class="plan-badge business">Business · $299/mes</span>
+                            </div>
+                            <div class="section-body">
+                                <table class="billing-table">
+                                    <tr>
+                                        <td>Plan Business (mensual)</td>
+                                        <td>$299.00</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Usuarios adicionales (4/50)</td>
+                                        <td>$0.00</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Tokens IA excedentes</td>
+                                        <td>$0.00</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Almacenamiento extra</td>
+                                        <td>$0.00</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Soporte Priority</td>
+                                        <td>Incluido</td>
+                                    </tr>
+                                    <tr class="billing-total">
+                                        <td><strong>Total</strong></td>
+                                        <td><strong>$299.00 USD</strong></td>
+                                    </tr>
+                                </table>
+                                <div style="margin-top:20px;display:flex;gap:12px;flex-wrap:wrap;">
+                                    <button class="btn btn-outline btn-sm" onclick="downloadInvoice()"><i
+                                            class="fas fa-download"></i> Descargar PDF</button>
+                                    <button class="btn btn-ghost btn-sm" onclick="openModal('billingHistoryModal')"><i
+                                            class="fas fa-history"></i> Historial</button>
+                                    <button class="btn btn-acc btn-sm" onclick="updatePayment()"><i
+                                            class="fas fa-credit-card"></i> Actualizar Pago</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="section-card reveal">
+                            <div class="section-header">
+                                <div class="section-title"><i class="fas fa-credit-card"></i>Método de Pago</div>
+                            </div>
+                            <div class="section-body" style="display:flex;flex-direction:column;gap:16px;">
+                                <div
+                                    style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--card2);border-radius:var(--radius);">
+                                    <i class="fab fa-cc-visa" style="font-size:32px;color:#1A1F71;"></i>
+                                    <div>
+                                        <div style="font-weight:600;color:var(--white);">Visa •••• 4242</div>
+                                        <div style="font-size:12px;color:var(--gray);">Expira: 12/2027</div>
+                                    </div>
+                                    <button class="btn btn-ghost btn-xs" style="margin-left:auto;"
+                                        onclick="editPaymentMethod()"><i class="fas fa-edit"></i></button>
+                                </div>
+                                <div style="font-size:12px;color:var(--gray);">
+                                    <i class="fas fa-calendar"></i> Próximo cobro: <strong
+                                        style="color:var(--white);">15 Abr 2026</strong>
+                                </div>
+                                <button class="btn btn-outline btn-sm" style="width:100%;justify-content:center;"
+                                    onclick="openModal('addPaymentModal')"><i class="fas fa-plus"></i> Agregar
+                                    Método</button>
+                            </div>
+                        </div>
+
+                        <div class="section-card reveal" style="margin-top:20px;">
+                            <div class="section-header">
+                                <div class="section-title"><i class="fas fa-arrow-up-right-from-square"></i>Upgrade
+                                </div>
+                            </div>
+                            <div class="section-body" style="text-align:center;">
+                                <div style="font-size:13px;color:var(--gray);margin-bottom:12px;">¿Necesitas más
+                                    recursos?</div>
+                                <div
+                                    style="background:linear-gradient(135deg,var(--accent),var(--cyan));padding:16px;border-radius:var(--radius);margin-bottom:12px;">
+                                    <div style="font-weight:700;color:#fff;font-size:16px;">Plan Enterprise</div>
+                                    <div style="color:rgba(255,255,255,0.9);font-size:13px;">Desde $799/mes</div>
+                                </div>
+                                <button class="btn btn-acc btn-sm" style="width:100%;justify-content:center;"
+                                    onclick="viewPlans()">
+                                    <i class="fas fa-arrow-right"></i> Ver Planes
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB: LOGS -->
+            <div class="tab-content" id="logs">
+                <div class="section-card reveal">
+                    <div class="section-header">
+                        <div class="section-title"><i class="fas fa-history"></i>Logs de Auditoría</div>
+                        <div style="display:flex;gap:8px;">
+                            <select class="filter-select" id="logsFilter"
+                                style="width:auto;padding:6px 12px;font-size:12px;" onchange="filterLogs()">
+                                <option value="all">Todos los eventos</option>
+                                <option value="access">Accesos</option>
+                                <option value="rpa">Ejecuciones RPA</option>
+                                <option value="api">API Calls</option>
+                                <option value="config">Configuración</option>
+                            </select>
+                            <button class="btn btn-outline btn-sm" onclick="exportLogs()"><i
+                                    class="fas fa-download"></i> Exportar</button>
+                        </div>
+                    </div>
+                    <div class="section-body" style="max-height:500px;overflow-y:auto;">
+                        <div class="timeline" style="padding-left:0;" id="logsTimeline">
+                            <div class="timeline-item log-item" data-type="rpa"
+                                style="padding-left:0;border-left:none;">
+                                <div
+                                    style="display:grid;grid-template-columns:100px 1fr auto;gap:16px;align-items:start;">
+                                    <span style="font-size:11px;color:var(--gray);">24 Mar 09:24</span>
+                                    <div>
+                                        <div style="color:var(--white);font-weight:500;">Ejecución de bot: "Procesar
+                                            facturas"</div>
+                                        <div style="font-size:12px;color:var(--gray);">Usuario: ana@techcorp.com · IP:
+                                            187.141.23.45 · ✅ Success</div>
+                                    </div>
+                                    <button class="btn btn-ghost btn-xs" onclick="openModal('logDetailModal')"><i
+                                            class="fas fa-eye"></i></button>
+                                </div>
+                            </div>
+                            <div class="timeline-item log-item" data-type="api"
+                                style="padding-left:0;border-left:none;">
+                                <div
+                                    style="display:grid;grid-template-columns:100px 1fr auto;gap:16px;align-items:start;">
+                                    <span style="font-size:11px;color:var(--gray);">24 Mar 08:15</span>
+                                    <div>
+                                        <div style="color:var(--white);font-weight:500;">API Call: POST /v1/rpa/execute
+                                        </div>
+                                        <div style="font-size:12px;color:var(--gray);">Key: pk_live_8x9k•••• · Status:
+                                            200</div>
+                                    </div>
+                                    <button class="btn btn-ghost btn-xs" onclick="openModal('logDetailModal')"><i
+                                            class="fas fa-eye"></i></button>
+                                </div>
+                            </div>
+                            <div class="timeline-item log-item" data-type="access"
+                                style="padding-left:0;border-left:none;">
+                                <div
+                                    style="display:grid;grid-template-columns:100px 1fr auto;gap:16px;align-items:start;">
+                                    <span style="font-size:11px;color:var(--gray);">23 Mar 16:45</span>
+                                    <div>
+                                        <div style="color:var(--white);font-weight:500;">Nuevo usuario invitado</div>
+                                        <div style="font-size:12px;color:var(--gray);">carlos@techcorp.com · Rol:
+                                            Operador</div>
+                                    </div>
+                                    <button class="btn btn-ghost btn-xs" onclick="openModal('logDetailModal')"><i
+                                            class="fas fa-eye"></i></button>
+                                </div>
+                            </div>
+                            <div class="timeline-item log-item" data-type="access"
+                                style="padding-left:0;border-left:none;">
+                                <div
+                                    style="display:grid;grid-template-columns:100px 1fr auto;gap:16px;align-items:start;">
+                                    <span style="font-size:11px;color:var(--gray);">23 Mar 11:20</span>
+                                    <div>
+                                        <div style="color:var(--white);font-weight:500;">Intento de acceso bloqueado
+                                        </div>
+                                        <div style="font-size:12px;color:var(--red);">IP: 191.203.45.128 · Motivo:
+                                            Geobloqueo</div>
+                                    </div>
+                                    <button class="btn btn-ghost btn-xs" onclick="openModal('logDetailModal')"><i
+                                            class="fas fa-eye"></i></button>
+                                </div>
+                            </div>
+                            <div class="timeline-item log-item" data-type="config"
+                                style="padding-left:0;border-left:none;">
+                                <div
+                                    style="display:grid;grid-template-columns:100px 1fr auto;gap:16px;align-items:start;">
+                                    <span style="font-size:11px;color:var(--gray);">22 Mar 15:30</span>
+                                    <div>
+                                        <div style="color:var(--white);font-weight:500;">Configuración actualizada</div>
+                                        <div style="font-size:12px;color:var(--gray);">Zona horaria cambiada a GMT-6
+                                        </div>
+                                    </div>
+                                    <button class="btn btn-ghost btn-xs" onclick="openModal('logDetailModal')"><i
+                                            class="fas fa-eye"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB: SETTINGS (EXPANDIDO) -->
+            <div class="tab-content" id="settings">
+                <div class="section-card reveal">
+                    <div class="section-header">
+                        <div class="section-title"><i class="fas fa-sliders-h"></i>Configuración General</div>
+                        <button class="btn btn-acc btn-sm" onclick="saveSettings()"><i class="fas fa-save"></i> Guardar
+                            Cambios</button>
+                    </div>
+                    <div class="section-body">
+                        <form class="settings-form" id="settingsForm">
+
+                            <!-- SECCIÓN: GENERAL -->
+                            <h3 style="color:var(--white);font-size:14px;display:flex;align-items:center;gap:8px;">
+                                <i class="fas fa-building" style="color:var(--accent);"></i> Información General
+                            </h3>
+                            <div class="form-group">
+                                <label class="form-label"><i class="fas fa-building"></i>Nombre de la Empresa</label>
+                                <input type="text" class="form-input" id="settName" value="TechCorp Solutions">
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label"><i class="fas fa-globe"></i>Dominio Personalizado</label>
+                                    <input type="text" class="form-input" id="settDomain"
+                                        value="techcorp.portalpilot.io">
+                                    <div class="form-hint">Requiere configuración DNS</div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label"><i class="fas fa-language"></i>Idioma
+                                        Predeterminado</label>
+                                    <select class="form-select" id="settLang">
+                                        <option selected>Español (México)</option>
+                                        <option>English (US)</option>
+                                        <option>Português (BR)</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label"><i class="fas fa-clock"></i>Zona Horaria</label>
+                                    <select class="form-select" id="settTimezone">
+                                        <option>GMT-6 (America/Mexico_City)</option>
+                                        <option>GMT-5 (America/New_York)</option>
+                                        <option>GMT-3 (America/Buenos_Aires)</option>
+                                        <option>GMT+1 (Europe/Madrid)</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label"><i class="fas fa-palette"></i>Tema</label>
+                                    <select class="form-select" id="settTheme">
+                                        <option selected>Oscuro (Default)</option>
+                                        <option>Claro</option>
+                                        <option>Auto (sistema)</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- SECCIÓN: APARIENCIA -->
+                            <h3
+                                style="color:var(--white);font-size:14px;margin-top:24px;display:flex;align-items:center;gap:8px;">
+                                <i class="fas fa-paint-brush" style="color:var(--accent);"></i> Apariencia y Marca
+                            </h3>
+                            <div class="form-group">
+                                <label class="form-label"><i class="fas fa-image"></i>Logo del Tenant</label>
+                                <div style="display:flex;gap:12px;align-items:center;">
+                                    <div
+                                        style="width:60px;height:60px;border-radius:12px;background:var(--card2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--gray);">
+                                        <i class="fas fa-image"></i>
+                                    </div>
+                                    <div>
+                                        <button type="button" class="btn btn-outline btn-xs"><i
+                                                class="fas fa-upload"></i> Subir Logo</button>
+                                        <div style="font-size:11px;color:var(--gray);margin-top:4px;">PNG, JPG hasta 2MB
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label"><i class="fas fa-palette"></i>Color Primario de Marca</label>
+                                <div style="display:flex;gap:8px;align-items:center;">
+                                    <input type="color" class="form-input" style="width:60px;height:40px;padding:4px;"
+                                        value="#8b5cf6">
+                                    <input type="text" class="form-input" value="#8b5cf6" style="flex:1;">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label"><i class="fas fa-image"></i>Banner de Fondo</label>
+                                <div style="display:flex;gap:12px;align-items:center;">
+                                    <div
+                                        style="width:120px;height:60px;border-radius:8px;background:var(--card2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--gray);">
+                                        <i class="fas fa-image"></i>
+                                    </div>
+                                    <div>
+                                        <button type="button" class="btn btn-outline btn-xs"><i
+                                                class="fas fa-upload"></i> Cambiar Banner</button>
+                                        <div style="font-size:11px;color:var(--gray);margin-top:4px;">Recomendado:
+                                            1920x400px</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- SECCIÓN: SEGURIDAD -->
+                            <h3
+                                style="color:var(--white);font-size:14px;margin-top:24px;display:flex;align-items:center;gap:8px;">
+                                <i class="fas fa-shield-alt" style="color:var(--accent);"></i> Seguridad
+                            </h3>
+                            <div class="form-group">
+                                <label class="form-switch">
+                                    <input type="checkbox" checked>
+                                    <span class="switch-slider"></span>
+                                    <span style="font-size:13px;">Autenticación de dos factores (2FA)</span>
+                                </label>
+                                <label class="form-switch">
+                                    <input type="checkbox" checked>
+                                    <span class="switch-slider"></span>
+                                    <span style="font-size:13px;">Geobloqueo automático</span>
+                                </label>
+                                <label class="form-switch">
+                                    <input type="checkbox">
+                                    <span class="switch-slider"></span>
+                                    <span style="font-size:13px;">Permitir acceso desde IPs desconocidas</span>
+                                </label>
+                                <label class="form-switch">
+                                    <input type="checkbox" checked>
+                                    <span class="switch-slider"></span>
+                                    <span style="font-size:13px;">Bloqueo tras 5 intentos fallidos</span>
+                                </label>
+                                <label class="form-switch">
+                                    <input type="checkbox">
+                                    <span class="switch-slider"></span>
+                                    <span style="font-size:13px;">Requerir aprobación para nuevos dispositivos</span>
+                                </label>
+                                <label class="form-switch">
+                                    <input type="checkbox" checked>
+                                    <span class="switch-slider"></span>
+                                    <span style="font-size:13px;">Cifrado de datos en reposo (AES-256)</span>
+                                </label>
+                                <label class="form-switch">
+                                    <input type="checkbox" checked>
+                                    <span class="switch-slider"></span>
+                                    <span style="font-size:13px;">Cifrado en tránsito (TLS 1.3)</span>
+                                </label>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label"><i class="fas fa-key"></i>Política de Contraseñas</label>
+                                <select class="form-select">
+                                    <option>Básica (mínimo 8 caracteres)</option>
+                                    <option selected>Media (8+ caracteres, números y letras)</option>
+                                    <option>Alta (12+ caracteres, mayúsculas, números, símbolos)</option>
+                                    <option>Enterprise (16+ caracteres + 2FA obligatorio)</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label"><i class="fas fa-clock"></i>Expiración de Sesión</label>
+                                <select class="form-select">
+                                    <option>30 minutos</option>
+                                    <option selected>1 hora</option>
+                                    <option>4 horas</option>
+                                    <option>8 horas</option>
+                                    <option>24 horas</option>
+                                </select>
+                            </div>
+
+                            <!-- SECCIÓN: NOTIFICACIONES -->
+                            <h3
+                                style="color:var(--white);font-size:14px;margin-top:24px;display:flex;align-items:center;gap:8px;">
+                                <i class="fas fa-bell" style="color:var(--accent);"></i> Notificaciones
+                            </h3>
+                            <div class="form-group">
+                                <label class="form-switch">
+                                    <input type="checkbox" checked>
+                                    <span class="switch-slider"></span>
+                                    <span style="font-size:13px;">Alertas por email</span>
+                                </label>
+                                <label class="form-switch">
+                                    <input type="checkbox" checked>
+                                    <span class="switch-slider"></span>
+                                    <span style="font-size:13px;">Alertas de seguridad críticas</span>
+                                </label>
+                                <label class="form-switch">
+                                    <input type="checkbox">
+                                    <span class="switch-slider"></span>
+                                    <span style="font-size:13px;">Reportes semanales por email</span>
+                                </label>
+                                <label class="form-switch">
+                                    <input type="checkbox" checked>
+                                    <span class="switch-slider"></span>
+                                    <span style="font-size:13px;">Notificaciones push en navegador</span>
+                                </label>
+                                <label class="form-switch">
+                                    <input type="checkbox">
+                                    <span class="switch-slider"></span>
+                                    <span style="font-size:13px;">Alertas por Slack</span>
+                                </label>
+                                <label class="form-switch">
+                                    <input type="checkbox">
+                                    <span class="switch-slider"></span>
+                                    <span style="font-size:13px;">Alertas por SMS (solo críticas)</span>
+                                </label>
+                                <label class="form-switch">
+                                    <input type="checkbox" checked>
+                                    <span class="switch-slider"></span>
+                                    <span style="font-size:13px;">Resumen mensual de actividad</span>
+                                </label>
+                            </div>
+
+                            <!-- SECCIÓN: DATOS Y ALMACENAMIENTO -->
+                            <h3
+                                style="color:var(--white);font-size:14px;margin-top:24px;display:flex;align-items:center;gap:8px;">
+                                <i class="fas fa-database" style="color:var(--accent);"></i> Datos y Almacenamiento
+                            </h3>
+                            <div class="form-group">
+                                <label class="form-switch">
+                                    <input type="checkbox" checked>
+                                    <span class="switch-slider"></span>
+                                    <span style="font-size:13px;">Backup automático diario</span>
+                                </label>
+                                <label class="form-switch">
+                                    <input type="checkbox">
+                                    <span class="switch-slider"></span>
+                                    <span style="font-size:13px;">Compresión de datos</span>
+                                </label>
+                                <label class="form-switch">
+                                    <input type="checkbox" checked>
+                                    <span class="switch-slider"></span>
+                                    <span style="font-size:13px;">Retención de logs (90 días)</span>
+                                </label>
+                                <label class="form-switch">
+                                    <input type="checkbox">
+                                    <span class="switch-slider"></span>
+                                    <span style="font-size:13px;">Replicación multi-región</span>
+                                </label>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label"><i class="fas fa-calendar"></i>Frecuencia de Backup</label>
+                                <select class="form-select">
+                                    <option>Cada 6 horas</option>
+                                    <option selected>Cada 12 horas</option>
+                                    <option>Diario</option>
+                                    <option>Semanal</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label"><i class="fas fa-history"></i>Retención de Backups</label>
+                                <select class="form-select">
+                                    <option>7 días</option>
+                                    <option selected>30 días</option>
+                                    <option>90 días</option>
+                                    <option>1 año</option>
+                                </select>
+                            </div>
+                            <button type="button" class="btn btn-outline btn-sm" style="align-self:flex-start;"><i
+                                    class="fas fa-download"></i> Descargar Backup Ahora</button>
+
+                            <!-- SECCIÓN: API Y WEBHOOKS -->
+                            <h3
+                                style="color:var(--white);font-size:14px;margin-top:24px;display:flex;align-items:center;gap:8px;">
+                                <i class="fas fa-code" style="color:var(--accent);"></i> API y Webhooks
+                            </h3>
+                            <div class="form-group">
+                                <label class="form-label"><i class="fas fa-link"></i> Webhook URL</label>
+                                <input type="text" class="form-input" placeholder="https://tu-servidor.com/webhook">
+                                <div class="form-hint">Recibirás notificaciones en esta URL cuando ocurran eventos</div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-switch">
+                                    <input type="checkbox">
+                                    <span class="switch-slider"></span>
+                                    <span style="font-size:13px;">Habilitar webhooks</span>
+                                </label>
+                                <label class="form-switch">
+                                    <input type="checkbox" checked>
+                                    <span class="switch-slider"></span>
+                                    <span style="font-size:13px;">Firmar payloads con HMAC</span>
+                                </label>
+                                <label class="form-switch">
+                                    <input type="checkbox" checked>
+                                    <span class="switch-slider"></span>
+                                    <span style="font-size:13px;">Reintentos automáticos (3 intentos)</span>
+                                </label>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label"><i class="fas fa-tachometer-alt"></i>Rate Limiting
+                                    (API)</label>
+                                <select class="form-select">
+                                    <option>100 requests/minuto</option>
+                                    <option selected>1000 requests/minuto</option>
+                                    <option>5000 requests/minuto</option>
+                                    <option>Sin límite</option>
+                                </select>
+                            </div>
+
+                            <!-- SECCIÓN: CUMPLIMIENTO -->
+                            <h3
+                                style="color:var(--white);font-size:14px;margin-top:24px;display:flex;align-items:center;gap:8px;">
+                                <i class="fas fa-gavel" style="color:var(--accent);"></i> Cumplimiento y Privacidad
+                            </h3>
+                            <div class="form-group">
+                                <label class="form-switch">
+                                    <input type="checkbox" checked>
+                                    <span class="switch-slider"></span>
+                                    <span style="font-size:13px;">Cumplimiento GDPR</span>
+                                </label>
+                                <label class="form-switch">
+                                    <input type="checkbox">
+                                    <span class="switch-slider"></span>
+                                    <span style="font-size:13px;">Cumplimiento HIPAA</span>
+                                </label>
+                                <label class="form-switch">
+                                    <input type="checkbox" checked>
+                                    <span class="switch-slider"></span>
+                                    <span style="font-size:13px;">Cumplimiento SOC 2</span>
+                                </label>
+                                <label class="form-switch">
+                                    <input type="checkbox">
+                                    <span class="switch-slider"></span>
+                                    <span style="font-size:13px;">Cumplimiento ISO 27001</span>
+                                </label>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label"><i class="fas fa-map-marker-alt"></i>Región de Datos</label>
+                                <select class="form-select">
+                                    <option selected>América del Norte (US-East)</option>
+                                    <option>América del Norte (US-West)</option>
+                                    <option>Europa (EU-West)</option>
+                                    <option>Asia Pacífico (APAC)</option>
+                                </select>
+                            </div>
+
+                            <!-- SECCIÓN: RENDIMIENTO -->
+                            <h3
+                                style="color:var(--white);font-size:14px;margin-top:24px;display:flex;align-items:center;gap:8px;">
+                                <i class="fas fa-tachometer-alt" style="color:var(--accent);"></i> Rendimiento
+                            </h3>
+                            <div class="form-group">
+                                <label class="form-switch">
+                                    <input type="checkbox" checked>
+                                    <span class="switch-slider"></span>
+                                    <span style="font-size:13px;">Caché de consultas frecuentes</span>
+                                </label>
+                                <label class="form-switch">
+                                    <input type="checkbox" checked>
+                                    <span class="switch-slider"></span>
+                                    <span style="font-size:13px;">Optimización automática de índices</span>
+                                </label>
+                                <label class="form-switch">
+                                    <input type="checkbox">
+                                    <span class="switch-slider"></span>
+                                    <span style="font-size:13px;">Modo de alto rendimiento (más recursos)</span>
+                                </label>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label"><i class="fas fa-memory"></i>Límite de Memoria por Bot</label>
+                                <select class="form-select">
+                                    <option>256 MB</option>
+                                    <option selected>512 MB</option>
+                                    <option>1 GB</option>
+                                    <option>2 GB</option>
+                                </select>
+                            </div>
+
+                            <!-- SECCIÓN: DOMINIOS Y SSL -->
+                            <h3
+                                style="color:var(--white);font-size:14px;margin-top:24px;display:flex;align-items:center;gap:8px;">
+                                <i class="fas fa-lock" style="color:var(--accent);"></i> Dominios y SSL
+                            </h3>
+                            <div class="form-group">
+                                <label class="form-switch">
+                                    <input type="checkbox" checked>
+                                    <span class="switch-slider"></span>
+                                    <span style="font-size:13px;">Certificado SSL automático (Let's Encrypt)</span>
+                                </label>
+                                <label class="form-switch">
+                                    <input type="checkbox" checked>
+                                    <span class="switch-slider"></span>
+                                    <span style="font-size:13px;">Redirección HTTP → HTTPS</span>
+                                </label>
+                                <label class="form-switch">
+                                    <input type="checkbox">
+                                    <span class="switch-slider"></span>
+                                    <span style="font-size:13px;">HSTS (Strict Transport Security)</span>
+                                </label>
+                            </div>
+
+                            <hr style="border-color:var(--border);margin:24px 0;">
+
+                            <div style="display:flex;gap:12px;flex-wrap:wrap;">
+                                <button type="button" class="btn btn-acc btn-sm" onclick="saveSettings()"><i
+                                        class="fas fa-save"></i> Guardar Cambios</button>
+                                <button type="button" class="btn btn-ghost btn-sm" onclick="resetSettings()"><i
+                                        class="fas fa-undo"></i> Restaurar</button>
+                                <button type="button" class="btn btn-danger btn-sm" style="margin-left:auto;"
+                                    onclick="confirmDelete()"><i class="fas fa-trash"></i> Eliminar Tenant</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <script src="js/tenant_detail.js"></script>
+</body>
+
+</html>

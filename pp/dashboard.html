@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard — Portal Pilot</title>
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="css/dashboard.css">
+</head>
+
+<body>
+
+  <div id="progress">
+    <div id="progress-fill"></div>
+  </div>
+  <div id="cursor-dot"></div>
+  <div id="cursor-ring"></div>
+  <div class="overlay" id="overlay"></div>
+
+  <!-- CONTEXT MENU -->
+  <div class="context-menu" id="contextMenu">
+    <div class="context-menu-item" data-action="view-details">
+      <i class="fas fa-eye"></i> <span>Ver detalles</span>
+    </div>
+    <div class="context-menu-item" data-action="refresh">
+      <i class="fas fa-sync-alt"></i> <span>Actualizar datos</span>
+    </div>
+    <div class="context-menu-item" data-action="expand">
+      <i class="fas fa-expand"></i> <span>Expandir vista</span>
+    </div>
+    <div class="context-menu-divider"></div>
+    <div class="context-menu-item" data-action="export">
+      <i class="fas fa-download"></i> <span>Exportar</span>
+    </div>
+    <div class="context-menu-item" data-action="settings">
+      <i class="fas fa-cog"></i> <span>Configurar widget</span>
+    </div>
+  </div>
+
+  <!-- LOGOUT MODAL -->
+  <div class="modal-overlay" id="logoutModal">
+    <div class="modal">
+      <div class="modal-icon"><i class="fas fa-sign-out-alt"></i></div>
+      <h3 class="modal-title">¿Cerrar sesión?</h3>
+      <p class="modal-desc">Estás a punto de cerrar tu sesión en Portal Pilot.</p>
+      <div class="modal-actions">
+        <button class="modal-btn cancel" id="modalCancel">Cancelar</button>
+        <button class="modal-btn confirm" id="modalConfirm">Sí, cerrar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- NOTIFICATIONS MODAL -->
+  <div class="modal-overlay" id="notificationsModal">
+    <div class="modal modal-lg">
+      <div class="modal-header">
+        <h3 class="modal-title"><i class="fas fa-bell"></i> Notificaciones</h3>
+        <button class="modal-close" id="closeNotifications"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="notification-list">
+        <div class="notification-item unread">
+          <div class="notification-icon error"><i class="fas fa-times-circle"></i></div>
+          <div class="notification-content">
+            <div class="notification-title">Acceso Denegado</div>
+            <div class="notification-desc">Intento de acceso no autorizado al tenant FinanceLab</div>
+            <div class="notification-time">Hace 12 minutos</div>
+          </div>
+        </div>
+        <div class="notification-item unread">
+          <div class="notification-icon warning"><i class="fas fa-exclamation-triangle"></i></div>
+          <div class="notification-content">
+            <div class="notification-title">Uso Elevado de Recursos</div>
+            <div class="notification-desc">GPU node-ia-03 al 85% de capacidad</div>
+            <div class="notification-time">Hace 1 hora</div>
+          </div>
+        </div>
+        <div class="notification-item">
+          <div class="notification-icon success"><i class="fas fa-envelope"></i></div>
+          <div class="notification-content">
+            <div class="notification-title">Correo Enviado</div>
+            <div class="notification-desc">Correo enviado a admin@techcorp.io</div>
+            <div class="notification-time">Hace 2 horas</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MESSAGES MODAL -->
+  <div class="modal-overlay" id="messagesModal">
+    <div class="modal modal-lg">
+      <div class="modal-header">
+        <h3 class="modal-title"><i class="fas fa-envelope"></i> Mensajes</h3>
+        <button class="modal-close" id="closeMessages"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="message-list">
+        <div class="message-item unread">
+          <div class="message-avatar">AD</div>
+          <div class="message-content">
+            <div class="message-header">
+              <span class="message-sender">Admin Sistema</span>
+              <span class="message-time">10:30 AM</span>
+            </div>
+            <div class="message-preview">Actualización de seguridad programada</div>
+          </div>
+          <span class="unread-badge"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ACTIVITY HISTORY MODAL -->
+  <div class="modal-overlay" id="activityHistoryModal">
+    <div class="modal modal-xl">
+      <div class="modal-header">
+        <h3 class="modal-title"><i class="fas fa-history"></i> Historial de Actividad</h3>
+        <button class="modal-close" id="closeActivityHistory"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="modal-search">
+        <i class="fas fa-search"></i>
+        <input type="text" id="activitySearch" placeholder="Buscar...">
+      </div>
+      <div class="activity-history-list" id="activityHistoryList"></div>
+    </div>
+  </div>
+
+  <!-- INCIDENT MODAL -->
+  <div class="modal-overlay" id="incidentModal">
+    <div class="modal modal-lg">
+      <div class="modal-header">
+        <h3 class="modal-title"><i class="fas fa-exclamation-circle"></i> Reportar Incidente</h3>
+        <button class="modal-close" id="closeIncident"><i class="fas fa-times"></i></button>
+      </div>
+      <form id="incidentForm" class="incident-form">
+        <div class="form-group">
+          <label>Título del Incidente</label>
+          <input type="text" id="incidentTitle" required>
+        </div>
+        <div class="form-group">
+          <label>Severidad</label>
+          <select id="incidentSeverity" required>
+            <option value="">Seleccionar</option>
+            <option value="critical">Crítica</option>
+            <option value="high">Alta</option>
+            <option value="medium">Media</option>
+            <option value="low">Baja</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Tenant Afectado</label>
+          <select id="incidentTenant" required>
+            <option value="">Seleccionar</option>
+            <option value="techcorp">TechCorp</option>
+            <option value="healthsys">HealthSys</option>
+            <option value="retailplus">RetailPlus</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Descripción</label>
+          <textarea id="incidentDescription" rows="4" required></textarea>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="modal-btn cancel" id="cancelIncident">Cancelar</button>
+          <button type="submit" class="modal-btn confirm"><i class="fas fa-paper-plane"></i> Enviar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODEL SELECTOR MODAL -->
+  <div class="modal-overlay" id="modelSelectorModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="modal-title"><i class="fas fa-brain"></i> Seleccionar Modelo IA</h3>
+        <button class="modal-close" id="closeModelSelector"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="model-list">
+        <div class="model-item active">
+          <div class="model-name">Gemma 3N</div>
+          <div class="model-version">v1.2.4</div>
+          <div class="model-status"><span class="status-dot green"></span> Activo</div>
+        </div>
+        <div class="model-item">
+          <div class="model-name">Llama 3</div>
+          <div class="model-version">v2.1.0</div>
+          <div class="model-status"><span class="status-dot green"></span> Disponible</div>
+        </div>
+        <div class="model-item">
+          <div class="model-name">Mistral</div>
+          <div class="model-version">v1.5.2</div>
+          <div class="model-status"><span class="status-dot green"></span> Disponible</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHART EXPANDED MODAL -->
+  <div class="modal-overlay" id="chartExpandedModal">
+    <div class="modal modal-xl">
+      <div class="modal-header">
+        <h3 class="modal-title" id="chartExpandedTitle"><i class="fas fa-chart-pie"></i> Análisis Detallado</h3>
+        <button class="modal-close" id="closeChartExpanded"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="chart-expanded-content">
+        <div class="chart-view-tabs">
+          <button class="chart-view-tab active" data-view="bar"><i class="fas fa-chart-bar"></i> Barras</button>
+          <button class="chart-view-tab" data-view="pie"><i class="fas fa-chart-pie"></i> Circular</button>
+          <button class="chart-view-tab" data-view="line"><i class="fas fa-chart-line"></i> Línea</button>
+        </div>
+        <div class="chart-expanded-grid">
+          <div class="chart-main" id="chartMainView"></div>
+          <div class="chart-stats" id="chartStatsView"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- WIDGET DETAIL MODAL -->
+  <div class="modal-overlay" id="widgetDetailModal">
+    <div class="modal modal-xl">
+      <div class="modal-header">
+        <h3 class="modal-title" id="widgetDetailTitle"><i class="fas fa-info-circle"></i> Detalles</h3>
+        <button class="modal-close" id="closeWidgetDetail"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="widget-detail-content" id="widgetDetailContent"></div>
+    </div>
+  </div>
+
+  <div class="dashboard" id="dashboard">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <h2 class="logo">PORTAL PILOT</h2>
+      </div>
+
+      <div class="profile-section">
+        <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80"
+          alt="Perfil" class="avatar">
+        <div class="profile-info">
+          <span class="name">Admin Principal</span>
+          <span class="role">Super Administrador</span>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <a href="pp/dashboard.html" class="sidebar-link active"><i class="fas fa-home"></i> <span>Dashboard</span></a>
+        <a href="pp/tenants.html" class="sidebar-link"><i class="fas fa-building"></i> <span>Tenants</span></a>
+        <a href="pp/usuarios.html" class="sidebar-link"><i class="fas fa-users"></i> <span>Usuarios</span></a>
+        <a href="pp/bots.html" class="sidebar-link"><i class="fas fa-robot"></i> <span>Bots RPA</span></a>
+        <a href="pp/auditoria.html" class="sidebar-link"><i class="fas fa-link"></i> <span>Auditoría</span></a>
+        <a href="pp/analytics.html" class="sidebar-link"><i class="fas fa-chart-line"></i> <span>Analytics</span></a>
+        <a href="pp/global_settings.html" class="sidebar-link"><i class="fas fa-cog"></i> <span>Configuración</span></a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <button class="footer-btn" id="darkModeToggle"><i class="fas fa-moon"></i> <span>Dark Mode</span></button>
+        <button class="footer-btn logout" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> <span>Cerrar
+            Sesión</span></button>
+      </div>
+
+      <button class="toggle-btn" id="toggleSidebar"><i class="fas fa-chevron-right"></i></button>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="main-content">
+      <header class="topbar">
+        <div class="topbar-left">
+          <div class="topbar-title">Centro de <span>Mando</span></div>
+          <div class="topbar-search">
+            <i class="fas fa-search"></i>
+            <input type="text" id="globalSearch" placeholder="Buscar... (Ctrl+B)">
+            <div class="search-results" id="searchResults"></div>
+          </div>
+        </div>
+        <div class="topbar-right">
+          <button class="topbar-btn" id="notificationsBtn" title="Notificaciones"><i class="fas fa-bell"></i><span
+              class="badge">3</span></button>
+          <button class="topbar-btn" id="messagesBtn" title="Mensajes"><i class="fas fa-envelope"></i></button>
+          <button class="topbar-btn" id="settingsBtn" title="Reorganizar widgets"><i
+              class="fas fa-sliders-h"></i></button>
+          <button class="btn btn-acc btn-sm" id="newBotBtn"><i class="fas fa-plus"></i> Nuevo Bot</button>
+        </div>
+      </header>
+
+      <div class="container">
+        <div class="dash-grid" id="dashboardGrid">
+
+          <!-- KPIs -->
+          <div class="kpi-card reveal" data-widget="kpi-tenants">
+            <div class="kpi-header">
+              <div class="kpi-icon"><i class="fas fa-building"></i></div>
+              <span class="kpi-trend up"><i class="fas fa-arrow-up"></i> +12%</span>
+            </div>
+
+            <!-- Número de tenants activos -->
+            <div class="kpi-value" id="kpiTenants">24</div>
+            <div class="kpi-label">Empresas Activas</div>
+            <div class="kpi-footer"><i class="fas fa-circle" style="color:var(--green);font-size:6px;"></i> Todas
+              operativas</div>
+          </div>
+
+          <div class="kpi-card reveal" data-widget="kpi-users" style="transition-delay:.05s;">
+            <div class="kpi-header">
+              <div class="kpi-icon"><i class="fas fa-users"></i></div>
+              <span class="kpi-trend up"><i class="fas fa-arrow-up"></i> +8%</span>
+            </div>
+
+            <!-- Número de usuarios totales -->
+            <div class="kpi-value" id="kpiUsers">1,247</div>
+            <div class="kpi-label">Usuarios Totales</div>
+            <div class="kpi-footer">
+              <span id="usersStatusIcon"><i class="fas fa-circle" style="color:var(--green);font-size:6px;"></i></span>
+              <span id="onlineUsers">142 online ahora</span>
+            </div>
+          </div>
+
+          <div class="kpi-card reveal" data-widget="kpi-revenue" style="transition-delay:.1s;">
+            <div class="kpi-header">
+              <div class="kpi-icon"><i class="fas fa-dollar-sign"></i></div>
+              <span class="kpi-trend up"><i class="fas fa-arrow-up"></i> +24%</span>
+            </div>
+
+            <!-- Ingresos este Mes -->
+            <div class="kpi-value" id="kpiRevenue">$185K</div>
+            <div class="kpi-label">Ingresos este Mes</div>
+            <div class="kpi-footer"><i class="fas fa-circle" style="color:var(--green);font-size:6px;"></i> Proyección:
+              $210K</div>
+          </div>
+
+          <div class="kpi-card reveal" data-widget="kpi-health" style="transition-delay:.15s;">
+            <div class="kpi-header">
+              <div class="kpi-icon"><i class="fas fa-server"></i></div>
+              <span class="kpi-trend" style="background:rgba(167,139,250,0.15);color:var(--cyan);"><i
+                  class="fas fa-minus"></i> Estable</span>
+            </div>
+            <div class="kpi-value" id="kpiHealth">98.5%</div>
+            <div class="kpi-label">Capacidad BD Health</div>
+            <div class="kpi-footer"><span class="status-dot green"></span> Ollama + NocoDB OK</div>
+          </div>
+
+          <!-- CHARTS -->
+          <div class="chart-card reveal" data-widget="chart-tenants">
+            <div class="chart-header">
+              <div class="chart-title">Nuevos Tenants por Semana</div>
+              <div class="chart-actions" data-chart="tenants">
+                <button class="btn-expand-chart" title="Ver análisis completo"><i
+                    class="fas fa-expand-alt"></i></button>
+                <button data-period="7D">7D</button><button data-period="30D" class="active">30D</button><button
+                  data-period="90D">90D</button>
+              </div>
+            </div>
+            <div class="chart-container" id="chartTenants"></div>
+            <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--gray);"><span>Semana
+                1</span><span id="chartTenantsEnd">Semana 4</span></div>
+          </div>
+
+          <div class="chart-card reveal" data-widget="chart-tokens" style="transition-delay:.1s;">
+            <div class="chart-header">
+              <div class="chart-title">Uso de Tokens <span id="currentModel">- Gemma 3N</span></div>
+              <div class="chart-actions" data-chart="tokens">
+                <button class="btn-expand-chart" title="Ver análisis completo"><i
+                    class="fas fa-expand-alt"></i></button>
+                <button data-token="model" id="modelSelectBtn">Modelo</button><button
+                  data-token="input">Entrada</button><button data-token="total" class="active">Total</button><button
+                  data-token="output">Salida</button>
+              </div>
+            </div>
+            <div class="chart-container" id="chartTokens"></div>
+            <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--gray);"><span>1
+                Nov</span><span>30 Nov</span></div>
+          </div>
+
+          <!-- ALERTS -->
+          <div class="alerts-panel reveal" data-widget="alerts">
+            <div class="panel-header">
+              <div class="panel-title"><i class="fas fa-exclamation-triangle"></i> Alertas Críticas</div>
+              <button class="btn btn-ghost btn-xs" id="viewAllAlerts">Ver todas</button>
+            </div>
+            <div class="alert-list">
+              <div class="alert-item critical">
+                <div class="alert-icon"><i class="fas fa-times"></i></div>
+                <div class="alert-content">
+                  <div class="alert-title">Intento de acceso no autorizado</div>
+                  <div class="alert-desc">IP 185.220.101.42 intentó acceder a <strong>FinanceLab</strong>.</div>
+                  <div class="alert-time"><i class="fas fa-clock"></i> Hace 12 minutos</div>
+                </div>
+              </div>
+              <div class="alert-item warning">
+                <div class="alert-icon"><i class="fas fa-exclamation"></i></div>
+                <div class="alert-content">
+                  <div class="alert-title">Uso elevado de recursos</div>
+                  <div class="alert-desc">Nodo <strong>node-ia-03</strong> superó 85% de GPU.</div>
+                  <div class="alert-time"><i class="fas fa-clock"></i> Hace 1 hora</div>
+                </div>
+              </div>
+              <div class="alert-item info">
+                <div class="alert-icon"><i class="fas fa-info"></i></div>
+                <div class="alert-content">
+                  <div class="alert-title">Actualización disponible</div>
+                  <div class="alert-desc">Gemma 3N v1.2.4 lista para staging.</div>
+                  <div class="alert-time"><i class="fas fa-clock"></i> Hace 3 horas</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- SERVICES -->
+          <div class="services-panel reveal" data-widget="services">
+            <div class="panel-header">
+              <div class="panel-title"><i class="fas fa-heartbeat"></i> Estado de Servicios</div>
+            </div>
+            <div class="service-item">
+              <div class="service-name"><i class="fas fa-plug"></i> API REST</div>
+              <div class="service-status"><span class="status-dot green"></span> Operativo</div>
+            </div>
+            <div class="service-item">
+              <div class="service-name"><i class="fas fa-database"></i> NocoDB</div>
+              <div class="service-status"><span class="status-dot green"></span> Operativo</div>
+            </div>
+            <div class="service-item">
+              <div class="service-name"><i class="fas fa-brain"></i> Gemma 3N</div>
+              <div class="service-status"><span class="status-dot green"></span> Operativo</div>
+            </div>
+            <div class="service-item">
+              <div class="service-name"><i class="fas fa-link"></i> Blockchain</div>
+              <div class="service-status"><span class="status-dot yellow"></span> Degradado</div>
+            </div>
+            <div style="padding-top:12px;"><button class="btn btn-ghost btn-sm"
+                style="width:100%;justify-content:center;" id="checkServices"><i class="fas fa-sync-alt"></i>
+                Verificar</button></div>
+          </div>
+
+          <!-- CALENDAR -->
+          <div class="calendar-panel reveal" data-widget="calendar">
+            <div class="panel-header">
+              <div class="panel-title"><i class="fas fa-calendar-alt"></i> Calendario</div>
+              <div class="calendar-nav">
+                <button class="cal-nav-btn" id="calPrev"><i class="fas fa-chevron-left"></i></button>
+                <span class="cal-month" id="calMonth">Junio 2026</span>
+                <button class="cal-nav-btn" id="calNext"><i class="fas fa-chevron-right"></i></button>
+              </div>
+            </div>
+            <div class="calendar-grid" id="calendarGrid"></div>
+            <div class="calendar-events">
+              <div class="events-title"><i class="fas fa-bolt"></i> Próximos Eventos</div>
+              <div class="events-list" id="eventsList"></div>
+            </div>
+          </div>
+
+          <!-- ACTIVITY -->
+          <div class="activity-panel reveal" data-widget="activity">
+            <div class="panel-header">
+              <div class="panel-title"><i class="fas fa-history"></i> Actividad Reciente</div>
+              <button class="btn btn-ghost btn-xs" id="viewHistory">Ver historial</button>
+            </div>
+            <div class="activity-list">
+              <div class="activity-item">
+                <div class="activity-avatar">TC</div>
+                <div class="activity-content">
+                  <div class="activity-text"><strong>TechCorp</strong> desplegó bot RPA para <em>"Análisis Q4"</em>
+                  </div>
+                  <div class="activity-meta"><span><i class="fas fa-user"></i> admin@techcorp.io</span><span><i
+                        class="fas fa-clock"></i> Hace 8 min</span></div>
+                </div>
+              </div>
+              <div class="activity-item">
+                <div class="activity-avatar">HL</div>
+                <div class="activity-content">
+                  <div class="activity-text"><strong>HealthSys</strong> actualizó seguridad biométrica</div>
+                  <div class="activity-meta"><span><i class="fas fa-user"></i> security@healthsys.com</span><span><i
+                        class="fas fa-clock"></i> Hace 24 min</span></div>
+                </div>
+              </div>
+              <div class="activity-item">
+                <div class="activity-avatar">RP</div>
+                <div class="activity-content">
+                  <div class="activity-text"><strong>RetailPlus</strong> exportó auditoría (472 transacciones)</div>
+                  <div class="activity-meta"><span><i class="fas fa-user"></i> ops@retailplus.co</span><span><i
+                        class="fas fa-clock"></i> Hace 1 hora</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- HEATMAP -->
+          <div class="heatmap-panel reveal" data-widget="heatmap">
+            <div class="panel-header">
+              <div class="panel-title"><i class="fas fa-fire"></i> Mapa de Actividad</div>
+              <div class="heatmap-legend">
+                <span>Menos</span>
+                <div class="legend-cell" style="background:rgba(139,92,246,0.1)"></div>
+                <div class="legend-cell" style="background:rgba(139,92,246,0.3)"></div>
+                <div class="legend-cell" style="background:rgba(139,92,246,0.55)"></div>
+                <div class="legend-cell" style="background:rgba(139,92,246,0.8)"></div>
+                <div class="legend-cell" style="background:var(--accent)"></div>
+                <span>Más</span>
+              </div>
+            </div>
+            <div class="heatmap-container" id="heatmapContainer"></div>
+          </div>
+
+          <!-- QUICK ACTIONS -->
+          <div class="services-panel reveal" data-widget="quick-actions">
+            <div class="panel-header">
+              <div class="panel-title"><i class="fas fa-bolt"></i> Acciones Rápidas</div>
+            </div>
+            <div class="quick-actions">
+              <button class="action-btn" id="createTenantBtn"><i class="fas fa-plus-circle"></i> Crear tenant</button>
+              <button class="action-btn" id="deployBotBtn"><i class="fas fa-robot"></i> Desplegar bot</button>
+              <button class="action-btn" id="exportAuditBtn"><i class="fas fa-download"></i> Exportar auditoría</button>
+              <button class="action-btn" id="managePermissionsBtn"><i class="fas fa-users-cog"></i> Permisos</button>
+              <button class="action-btn" style="border-color:var(--red);" id="reportIncidentBtn"><i
+                  class="fas fa-exclamation-circle" style="color:var(--red);"></i> Reportar incidente</button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="auth-check.js"></script>
+  <script src="js/dashboard.js"></script>
+</body>
+
+</html>

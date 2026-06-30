@@ -1,6 +1,0 @@
-- `[x]` Crear directorio `backend` e inicializar proyecto Node.js
-- `[x]` Instalar dependencias (`express`, `cors`, `axios`, `bcryptjs`, `dotenv`)
-- `[x]` Crear archivo `backend/.env`
-- `[x]` Crear archivo `backend/server.js` con las rutas de API
-- `[x]` Modificar `login.html` para conectarse al backend
-- `[x]` Validar funcionamiento

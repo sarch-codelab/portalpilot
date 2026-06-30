@@ -1,3 +1,7 @@
 backend/node_modules/
 node_modules/
 Portal-Pilot-BACKUP POR SI ACASO/
+.env
+backend/.env
+.gemini/
+*.log

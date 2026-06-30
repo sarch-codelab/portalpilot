@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Perfil — Portal Pilot</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="css/perfil.css">
+</head>
+
+<body>
+
+    <!-- PROGRESS & CURSOR -->
+    <div id="progress">
+        <div id="progress-fill"></div>
+    </div>
+    <div id="cursor-dot"></div>
+    <div id="cursor-ring"></div>
+    <div class="overlay" id="overlay"></div>
+
+    <div class="dashboard" id="dashboard">
+
+        <!-- SIDEBAR -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h2 class="logo">PORTAL PILOT</h2>
+            </div>
+
+            <!-- Profile -->
+            <div class="profile-section">
+                <img src="img/asuka.png" alt="Perfil" class="avatar"
+                    onerror="this.src='https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80'">
+                <div class="profile-info"><span class="name">Asuka Langley Soryu</span><span class="role">Admin de
+                        Tenant</span>
+                </div>
+            </div>
+
+            <!-- Nav -->
+            <nav class="sidebar-nav">
+                <a href="dashboard.html" class="sidebar-link"><i class="fas fa-home"></i> <span>Dashboard</span></a>
+                <a href="tenants.html" class="sidebar-link"><i class="fas fa-building"></i> <span>Tenants</span></a>
+                <a href="usuarios.html" class="sidebar-link"><i class="fas fa-users"></i> <span>Usuarios</span></a>
+                <a href="#" class="sidebar-link"><i class="fas fa-robot"></i> <span>Bots RPA</span></a>
+                <a href="#" class="sidebar-link"><i class="fas fa-link"></i> <span>Auditoría</span></a>
+                <a href="#" class="sidebar-link"><i class="fas fa-chart-line"></i> <span>Analytics</span></a>
+                <a href="global_settings.html" class="sidebar-link"><i class="fas fa-cog"></i> <span>Configuración
+                        Global</span></a>
+            </nav>
+
+            <!-- Footer -->
+            <div class="sidebar-footer">
+                <button class="footer-btn" id="darkModeToggle"><i class="fas fa-moon"></i> <span>Dark
+                        Mode</span></button>
+                <button class="footer-btn logout" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> <span>Cerrar
+                        Sesión</span></button>
+            </div>
+
+            <!-- Toggle Button -->
+            <button class="toggle-btn" id="toggleSidebar" aria-label="Toggle Sidebar"><i
+                    class="fas fa-chevron-right"></i></button>
+        </aside>
+
+        <!-- MAIN CONTENT -->
+        <main class="main-content">
+
+            <!-- TOP BAR -->
+            <header class="topbar">
+                <div class="topbar-left">
+                    <div class="topbar-title">Mi <span>Perfil</span></div>
+                    <div class="topbar-search"><i class="fas fa-search"></i><input type="text"
+                            placeholder="Buscar en configuración..." id="searchInput"></div>
+                </div>
+                <div class="topbar-right">
+                    <button class="topbar-btn" title="Notificaciones" id="notificationsBtn">
+                        <i class="fas fa-bell"></i>
+                        <span class="badge" id="notifBadge">2</span>
+                    </button>
+                    <button class="btn btn-outline btn-sm" onclick="openIdCard()">
+                        <i class="fas fa-id-card"></i> Identificación
+                    </button>
+                    <button class="btn btn-acc btn-sm" id="saveBtn" onclick="saveProfile()" style="display:none;">
+                        <i class="fas fa-save"></i> Guardar Cambios
+                    </button>
+                </div>
+            </header>
+
+            <!-- BANNER HEADER -->
+            <div class="user-header">
+                <div class="user-header-bg" style="background-image: url('img/banner_ud.jpg');" id="profileBanner">
+                </div>
+                <div class="user-header-content">
+                    <div class="user-avatar-container">
+                        <div class="user-avatar-large" id="profileAvatar">
+                            <img src="img/asuka.png" alt="Profile"
+                                onerror="this.style.display='none';this.parentElement.innerHTML='AS'">
+                        </div>
+                        <span class="status-badge online" id="profileStatusBadge"></span>
+                    </div>
+                    <div class="user-info-large">
+                        <h1 class="user-name" id="profileName">Asuka Langley Shikinami</h1>
+                        <p class="user-email" id="profileEmail">asuka.langley@nerv.jp</p>
+                        <div class="user-badges" id="profileBadges">
+                            <span class="user-badge role"><i class="fas fa-id-badge"></i>Admin de Tenant</span>
+                            <span class="user-badge verified"><i class="fas fa-check-circle"></i> Verificado</span>
+                            <span class="user-badge premium"><i class="fas fa-crown"></i> Enterprise</span>
+                        </div>
+                    </div>
+                    <div class="profile-actions" style="margin-left:auto; display:flex; gap:12px;">
+                        <button class="btn btn-outline btn-sm" onclick="openModal('uploadAvatarModal')"
+                            aria-label="Cambiar Foto de Perfil">
+                            <i class="fas fa-camera"></i> Cambiar Foto
+                        </button>
+                        <button class="btn btn-outline btn-sm" onclick="openModal('uploadBannerModal')"
+                            aria-label="Cambiar Banner de Perfil">
+                            <i class="fas fa-image"></i> Cambiar Banner
+                        </button>
+                        <button class="btn btn-ghost btn-sm" onclick="exportProfile()">
+                            <i class="fas fa-download"></i> Exportar Datos
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PROFILE LAYOUT -->
+            <div class="profile-layout">
+
+                <!-- LEFT: Editable Sections -->
+                <div class="main-column">
+
+                    <!-- Personal Information -->
+                    <div class="card reveal">
+                        <div class="card-header">
+                            <h2 class="card-title"><i class="fas fa-user"></i> Información Personal</h2>
+                            <button class="btn btn-ghost btn-xs" onclick="toggleEdit('personal')">
+                                <i class="fas fa-edit"></i> Editar
+                            </button>
+                        </div>
+                        <div class="form-grid" id="personalFields">
+                            <div class="field">
+                                <label>NOMBRE COMPLETO</label>
+                                <input type="text" id="fullName" value="Asuka Langley Soryu" disabled
+                                    onchange="trackChanges()">
+                            </div>
+                            <div class="field">
+                                <label>CORREO ELECTRÓNICO</label>
+                                <input type="email" id="email" value="asuka.langley@nerv.jp" disabled
+                                    onchange="trackChanges()">
+                                <div class="field-hint">Para cambiar tu email, contacta a soporte</div>
+                            </div>
+                            <div class="field">
+                                <label>Teléfono</label>
+                                <input type="tel" id="phone" value="+52 81 0002 0999" disabled
+                                    onchange="trackChanges()">
+                            </div>
+                            <div class="field">
+                                <label>Zona Horaria</label>
+                                <select id="timezone" disabled onchange="trackChanges()">
+                                    <option>America/Mexico_City (GMT-6)</option>
+                                    <option>America/New_York (GMT-5)</option>
+                                    <option>Europe/Madrid (GMT+1)</option>
+                                </select>
+                            </div>
+                            <div class="field" style="grid-column: 1/-1;">
+                                <label>Biografía</label>
+                                <textarea id="bio" rows="3" disabled
+                                    onchange="trackChanges()">Diseñador UI/UX especializado en interfaces enterprise. Apasionado por la experiencia de usuario y la accesibilidad digital.</textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Security Settings -->
+                    <div class="card reveal">
+                        <div class="card-header">
+                            <h2 class="card-title"><i class="fas fa-shield-alt"></i> Seguridad</h2>
+                        </div>
+
+                        <div class="security-item">
+                            <div class="security-info">
+                                <div class="security-title">Contraseña</div>
+                                <div class="security-desc">Último cambio: hace 45 días</div>
+                            </div>
+                            <button class="btn btn-outline btn-sm" onclick="openModal('changePasswordModal')">
+                                Cambiar
+                            </button>
+                        </div>
+
+                        <div class="security-item">
+                            <div class="security-info">
+                                <div class="security-title">Autenticación en Dos Pasos (2FA)</div>
+                                <div class="security-desc">Protege tu cuenta con un código adicional</div>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="toggle2fa" checked onchange="toggle2FA()">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+
+                        <div class="security-item">
+                            <div class="security-info">
+                                <div class="security-title">Sesiones Activas</div>
+                                <div class="security-desc">3 dispositivos conectados actualmente</div>
+                            </div>
+                            <button class="btn btn-ghost btn-sm" onclick="openModal('sessionsModal')">
+                                Ver todas
+                            </button>
+                        </div>
+
+                        <div class="security-item">
+                            <div class="security-info">
+                                <div class="security-title">Claves API</div>
+                                <div class="security-desc">2 claves activas para integraciones</div>
+                            </div>
+                            <button class="btn btn-ghost btn-sm" onclick="openModal('apiKeysModal')">
+                                Gestionar
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Notification Preferences -->
+                    <div class="card reveal">
+                        <div class="card-header">
+                            <h2 class="card-title"><i class="fas fa-bell"></i> Notificaciones</h2>
+                        </div>
+                        <div class="info-list" id="notifPrefs">
+                            <div class="info-item">
+                                <span class="info-label">Alertas de seguridad</span>
+                                <label class="field-row">
+                                    <input type="checkbox" checked onchange="trackChanges()">
+                                    <span style="font-size:12px">Email</span>
+                                </label>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Actualizaciones de bots RPA</span>
+                                <label class="field-row">
+                                    <input type="checkbox" checked onchange="trackChanges()">
+                                    <span style="font-size:12px">Email</span>
+                                </label>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Reportes semanales</span>
+                                <label class="field-row">
+                                    <input type="checkbox" onchange="trackChanges()">
+                                    <span style="font-size:12px">Email</span>
+                                </label>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Menciones en auditoría</span>
+                                <label class="field-row">
+                                    <input type="checkbox" checked onchange="trackChanges()">
+                                    <span style="font-size:12px">Push</span>
+                                </label>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Boletín de novedades</span>
+                                <label class="field-row">
+                                    <input type="checkbox" onchange="trackChanges()">
+                                    <span style="font-size:12px">Email</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- RIGHT: Summary & Quick Actions -->
+                <div class="sidebar-column">
+
+                    <!-- Account Summary -->
+                    <div class="card reveal">
+                        <h2 class="card-title"><i class="fas fa-chart-pie"></i> Resumen de Cuenta</h2>
+                        <div class="info-list">
+                            <div class="info-item">
+                                <span class="info-label">Miembro desde</span>
+                                <span class="info-value">Mar 2024</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Último acceso</span>
+                                <span class="info-value">Hoy, 10:32 AM</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Tenant principal</span>
+                                <span class="info-value">NERV Organization</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Rol</span>
+                                <span class="info-value">Admin de Tenant</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">ID de usuario</span>
+                                <span class="info-value"><code>alangley</code></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="card reveal">
+                        <h2 class="card-title"><i class="fas fa-bolt"></i> Acciones Rápidas</h2>
+                        <div style="display:flex;flex-direction:column;gap:10px;">
+                            <button class="btn btn-ghost" style="justify-content:flex-start;"
+                                onclick="openModal('changePasswordModal')">
+                                <i class="fas fa-key" style="width:20px;color:var(--accent)"></i> Cambiar contraseña
+                            </button>
+                            <button class="btn btn-ghost" style="justify-content:flex-start;"
+                                onclick="openModal('sessionsModal')">
+                                <i class="fas fa-laptop" style="width:20px;color:var(--cyan)"></i> Cerrar otras sesiones
+                            </button>
+                            <button class="btn btn-ghost" style="justify-content:flex-start;" onclick="downloadData()">
+                                <i class="fas fa-file-export" style="width:20px;color:var(--green)"></i> Descargar mis
+                                datos
+                            </button>
+                            <button class="btn btn-ghost" style="justify-content:flex-start;" onclick="openIdCard()">
+                                <i class="fas fa-id-card" style="width:20px;color:var(--yellow)"></i> Ver identificación
+                            </button>
+                            <button class="btn btn-danger" style="justify-content:flex-start;"
+                                onclick="openModal('deleteAccountModal')">
+                                <i class="fas fa-trash" style="width:20px"></i> Eliminar cuenta
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Activity Log Preview -->
+                    <div class="card reveal">
+                        <h2 class="card-title"><i class="fas fa-history"></i> Actividad Reciente</h2>
+                        <div style="display:flex;flex-direction:column;gap:12px;">
+                            <div
+                                style="font-size:12px;color:var(--gray);padding:8px 0;border-bottom:1px solid var(--border);">
+                                <strong style="color:var(--white)">Actualizó perfil</strong><br>
+                                <span>Hace 2 horas • Dashboard</span>
+                            </div>
+                            <div
+                                style="font-size:12px;color:var(--gray);padding:8px 0;border-bottom:1px solid var(--border);">
+                                <strong style="color:var(--white)">Cambio de contraseña</strong><br>
+                                <span>Hace 45 días • Seguridad</span>
+                            </div>
+                            <div style="font-size:12px;color:var(--gray);padding:8px 0;">
+                                <strong style="color:var(--white)">Primer inicio de sesión</strong><br>
+                                <span>15 Mar 2024 • Registro</span>
+                            </div>
+                        </div>
+                        <button class="btn btn-ghost btn-sm" style="margin-top:12px;width:100%;justify-content:center;"
+                            onclick="openModal('activityModal')">
+                            Ver historial completo <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- NOTIFICATIONS MODAL -->
+    <div class="modal-overlay" id="notificationsModal">
+        <div class="modal" style="max-width:480px;">
+            <div class="modal-header">
+                <div class="modal-title"><i class="fas fa-bell"
+                        style="margin-right:8px;color:var(--accent);"></i>Notificaciones</div>
+                <button class="modal-close" onclick="closeModal('notificationsModal')"><i
+                        class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body" style="max-height:400px;overflow-y:auto;">
+                <div class="notification-item unread">
+                    <div class="notif-icon success"><i class="fas fa-check"></i></div>
+                    <div class="notif-content">
+                        <div class="notif-title">Perfil actualizado</div>
+                        <div class="notif-desc">Tu información personal fue guardada exitosamente</div>
+                        <div class="notif-time">Hace 2 horas</div>
+                    </div>
+                    <button class="notif-mark" onclick="markAsRead(this)"><i class="fas fa-check"></i></button>
+                </div>
+                <div class="notification-item unread">
+                    <div class="notif-icon warning"><i class="fas fa-exclamation"></i></div>
+                    <div class="notif-content">
+                        <div class="notif-title">Sesión nueva detectada</div>
+                        <div class="notif-desc">Inicio de sesión desde Guadalajara, MX</div>
+                        <div class="notif-time">Hace 5 horas</div>
+                    </div>
+                    <button class="notif-mark" onclick="markAsRead(this)"><i class="fas fa-check"></i></button>
+                </div>
+                <div class="notification-item">
+                    <div class="notif-icon info"><i class="fas fa-info"></i></div>
+                    <div class="notif-content">
+                        <div class="notif-title">Actualización de seguridad</div>
+                        <div class="notif-desc">Se aplicaron nuevas políticas de contraseña</div>
+                        <div class="notif-time">Hace 2 días</div>
+                    </div>
+                    <button class="notif-mark" onclick="markAsRead(this)"><i class="fas fa-check"></i></button>
+                </div>
+                <div class="notification-item">
+                    <div class="notif-icon success"><i class="fas fa-shield-alt"></i></div>
+                    <div class="notif-content">
+                        <div class="notif-title">2FA activado</div>
+                        <div class="notif-desc">La autenticación de dos factores está habilitada</div>
+                        <div class="notif-time">Hace 45 días</div>
+                    </div>
+                    <button class="notif-mark" onclick="markAsRead(this)"><i class="fas fa-check"></i></button>
+                </div>
+            </div>
+            <div class="modal-footer" style="justify-content:space-between;">
+                <button class="btn btn-ghost btn-sm" onclick="markAllRead()">Marcar todas como leídas</button>
+                <button class="btn btn-ghost btn-sm" onclick="closeModal('notificationsModal')">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- UPLOAD AVATAR MODAL -->
+    <div class="modal-overlay" id="uploadAvatarModal">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-title">Cambiar Foto de Perfil</div>
+                <button class="modal-close" onclick="closeModal('uploadAvatarModal')"><i
+                        class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <div style="text-align:center;margin-bottom:20px;">
+                    <div class="profile-avatar-large" style="margin:0 auto 16px;width:80px;height:80px;font-size:24px;">
+                        <img src="img/asuka.png" onerror="this.style.display='none';this.parentElement.innerHTML='AS'">
+                    </div>
+                    <p style="font-size:13px;color:var(--gray)">Formatos: JPG, PNG. Máx. 5MB.</p>
+                </div>
+                <div class="field">
+                    <label>Seleccionar imagen</label>
+                    <input type="file" id="avatarFile" accept="image/*" onchange="previewAvatar(this)">
+                </div>
+                <div id="avatarPreview" style="margin-top:16px;display:none;">
+                    <img id="previewImg" style="width:100%;max-width:200px;border-radius:8px;">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-ghost" onclick="closeModal('uploadAvatarModal')">Cancelar</button>
+                <button class="btn btn-acc" onclick="uploadAvatar()">Subir Foto</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- UPLOAD BANNER MODAL -->
+    <div class="modal-overlay" id="uploadBannerModal">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-title">Cambiar Banner de Perfil</div>
+                <button class="modal-close" onclick="closeModal('uploadBannerModal')"><i
+                        class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <div style="text-align:center;margin-bottom:20px;">
+                    <div
+                        style="width:100%;height:120px;background:linear-gradient(135deg,var(--accent),var(--cyan));border-radius:8px;margin-bottom:12px;overflow:hidden;">
+                        <img id="currentBannerPreview" src="img/banner_ud.jpg"
+                            style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'">
+                    </div>
+                    <p style="font-size:13px;color:var(--gray)">Formatos: JPG, PNG. Máx. 10MB. Recomendado: 1200x300px
+                    </p>
+                </div>
+                <div class="field">
+                    <label>Seleccionar imagen</label>
+                    <input type="file" id="bannerFile" accept="image/*" onchange="previewBanner(this)">
+                </div>
+                <div id="bannerPreview" style="margin-top:16px;display:none;">
+                    <img id="bannerPreviewImg" style="width:100%;height:120px;object-fit:cover;border-radius:8px;">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-ghost" onclick="closeModal('uploadBannerModal')">Cancelar</button>
+                <button class="btn btn-acc" onclick="uploadBanner()">Subir Banner</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CHANGE PASSWORD MODAL -->
+    <div class="modal-overlay" id="changePasswordModal">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-title">Cambiar Contraseña</div>
+                <button class="modal-close" onclick="closeModal('changePasswordModal')"><i
+                        class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="field">
+                    <label>Contraseña Actual</label>
+                    <input type="password" id="currentPass" placeholder="••••••••">
+                </div>
+                <div class="field">
+                    <label>Nueva Contraseña</label>
+                    <input type="password" id="newPass" placeholder="Mínimo 12 caracteres"
+                        oninput="checkStrength(this)">
+                    <div class="strength-wrap" style="margin-top:8px;">
+                        <div class="strength-bar"
+                            style="height:3px;background:rgba(255,255,255,.06);border-radius:2px;">
+                            <div class="strength-fill" id="strengthFill"
+                                style="height:100%;width:0;border-radius:2px;transition:all.3s"></div>
+                        </div>
+                        <div class="strength-label" style="font-size:10px;color:var(--gray);margin-top:4px;">
+                            <span id="strengthText">Contraseña débil</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="field">
+                    <label>Confirmar Nueva Contraseña</label>
+                    <input type="password" id="confirmPass" placeholder="••••••••" oninput="checkMatch()">
+                    <div id="matchStatus" style="font-size:11px;margin-top:6px;"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-ghost" onclick="closeModal('changePasswordModal')">Cancelar</button>
+                <button class="btn btn-acc" id="btnChangePass" onclick="changePassword()" disabled>
+                    Actualizar Contraseña
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SESSIONS MODAL -->
+    <div class="modal-overlay" id="sessionsModal">
+        <div class="modal" style="max-width:520px;">
+            <div class="modal-header">
+                <div class="modal-title">Sesiones Activas</div>
+                <button class="modal-close" onclick="closeModal('sessionsModal')"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="session-item current">
+                    <div class="session-info">
+                        <div class="session-device"><i class="fas fa-desktop"></i> Chrome • Windows</div>
+                        <div class="session-meta">Última actividad: Ahora • <span style="color:var(--green)">●
+                                Activa</span></div>
+                        <div class="session-location">📍 Monterrey, MX • 187.210.34.89</div>
+                    </div>
+                    <span class="profile-badge verified" style="font-size:10px;padding:2px 8px;">Actual</span>
+                </div>
+                <div class="session-item">
+                    <div class="session-info">
+                        <div class="session-device"><i class="fas fa-mobile-alt"></i> Safari • iOS</div>
+                        <div class="session-meta">Última actividad: Hace 2 horas</div>
+                        <div class="session-location">📍 Guadalajara, MX • 189.203.45.12</div>
+                    </div>
+                    <button class="btn btn-ghost btn-xs" onclick="endSession(this)">Cerrar</button>
+                </div>
+                <div class="session-item">
+                    <div class="session-info">
+                        <div class="session-device"><i class="fas fa-laptop"></i> Firefox • macOS</div>
+                        <div class="session-meta">Última actividad: Ayer, 6:45 PM</div>
+                        <div class="session-location">📍 CDMX, MX • 201.99.12.45</div>
+                    </div>
+                    <button class="btn btn-ghost btn-xs" onclick="endSession(this)">Cerrar</button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-danger btn-sm" onclick="endAllSessions()">
+                    <i class="fas fa-sign-out-alt"></i> Cerrar Todas
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- API KEYS MODAL -->
+    <div class="modal-overlay" id="apiKeysModal">
+        <div class="modal" style="max-width:520px;">
+            <div class="modal-header">
+                <div class="modal-title">Claves API</div>
+                <button class="modal-close" onclick="closeModal('apiKeysModal')"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="api-key-item">
+                    <div class="api-key-info">
+                        <div class="api-key-name">Producción - Dashboard</div>
+                        <div class="api-key-value">pk_live_8a3f...2e1b9c4d</div>
+                        <div class="api-key-meta">Creada: 12 Ene 2026 • Última usada: Hoy</div>
+                    </div>
+                    <div class="api-key-actions">
+                        <button class="btn btn-ghost btn-xs" onclick="copyApiKey('pk_live_8a3f2e1b9c4d')">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                        <button class="btn btn-danger btn-xs" onclick="revokeApiKey(this)">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="api-key-item">
+                    <div class="api-key-info">
+                        <div class="api-key-name">Desarrollo - Testing</div>
+                        <div class="api-key-value">pk_test_4f1a...9b2c8e3d</div>
+                        <div class="api-key-meta">Creada: 3 Mar 2026 • Última usada: Hace 3 días</div>
+                    </div>
+                    <div class="api-key-actions">
+                        <button class="btn btn-ghost btn-xs" onclick="copyApiKey('pk_test_4f1a9b2c8e3d')">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                        <button class="btn btn-danger btn-xs" onclick="revokeApiKey(this)">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+                <button class="btn btn-acc btn-sm" style="width:100%;margin-top:12px;" onclick="createApiKey()">
+                    <i class="fas fa-plus"></i> Generar Nueva Clave
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- DELETE ACCOUNT MODAL -->
+    <div class="modal-overlay" id="deleteAccountModal">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-title" style="color:var(--red)">
+                    <i class="fas fa-exclamation-triangle"></i> Eliminar Cuenta
+                </div>
+                <button class="modal-close" onclick="closeModal('deleteAccountModal')"><i
+                        class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body" style="text-align:center;">
+                <p style="font-size:14px;color:var(--gray);margin-bottom:20px;">
+                    Esta acción es <strong>irreversible</strong>. Todos tus datos, proyectos y configuraciones serán
+                    eliminados permanentemente.
+                </p>
+                <div class="field" style="text-align:left;">
+                    <label>Confirma escribiendo "ELIMINAR"</label>
+                    <input type="text" id="deleteConfirm" placeholder="ELIMINAR"
+                        style="text-transform:uppercase;letter-spacing:2px;text-align:center;"
+                        oninput="checkDeleteConfirm()">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-ghost" onclick="closeModal('deleteAccountModal')">Cancelar</button>
+                <button class="btn btn-danger" id="btnDeleteAccount" onclick="deleteAccount()" disabled>
+                    Eliminar Permanentemente
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="auth-check.js"></script>
+    <script src="js/perfil.js"></script>
+</body>
+
+</html>

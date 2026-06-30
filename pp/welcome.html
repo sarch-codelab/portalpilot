@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InfiniHon - Portal Pilot</title>
+    <style>
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #000000;
+            font-family: 'Impact', 'Arial Black', sans-serif;
+            overflow: hidden;
+            perspective: 1000px;
+            color: #ffffff;
+            user-select: none;
+        }
+
+        .audio-unlocker {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 999;
+            cursor: pointer;
+            background: transparent;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .unlocker-hint {
+            font-size: 4rem;
+            animation: pulseClick 1.8s infinite ease-in-out;
+            filter: drop-shadow(0 0 15px rgba(168, 85, 247, 0.8));
+        }
+
+        @keyframes pulseClick {
+
+            0%,
+            100% {
+                opacity: 0.5;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 1;
+                transform: scale(1.15);
+            }
+        }
+
+        .system-credits {
+            position: fixed;
+            top: 25px;
+            left: 25px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.8rem;
+            color: #222;
+            letter-spacing: 2px;
+            z-index: 20;
+            text-transform: uppercase;
+        }
+
+        .origin-credits {
+            position: fixed;
+            bottom: 25px;
+            right: 25px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.8rem;
+            color: #222;
+            letter-spacing: 3px;
+            z-index: 20;
+            text-transform: uppercase;
+        }
+
+        .cinema-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%;
+            height: 160px;
+            text-align: center;
+            transform-style: preserve-3d;
+            pointer-events: none;
+        }
+
+        .word-box {
+            position: absolute;
+            width: 100%;
+            line-height: 160px;
+            font-size: 6.5rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 12px;
+            transform-origin: 50% 50% -80px;
+            transform: rotateX(-90deg);
+            opacity: 0;
+            backface-visibility: hidden;
+            transition: transform 0.5s cubic-bezier(0.7, 0, 0.3, 1), opacity 0.3s;
+        }
+
+        .word-box.visible {
+            transform: rotateX(0deg);
+            opacity: 1;
+        }
+
+        .word-box.exit {
+            transform: rotateX(90deg);
+            opacity: 0;
+        }
+
+        .word-box.final-zoom {
+            transition: transform 1.2s cubic-bezier(0.7, 0, 1, 1), opacity 0.8s, filter 0.8s;
+            transform: scale(25);
+            opacity: 0;
+            filter: blur(20px);
+        }
+
+        canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        .redirect-text {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-family: 'Courier New', monospace;
+            font-size: 1.4rem;
+            color: #ffffff;
+            letter-spacing: 8px;
+            text-transform: uppercase;
+            opacity: 0;
+            z-index: 30;
+        }
+
+        @keyframes pulseText {
+
+            0%,
+            100% {
+                opacity: 0.3;
+                text-shadow: 0 0 10px rgba(186, 85, 211, 0.5);
+            }
+
+            50% {
+                opacity: 1;
+                text-shadow: 0 0 35px rgba(216, 191, 216, 1);
+            }
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(rgba(18, 16, 16, 0) 60%, rgba(0, 0, 0, 0.2) 40%);
+            background-size: 100% 4px;
+            pointer-events: none;
+            z-index: 15;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="unlocker" class="audio-unlocker">
+        <div class="unlocker-hint">👆</div>
+    </div>
+
+    <div class="overlay"></div>
+
+    <div class="system-credits">Gracias por usar Portal Pilot</div>
+    <div class="origin-credits">Made in Honduras</div>
+
+    <div class="cinema-container">
+        <div id="wordDisplay" class="word-box"></div>
+    </div>
+
+    <div id="redirectText" class="redirect-text">Redirigiendo...</div>
+    <canvas id="waterCanvas"></canvas>
+
+    <script>
+        // Obtener datos del usuario desde localStorage
+        const storedName = localStorage.getItem('userName') || "Usuario";
+        const firstName = storedName.split(' ')[0] || "Usuario";
+        const storedTenant = localStorage.getItem('empresaCodigo') || "ROOT";
+        const storedTenantName = localStorage.getItem('empresaNombre') || null;
+        
+        let tenantName = "Portal Pilot";
+        let targetPath = "../inicio.html";
+        
+        if (storedTenant.toUpperCase() !== "ROOT" && storedTenant.trim() !== "") {
+            tenantName = storedTenantName || storedTenant; // Usar el nombre real si existe
+            targetPath = "../enterprise/dashboard.html"; // Dashboard de empresa
+        } else {
+            tenantName = "Portal Pilot";
+            targetPath = "dashboard.html"; // Dashboard Admin de Portal Pilot
+        }
+
+        const phrases = ["Bienvenido/a", "a", tenantName, firstName + "."];
+        const wordDisplay = document.getElementById('wordDisplay');
+        const redirectText = document.getElementById('redirectText');
+        const canvas = document.getElementById('waterCanvas');
+        const ctx = canvas.getContext('2d');
+        const unlocker = document.getElementById('unlocker');
+
+        let audioCtx = null;
+        let sequenceStarted = false;
+        let masterGain = null;
+        let reverbNode = null;
+        let reverbGain = null;
+        let dryGain = null;
+
+        unlocker.addEventListener('click', () => {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                setupAudioGraph();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            unlocker.style.display = 'none';
+            if (!sequenceStarted) {
+                sequenceStarted = true;
+                runSequence();
+            }
+        });
+
+        function setupAudioGraph() {
+            masterGain = audioCtx.createGain();
+            masterGain.gain.value = 1.6; // Aumentado para mejor volumen
+
+            dryGain = audioCtx.createGain();
+            dryGain.gain.value = 1.0; // Aumentado para mejor volumen
+
+            reverbGain = audioCtx.createGain();
+            reverbGain.gain.value = 0.55;
+
+            reverbNode = audioCtx.createConvolver();
+            const reverbBuffer = createReverbImpulse(3.5, 2.5);
+            reverbNode.buffer = reverbBuffer;
+
+            dryGain.connect(masterGain);
+            reverbNode.connect(reverbGain);
+            reverbGain.connect(masterGain);
+            masterGain.connect(audioCtx.destination);
+        }
+
+        function createReverbImpulse(duration, decay) {
+            const sampleRate = audioCtx.sampleRate;
+            const length = sampleRate * duration;
+            const impulse = audioCtx.createBuffer(2, length, sampleRate);
+
+            for (let channel = 0; channel < 2; channel++) {
+                const channelData = impulse.getChannelData(channel);
+                for (let i = 0; i < length; i++) {
+                    channelData[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / length, decay);
+                }
+            }
+            return impulse;
+        }
+
+        function playTypeSound() {
+            if (!audioCtx) return;
+
+            const now = audioCtx.currentTime;
+
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            const filter = audioCtx.createBiquadFilter();
+
+            osc.connect(filter);
+            filter.connect(gain);
+            gain.connect(dryGain);
+            gain.connect(reverbNode);
+
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(800 + Math.random() * 150, now);
+
+            filter.type = 'lowpass';
+            filter.frequency.value = 2500;
+            filter.Q.value = 1;
+
+            gain.gain.setValueAtTime(0, now);
+            gain.gain.linearRampToValueAtTime(0.4, now + 0.005);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+
+            osc.start(now);
+            osc.stop(now + 0.04);
+        }
+
+        function playFlipSound() {
+            if (!audioCtx) return;
+
+            const now = audioCtx.currentTime;
+
+            const bufferSize = audioCtx.sampleRate * 0.4;
+            const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+            const noiseData = noiseBuffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) {
+                noiseData[i] = Math.random() * 2 - 1;
+            }
+
+            const noise = audioCtx.createBufferSource();
+            noise.buffer = noiseBuffer;
+
+            const filter = audioCtx.createBiquadFilter();
+            const gain = audioCtx.createGain();
+
+            noise.connect(filter);
+            filter.connect(gain);
+            gain.connect(dryGain);
+            gain.connect(reverbNode);
+
+            filter.type = 'bandpass';
+            filter.frequency.setValueAtTime(1200, now);
+            filter.frequency.exponentialRampToValueAtTime(180, now + 0.35);
+            filter.Q.value = 2;
+
+            gain.gain.setValueAtTime(0, now);
+            gain.gain.linearRampToValueAtTime(0.28, now + 0.02);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+
+            noise.start(now);
+            noise.stop(now + 0.35);
+
+            const subOsc = audioCtx.createOscillator();
+            const subGain = audioCtx.createGain();
+            subOsc.connect(subGain);
+            subGain.connect(dryGain);
+
+            subOsc.type = 'sine';
+            subOsc.frequency.setValueAtTime(90, now);
+            subOsc.frequency.exponentialRampToValueAtTime(45, now + 0.3);
+
+            subGain.gain.setValueAtTime(0, now);
+            subGain.gain.linearRampToValueAtTime(0.2, now + 0.01);
+            subGain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+
+            subOsc.start(now);
+            subOsc.stop(now + 0.3);
+
+            const osc = audioCtx.createOscillator();
+            const oscGain = audioCtx.createGain();
+            osc.connect(oscGain);
+            oscGain.connect(dryGain);
+            oscGain.connect(reverbNode);
+
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(700, now);
+            osc.frequency.exponentialRampToValueAtTime(280, now + 0.3);
+
+            oscGain.gain.setValueAtTime(0, now);
+            oscGain.gain.linearRampToValueAtTime(0.12, now + 0.01);
+            oscGain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+
+            osc.start(now);
+            osc.stop(now + 0.3);
+        }
+
+        function playZoomSound() {
+            if (!audioCtx) return;
+
+            const now = audioCtx.currentTime;
+
+            const subOsc = audioCtx.createOscillator();
+            const subGain = audioCtx.createGain();
+            const subFilter = audioCtx.createBiquadFilter();
+
+            subOsc.connect(subFilter);
+            subFilter.connect(subGain);
+            subGain.connect(dryGain);
+
+            subOsc.type = 'sine';
+            subOsc.frequency.setValueAtTime(35, now);
+            subOsc.frequency.exponentialRampToValueAtTime(140, now + 1.2);
+
+            subFilter.type = 'lowpass';
+            subFilter.frequency.value = 250;
+
+            subGain.gain.setValueAtTime(0, now);
+            subGain.gain.linearRampToValueAtTime(0.6, now + 0.1);
+            subGain.gain.linearRampToValueAtTime(0.5, now + 0.9);
+            subGain.gain.exponentialRampToValueAtTime(0.001, now + 1.3);
+
+            subOsc.start(now);
+            subOsc.stop(now + 1.3);
+
+            const osc1 = audioCtx.createOscillator();
+            const gain1 = audioCtx.createGain();
+            const filter1 = audioCtx.createBiquadFilter();
+
+            osc1.connect(filter1);
+            filter1.connect(gain1);
+            gain1.connect(dryGain);
+            gain1.connect(reverbNode);
+
+            osc1.type = 'sine';
+            osc1.frequency.setValueAtTime(220, now);
+            osc1.frequency.exponentialRampToValueAtTime(900, now + 1.0);
+
+            filter1.type = 'lowpass';
+            filter1.frequency.setValueAtTime(450, now);
+            filter1.frequency.exponentialRampToValueAtTime(1800, now + 1.0);
+
+            gain1.gain.setValueAtTime(0, now);
+            gain1.gain.linearRampToValueAtTime(0.3, now + 0.1);
+            gain1.gain.linearRampToValueAtTime(0.25, now + 0.8);
+            gain1.gain.exponentialRampToValueAtTime(0.001, now + 1.2);
+
+            osc1.start(now);
+            osc1.stop(now + 1.2);
+
+            const osc2 = audioCtx.createOscillator();
+            const gain2 = audioCtx.createGain();
+
+            osc2.connect(gain2);
+            gain2.connect(dryGain);
+            gain2.connect(reverbNode);
+
+            osc2.type = 'sine';
+            osc2.frequency.setValueAtTime(440, now);
+            osc2.frequency.exponentialRampToValueAtTime(2000, now + 1.0);
+
+            gain2.gain.setValueAtTime(0, now);
+            gain2.gain.linearRampToValueAtTime(0.14, now + 0.15);
+            gain2.gain.exponentialRampToValueAtTime(0.001, now + 1.1);
+
+            osc2.start(now);
+            osc2.stop(now + 1.1);
+
+            const bufferSize = audioCtx.sampleRate * 1.3;
+            const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+            const noiseData = noiseBuffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) {
+                noiseData[i] = Math.random() * 2 - 1;
+            }
+
+            const noise = audioCtx.createBufferSource();
+            noise.buffer = noiseBuffer;
+
+            const noiseFilter = audioCtx.createBiquadFilter();
+            const noiseGain = audioCtx.createGain();
+
+            noise.connect(noiseFilter);
+            noiseFilter.connect(noiseGain);
+            noiseGain.connect(dryGain);
+
+            noiseFilter.type = 'lowpass';
+            noiseFilter.frequency.setValueAtTime(220, now);
+            noiseFilter.frequency.exponentialRampToValueAtTime(1400, now + 1.0);
+
+            noiseGain.gain.setValueAtTime(0, now);
+            noiseGain.gain.linearRampToValueAtTime(0.1, now + 0.1);
+            noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 1.2);
+
+            noise.start(now);
+            noise.stop(now + 1.2);
+        }
+
+        function playWaterSplashSound() {
+            if (!audioCtx) return;
+
+            const now = audioCtx.currentTime;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+
+            // Conectar al mismo grafo que los demás sonidos
+            osc.connect(gain);
+            gain.connect(dryGain);
+
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(70, now);
+            osc.frequency.linearRampToValueAtTime(10, now + 1.8);
+
+            gain.gain.setValueAtTime(0.9, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 1.8);
+
+            osc.start(now);
+            osc.stop(now + 1.8);
+        }
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        let ripples = [];
+
+        function addRipple(x, y, radius, maxRadius, speed, width, opacity) {
+            ripples.push({ x, y, radius, maxRadius, speed, width, opacity });
+        }
+
+        function animateWater() {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.06)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            for (let i = ripples.length - 1; i >= 0; i--) {
+                let r = ripples[i];
+                r.radius += r.speed;
+                let life = 1 - (r.radius / r.maxRadius);
+
+                if (life <= 0) {
+                    ripples.splice(i, 1);
+                    continue;
+                }
+
+                ctx.beginPath();
+                ctx.arc(r.x, r.y, r.radius, 0, Math.PI * 2);
+                ctx.strokeStyle = `rgba(168, 85, 247, ${life * r.opacity})`;
+                ctx.lineWidth = r.width * life;
+                ctx.shadowBlur = 40 * life;
+                ctx.shadowColor = '#a855f7';
+                ctx.stroke();
+                ctx.closePath();
+                ctx.shadowBlur = 0;
+            }
+
+            if (ripples.length > 0 || redirectText.style.opacity === "1") {
+                requestAnimationFrame(animateWater);
+            }
+        }
+
+        let currentPhraseIndex = 0;
+
+        function typePhrase(phrase, callback) {
+            wordDisplay.innerHTML = "";
+            wordDisplay.className = "word-box visible";
+            let charIndex = 0;
+
+            function nextChar() {
+                if (charIndex < phrase.length) {
+                    wordDisplay.innerHTML += phrase[charIndex];
+                    playTypeSound();
+                    charIndex++;
+                    setTimeout(nextChar, 30 + Math.random() * 20);
+                } else {
+                    setTimeout(callback, 800);
+                }
+            }
+            nextChar();
+        }
+
+        function runSequence() {
+            if (currentPhraseIndex < phrases.length) {
+                let phrase = phrases[currentPhraseIndex];
+
+                typePhrase(phrase, () => {
+                    if (currentPhraseIndex < phrases.length - 1) {
+                        wordDisplay.className = "word-box exit";
+                        playFlipSound();
+                        currentPhraseIndex++;
+                        setTimeout(runSequence, 500);
+                    } else {
+                        setTimeout(() => {
+                            playZoomSound();
+                            wordDisplay.className = "word-box visible final-zoom";
+                            setTimeout(triggerWaterExplosion, 500);
+                        }, 400);
+                    }
+                });
+            }
+        }
+
+        function triggerWaterExplosion() {
+            playWaterSplashSound();
+            let centerX = canvas.width / 2;
+            let centerY = canvas.height / 2;
+            let maxRadius = Math.sqrt(canvas.width ** 2 + canvas.height ** 2) / 1.5;
+
+            addRipple(centerX, centerY, 0, maxRadius, 14, 25, 1.0);
+            setTimeout(() => addRipple(centerX, centerY, 0, maxRadius, 10, 10, 0.6), 100);
+            setTimeout(() => addRipple(centerX, centerY, 0, maxRadius, 7, 6, 0.4), 250);
+
+            animateWater();
+
+            redirectText.style.opacity = "1";
+            redirectText.style.animation = "pulseText 1.2s infinite";
+            
+            setTimeout(() => {
+                window.location.href = targetPath;
+            }, 1800);
+        }
+    </script>
+</body>
+
+</html>

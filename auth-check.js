@@ -32,6 +32,9 @@
       if (!localStorage.getItem('empresaCodigo') && payload.empresa_codigo) {
         localStorage.setItem('empresaCodigo', payload.empresa_codigo.toString());
       }
+      if (!localStorage.getItem('empresaNombre') && payload.empresa_nombre) {
+        localStorage.setItem('empresaNombre', payload.empresa_nombre.toString());
+      }
     } catch (e) {
       // No bloquear si el token no es decodificable
     }
@@ -40,6 +43,7 @@
   const userName = localStorage.getItem('userName');
   const userEmail = localStorage.getItem('userEmail');
   const empresaCodigo = localStorage.getItem('empresaCodigo');
+  const empresaNombre = localStorage.getItem('empresaNombre') || empresaCodigo || 'Enterprise';
 
   // Determinar ruta de login relativa a la ubicación actual
   const isSubDir = window.location.pathname.includes('/enterprise/') || window.location.pathname.includes('\\enterprise\\');
@@ -77,7 +81,7 @@
 
   function getAccountDisplayName(account) {
     const isRoot = !account.empresa_codigo || account.empresa_codigo.toString().trim().toUpperCase() === 'ROOT';
-    const name = isRoot ? 'Portal Pilot' : account.empresa_codigo || 'Tenant';
+    const name = isRoot ? 'Portal Pilot' : account.empresa_nombre || account.empresa_codigo || 'Tenant';
     const email = account.email ? ` - ${account.email}` : '';
     return `${name}${email}`;
   }
@@ -140,6 +144,7 @@
     localStorage.setItem('userName', account.nombre || account.email);
     localStorage.setItem('userEmail', account.email);
     localStorage.setItem('empresaCodigo', account.empresa_codigo || 'ROOT');
+    localStorage.setItem('empresaNombre', account.empresa_nombre || (account.empresa_codigo === 'ROOT' ? 'Portal Pilot' : account.empresa_codigo));
     localStorage.setItem('currentAccountId', account.id);
     const target = getSwitchTarget(account);
     window.location.href = target;
@@ -437,7 +442,7 @@
     // Código/Nombre de empresa
     document.querySelectorAll('.company-name, .tenant-name, .brand-right .company-name').forEach(el => {
       if (el.id !== 'tenant-name') { // Evitar pisar el detalle específico
-        el.textContent = empresaCodigo || 'Enterprise';
+        el.textContent = empresaNombre;
       }
     });
 

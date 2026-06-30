@@ -43,7 +43,13 @@ app.use(helmet({
       "style-src-elem": ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://cdnjs.cloudflare.com"],
       "font-src": ["'self'", "https://fonts.gstatic.com", "https://cdnjs.cloudflare.com"],
       "img-src": ["'self'", "data:", "https://images.unsplash.com"],
-      "connect-src": ["'self'", "https://fonts.googleapis.com", "https://fonts.gstatic.com", "https://cdnjs.cloudflare.com"],
+      "connect-src": [
+        "'self'",
+        "https://fonts.googleapis.com",
+        "https://fonts.gstatic.com",
+        "https://cdnjs.cloudflare.com",
+        "https://portal-pilot.vercel.app",
+      ],
     },
   },
 }));
@@ -150,13 +156,12 @@ function generateVerificationCode(length = 6) {
   return crypto.randomInt(min, max).toString().padStart(length, '0');
 }
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 5173;
 const NOCODB_URL = process.env.NOCODB_URL || 'https://app.nocodb.com';
 const API_TOKEN = process.env.NOCODB_API_TOKEN || process.env.NOCODB_API_KEY || '';
 
 if (!process.env.JWT_SECRET || !API_TOKEN) {
-  console.error('[STARTUP] ERROR: JWT_SECRET o NOCODB_API_TOKEN no están definidas.');
-  if (!IS_SERVERLESS) process.exit(1);
+  console.warn('[STARTUP] WARNING: JWT_SECRET o NOCODB_API_TOKEN no están definidas localmente. Algunas rutas locales de API fallarán, pero el servidor estático funcionará.');
 }
 
 console.log(`[NocoDB] URL=${NOCODB_URL} TOKEN_CONFIGURED=${!!API_TOKEN}`);
@@ -170,13 +175,13 @@ function requireNocoDbToken(res) {
 }
 
 // 🔧 FIX VERCEL: Desactivar keepAlive en serverless (causa conexiones stale)
-const httpAgent = new http.Agent({ 
-  keepAlive: !IS_SERVERLESS, 
+const httpAgent = new http.Agent({
+  keepAlive: !IS_SERVERLESS,
   maxSockets: IS_SERVERLESS ? 5 : 50,
   timeout: 10000
 });
-const httpsAgent = new https.Agent({ 
-  keepAlive: !IS_SERVERLESS, 
+const httpsAgent = new https.Agent({
+  keepAlive: !IS_SERVERLESS,
   maxSockets: IS_SERVERLESS ? 5 : 50,
   timeout: 10000
 });
@@ -550,7 +555,7 @@ async function enviarAlertaNuevoAcceso(emailDestinatario, req, success = true) {
     const mensajePrincipal = success
       ? `Se ha detectado un acceso exitoso desde ${dispositivo} (${ubicacion}) el ${fechaActual}.`
       : `Se ha detectado un intento de acceso fallido desde ${dispositivo} (${ubicacion}) el ${fechaActual}.`;
-    
+
     const loginUrl = 'https://portal-pilot.vercel.app/login.html';
 
     htmlContent = htmlContent
@@ -611,9 +616,9 @@ async function enviarAlertaActivacionCuenta(emailDestinatario, passwordTemporal,
 
     let loginUrl = `https://portal-pilot.vercel.app/primer_acceso.html?email=${encodeURIComponent(emailDestinatario)}`;
     if (tokenForLink) loginUrl += `&token=${encodeURIComponent(tokenForLink)}`;
-    
+
     htmlContent = htmlContent.replace(/https:\/\/portal-pilot\.vercel\.app(?:\/[^"'\s]*)?/g, loginUrl);
-    
+
     const displayTenant = tenantName || 'Portal Pilot';
     htmlContent = htmlContent.replace(/\{\{\s*TENANT_NAME\s*\}\}/g, displayTenant);
     htmlContent = htmlContent.replace(/\{\{\s*TENANT\s*\}\}/g, displayTenant);
@@ -674,7 +679,7 @@ async function enviarCambioEstadoUsuario(emailDestinatario, action, adminEmail, 
     const subject = isSuspended ? '⚠️ Tu cuenta ha sido suspendida' : '✅ Cuenta reactivada';
     const actionText = isSuspended ? 'suspendida' : 'reactivada';
     const reasonText = reason ? `<p>Motivo: <strong>${reason}</strong></p>` : '';
-    
+
     const htmlContent = `
       <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; background-color: #0b0a15; color: #e2e8f0; padding: 30px; border-radius: 16px;">
         <h2>Tu cuenta ha sido ${actionText}</h2>
@@ -682,7 +687,7 @@ async function enviarCambioEstadoUsuario(emailDestinatario, action, adminEmail, 
         ${reasonText}
         <p>Administrador: ${adminEmail}</p>
       </div>`;
-    
+
     await transporter.sendMail({
       from: `"Seguridad Portal Pilot" <${EMAIL_FROM}>`,
       replyTo: EMAIL_REPLY_TO,
@@ -717,8 +722,8 @@ async function enviarNuevoAccesoUsuario(emailDestinatario, passwordTemporal, ten
     const loginUrl = 'https://portal-pilot.vercel.app/login.html';
     const displayName = userName || emailDestinatario;
     const tenantLabel = tenantName ? `Tenant: ${tenantName}` : '';
-    const passwordText = passwordTemporal 
-      ? `<strong>Contraseña temporal:</strong> <code>${passwordTemporal}</code>` 
+    const passwordText = passwordTemporal
+      ? `<strong>Contraseña temporal:</strong> <code>${passwordTemporal}</code>`
       : '<strong>Contraseña:</strong> Generada automáticamente.';
 
     htmlContent = htmlContent
@@ -790,8 +795,8 @@ async function enviarCorreoPortalPilot(emailDestinatario, asunto, titulo, subtit
 
 // 🔧 FIX VERCEL: Health check endpoint
 app.get('/api/health', (req, res) => {
-  res.json({ 
-    status: 'ok', 
+  res.json({
+    status: 'ok',
     timestamp: new Date().toISOString(),
     environment: IS_SERVERLESS ? 'serverless' : 'local',
     nocodb_configured: !!API_TOKEN,
@@ -904,7 +909,7 @@ app.post('/api/login', loginLimiter, async (req, res) => {
     });
     const responseData = r1.data.list || [];
     const queryDuration = Date.now() - queryStart;
-    
+
     const usuariosEncontrados = responseData;
 
     if (!usuariosEncontrados || usuariosEncontrados.length === 0) {
@@ -933,7 +938,7 @@ app.post('/api/login', loginLimiter, async (req, res) => {
       return res.status(401).json({ error: 'Credenciales inválidas (contraseña incorrecta).' });
     }
 
-    const loginAccounts = matchedUsers.map(usuario => {
+    const loginAccounts = await Promise.all(matchedUsers.map(async usuario => {
       const rawEmpresa = usuario.empresa_codigo || usuario.Empresa_Codigo || usuario.EmpresaCodigo || usuario.empresaCodigo || 'ROOT';
       const rawRole = usuario.rol || usuario.Rol || usuario.role || usuario.Role || '';
       const rawStatus = usuario.status || usuario.Status || usuario.estado || usuario.Estado || 'active';
@@ -944,14 +949,35 @@ app.post('/api/login', loginLimiter, async (req, res) => {
       const userRole = rawRole.toString().trim().toLowerCase();
       const userStatus = normalizeStatus(rawStatus);
 
-      if (userRole.includes('root') || userRole.includes('admin') || userRole.includes('superadmin')) {
+      // Solo forzar a ROOT a los roles de superusuario global o si ya pertenece a ROOT
+      if (userRole.includes('root') || userRole.includes('superadmin') || normalizedEmpresa.toUpperCase() === 'ROOT') {
         normalizedEmpresa = 'ROOT';
       }
 
       normalizedEmpresa = normalizedEmpresa.toString().trim().toUpperCase() || 'ROOT';
 
+      let empresaNombre = 'Portal Pilot';
+      if (normalizedEmpresa !== 'ROOT') {
+        try {
+          const tenantInfo = await findTenantByIdentifier(normalizedEmpresa);
+          if (tenantInfo) {
+            empresaNombre = tenantInfo.nombre || tenantInfo.Nombre || normalizedEmpresa;
+          } else {
+            empresaNombre = normalizedEmpresa;
+          }
+        } catch (e) {
+          console.warn('[LOGIN] Error al buscar empresa:', e.message);
+          empresaNombre = normalizedEmpresa;
+        }
+      }
+
       const accountToken = jwt.sign(
-        { sub: usuario.id || usuario.ID || usuario.Id || usuario._id, rol: rawRole, empresa_codigo: normalizedEmpresa },
+        { 
+          sub: usuario.id || usuario.ID || usuario.Id || usuario._id, 
+          rol: rawRole, 
+          empresa_codigo: normalizedEmpresa,
+          empresa_nombre: empresaNombre
+        },
         process.env.JWT_SECRET,
         { expiresIn: '2h' }
       );
@@ -963,11 +989,12 @@ app.post('/api/login', loginLimiter, async (req, res) => {
         email: rawEmail,
         rol: rawRole,
         empresa_codigo: normalizedEmpresa,
+        empresa_nombre: empresaNombre,
         tenant: normalizedEmpresa,
         status: userStatus,
         token: accountToken
       };
-    });
+    }));
 
     const hasPendingAccount = loginAccounts.some(acc => acc.status === 'pending');
     const pendingAccount = loginAccounts.find(acc => acc.status === 'pending');
@@ -1035,7 +1062,7 @@ app.get('/api/tenants', authenticate, async (req, res) => {
     const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 50, 10), 200);
     const response = await nocodbApi.get(EMPRESAS_TABLE, { params: { limit } });
     const empresas = response.data.list || [];
-    
+
     // 🔧 FIX VERCEL: Reducir límite de usuarios
     const usuariosRes = await nocodbApi.get(USUARIOS_TABLE, { params: { limit: 500 } });
     const usuariosList = usuariosRes.data.list || [];
@@ -1234,11 +1261,11 @@ app.delete('/api/tenants/:id', authenticate, async (req, res) => {
     }
 
     if (targetTenantId) {
-      const usersResponse = await nocodbApi.get(USUARIOS_TABLE, { 
-        params: { where: `(empresa_codigo,eq,${formatNocoFilter(finalTenantCode)})`, limit: 500 } 
+      const usersResponse = await nocodbApi.get(USUARIOS_TABLE, {
+        params: { where: `(empresa_codigo,eq,${formatNocoFilter(finalTenantCode)})`, limit: 500 }
       });
       const usersToDelete = usersResponse.data.list || [];
-      
+
       await runBatched(usersToDelete, async user => {
         const userRecordId = extractNocoRecordId(user);
         try {
@@ -1404,8 +1431,8 @@ app.post('/api/recuperacion/verificar', recoveryLimiter, async (req, res) => {
 
     let found = null;
     try {
-      const resp = await nocodbApi.get(RECOVERY_CODES_TABLE, { 
-        params: { where: `(email,eq,${email}),(code,eq,${code.trim()})`, limit: 1 } 
+      const resp = await nocodbApi.get(RECOVERY_CODES_TABLE, {
+        params: { where: `(email,eq,${email}),(code,eq,${code.trim()})`, limit: 1 }
       });
       found = resp.data.list?.[0] || null;
     } catch (err) {
@@ -1522,8 +1549,8 @@ app.get('/api/users/:id', authenticate, async (req, res) => {
       const response = await nocodbApi.get(`${USUARIOS_TABLE}/${encodeURIComponent(id)}`);
       usuario = response.data;
     } catch (err) {
-      const response = await nocodbApi.get(USUARIOS_TABLE, { 
-        params: { where: `(Id,eq,${formatNocoFilter(id, { numeric: true })})`, limit: 1 } 
+      const response = await nocodbApi.get(USUARIOS_TABLE, {
+        params: { where: `(Id,eq,${formatNocoFilter(id, { numeric: true })})`, limit: 1 }
       });
       usuario = response.data.list?.[0];
     }
@@ -1649,8 +1676,8 @@ app.put('/api/users/:id', authenticate, async (req, res) => {
       const currentResponse = await nocodbApi.get(`${USUARIOS_TABLE}/${encodeURIComponent(id)}`);
       usuarioActual = currentResponse.data;
     } catch (err) {
-      const currentResponse = await nocodbApi.get(USUARIOS_TABLE, { 
-        params: { where: `(Id,eq,${formatNocoFilter(id, { numeric: true })})`, limit: 1 } 
+      const currentResponse = await nocodbApi.get(USUARIOS_TABLE, {
+        params: { where: `(Id,eq,${formatNocoFilter(id, { numeric: true })})`, limit: 1 }
       });
       usuarioActual = currentResponse.data.list?.[0];
     }
@@ -1663,8 +1690,8 @@ app.put('/api/users/:id', authenticate, async (req, res) => {
     }
 
     if (email && email !== usuarioActual.email) {
-      const existingResponse = await nocodbApi.get(USUARIOS_TABLE, { 
-        params: { where: `(email,eq,${email})`, limit: 1 } 
+      const existingResponse = await nocodbApi.get(USUARIOS_TABLE, {
+        params: { where: `(email,eq,${email})`, limit: 1 }
       });
       if (existingResponse.data.list && existingResponse.data.list.length > 0) {
         return res.status(400).json({ error: 'El correo ya está en uso.' });
@@ -1752,15 +1779,15 @@ app.delete('/api/users/:id', authenticate, async (req, res) => {
     let nombreUsuario = `ID: ${id}`, emailUsuario = 'N/A';
     let userRecord = null;
     try {
-      const findRes = await nocodbApi.get(USUARIOS_TABLE, { 
-        params: { where: `(Id,eq,${formatNocoFilter(id, { numeric: true })})` } 
+      const findRes = await nocodbApi.get(USUARIOS_TABLE, {
+        params: { where: `(Id,eq,${formatNocoFilter(id, { numeric: true })})` }
       });
       userRecord = findRes.data.list?.[0];
       if (userRecord) {
         nombreUsuario = `${userRecord.nombre || ''} ${userRecord.apellido || ''}`.trim() || `ID: ${id}`;
         emailUsuario = userRecord.email || 'N/A';
       }
-    } catch (e) { 
+    } catch (e) {
       console.warn(`[DELETE USER] No se pudo obtener datos: ${e.message}`);
     }
 

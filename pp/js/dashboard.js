@@ -132,7 +132,7 @@ modalConfirm.addEventListener('click', () => {
   logoutModal.classList.remove('active');
   localStorage.clear();
   showToast('Sesión cerrada', 'Redirigiendo...', 'info');
-  setTimeout(() => window.location.href = 'login.html', 1500);
+  setTimeout(() => window.location.href = '/login.html', 1500);
 });
 logoutModal.addEventListener('click', e => { if (e.target === logoutModal) logoutModal.classList.remove('active'); });
 

@@ -45,12 +45,14 @@
   const empresaCodigo = localStorage.getItem('empresaCodigo');
   const empresaNombre = localStorage.getItem('empresaNombre') || empresaCodigo || 'Enterprise';
 
-  // Determinar ruta de login relativa a la ubicación actual
-  const isSubDir = window.location.pathname.includes('/enterprise/') || window.location.pathname.includes('\\enterprise\\');
-  const loginPath = isSubDir ? '../login.html' : 'login.html';
+  // Determinar ruta de login — usando ruta absoluta para funcionar desde cualquier subdirectorio
+  const isSubDir = window.location.pathname.includes('/enterprise/') || window.location.pathname.includes('\\enterprise\\') || window.location.pathname.includes('/pp/') || window.location.pathname.includes('\\pp\\');
+  const loginPath = '/login.html';
   const apiRefreshPath = isSubDir ? '../api/refresh' : '/api/refresh';
   const apiAlertaPath = isSubDir ? '../api/alerta-no-autorizado' : '/api/alerta-no-autorizado';
   const isEnterprisePage = isSubDir;
+  // Disponible globalmente para otros scripts
+  window.loginPath = loginPath;
   const isRootUser = !empresaCodigo || empresaCodigo.toUpperCase() === 'ROOT' || (userRole && userRole.toLowerCase().includes('root'));
   const isEnterpriseUser = empresaCodigo && empresaCodigo.toUpperCase() !== 'ROOT' && empresaCodigo.trim() !== '';
   const linkedAccounts = (() => {
@@ -176,7 +178,7 @@
   if (isEnterprisePage && !isEnterpriseUser && !isRootUser) {
     alert('Acceso restringido: esta área es solo para administradores de tenant.');
     localStorage.clear();
-    window.location.href = '../inicio.html';
+    window.location.href = '/inicio.html';
     return;
   }
   
@@ -447,6 +449,14 @@
     });
 
     renderAccountSwitcher();
+
+    // Redirección al hacer click en la sección de perfil (.profile-section)
+    document.querySelectorAll('.profile-section').forEach(el => {
+      el.style.cursor = 'pointer';
+      el.addEventListener('click', () => {
+        window.location.href = 'perfil.html';
+      });
+    });
 
     // Saludo de bienvenida personalizado en inicio.html
     const greetingEl = document.getElementById('greeting');

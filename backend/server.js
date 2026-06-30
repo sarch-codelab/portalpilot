@@ -314,9 +314,27 @@ async function patchNocoRecordByFilter(tablePath, whereFilter, data = {}) {
 
 async function deleteNocoRecord(tablePath, recordId) {
   if (!recordId) throw new Error('Record ID no definido');
-  const recordPath = buildNocoRecordPath(tablePath, recordId);
-  const response = await nocodbApi.delete(recordPath);
-  return recordPath;
+  try {
+    const recordPath = buildNocoRecordPath(tablePath, recordId);
+    await nocodbApi.delete(recordPath);
+    return recordPath;
+  } catch (err) {
+    console.warn(`[NocoDB] Falló delete por URL path (${recordId}), intentando por payload...`);
+    try {
+      // Intento 1: Payload de objeto con Id y id (NocoDB v2 requiere 'Id')
+      await nocodbApi.delete(tablePath, { data: { Id: recordId, id: recordId } });
+      return tablePath;
+    } catch (err2) {
+      try {
+        // Intento 2: Payload de array de objetos con Id y id (algunas configuraciones de NocoDB v2 lo requieren)
+        await nocodbApi.delete(tablePath, { data: [{ Id: recordId, id: recordId }] });
+        return tablePath;
+      } catch (err3) {
+        console.error(`[NocoDB] Todos los intentos de eliminación fallaron para ID=${recordId}:`, err3.message);
+        throw err3;
+      }
+    }
+  }
 }
 
 async function patchNocoRecordById(tablePath, recordId, data = {}) {
@@ -327,9 +345,7 @@ async function patchNocoRecordById(tablePath, recordId, data = {}) {
 }
 
 async function deleteNocoRecordByPayload(tablePath, recordId) {
-  if (!recordId) throw new Error('Record ID no definido para delete payload');
-  const response = await nocodbApi.delete(tablePath, { data: { id: recordId } });
-  return tablePath;
+  return await deleteNocoRecord(tablePath, recordId);
 }
 
 async function softDeleteNocoRecord(tablePath, recordId, data = {}) {
@@ -1779,16 +1795,30 @@ app.delete('/api/users/:id', authenticate, async (req, res) => {
     let nombreUsuario = `ID: ${id}`, emailUsuario = 'N/A';
     let userRecord = null;
     try {
-      const findRes = await nocodbApi.get(USUARIOS_TABLE, {
-        params: { where: `(Id,eq,${formatNocoFilter(id, { numeric: true })})` }
-      });
-      userRecord = findRes.data.list?.[0];
-      if (userRecord) {
-        nombreUsuario = `${userRecord.nombre || ''} ${userRecord.apellido || ''}`.trim() || `ID: ${id}`;
-        emailUsuario = userRecord.email || 'N/A';
+      // Intentar GET directo primero
+      const findRes = await nocodbApi.get(`${USUARIOS_TABLE}/${encodeURIComponent(id)}`);
+      userRecord = findRes.data;
+    } catch (err) {
+      try {
+        const findRes = await nocodbApi.get(USUARIOS_TABLE, {
+          params: { where: `(Id,eq,${formatNocoFilter(id, { numeric: true })})` }
+        });
+        userRecord = findRes.data.list?.[0];
+      } catch (err2) {
+        try {
+          const findRes = await nocodbApi.get(USUARIOS_TABLE, {
+            params: { where: `(id,eq,${formatNocoFilter(id)})` }
+          });
+          userRecord = findRes.data.list?.[0];
+        } catch (err3) {
+          // continuar con userRecord como null
+        }
       }
-    } catch (e) {
-      console.warn(`[DELETE USER] No se pudo obtener datos: ${e.message}`);
+    }
+
+    if (userRecord) {
+      nombreUsuario = `${userRecord.nombre || ''} ${userRecord.apellido || ''}`.trim() || `ID: ${id}`;
+      emailUsuario = userRecord.email || 'N/A';
     }
 
     const userIdentifier = extractNocoRecordId(userRecord) || id;

@@ -1863,7 +1863,7 @@
         <div class="detail-body" id="detailContent"></div>
     </div>
 
-    <script src="auth-check.js"></script>
+    <script src="../auth-check.js"></script>
     <script>
         // ── Custom Cursor ─────────────────
         const dot = document.getElementById('cursor-dot'), ring = document.getElementById('cursor-ring'), glow = document.getElementById('cursor-glow');
@@ -1935,7 +1935,7 @@
           if (!token) {
             console.error('[USUARIOS] No se encontró token de sesión válido');
             localStorage.clear();
-            window.location.href = 'login.html';
+            window.location.href = '/login.html';
             return false;
           }
           return true;
@@ -2011,7 +2011,7 @@
                 if (response.status === 401 || response.status === 403) {
                   console.error('[USUARIOS] Error de autenticación al cargar tenants');
                   localStorage.clear();
-                  window.location.href = 'login.html';
+                  window.location.href = '/login.html';
                   return [];
                 }
                 
@@ -2061,7 +2061,7 @@
                 if (response.status === 401 || response.status === 403) {
                   console.error('[USUARIOS] Error de autenticación al cargar usuarios');
                   localStorage.clear();
-                  window.location.href = 'login.html';
+                  window.location.href = '/login.html';
                   return;
                 }
                 
@@ -2340,7 +2340,7 @@
             const token = localStorage.getItem('token');
             if (!token) {
                 showMessage('No se encontró token de sesión. Por favor inicia sesión de nuevo.', 'error');
-                window.location.href = 'login.html';
+                window.location.href = '/login.html';
                 return;
             }
             try {
@@ -2354,7 +2354,7 @@
                   showMessage('Tu sesión ha expirado. Por favor inicia sesión de nuevo.', 'error');
                   localStorage.clear();
                   sessionStorage.clear();
-                  window.location.href = 'login.html';
+                  window.location.href = '/login.html';
                   return;
                 }
                 

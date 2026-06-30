@@ -5,11 +5,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Tenants — Portal Pilot</title>
-  
+
   <!-- Fuentes e iconos -->
-  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap"
+    rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-  
+
   <!-- ✅ CSS específico de tenants -->
   <link rel="stylesheet" href="css/tenants.css">
 </head>
@@ -48,7 +50,9 @@
 
       <!-- Profile -->
       <div class="profile-section">
-        <div class="avatar" style="display:flex;align-items:center;justify-content:center;background:var(--accent-glow);color:var(--accent);font-size:20px;"><i class="fas fa-user"></i></div>
+        <div class="avatar"
+          style="display:flex;align-items:center;justify-content:center;background:var(--accent-glow);color:var(--accent);font-size:20px;">
+          <i class="fas fa-user"></i></div>
         <div class="profile-info">
           <span class="name">Ajendra S.</span>
           <span class="role">UI/UX Designer</span>
@@ -63,13 +67,15 @@
         <a href="#" class="sidebar-link"><i class="fas fa-robot"></i> <span>Bots RPA</span></a>
         <a href="#" class="sidebar-link"><i class="fas fa-link"></i> <span>Auditoría</span></a>
         <a href="#" class="sidebar-link"><i class="fas fa-chart-line"></i> <span>Analytics</span></a>
-        <a href="global_settings.html" class="sidebar-link"><i class="fas fa-cog"></i> <span>Configuración Global</span></a>
+        <a href="global_settings.html" class="sidebar-link"><i class="fas fa-cog"></i> <span>Configuración
+            Global</span></a>
       </nav>
 
       <!-- Footer -->
       <div class="sidebar-footer">
         <button class="footer-btn" id="darkModeToggle"><i class="fas fa-moon"></i> <span>Dark Mode</span></button>
-        <button class="footer-btn logout" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> <span>Cerrar Sesión</span></button>
+        <button class="footer-btn logout" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> <span>Cerrar
+            Sesión</span></button>
       </div>
 
       <!-- Toggle Button -->
@@ -87,12 +93,16 @@
           <div class="topbar-title">Gestión de <span>Tenants</span></div>
           <div class="topbar-search">
             <i class="fas fa-search"></i>
-            <input type="text" id="globalSearch" placeholder="Buscar empresa, dominio, email..." onkeyup="filterTenants()">
+            <input type="text" id="globalSearch" placeholder="Buscar empresa, dominio, email..."
+              onkeyup="filterTenants()">
           </div>
         </div>
         <div class="topbar-right">
-          <button class="topbar-btn" title="Notificaciones"><i class="fas fa-bell"></i><span class="badge">2</span></button> // Al hacer click aparece una pantalla emergente con la lista de notificaciones como alertas de error acceso denegado tenant creado exitosamente, etceterea.
-          <button class="btn btn-acc btn-sm" onclick="openModal('createModal')"><i class="fas fa-plus"></i> Nuevo Tenant</button>
+          <button class="topbar-btn" title="Notificaciones"><i class="fas fa-bell"></i><span
+              class="badge">2</span></button>
+          <!--  Al hacer click aparece una pantalla emergente con la lista de notificaciones como alertas de error acceso denegado tenant creado exitosamente, etceterea. -->
+          <button class="btn btn-acc btn-sm" onclick="openModal('createModal')"><i class="fas fa-plus"></i> Nuevo
+            Tenant</button>
         </div>
       </header>
 
@@ -100,11 +110,14 @@
       <div class="page-header">
         <div>
           <h1 class="page-title">Empresas <span>Activas</span></h1>
-          <p class="page-subtitle">Administra todas las empresas registradas en tu plataforma. Gestiona planes, usuarios y accede a logs específicos de cada tenant.</p>
+          <p class="page-subtitle">Administra todas las empresas registradas en tu plataforma. Gestiona planes, usuarios
+            y accede a logs específicos de cada tenant.</p>
         </div>
         <div class="page-actions">
-          <button class="btn btn-outline btn-sm" onclick="exportTenants()"><i class="fas fa-download"></i> Exportar CSV</button>
-          <button class="btn btn-ghost btn-sm" onclick="refreshTenants()"><i class="fas fa-sync-alt"></i> Actualizar</button>
+          <button class="btn btn-outline btn-sm" onclick="exportTenants()"><i class="fas fa-download"></i> Exportar
+            CSV</button>
+          <button class="btn btn-ghost btn-sm" onclick="refreshTenants()"><i class="fas fa-sync-alt"></i>
+            Actualizar</button>
         </div>
       </div>
 
@@ -177,7 +190,8 @@
   <div class="modal-overlay" id="createModal">
     <div class="modal">
       <div class="modal-header">
-        <div class="modal-title"><i class="fas fa-plus" style="margin-right:8px;color:var(--accent);"></i>Nuevo Tenant</div>
+        <div class="modal-title"><i class="fas fa-plus" style="margin-right:8px;color:var(--accent);"></i>Nuevo Tenant
+        </div>
         <button class="modal-close" onclick="closeModal('createModal')"><i class="fas fa-times"></i></button>
       </div>
       <div class="modal-body">
@@ -229,7 +243,8 @@
           </div>
           <div class="form-group">
             <label class="form-label">Notas Internas</label>
-            <textarea id="t-notas" class="form-input" rows="3" placeholder="Información adicional para el equipo..."></textarea>
+            <textarea id="t-notas" class="form-input" rows="3"
+              placeholder="Información adicional para el equipo..."></textarea>
             <div class="form-hint"><i class="fas fa-info-circle"></i> Solo visible para administradores</div>
           </div>
         </form>

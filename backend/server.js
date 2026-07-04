@@ -24,8 +24,23 @@ const IS_SERVERLESS = !!(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_N
 console.log(`[STARTUP] Environment: ${IS_SERVERLESS ? 'SERVERLESS' : 'LOCAL'}, Node: ${process.version}`);
 
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
+const allowedOrigins = [
+  FRONTEND_URL,
+  'http://localhost:5173',
+  'http://127.0.0.1:5173',
+  'http://localhost:3000',
+  'http://127.0.0.1:3000',
+  'https://portal-pilot.vercel.app',
+  'https://www.portal-pilot.vercel.app'
+];
 const corsOptions = {
-  origin: FRONTEND_URL,
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin) || /https:\/\/.*\.vercel\.app$/i.test(origin)) {
+      callback(null, true);
+      return;
+    }
+    callback(new Error('Origen no permitido por CORS'));
+  },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true
@@ -55,12 +70,34 @@ app.use(helmet({
 }));
 
 app.use(cors(corsOptions));
+app.options(/(.*)/, cors(corsOptions));
+app.use((req, res, next) => {
+  console.log('[REQUEST]', req.method, req.path);
+  next();
+});
 app.use(express.json());
 
 function handleServerError(res, error) {
   console.error('[ERROR]', error?.message || error);
   return res.status(500).json({ error: 'Ha ocurrido un error interno en el servidor' });
 }
+
+function handleNocoDbError(res, error, fallbackMessage = 'Error al comunicarse con la base de datos') {
+  const status = error?.response?.status;
+  const message = error?.response?.data?.msg || error?.response?.data?.error || error?.message || fallbackMessage;
+  const responseStatus = status === 401 || status === 403 ? 503 : (status || 503);
+  return res.status(responseStatus).json({ error: message });
+}
+
+app.use((err, req, res, next) => {
+  if (err && (err.type === 'entity.parse.failed' || err instanceof SyntaxError || err?.status === 400)) {
+    return res.status(400).json({ error: 'JSON inválido en la solicitud.' });
+  }
+  if (err?.message === 'Origen no permitido por CORS') {
+    return res.status(403).json({ error: 'Origen no permitido por CORS.' });
+  }
+  next(err);
+});
 
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -84,7 +121,7 @@ function authenticate(req, res, next) {
 
   if (!token) return res.status(401).json({ error: 'Token no provisto' });
 
-  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+  jwt.verify(token, JWT_SECRET, (err, user) => {
     if (err) return res.status(403).json({ error: 'Token inválido' });
     req.user = user;
     next();
@@ -159,6 +196,7 @@ function generateVerificationCode(length = 6) {
 const PORT = process.env.PORT || 5173;
 const NOCODB_URL = process.env.NOCODB_URL || 'https://app.nocodb.com';
 const API_TOKEN = process.env.NOCODB_API_TOKEN || process.env.NOCODB_API_KEY || '';
+const JWT_SECRET = process.env.JWT_SECRET || 'dev-local-secret-change-me';
 
 if (!process.env.JWT_SECRET || !API_TOKEN) {
   console.warn('[STARTUP] WARNING: JWT_SECRET o NOCODB_API_TOKEN no están definidas localmente. Algunas rutas locales de API fallarán, pero el servidor estático funcionará.');
@@ -168,7 +206,7 @@ console.log(`[NocoDB] URL=${NOCODB_URL} TOKEN_CONFIGURED=${!!API_TOKEN}`);
 
 function requireNocoDbToken(res) {
   if (!API_TOKEN) {
-    res.status(500).json({ error: 'NocoDB API token no configurado.' });
+    res.status(503).json({ error: 'NocoDB API token no configurado. El servicio de base de datos no está disponible.' });
     return false;
   }
   return true;
@@ -267,6 +305,10 @@ function isBusinessRecordCode(value) {
 function buildNocoWhereFilter(field, value, options = {}) {
   if (!field || value === undefined || value === null) return null;
   return `(${field},eq,${formatNocoFilter(value, options)})`;
+}
+
+function buildNocoCompoundWhereFilter(filters = []) {
+  return filters.filter(Boolean).join('~and~');
 }
 
 async function runBatched(items, handler, batchSize = IS_SERVERLESS ? 2 : 3, delayMs = IS_SERVERLESS ? 600 : 400) {
@@ -863,14 +905,25 @@ app.get('/api/diagnostico', async (req, res) => {
 
 app.post('/api/registro', async (req, res) => {
   try {
+    if (!requireNocoDbToken(res)) return;
+
     const {
       empresaNombre, empresaCodigo, empresaSector,
       usuarioNombre, usuarioApellido, email, rol,
       password, dosFaActivo, terminosAceptados
     } = req.body;
 
-    if (!email || !password || !empresaCodigo) {
+    if (!email || !password || !empresaCodigo || !usuarioNombre || !usuarioApellido) {
       return res.status(400).json({ error: 'Faltan campos obligatorios' });
+    }
+
+    const emailNorm = String(email).trim().toLowerCase();
+    const existingUsers = await nocodbApi.get(USUARIOS_TABLE, {
+      params: { where: buildNocoWhereFilter('email', emailNorm), limit: 1 }
+    });
+
+    if ((existingUsers.data?.list || []).length > 0) {
+      return res.status(409).json({ error: 'El correo ya está registrado.' });
     }
 
     try {
@@ -889,27 +942,30 @@ app.post('/api/registro', async (req, res) => {
     const nuevoUsuario = {
       nombre: usuarioNombre,
       apellido: usuarioApellido,
-      email: email,
+      email: emailNorm,
       rol: rol,
       password: passwordHash,
       dosfa_activo: dosFaActivo,
       terminos_aceptados: terminosAceptados,
-      empresa_codigo: empresaCodigo
+      empresa_codigo: empresaCodigo,
+      status: 'pending'
     };
 
     await nocodbApi.post(USUARIOS_TABLE, nuevoUsuario);
 
-    // 🔧 FIX VERCEL: await en lugar de dispatchEmailAsync
-    await enviarOnboardingEmail(email);
+    await enviarOnboardingEmail(emailNorm);
 
     res.status(201).json({ message: 'Usuario y Empresa registrados con éxito' });
   } catch (error) {
-    return handleServerError(res, error);
+    return handleNocoDbError(res, error, 'No se pudo completar el registro en este momento.');
   }
 });
 
 app.post('/api/login', loginLimiter, async (req, res) => {
   try {
+    console.log('[LOGIN] start', { hasToken: !!API_TOKEN, body: req.body });
+    if (!requireNocoDbToken(res)) return;
+
     const routeStart = Date.now();
     const { email, password } = req.body;
 
@@ -994,7 +1050,7 @@ app.post('/api/login', loginLimiter, async (req, res) => {
           empresa_codigo: normalizedEmpresa,
           empresa_nombre: empresaNombre
         },
-        process.env.JWT_SECRET,
+        JWT_SECRET,
         { expiresIn: '2h' }
       );
 
@@ -1033,7 +1089,7 @@ app.post('/api/login', loginLimiter, async (req, res) => {
     });
 
   } catch (error) {
-    return handleServerError(res, error);
+    return handleNocoDbError(res, error, 'No se pudo validar el inicio de sesión en este momento.');
   }
 });
 
@@ -1041,7 +1097,7 @@ app.post('/api/refresh', authenticate, (req, res) => {
   try {
     const newToken = jwt.sign(
       { sub: req.user.sub, rol: req.user.rol, empresa_codigo: req.user.empresa_codigo },
-      process.env.JWT_SECRET,
+      JWT_SECRET,
       { expiresIn: '2h' }
     );
     res.json({ token: newToken });
@@ -1147,7 +1203,7 @@ app.post('/api/tenants', authenticate, async (req, res) => {
       const createdId = creadoRes.data?.id || creadoRes.data?.Id || creadoRes.data?.ID;
       activationToken = jwt.sign(
         { sub: createdId, rol: 'Owner', empresa_codigo: codigo },
-        process.env.JWT_SECRET,
+        JWT_SECRET,
         { expiresIn: '6h' }
       );
     } catch (e) {
@@ -1374,6 +1430,8 @@ app.post('/api/alerta-no-autorizado', async (req, res) => {
 
 app.post('/api/recuperacion', recoveryLimiter, async (req, res) => {
   try {
+    if (!requireNocoDbToken(res)) return;
+
     const { email } = req.body;
     if (!email) return res.status(400).json({ error: 'Correo electrónico requerido.' });
 
@@ -1434,12 +1492,14 @@ app.post('/api/recuperacion', recoveryLimiter, async (req, res) => {
     console.log(`[Recuperación] Código enviado a ${email}`);
     res.json({ message: 'Si el correo está registrado, se ha enviado un código.' });
   } catch (error) {
-    return handleServerError(res, error);
+    return handleNocoDbError(res, error, 'No se pudo procesar la recuperación en este momento.');
   }
 });
 
 app.post('/api/recuperacion/verificar', recoveryLimiter, async (req, res) => {
   try {
+    if (!requireNocoDbToken(res)) return;
+
     const { email, code, newPassword } = req.body;
     if (!email || !code || !newPassword) {
       return res.status(400).json({ error: 'Faltan campos obligatorios.' });
@@ -1447,8 +1507,13 @@ app.post('/api/recuperacion/verificar', recoveryLimiter, async (req, res) => {
 
     let found = null;
     try {
+      const emailNorm = String(email).trim().toLowerCase();
+      const compoundFilter = buildNocoCompoundWhereFilter([
+        buildNocoWhereFilter('email', emailNorm),
+        buildNocoWhereFilter('code', code.trim())
+      ]);
       const resp = await nocodbApi.get(RECOVERY_CODES_TABLE, {
-        params: { where: `(email,eq,${email}),(code,eq,${code.trim()})`, limit: 1 }
+        params: { where: compoundFilter, limit: 1 }
       });
       found = resp.data.list?.[0] || null;
     } catch (err) {
@@ -1486,7 +1551,7 @@ app.post('/api/recuperacion/verificar', recoveryLimiter, async (req, res) => {
 
     res.json({ message: 'Contraseña restablecida con éxito.' });
   } catch (error) {
-    return handleServerError(res, error);
+    return handleNocoDbError(res, error, 'No se pudo restablecer la contraseña en este momento.');
   }
 });
 

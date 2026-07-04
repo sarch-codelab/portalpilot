@@ -1,0 +1,3150 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Descarga Portal Pilot Desktop — Windows, macOS y Linux</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    *,
+    *::before,
+    *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg: #000000;
+      --bg-soft: #0a0a0c;
+      --surface: #111114;
+      --surface-2: #16161a;
+      --border: rgba(255, 255, 255, 0.08);
+      --border-strong: rgba(255, 255, 255, 0.14);
+      --accent: #8b5cf6;
+      --accent-soft: #a78bfa;
+      --accent-glow: rgba(139, 92, 246, 0.25);
+      --white: #f5f5f7;
+      --text: #d2d2d7;
+      --text-dim: #86868b;
+      --text-muted: #6e6e73;
+      --green: #30d158;
+      --red: #ff453a;
+      --blue: #0a84ff;
+      --radius: 12px;
+      --radius-lg: 20px;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      font-size: 16px;
+    }
+
+    body {
+      font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow-x: hidden;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    a {
+      text-decoration: none;
+      color: inherit;
+    }
+
+    ul {
+      list-style: none;
+    }
+
+    button {
+      font-family: inherit;
+      cursor: pointer;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 clamp(16px, 4vw, 40px);
+    }
+
+    /* ─── FONDO SUTIL ────────────────────────────────────── */
+    .page-bg {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background:
+        radial-gradient(ellipse 80% 60% at 50% 0%, rgba(139, 92, 246, 0.06) 0%, transparent 50%),
+        radial-gradient(ellipse 60% 50% at 50% 100%, rgba(167, 139, 250, 0.03) 0%, transparent 60%);
+    }
+
+    /* ─── NAV ───────────────────────────────────────────── */
+    header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      padding: 0 clamp(16px, 4vw, 40px);
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    nav {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      height: 56px;
+      gap: 0;
+    }
+
+    .nav-logo {
+      font-family: 'Syne', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--white);
+      letter-spacing: 1.5px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .nav-logo .logo-icon {
+      width: 28px;
+      height: 28px;
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-soft) 100%);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      color: #fff;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin: 0 32px;
+    }
+
+    .nav-links a {
+      font-size: 13px;
+      font-weight: 400;
+      color: var(--text-dim);
+      padding: 6px 12px;
+      border-radius: 6px;
+      transition: color .2s;
+    }
+
+    .nav-links a:hover {
+      color: var(--white);
+    }
+
+    .nav-back {
+      margin-left: auto;
+      font-size: 13px;
+      color: var(--text-dim);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: color .2s;
+    }
+
+    .nav-back:hover {
+      color: var(--white);
+    }
+
+    .nav-download {
+      margin-left: 16px;
+      padding: 8px 16px;
+      border-radius: 40px;
+      background: var(--white);
+      color: #000;
+      font-size: 12px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all .2s;
+    }
+
+    .nav-download:hover {
+      background: #e8e8ed;
+      transform: scale(1.02);
+    }
+
+    /* ─── HERO ──────────────────────────────────────────── */
+    .app-hero {
+      padding: 140px 0 80px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .app-hero-grid {
+      display: grid;
+      grid-template-columns: 1fr 1.2fr;
+      gap: clamp(32px, 5vw, 80px);
+      align-items: center;
+    }
+
+    .app-hero-text .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 40px;
+      padding: 7px 18px;
+      font-size: 11px;
+      color: var(--text-dim);
+      margin-bottom: 24px;
+      font-weight: 500;
+      letter-spacing: .5px;
+    }
+
+    .app-hero-text .eyebrow i {
+      color: var(--accent-soft);
+    }
+
+    .app-hero-text h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(40px, 6vw, 72px);
+      font-weight: 700;
+      color: var(--white);
+      letter-spacing: -2.5px;
+      line-height: 1;
+      margin-bottom: 20px;
+    }
+
+    .app-hero-text h1 span {
+      background: linear-gradient(135deg, var(--white) 30%, var(--accent-soft));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .app-hero-text p {
+      font-size: 16px;
+      color: var(--text-dim);
+      line-height: 1.7;
+      max-width: 480px;
+      margin-bottom: 32px;
+    }
+
+    /* Download buttons */
+    .download-btns {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 24px;
+    }
+
+    .store-btn {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 22px;
+      background: var(--white);
+      color: #000;
+      border-radius: 14px;
+      transition: all .25s ease;
+      min-width: 200px;
+    }
+
+    .store-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(255, 255, 255, 0.1);
+    }
+
+    .store-btn i {
+      font-size: 26px;
+    }
+
+    .store-btn .store-text {
+      display: flex;
+      flex-direction: column;
+      line-height: 1.1;
+    }
+
+    .store-btn .store-text small {
+      font-size: 10px;
+      opacity: 0.7;
+    }
+
+    .store-btn .store-text strong {
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .store-btn .store-text .version {
+      font-size: 10px;
+      opacity: 0.5;
+      margin-top: 2px;
+    }
+
+    .store-btn.secondary {
+      background: var(--surface);
+      color: var(--white);
+      border: 1px solid var(--border-strong);
+    }
+
+    .store-btn.secondary:hover {
+      background: var(--surface-2);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .download-meta {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-bottom: 24px;
+    }
+
+    .download-meta span {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .download-meta i {
+      color: var(--accent-soft);
+    }
+
+    /* Hero stats */
+    .hero-mini-stats {
+      display: flex;
+      gap: 32px;
+      flex-wrap: wrap;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+    }
+
+    .mini-stat .n {
+      font-family: 'Syne', sans-serif;
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--white);
+    }
+
+    .mini-stat .l {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: .5px;
+    }
+
+    /* ─── LAPTOP MOCKUP ────────────────────────────────── */
+    .laptop-mockup {
+      position: relative;
+      max-width: 640px;
+      margin: 0 auto;
+      animation: laptopFloat 6s ease-in-out infinite;
+    }
+
+    @keyframes laptopFloat {
+
+      0%,
+      100% {
+        transform: translateY(0);
+      }
+
+      50% {
+        transform: translateY(-10px);
+      }
+    }
+
+    .laptop-screen {
+      background: #0a0a0a;
+      border: 2px solid #2a2a2a;
+      border-radius: 14px 14px 0 0;
+      padding: 14px 14px 0 14px;
+      position: relative;
+      box-shadow: 
+        0 40px 80px rgba(0, 0, 0, 0.5),
+        0 0 0 1px rgba(255, 255, 255, 0.05);
+    }
+
+    .laptop-camera {
+      position: absolute;
+      top: 6px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #1a1a1a;
+      border: 1px solid #2a2a2a;
+      z-index: 10;
+    }
+
+    .laptop-display {
+      width: 100%;
+      aspect-ratio: 16/10;
+      background: linear-gradient(180deg, #0d0d14 0%, #08080d 100%);
+      border-radius: 4px 4px 0 0;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .laptop-base {
+      height: 12px;
+      background: linear-gradient(180deg, #2a2a2a 0%, #1a1a1a 100%);
+      border-radius: 0 0 8px 8px;
+      position: relative;
+    }
+
+    .laptop-base::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 80px;
+      height: 4px;
+      background: #1a1a1a;
+      border-radius: 0 0 4px 4px;
+    }
+
+    .laptop-stand {
+      width: 70%;
+      height: 6px;
+      margin: 0 auto;
+      background: linear-gradient(180deg, #1a1a1a 0%, #0a0a0a 100%);
+      border-radius: 0 0 12px 12px;
+    }
+
+    /* Screen content - Desktop Dashboard */
+    .desktop-screen {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      font-size: 10px;
+    }
+
+    .desktop-topbar {
+      display: flex;
+      align-items: center;
+      padding: 8px 12px;
+      background: rgba(17, 17, 20, 0.95);
+      border-bottom: 1px solid var(--border);
+      gap: 12px;
+    }
+
+    .desktop-topbar-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .desktop-logo-mini {
+      width: 18px;
+      height: 18px;
+      border-radius: 4px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-soft));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 9px;
+      color: #fff;
+    }
+
+    .desktop-app-name {
+      font-family: 'Syne', sans-serif;
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--white);
+    }
+
+    .desktop-topbar-menu {
+      display: flex;
+      gap: 10px;
+      font-size: 9px;
+      color: var(--text-dim);
+    }
+
+    .desktop-topbar-right {
+      margin-left: auto;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      font-size: 9px;
+      color: var(--text-muted);
+    }
+
+    .desktop-topbar-right i {
+      font-size: 9px;
+    }
+
+    .desktop-body {
+      display: grid;
+      grid-template-columns: 140px 1fr;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .desktop-sidebar {
+      background: rgba(10, 10, 14, 0.6);
+      border-right: 1px solid var(--border);
+      padding: 12px 8px;
+    }
+
+    .sidebar-section {
+      margin-bottom: 12px;
+    }
+
+    .sidebar-label {
+      font-size: 7px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 0 6px;
+      margin-bottom: 4px;
+    }
+
+    .sidebar-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 6px;
+      border-radius: 4px;
+      font-size: 9px;
+      color: var(--text-dim);
+      margin-bottom: 1px;
+    }
+
+    .sidebar-item.active {
+      background: rgba(139, 92, 246, 0.15);
+      color: var(--white);
+    }
+
+    .sidebar-item i {
+      font-size: 9px;
+      width: 10px;
+    }
+
+    .desktop-main {
+      padding: 12px;
+      overflow: hidden;
+    }
+
+    .desktop-main-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .desktop-main-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--white);
+    }
+
+    .desktop-main-actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    .desktop-btn-mini {
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      font-size: 8px;
+      color: var(--text-dim);
+      display: flex;
+      align-items: center;
+      gap: 3px;
+    }
+
+    .desktop-btn-mini.primary {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+
+    .desktop-stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+
+    .desktop-stat {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 8px;
+    }
+
+    .desktop-stat .label {
+      font-size: 7px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      margin-bottom: 2px;
+    }
+
+    .desktop-stat .value {
+      font-family: 'Syne', sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--white);
+    }
+
+    .desktop-stat .change {
+      font-size: 7px;
+      color: var(--green);
+      margin-top: 2px;
+    }
+
+    .desktop-content-grid {
+      display: grid;
+      grid-template-columns: 1.5fr 1fr;
+      gap: 6px;
+    }
+
+    .desktop-panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 8px;
+    }
+
+    .desktop-panel-title {
+      font-size: 8px;
+      font-weight: 600;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 6px;
+    }
+
+    .desktop-bot-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px;
+      border-radius: 4px;
+      margin-bottom: 3px;
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .desktop-bot-icon {
+      width: 16px;
+      height: 16px;
+      border-radius: 4px;
+      background: rgba(139, 92, 246, 0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 7px;
+      color: var(--accent-soft);
+      flex-shrink: 0;
+    }
+
+    .desktop-bot-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .desktop-bot-info .name {
+      font-size: 8px;
+      font-weight: 600;
+      color: var(--white);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .desktop-bot-info .status {
+      font-size: 7px;
+      color: var(--text-muted);
+    }
+
+    .desktop-bot-status {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--green);
+      flex-shrink: 0;
+    }
+
+    .desktop-chart {
+      height: 60px;
+      display: flex;
+      align-items: flex-end;
+      gap: 3px;
+      padding: 4px 0;
+    }
+
+    .desktop-chart-bar {
+      flex: 1;
+      background: linear-gradient(180deg, var(--accent-soft), var(--accent));
+      border-radius: 2px 2px 0 0;
+      opacity: 0.7;
+    }
+
+    /* ─── FEATURES SECTION ─────────────────────────────── */
+    .app-features {
+      padding: 100px 0;
+      position: relative;
+      z-index: 1;
+    }
+
+    .section-header {
+      text-align: center;
+      margin-bottom: 64px;
+    }
+
+    .sec-eyebrow {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--accent-soft);
+      margin-bottom: 12px;
+    }
+
+    .sec-title {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(28px, 4vw, 44px);
+      font-weight: 700;
+      color: var(--white);
+      letter-spacing: -1px;
+      margin-bottom: 14px;
+    }
+
+    .sec-sub {
+      font-size: 15px;
+      color: var(--text-dim);
+      max-width: 520px;
+      margin: 0 auto;
+      line-height: 1.8;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+
+    .feature-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 32px 28px;
+      transition: all .3s ease;
+    }
+
+    .feature-card:hover {
+      border-color: var(--border-strong);
+      transform: translateY(-3px);
+    }
+
+    .feature-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
+      background: rgba(139, 92, 246, 0.1);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      color: var(--accent-soft);
+      margin-bottom: 20px;
+    }
+
+    .feature-card h3 {
+      font-family: 'Syne', sans-serif;
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--white);
+      margin-bottom: 8px;
+    }
+
+    .feature-card p {
+      font-size: 13px;
+      color: var(--text-dim);
+      line-height: 1.7;
+    }
+
+    .feature-card .shortcut {
+      display: inline-block;
+      margin-top: 12px;
+      padding: 3px 8px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-family: monospace;
+      font-size: 11px;
+      color: var(--text-dim);
+    }
+
+    /* ─── SCREENSHOTS SECTION ──────────────────────────── */
+    .screenshots {
+      padding: 100px 0;
+      background: var(--bg-soft);
+      position: relative;
+      z-index: 1;
+    }
+
+    .screenshots-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 24px;
+    }
+
+    .screenshot-item {
+      transition: transform .3s ease;
+    }
+
+    .screenshot-item:hover {
+      transform: translateY(-4px);
+    }
+
+    .screenshot-monitor {
+      background: #0a0a0a;
+      border: 2px solid #2a2a2a;
+      border-radius: 10px 10px 0 0;
+      padding: 10px 10px 0 10px;
+      position: relative;
+    }
+
+    .screenshot-monitor .laptop-camera {
+      top: 4px;
+      width: 4px;
+      height: 4px;
+    }
+
+    .screenshot-display {
+      width: 100%;
+      aspect-ratio: 16/10;
+      background: linear-gradient(180deg, #0d0d14 0%, #08080d 100%);
+      border-radius: 3px 3px 0 0;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .screenshot-stand {
+      height: 8px;
+      background: linear-gradient(180deg, #2a2a2a 0%, #1a1a1a 100%);
+      border-radius: 0 0 6px 6px;
+    }
+
+    .screenshot-base {
+      width: 40%;
+      height: 4px;
+      margin: 0 auto;
+      background: #1a1a1a;
+      border-radius: 0 0 4px 4px;
+    }
+
+    .screenshot-label {
+      text-align: center;
+      margin-top: 16px;
+      font-size: 13px;
+      color: var(--text-dim);
+      font-weight: 500;
+    }
+
+    /* Screen 2 - Bots Management */
+    .screen-bots-mgmt {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      font-size: 10px;
+    }
+
+    .bots-topbar {
+      padding: 6px 10px;
+      background: rgba(17, 17, 20, 0.95);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 9px;
+    }
+
+    .bots-topbar .title {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      color: var(--white);
+    }
+
+    .bots-body {
+      display: grid;
+      grid-template-columns: 120px 1fr;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .bots-sidebar {
+      background: rgba(10, 10, 14, 0.6);
+      border-right: 1px solid var(--border);
+      padding: 8px 6px;
+    }
+
+    .bots-sidebar-item {
+      padding: 4px 6px;
+      font-size: 8px;
+      color: var(--text-dim);
+      border-radius: 3px;
+      margin-bottom: 2px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .bots-sidebar-item.active {
+      background: rgba(139, 92, 246, 0.15);
+      color: var(--white);
+    }
+
+    .bots-main {
+      padding: 10px;
+    }
+
+    .bots-toolbar {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+
+    .bots-search {
+      flex: 1;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 4px 8px;
+      font-size: 8px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .bots-table {
+      width: 100%;
+      font-size: 8px;
+    }
+
+    .bots-table-header {
+      display: grid;
+      grid-template-columns: 1.5fr 1fr 1fr 0.8fr;
+      padding: 4px 6px;
+      background: var(--surface);
+      border-radius: 3px;
+      color: var(--text-muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      margin-bottom: 3px;
+    }
+
+    .bots-table-row {
+      display: grid;
+      grid-template-columns: 1.5fr 1fr 1fr 0.8fr;
+      padding: 5px 6px;
+      border-bottom: 1px solid var(--border);
+      color: var(--text-dim);
+      align-items: center;
+    }
+
+    .bots-table-row .name {
+      color: var(--white);
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .bots-table-row .name i {
+      color: var(--accent-soft);
+      font-size: 8px;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      padding: 1px 5px;
+      border-radius: 3px;
+      font-size: 7px;
+      font-weight: 600;
+    }
+
+    .status-badge.running {
+      background: rgba(48, 209, 88, 0.15);
+      color: var(--green);
+    }
+
+    .status-badge.paused {
+      background: rgba(255, 149, 0, 0.15);
+      color: #ff9f0a;
+    }
+
+    .status-badge.stopped {
+      background: rgba(255, 69, 58, 0.15);
+      color: var(--red);
+    }
+
+    /* Screen 3 - Analytics */
+    .screen-analytics-full {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      font-size: 10px;
+    }
+
+    .analytics-topbar {
+      padding: 6px 10px;
+      background: rgba(17, 17, 20, 0.95);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 9px;
+    }
+
+    .analytics-topbar .title {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      color: var(--white);
+    }
+
+    .analytics-body {
+      padding: 10px;
+      flex: 1;
+    }
+
+    .analytics-kpi-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+
+    .analytics-kpi {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 8px;
+    }
+
+    .analytics-kpi .label {
+      font-size: 7px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    .analytics-kpi .value {
+      font-family: 'Syne', sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--white);
+      margin: 2px 0;
+    }
+
+    .analytics-kpi .change {
+      font-size: 7px;
+      color: var(--green);
+    }
+
+    .analytics-chart-big {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 10px;
+      margin-bottom: 8px;
+    }
+
+    .chart-header-big {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .chart-header-big .title {
+      font-size: 9px;
+      font-weight: 600;
+      color: var(--white);
+    }
+
+    .chart-header-big .legend {
+      display: flex;
+      gap: 8px;
+      font-size: 7px;
+      color: var(--text-muted);
+    }
+
+    .chart-header-big .legend span {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+    }
+
+    .chart-header-big .legend .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+    }
+
+    .chart-line {
+      height: 70px;
+      position: relative;
+      background-image: 
+        linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px);
+      background-size: 100% 14px;
+    }
+
+    .chart-line svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    /* Screen 4 - Security */
+    .screen-security-full {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      font-size: 10px;
+    }
+
+    .security-topbar {
+      padding: 6px 10px;
+      background: rgba(17, 17, 20, 0.95);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 9px;
+    }
+
+    .security-topbar .title {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      color: var(--white);
+    }
+
+    .security-body {
+      padding: 10px;
+      flex: 1;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .security-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 10px;
+    }
+
+    .security-card-title {
+      font-size: 8px;
+      font-weight: 600;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .security-card-title i {
+      color: var(--accent-soft);
+    }
+
+    .security-status-big {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px;
+      background: rgba(48, 209, 88, 0.08);
+      border: 1px solid rgba(48, 209, 88, 0.2);
+      border-radius: 6px;
+      margin-bottom: 8px;
+    }
+
+    .security-status-big .icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: rgba(48, 209, 88, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--green);
+      font-size: 12px;
+    }
+
+    .security-status-big .text {
+      font-size: 9px;
+      color: var(--green);
+      font-weight: 600;
+    }
+
+    .security-status-big .sub {
+      font-size: 7px;
+      color: var(--text-muted);
+      font-weight: 400;
+    }
+
+    .security-list-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 5px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 8px;
+    }
+
+    .security-list-item:last-child {
+      border-bottom: none;
+    }
+
+    .security-list-item .label {
+      color: var(--text-dim);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .security-list-item .label i {
+      color: var(--accent-soft);
+      font-size: 8px;
+    }
+
+    .security-list-item .value {
+      color: var(--green);
+      font-weight: 600;
+    }
+
+    .security-list-item .value.warn {
+      color: #ff9f0a;
+    }
+
+    /* ─── INTEGRATIONS ─────────────────────────────────── */
+    .integrations {
+      padding: 100px 0;
+      position: relative;
+      z-index: 1;
+    }
+
+    .integrations-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 16px;
+      margin-top: 48px;
+    }
+
+    .integration-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px 16px;
+      text-align: center;
+      transition: all .3s ease;
+    }
+
+    .integration-card:hover {
+      border-color: var(--border-strong);
+      transform: translateY(-3px);
+    }
+
+    .integration-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      background: var(--surface-2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      margin: 0 auto 12px;
+    }
+
+    .integration-card h4 {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--white);
+      margin-bottom: 4px;
+    }
+
+    .integration-card p {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    /* ─── COMPARISON ───────────────────────────────────── */
+    .comparison {
+      padding: 100px 0;
+      background: var(--bg-soft);
+      position: relative;
+      z-index: 1;
+    }
+
+    .comparison-table {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      margin-top: 48px;
+    }
+
+    .comparison-head {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .comparison-head-cell {
+      padding: 20px 24px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-dim);
+      border-right: 1px solid var(--border);
+    }
+
+    .comparison-head-cell:last-child {
+      border-right: none;
+    }
+
+    .comparison-head-cell.featured {
+      background: rgba(139, 92, 246, 0.06);
+      color: var(--white);
+    }
+
+    .comparison-head-cell .badge {
+      display: inline-block;
+      margin-left: 6px;
+      padding: 2px 8px;
+      background: var(--accent);
+      color: #fff;
+      font-size: 9px;
+      border-radius: 10px;
+      vertical-align: middle;
+    }
+
+    .comparison-row {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .comparison-row:last-child {
+      border-bottom: none;
+    }
+
+    .comparison-cell {
+      padding: 14px 24px;
+      font-size: 13px;
+      color: var(--text-dim);
+      border-right: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .comparison-cell:last-child {
+      border-right: none;
+    }
+
+    .comparison-cell.featured {
+      background: rgba(139, 92, 246, 0.03);
+      color: var(--white);
+    }
+
+    .comparison-cell .feat-icon {
+      color: var(--accent-soft);
+      font-size: 14px;
+    }
+
+    .check-yes {
+      color: var(--green);
+      font-size: 14px;
+    }
+
+    .check-no {
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+
+    .check-partial {
+      color: #ff9f0a;
+      font-size: 14px;
+    }
+
+    /* ─── SYSTEM REQUIREMENTS ──────────────────────────── */
+    .requirements {
+      padding: 100px 0;
+      position: relative;
+      z-index: 1;
+    }
+
+    .requirements-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      margin-top: 48px;
+    }
+
+    .req-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 32px 28px;
+      transition: all .3s ease;
+    }
+
+    .req-card:hover {
+      border-color: var(--border-strong);
+      transform: translateY(-3px);
+    }
+
+    .req-card-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .req-card-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: var(--surface-2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    }
+
+    .req-card-icon.windows {
+      color: #0078d4;
+    }
+
+    .req-card-icon.macos {
+      color: var(--white);
+    }
+
+    .req-card-icon.linux {
+      color: #fbb824;
+    }
+
+    .req-card-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--white);
+    }
+
+    .req-card-sub {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .req-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .req-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      font-size: 13px;
+    }
+
+    .req-item .label {
+      color: var(--text-dim);
+      font-weight: 500;
+    }
+
+    .req-item .value {
+      color: var(--white);
+      text-align: right;
+      font-size: 12px;
+    }
+
+    .req-download-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      margin-top: 20px;
+      padding: 12px;
+      border-radius: 40px;
+      background: var(--white);
+      color: #000;
+      font-size: 13px;
+      font-weight: 500;
+      transition: all .2s;
+    }
+
+    .req-download-btn:hover {
+      background: #e8e8ed;
+      transform: scale(1.02);
+    }
+
+    .req-card .req-download-btn.secondary {
+      background: var(--surface-2);
+      color: var(--white);
+      border: 1px solid var(--border-strong);
+    }
+
+    .req-card .req-download-btn.secondary:hover {
+      background: var(--surface);
+    }
+
+    /* ─── CHANGELOG ────────────────────────────────────── */
+    .changelog {
+      padding: 100px 0;
+      background: var(--bg-soft);
+      position: relative;
+      z-index: 1;
+    }
+
+    .changelog-list {
+      max-width: 800px;
+      margin: 48px auto 0;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .changelog-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 24px 28px;
+      transition: all .3s ease;
+    }
+
+    .changelog-item:hover {
+      border-color: var(--border-strong);
+    }
+
+    .changelog-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+
+    .changelog-version {
+      font-family: 'Syne', sans-serif;
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--white);
+    }
+
+    .changelog-tag {
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .changelog-tag.latest {
+      background: rgba(48, 209, 88, 0.15);
+      color: var(--green);
+    }
+
+    .changelog-tag.stable {
+      background: rgba(10, 132, 255, 0.15);
+      color: var(--blue);
+    }
+
+    .changelog-tag.beta {
+      background: rgba(255, 149, 0, 0.15);
+      color: #ff9f0a;
+    }
+
+    .changelog-date {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-left: auto;
+    }
+
+    .changelog-body {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .changelog-entry {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      font-size: 13px;
+      color: var(--text-dim);
+      line-height: 1.6;
+    }
+
+    .changelog-entry i {
+      margin-top: 4px;
+      font-size: 11px;
+      flex-shrink: 0;
+    }
+
+    .changelog-entry.new i {
+      color: var(--green);
+    }
+
+    .changelog-entry.fix i {
+      color: var(--blue);
+    }
+
+    .changelog-entry.improve i {
+      color: var(--accent-soft);
+    }
+
+    /* ─── TESTIMONIALS ─────────────────────────────────── */
+    .app-testimonials {
+      padding: 100px 0;
+      position: relative;
+      z-index: 1;
+    }
+
+    .testimonials-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+
+    .testimonial-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 28px;
+      transition: all .3s ease;
+    }
+
+    .testimonial-card:hover {
+      border-color: var(--border-strong);
+      transform: translateY(-3px);
+    }
+
+    .testimonial-stars {
+      display: flex;
+      gap: 2px;
+      margin-bottom: 16px;
+      color: #fbbf24;
+      font-size: 12px;
+    }
+
+    .testimonial-text {
+      font-size: 14px;
+      color: var(--text);
+      line-height: 1.7;
+      margin-bottom: 20px;
+      font-style: italic;
+    }
+
+    .testimonial-author {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .testimonial-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--accent-soft));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      color: #fff;
+      font-weight: 700;
+    }
+
+    .testimonial-info .name {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--white);
+    }
+
+    .testimonial-info .role {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    /* ─── FAQ ──────────────────────────────────────────── */
+    .app-faq {
+      padding: 100px 0;
+      background: var(--bg-soft);
+      position: relative;
+      z-index: 1;
+    }
+
+    .faq-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      margin-top: 40px;
+      max-width: 800px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .faq-item {
+      border-bottom: 1px solid var(--border);
+    }
+
+    .faq-item:last-child {
+      border-bottom: none;
+    }
+
+    .faq-q {
+      padding: 22px 26px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      transition: background .2s;
+      cursor: pointer;
+    }
+
+    .faq-q:hover {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .faq-q-text {
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--white);
+    }
+
+    .faq-toggle {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      background: var(--surface-2);
+      border: 1px solid var(--border-strong);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      color: var(--text-dim);
+      transition: all .3s;
+    }
+
+    .faq-item.open .faq-toggle {
+      background: var(--white);
+      color: #000;
+      border-color: var(--white);
+      transform: rotate(45deg);
+    }
+
+    .faq-a {
+      font-size: 14px;
+      color: var(--text-dim);
+      line-height: 1.8;
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height .4s ease, padding .4s ease;
+      padding: 0 26px;
+    }
+
+    .faq-item.open .faq-a {
+      max-height: 300px;
+      padding-bottom: 22px;
+    }
+
+    /* ─── CTA FINAL ────────────────────────────────────── */
+    .app-cta {
+      padding: 100px 0;
+      text-align: center;
+      position: relative;
+      z-index: 1;
+    }
+
+    .app-cta h2 {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(36px, 6vw, 64px);
+      font-weight: 700;
+      color: var(--white);
+      letter-spacing: -2px;
+      line-height: 1.05;
+      margin-bottom: 20px;
+    }
+
+    .app-cta h2 span {
+      background: linear-gradient(135deg, var(--white) 30%, var(--accent-soft));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .app-cta p {
+      font-size: 16px;
+      color: var(--text-dim);
+      max-width: 500px;
+      margin: 0 auto 36px;
+    }
+
+    .app-cta .download-btns {
+      justify-content: center;
+      margin-bottom: 24px;
+    }
+
+    /* ─── FOOTER ─────────────────────────────────────────── */
+    footer {
+      padding: 40px 0;
+      border-top: 1px solid var(--border);
+      text-align: center;
+      position: relative;
+      z-index: 1;
+    }
+
+    footer p {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    footer a {
+      color: var(--text-dim);
+      margin: 0 8px;
+      transition: color .2s;
+    }
+
+    footer a:hover {
+      color: var(--white);
+    }
+
+    /* ─── RESPONSIVE ─────────────────────────────────────── */
+    @media (max-width: 900px) {
+      .app-hero-grid {
+        grid-template-columns: 1fr;
+        text-align: center;
+      }
+
+      .app-hero-text p {
+        margin-left: auto;
+        margin-right: auto;
+      }
+
+      .download-btns {
+        justify-content: center;
+      }
+
+      .hero-mini-stats {
+        justify-content: center;
+      }
+
+      .features-grid,
+      .testimonials-grid,
+      .requirements-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .integrations-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+
+      .screenshots-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .nav-links {
+        display: none;
+      }
+
+      .nav-download {
+        display: none;
+      }
+
+      .comparison-head,
+      .comparison-row {
+        grid-template-columns: 1.5fr 1fr 1fr;
+        font-size: 12px;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .download-btns {
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .store-btn {
+        width: 100%;
+        max-width: 280px;
+        justify-content: center;
+      }
+
+      .integrations-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .comparison-head-cell,
+      .comparison-cell {
+        padding: 10px 12px;
+        font-size: 11px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="page-bg"></div>
+
+  <!-- NAV -->
+  <header>
+    <nav>
+      <a href="index.html" class="nav-logo">
+        <div class="logo-icon"><i class="fas fa-robot"></i></div>
+        PORTAL PILOT
+      </a>
+      <div class="nav-links">
+        <a href="#features">Características</a>
+        <a href="#screenshots">Capturas</a>
+        <a href="#requirements">Requisitos</a>
+        <a href="#changelog">Changelog</a>
+        <a href="#faq">FAQ</a>
+      </div>
+      <a href="index.html" class="nav-back">
+        <i class="fas fa-arrow-left" style="font-size:11px;"></i> Volver al inicio
+      </a>
+      <a href="#download" class="nav-download">
+        <i class="fas fa-download"></i> Descargar
+      </a>
+    </nav>
+  </header>
+
+  <!-- HERO -->
+  <section class="app-hero container">
+    <div class="app-hero-grid">
+
+      <!-- Text -->
+      <div class="app-hero-text">
+        <div class="eyebrow">
+          <i class="fas fa-desktop"></i> PORTAL PILOT DESKTOP v2.4.0
+        </div>
+        <h1>El poder enterprise, <span>en tu escritorio.</span></h1>
+        <p>La aplicación nativa de Portal Pilot para Windows, macOS y Linux. Gestiona bots RPA, revisa auditorías
+          blockchain y controla tu infraestructura con el rendimiento y las funciones avanzadas que solo un desktop
+          puede ofrecer.</p>
+
+        <div class="download-btns" id="download">
+          <a href="https://github.com/sarch-codelab/portalpilot/releases/download/v1.0.0/portal_pilot_setup.exe" class="store-btn">
+            <i class="fab fa-windows" style="color:#0078d4;"></i>
+            <div class="store-text">
+              <small>Descargar para</small>
+              <strong>Windows</strong>
+              <span class="version">Windows 10/11 · 64-bit</span>
+            </div>
+          </a>
+          <a href="#" class="store-btn secondary">
+            <i class="fab fa-apple"></i>
+            <div class="store-text">
+              <small>Descargar para</small>
+              <strong>macOS</strong>
+              <span class="version">macOS 12+ · Intel & M1/M2</span>
+            </div>
+          </a>
+          <a href="#" class="store-btn secondary">
+            <i class="fab fa-linux" style="color:#fbb824;"></i>
+            <div class="store-text">
+              <small>Descargar para</small>
+              <strong>Linux</strong>
+              <span class="version">Ubuntu 20.04+ · AppImage</span>
+            </div>
+          </a>
+        </div>
+
+        <div class="download-meta">
+          <span><i class="fas fa-shield"></i> Firmado digitalmente</span>
+          <span><i class="fas fa-bolt"></i> 148 MB</span>
+          <span><i class="fas fa-code-branch"></i> v2.4.0 estable</span>
+          <span><i class="fas fa-calendar"></i> Actualizado julio 2026</span>
+        </div>
+
+        <div class="hero-mini-stats">
+          <div class="mini-stat">
+            <div class="n">250K+</div>
+            <div class="l">Instalaciones</div>
+          </div>
+          <div class="mini-stat">
+            <div class="n">4.8★</div>
+            <div class="l">Calificación</div>
+          </div>
+          <div class="mini-stat">
+            <div class="n">99.9%</div>
+            <div class="l">Uptime</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Laptop Mockup -->
+      <div>
+        <div class="laptop-mockup">
+          <div class="laptop-screen">
+            <div class="laptop-camera"></div>
+            <div class="laptop-display">
+              <div class="desktop-screen">
+                <!-- Top bar -->
+                <div class="desktop-topbar">
+                  <div class="desktop-topbar-left">
+                    <div class="desktop-logo-mini"><i class="fas fa-robot"></i></div>
+                    <div class="desktop-app-name">Portal Pilot</div>
+                  </div>
+                  <div class="desktop-topbar-menu">
+                    <span>Archivo</span>
+                    <span>Editar</span>
+                    <span>Ver</span>
+                    <span>Bots</span>
+                    <span>Ayuda</span>
+                  </div>
+                  <div class="desktop-topbar-right">
+                    <i class="fas fa-wifi"></i>
+                    <i class="fas fa-bell"></i>
+                    <i class="fas fa-user-circle"></i>
+                    <span>JS</span>
+                  </div>
+                </div>
+
+                <!-- Body -->
+                <div class="desktop-body">
+                  <!-- Sidebar -->
+                  <div class="desktop-sidebar">
+                    <div class="sidebar-section">
+                      <div class="sidebar-label">Principal</div>
+                      <div class="sidebar-item active"><i class="fas fa-house"></i> Dashboard</div>
+                      <div class="sidebar-item"><i class="fas fa-robot"></i> Bots RPA</div>
+                      <div class="sidebar-item"><i class="fas fa-chart-line"></i> Analytics</div>
+                      <div class="sidebar-item"><i class="fas fa-link"></i> Blockchain</div>
+                    </div>
+                    <div class="sidebar-section">
+                      <div class="sidebar-label">Gestión</div>
+                      <div class="sidebar-item"><i class="fas fa-building"></i> Empresas</div>
+                      <div class="sidebar-item"><i class="fas fa-users"></i> Usuarios</div>
+                      <div class="sidebar-item"><i class="fas fa-shield"></i> Cyberyx</div>
+                      <div class="sidebar-item"><i class="fas fa-cog"></i> Ajustes</div>
+                    </div>
+                  </div>
+
+                  <!-- Main -->
+                  <div class="desktop-main">
+                    <div class="desktop-main-header">
+                      <div class="desktop-main-title">Dashboard</div>
+                      <div class="desktop-main-actions">
+                        <div class="desktop-btn-mini"><i class="fas fa-download"></i> Exportar</div>
+                        <div class="desktop-btn-mini primary"><i class="fas fa-plus"></i> Nuevo bot</div>
+                      </div>
+                    </div>
+
+                    <div class="desktop-stats-grid">
+                      <div class="desktop-stat">
+                        <div class="label">Bots activos</div>
+                        <div class="value">24</div>
+                        <div class="change">↑ 12%</div>
+                      </div>
+                      <div class="desktop-stat">
+                        <div class="label">Tareas hoy</div>
+                        <div class="value">1,284</div>
+                        <div class="change">↑ 24%</div>
+                      </div>
+                      <div class="desktop-stat">
+                        <div class="label">Horas ahorradas</div>
+                        <div class="value">142h</div>
+                        <div class="change">↑ 18%</div>
+                      </div>
+                      <div class="desktop-stat">
+                        <div class="label">ROI</div>
+                        <div class="value">312%</div>
+                        <div class="change">↑ 8%</div>
+                      </div>
+                    </div>
+
+                    <div class="desktop-content-grid">
+                      <div class="desktop-panel">
+                        <div class="desktop-panel-title">Bots recientes</div>
+                        <div class="desktop-bot-row">
+                          <div class="desktop-bot-icon"><i class="fas fa-chart-line"></i></div>
+                          <div class="desktop-bot-info">
+                            <div class="name">Análisis proveedores Q4</div>
+                            <div class="status">Ejecutando · 3 min</div>
+                          </div>
+                          <div class="desktop-bot-status"></div>
+                        </div>
+                        <div class="desktop-bot-row">
+                          <div class="desktop-bot-icon"><i class="fas fa-file-invoice"></i></div>
+                          <div class="desktop-bot-info">
+                            <div class="name">Conciliación facturas</div>
+                            <div class="status">Completado · 14:32</div>
+                          </div>
+                          <div class="desktop-bot-status" style="background:var(--accent-soft)"></div>
+                        </div>
+                        <div class="desktop-bot-row">
+                          <div class="desktop-bot-icon"><i class="fas fa-database"></i></div>
+                          <div class="desktop-bot-info">
+                            <div class="name">Sync Oracle DB</div>
+                            <div class="status">Completado · 13:10</div>
+                          </div>
+                          <div class="desktop-bot-status" style="background:var(--accent-soft)"></div>
+                        </div>
+                      </div>
+                      <div class="desktop-panel">
+                        <div class="desktop-panel-title">Actividad semanal</div>
+                        <div class="desktop-chart">
+                          <div class="desktop-chart-bar" style="height:40%"></div>
+                          <div class="desktop-chart-bar" style="height:65%"></div>
+                          <div class="desktop-chart-bar" style="height:50%"></div>
+                          <div class="desktop-chart-bar" style="height:80%"></div>
+                          <div class="desktop-chart-bar" style="height:70%"></div>
+                          <div class="desktop-chart-bar" style="height:90%"></div>
+                          <div class="desktop-chart-bar" style="height:100%"></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="laptop-base"></div>
+          <div class="laptop-stand"></div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section class="app-features" id="features">
+    <div class="container">
+      <div class="section-header">
+        <div class="sec-eyebrow">Características nativas</div>
+        <h2 class="sec-title">Construido para el poder del desktop</h2>
+        <p class="sec-sub">Aprovecha al máximo tu hardware con funciones avanzadas que solo la aplicación de escritorio
+          puede ofrecer.</p>
+      </div>
+
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon"><i class="fas fa-keyboard"></i></div>
+          <h3>Atajos de teclado globales</h3>
+          <p>Controla tus bots con atajos personalizados desde cualquier aplicación. Productividad máxima sin tocar el
+            mouse.</p>
+          <span class="shortcut">Ctrl + Shift + P</span>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon"><i class="fas fa-layer-group"></i></div>
+          <h3>Multi-ventana nativa</h3>
+          <p>Abre múltiples dashboards, bots y reportes en ventanas independientes. Organiza tu flujo de trabajo como
+            prefieras.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon"><i class="fas fa-hard-drive"></i></div>
+          <h3>Acceso al sistema de archivos</h3>
+          <p>Procesa archivos locales, genera reportes en disco y ejecuta scripts directamente desde tu sistema operativo.
+          </p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon"><i class="fas fa-bell"></i></div>
+          <h3>Notificaciones del sistema</h3>
+          <p>Recibe alertas nativas de Windows, macOS y Linux cuando tus bots completan tareas o requieren tu atención.
+          </p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon"><i class="fas fa-microchip"></i></div>
+          <h3>Aceleración por hardware</h3>
+          <p>GPU acceleration para visualizaciones complejas y procesamiento local de datos. Rendimiento óptimo incluso
+            con grandes volúmenes.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon"><i class="fas fa-plug"></i></div>
+          <h3>Integración con el sistema</h3>
+          <p>Inicio automático, bandeja del sistema, acceso rápido desde la barra de tareas. Portal Pilot siempre
+            disponible.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon"><i class="fas fa-download"></i></div>
+          <h3>Exportación avanzada</h3>
+          <p>Exporta datos a Excel, PDF, CSV, JSON y más. Genera reportes ejecutivos con un clic directamente en tu
+            disco.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon"><i class="fas fa-terminal"></i></div>
+          <h3>Terminal integrado</h3>
+          <p>Ejecuta comandos, scripts y operaciones avanzadas desde la terminal embebida. Para power users y
+            administradores.</p>
+          <span class="shortcut">Ctrl + `</span>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon"><i class="fas fa-cloud-arrow-down"></i></div>
+          <h3>Actualizaciones automáticas</h3>
+          <p>Recibe nuevas versiones y parches de seguridad automáticamente en segundo plano. Sin interrupciones en tu
+            trabajo.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SCREENSHOTS -->
+  <section class="screenshots" id="screenshots">
+    <div class="container">
+      <div class="section-header">
+        <div class="sec-eyebrow">Capturas</div>
+        <h2 class="sec-title">Descubre la interfaz completa</h2>
+        <p class="sec-sub">Una interfaz densa en funcionalidad, clara en presentación. Diseñada para profesionales que
+          necesitan control total.</p>
+      </div>
+
+      <div class="screenshots-grid">
+
+        <!-- Screen 1: Dashboard -->
+        <div class="screenshot-item">
+          <div class="screenshot-monitor">
+            <div class="laptop-camera"></div>
+            <div class="screenshot-display">
+              <div class="desktop-screen">
+                <div class="desktop-topbar">
+                  <div class="desktop-topbar-left">
+                    <div class="desktop-logo-mini"><i class="fas fa-robot"></i></div>
+                    <div class="desktop-app-name">Portal Pilot</div>
+                  </div>
+                  <div class="desktop-topbar-right">
+                    <i class="fas fa-wifi"></i>
+                    <i class="fas fa-bell"></i>
+                    <span>JS</span>
+                  </div>
+                </div>
+                <div class="desktop-body">
+                  <div class="desktop-sidebar">
+                    <div class="sidebar-section">
+                      <div class="sidebar-label">Principal</div>
+                      <div class="sidebar-item active"><i class="fas fa-house"></i> Dashboard</div>
+                      <div class="sidebar-item"><i class="fas fa-robot"></i> Bots RPA</div>
+                      <div class="sidebar-item"><i class="fas fa-chart-line"></i> Analytics</div>
+                    </div>
+                  </div>
+                  <div class="desktop-main">
+                    <div class="desktop-main-header">
+                      <div class="desktop-main-title">Dashboard</div>
+                      <div class="desktop-main-actions">
+                        <div class="desktop-btn-mini primary"><i class="fas fa-plus"></i> Nuevo</div>
+                      </div>
+                    </div>
+                    <div class="desktop-stats-grid">
+                      <div class="desktop-stat">
+                        <div class="label">Bots</div>
+                        <div class="value">24</div>
+                        <div class="change">↑ 12%</div>
+                      </div>
+                      <div class="desktop-stat">
+                        <div class="label">Tareas</div>
+                        <div class="value">1.2K</div>
+                        <div class="change">↑ 24%</div>
+                      </div>
+                      <div class="desktop-stat">
+                        <div class="label">Ahorro</div>
+                        <div class="value">142h</div>
+                        <div class="change">↑ 18%</div>
+                      </div>
+                      <div class="desktop-stat">
+                        <div class="label">ROI</div>
+                        <div class="value">312%</div>
+                        <div class="change">↑ 8%</div>
+                      </div>
+                    </div>
+                    <div class="desktop-panel">
+                      <div class="desktop-panel-title">Actividad</div>
+                      <div class="desktop-chart">
+                        <div class="desktop-chart-bar" style="height:40%"></div>
+                        <div class="desktop-chart-bar" style="height:65%"></div>
+                        <div class="desktop-chart-bar" style="height:50%"></div>
+                        <div class="desktop-chart-bar" style="height:80%"></div>
+                        <div class="desktop-chart-bar" style="height:70%"></div>
+                        <div class="desktop-chart-bar" style="height:90%"></div>
+                        <div class="desktop-chart-bar" style="height:100%"></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="screenshot-base"></div>
+          <div class="screenshot-label">Dashboard principal</div>
+        </div>
+
+        <!-- Screen 2: Bots Management -->
+        <div class="screenshot-item">
+          <div class="screenshot-monitor">
+            <div class="laptop-camera"></div>
+            <div class="screenshot-display">
+              <div class="screen-bots-mgmt">
+                <div class="bots-topbar">
+                  <div class="title">Gestión de Bots RPA</div>
+                  <div style="display:flex;gap:6px;align-items:center;">
+                    <span style="color:var(--green);font-size:8px;">● 18 activos</span>
+                  </div>
+                </div>
+                <div class="bots-body">
+                  <div class="bots-sidebar">
+                    <div class="bots-sidebar-item active"><i class="fas fa-list"></i> Todos</div>
+                    <div class="bots-sidebar-item"><i class="fas fa-play"></i> Activos</div>
+                    <div class="bots-sidebar-item"><i class="fas fa-pause"></i> Pausados</div>
+                    <div class="bots-sidebar-item"><i class="fas fa-stop"></i> Detenidos</div>
+                    <div class="bots-sidebar-item"><i class="fas fa-calendar"></i> Programados</div>
+                  </div>
+                  <div class="bots-main">
+                    <div class="bots-toolbar">
+                      <div class="bots-search"><i class="fas fa-search"></i> Buscar bot...</div>
+                      <div class="desktop-btn-mini primary"><i class="fas fa-plus"></i> Crear</div>
+                    </div>
+                    <div class="bots-table">
+                      <div class="bots-table-header">
+                        <div>Nombre</div>
+                        <div>Estado</div>
+                        <div>Última ejecución</div>
+                        <div>Acciones</div>
+                      </div>
+                      <div class="bots-table-row">
+                        <div class="name"><i class="fas fa-chart-line"></i> Análisis mercado</div>
+                        <div><span class="status-badge running">● Activo</span></div>
+                        <div>Hace 2 min</div>
+                        <div><i class="fas fa-ellipsis" style="color:var(--text-muted);"></i></div>
+                      </div>
+                      <div class="bots-table-row">
+                        <div class="name"><i class="fas fa-file-invoice"></i> Facturas auto</div>
+                        <div><span class="status-badge running">● Activo</span></div>
+                        <div>Hace 15 min</div>
+                        <div><i class="fas fa-ellipsis" style="color:var(--text-muted);"></i></div>
+                      </div>
+                      <div class="bots-table-row">
+                        <div class="name"><i class="fas fa-envelope"></i> Email classifier</div>
+                        <div><span class="status-badge paused">● Pausado</span></div>
+                        <div>Hace 1h</div>
+                        <div><i class="fas fa-ellipsis" style="color:var(--text-muted);"></i></div>
+                      </div>
+                      <div class="bots-table-row">
+                        <div class="name"><i class="fas fa-database"></i> Oracle Sync</div>
+                        <div><span class="status-badge running">● Activo</span></div>
+                        <div>Hace 30 min</div>
+                        <div><i class="fas fa-ellipsis" style="color:var(--text-muted);"></i></div>
+                      </div>
+                      <div class="bots-table-row">
+                        <div class="name"><i class="fas fa-users"></i> HR Onboarding</div>
+                        <div><span class="status-badge stopped">● Detenido</span></div>
+                        <div>Ayer</div>
+                        <div><i class="fas fa-ellipsis" style="color:var(--text-muted);"></i></div>
+                      </div>
+                      <div class="bots-table-row">
+                        <div class="name"><i class="fas fa-shield"></i> Security scan</div>
+                        <div><span class="status-badge running">● Activo</span></div>
+                        <div>Hace 5 min</div>
+                        <div><i class="fas fa-ellipsis" style="color:var(--text-muted);"></i></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="screenshot-base"></div>
+          <div class="screenshot-label">Gestión de bots RPA</div>
+        </div>
+
+        <!-- Screen 3: Analytics -->
+        <div class="screenshot-item">
+          <div class="screenshot-monitor">
+            <div class="laptop-camera"></div>
+            <div class="screenshot-display">
+              <div class="screen-analytics-full">
+                <div class="analytics-topbar">
+                  <div class="title">Analytics & Reportes</div>
+                  <div style="display:flex;gap:6px;">
+                    <div class="desktop-btn-mini">7 días</div>
+                    <div class="desktop-btn-mini primary">30 días</div>
+                    <div class="desktop-btn-mini">90 días</div>
+                  </div>
+                </div>
+                <div class="analytics-body">
+                  <div class="analytics-kpi-row">
+                    <div class="analytics-kpi">
+                      <div class="label">Tareas totales</div>
+                      <div class="value">12,847</div>
+                      <div class="change">↑ 24%</div>
+                    </div>
+                    <div class="analytics-kpi">
+                      <div class="label">Horas ahorradas</div>
+                      <div class="value">1,428h</div>
+                      <div class="change">↑ 18%</div>
+                    </div>
+                    <div class="analytics-kpi">
+                      <div class="label">Ahorro USD</div>
+                      <div class="value">$42.8K</div>
+                      <div class="change">↑ 32%</div>
+                    </div>
+                    <div class="analytics-kpi">
+                      <div class="label">ROI</div>
+                      <div class="value">312%</div>
+                      <div class="change">↑ 8%</div>
+                    </div>
+                  </div>
+                  <div class="analytics-chart-big">
+                    <div class="chart-header-big">
+                      <div class="title">Rendimiento mensual</div>
+                      <div class="legend">
+                        <span><span class="dot" style="background:var(--accent-soft);"></span> Tareas</span>
+                        <span><span class="dot" style="background:var(--green);"></span> Éxito</span>
+                      </div>
+                    </div>
+                    <div class="chart-line">
+                      <svg viewBox="0 0 400 70" preserveAspectRatio="none">
+                        <polyline fill="none" stroke="#a78bfa" stroke-width="2"
+                          points="0,50 40,40 80,45 120,30 160,35 200,20 240,25 280,15 320,18 360,10 400,5" />
+                        <polyline fill="none" stroke="#30d158" stroke-width="2"
+                          points="0,55 40,48 80,52 120,38 160,42 200,28 240,32 280,22 320,25 360,18 400,12" />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="screenshot-base"></div>
+          <div class="screenshot-label">Analytics avanzados</div>
+        </div>
+
+        <!-- Screen 4: Security -->
+        <div class="screenshot-item">
+          <div class="screenshot-monitor">
+            <div class="laptop-camera"></div>
+            <div class="screenshot-display">
+              <div class="screen-security-full">
+                <div class="security-topbar">
+                  <div class="title">Cyberyx Vantage</div>
+                  <div style="display:flex;gap:6px;">
+                    <div class="desktop-btn-mini"><i class="fas fa-download"></i> Reporte</div>
+                    <div class="desktop-btn-mini primary"><i class="fas fa-shield"></i> Escanear</div>
+                  </div>
+                </div>
+                <div class="security-body">
+                  <div class="security-card" style="grid-column:span 2;">
+                    <div class="security-card-title"><i class="fas fa-shield-halved"></i> Estado general</div>
+                    <div class="security-status-big">
+                      <div class="icon"><i class="fas fa-circle-check"></i></div>
+                      <div>
+                        <div class="text">TODOS LOS SISTEMAS SEGUROS</div>
+                        <div class="sub">Última verificación: hace 2 minutos</div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="security-card">
+                    <div class="security-card-title"><i class="fas fa-lock"></i> Autenticación</div>
+                    <div class="security-list-item">
+                      <div class="label"><i class="fas fa-fingerprint"></i> Biometría</div>
+                      <div class="value">Activo</div>
+                    </div>
+                    <div class="security-list-item">
+                      <div class="label"><i class="fas fa-key"></i> 2FA</div>
+                      <div class="value">Activo</div>
+                    </div>
+                    <div class="security-list-item">
+                      <div class="label"><i class="fas fa-envelope"></i> Email verify</div>
+                      <div class="value">Activo</div>
+                    </div>
+                    <div class="security-list-item">
+                      <div class="label"><i class="fas fa-clock"></i> Sesión activa</div>
+                      <div class="value">2h 14m</div>
+                    </div>
+                  </div>
+                  <div class="security-card">
+                    <div class="security-card-title"><i class="fas fa-link"></i> Blockchain</div>
+                    <div class="security-list-item">
+                      <div class="label"><i class="fas fa-cube"></i> Hashes hoy</div>
+                      <div class="value">1,284</div>
+                    </div>
+                    <div class="security-list-item">
+                      <div class="label"><i class="fas fa-check"></i> Verificados</div>
+                      <div class="value">100%</div>
+                    </div>
+                    <div class="security-list-item">
+                      <div class="label"><i class="fas fa-database"></i> Red</div>
+                      <div class="value">Privada</div>
+                    </div>
+                    <div class="security-list-item">
+                      <div class="label"><i class="fas fa-shield"></i> Cifrado</div>
+                      <div class="value">AES-256</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="screenshot-base"></div>
+          <div class="screenshot-label">Seguridad Cyberyx Vantage</div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- INTEGRATIONS -->
+  <section class="integrations">
+    <div class="container">
+      <div class="section-header">
+        <div class="sec-eyebrow">Integraciones</div>
+        <h2 class="sec-title">Conecta con tu stack empresarial</h2>
+        <p class="sec-sub">Portal Pilot Desktop se integra nativamente con las herramientas que ya usas. Sin
+          configuraciones complicadas.</p>
+      </div>
+
+      <div class="integrations-grid">
+        <div class="integration-card">
+          <div class="integration-icon" style="color:#0078d4;"><i class="fab fa-microsoft"></i></div>
+          <h4>Microsoft 365</h4>
+          <p>Outlook, Teams, Excel</p>
+        </div>
+        <div class="integration-card">
+          <div class="integration-icon" style="color:#4285f4;"><i class="fab fa-google"></i></div>
+          <h4>Google Workspace</h4>
+          <p>Gmail, Drive, Sheets</p>
+        </div>
+        <div class="integration-card">
+          <div class="integration-icon" style="color:#f59e0b;"><i class="fas fa-database"></i></div>
+          <h4>Oracle DB</h4>
+          <p>Enterprise storage</p>
+        </div>
+        <div class="integration-card">
+          <div class="integration-icon" style="color:#0074d0;"><i class="fas fa-server"></i></div>
+          <h4>SQL Server</h4>
+          <p>Microsoft SQL</p>
+        </div>
+        <div class="integration-card">
+          <div class="integration-icon" style="color:#336791;"><i class="fas fa-code"></i></div>
+          <h4>PostgreSQL</h4>
+          <p>Open source DB</p>
+        </div>
+        <div class="integration-card">
+          <div class="integration-icon" style="color:#47a248;"><i class="fas fa-leaf"></i></div>
+          <h4>MongoDB</h4>
+          <p>NoSQL database</p>
+        </div>
+        <div class="integration-card">
+          <div class="integration-icon" style="color:#ff6384;"><i class="fas fa-chart-pie"></i></div>
+          <h4>Power BI</h4>
+          <p>Business analytics</p>
+        </div>
+        <div class="integration-card">
+          <div class="integration-icon" style="color:#ff4500;"><i class="fas fa-table"></i></div>
+          <h4>Tableau</h4>
+          <p>Data visualization</p>
+        </div>
+        <div class="integration-card">
+          <div class="integration-icon" style="color:#2d9cdb;"><i class="fab fa-salesforce"></i></div>
+          <h4>Salesforce</h4>
+          <p>CRM platform</p>
+        </div>
+        <div class="integration-card">
+          <div class="integration-icon" style="color:#ff6b35;"><i class="fab fa-aws"></i></div>
+          <h4>AWS</h4>
+          <p>Cloud services</p>
+        </div>
+        <div class="integration-card">
+          <div class="integration-icon" style="color:#0078d4;"><i class="fab fa-azure"></i></div>
+          <h4>Azure</h4>
+          <p>Microsoft cloud</p>
+        </div>
+        <div class="integration-card">
+          <div class="integration-icon" style="color:#4285f4;"><i class="fab fa-github"></i></div>
+          <h4>GitHub</h4>
+          <p>DevOps & code</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- COMPARISON -->
+  <section class="comparison">
+    <div class="container">
+      <div class="section-header">
+        <div class="sec-eyebrow">Comparativa</div>
+        <h2 class="sec-title">Web vs Desktop</h2>
+        <p class="sec-sub">Descubre por qué miles de empresas eligen la aplicación de escritorio para sus operaciones
+          críticas.</p>
+      </div>
+
+      <div class="comparison-table">
+        <div class="comparison-head">
+          <div class="comparison-head-cell">Característica</div>
+          <div class="comparison-head-cell">Versión Web</div>
+          <div class="comparison-head-cell featured">Desktop App <span class="badge">RECOMENDADO</span></div>
+        </div>
+        <div class="comparison-row">
+          <div class="comparison-cell"><i class="fas fa-keyboard feat-icon"></i> Atajos de teclado globales</div>
+          <div class="comparison-cell"><i class="fas fa-times check-no"></i></div>
+          <div class="comparison-cell featured"><i class="fas fa-check check-yes"></i></div>
+        </div>
+        <div class="comparison-row">
+          <div class="comparison-cell"><i class="fas fa-layer-group feat-icon"></i> Multi-ventana nativa</div>
+          <div class="comparison-cell"><i class="fas fa-times check-no"></i></div>
+          <div class="comparison-cell featured"><i class="fas fa-check check-yes"></i></div>
+        </div>
+        <div class="comparison-row">
+          <div class="comparison-cell"><i class="fas fa-hard-drive feat-icon"></i> Acceso a sistema de archivos</div>
+          <div class="comparison-cell"><i class="fas fa-times check-no"></i></div>
+          <div class="comparison-cell featured"><i class="fas fa-check check-yes"></i></div>
+        </div>
+        <div class="comparison-row">
+          <div class="comparison-cell"><i class="fas fa-bell feat-icon"></i> Notificaciones del sistema</div>
+          <div class="comparison-cell"><i class="fas fa-minus check-partial"></i> Limitadas</div>
+          <div class="comparison-cell featured"><i class="fas fa-check check-yes"></i></div>
+        </div>
+        <div class="comparison-row">
+          <div class="comparison-cell"><i class="fas fa-microchip feat-icon"></i> Aceleración GPU</div>
+          <div class="comparison-cell"><i class="fas fa-minus check-partial"></i> Básica</div>
+          <div class="comparison-cell featured"><i class="fas fa-check check-yes"></i></div>
+        </div>
+        <div class="comparison-row">
+          <div class="comparison-cell"><i class="fas fa-terminal feat-icon"></i> Terminal integrado</div>
+          <div class="comparison-cell"><i class="fas fa-times check-no"></i></div>
+          <div class="comparison-cell featured"><i class="fas fa-check check-yes"></i></div>
+        </div>
+        <div class="comparison-row">
+          <div class="comparison-cell"><i class="fas fa-download feat-icon"></i> Exportación avanzada</div>
+          <div class="comparison-cell"><i class="fas fa-minus check-partial"></i> Básica</div>
+          <div class="comparison-cell featured"><i class="fas fa-check check-yes"></i></div>
+        </div>
+        <div class="comparison-row">
+          <div class="comparison-cell"><i class="fas fa-plug feat-icon"></i> Inicio automático</div>
+          <div class="comparison-cell"><i class="fas fa-times check-no"></i></div>
+          <div class="comparison-cell featured"><i class="fas fa-check check-yes"></i></div>
+        </div>
+        <div class="comparison-row">
+          <div class="comparison-cell"><i class="fas fa-wifi feat-icon"></i> Modo offline completo</div>
+          <div class="comparison-cell"><i class="fas fa-times check-no"></i></div>
+          <div class="comparison-cell featured"><i class="fas fa-check check-yes"></i></div>
+        </div>
+        <div class="comparison-row">
+          <div class="comparison-cell"><i class="fas fa-shield feat-icon"></i> Biometría nativa del sistema</div>
+          <div class="comparison-cell"><i class="fas fa-minus check-partial"></i> Limitada</div>
+          <div class="comparison-cell featured"><i class="fas fa-check check-yes"></i></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SYSTEM REQUIREMENTS -->
+  <section class="requirements" id="requirements">
+    <div class="container">
+      <div class="section-header">
+        <div class="sec-eyebrow">Requisitos del sistema</div>
+        <h2 class="sec-title">Compatible con tu plataforma</h2>
+        <p class="sec-sub">Portal Pilot Desktop está optimizado para funcionar de manera fluida en los sistemas
+          operativos más populares.</p>
+      </div>
+
+      <div class="requirements-grid">
+
+        <!-- Windows -->
+        <div class="req-card">
+          <div class="req-card-header">
+            <div class="req-card-icon windows"><i class="fab fa-windows"></i></div>
+            <div>
+              <div class="req-card-title">Windows</div>
+              <div class="req-card-sub">10 / 11 · 64-bit</div>
+            </div>
+          </div>
+          <div class="req-list">
+            <div class="req-item">
+              <div class="label">SO</div>
+              <div class="value">Windows 10 o superior</div>
+            </div>
+            <div class="req-item">
+              <div class="label">Procesador</div>
+              <div class="value">Intel/AMD 64-bit, 2 GHz+</div>
+            </div>
+            <div class="req-item">
+              <div class="label">RAM</div>
+              <div class="value">4 GB mínimo · 8 GB recomendado</div>
+            </div>
+            <div class="req-item">
+              <div class="label">Espacio</div>
+              <div class="value">500 MB disponibles</div>
+            </div>
+            <div class="req-item">
+              <div class="label">Gráficos</div>
+              <div class="value">DirectX 11 compatible</div>
+            </div>
+            <div class="req-item">
+              <div class="label">Red</div>
+              <div class="value">Banda ancha</div>
+            </div>
+          </div>
+          <a href="#" class="req-download-btn">
+            <i class="fas fa-download"></i> Descargar .exe (148 MB)
+          </a>
+        </div>
+
+        <!-- macOS -->
+        <div class="req-card">
+          <div class="req-card-header">
+            <div class="req-card-icon macos"><i class="fab fa-apple"></i></div>
+            <div>
+              <div class="req-card-title">macOS</div>
+              <div class="req-card-sub">Monterey o superior</div>
+            </div>
+          </div>
+          <div class="req-list">
+            <div class="req-item">
+              <div class="label">SO</div>
+              <div class="value">macOS 12+ (Monterey)</div>
+            </div>
+            <div class="req-item">
+              <div class="label">Procesador</div>
+              <div class="value">Intel o Apple Silicon (M1/M2/M3)</div>
+            </div>
+            <div class="req-item">
+              <div class="label">RAM</div>
+              <div class="value">4 GB mínimo · 8 GB recomendado</div>
+            </div>
+            <div class="req-item">
+              <div class="label">Espacio</div>
+              <div class="value">450 MB disponibles</div>
+            </div>
+            <div class="req-item">
+              <div class="label">Gráficos</div>
+              <div class="value">Metal compatible</div>
+            </div>
+            <div class="req-item">
+              <div class="label">Red</div>
+              <div class="value">Banda ancha</div>
+            </div>
+          </div>
+          <a href="#" class="req-download-btn secondary">
+            <i class="fas fa-download"></i> Descargar .dmg (142 MB)
+          </a>
+        </div>
+
+        <!-- Linux -->
+        <div class="req-card">
+          <div class="req-card-header">
+            <div class="req-card-icon linux"><i class="fab fa-linux"></i></div>
+            <div>
+              <div class="req-card-title">Linux</div>
+              <div class="req-card-sub">Ubuntu, Fedora, Debian</div>
+            </div>
+          </div>
+          <div class="req-list">
+            <div class="req-item">
+              <div class="label">Distribución</div>
+              <div class="value">Ubuntu 20.04+ / Fedora 36+</div>
+            </div>
+            <div class="req-item">
+              <div class="label">Procesador</div>
+              <div class="value">x86_64, 2 GHz+</div>
+            </div>
+            <div class="req-item">
+              <div class="label">RAM</div>
+              <div class="value">4 GB mínimo · 8 GB recomendado</div>
+            </div>
+            <div class="req-item">
+              <div class="label">Espacio</div>
+              <div class="value">480 MB disponibles</div>
+            </div>
+            <div class="req-item">
+              <div class="label">Gráficos</div>
+              <div class="value">OpenGL 3.3+</div>
+            </div>
+            <div class="req-item">
+              <div class="label">Red</div>
+              <div class="value">Banda ancha</div>
+            </div>
+          </div>
+          <a href="#" class="req-download-btn secondary">
+            <i class="fas fa-download"></i> Descargar .AppImage (156 MB)
+          </a>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- CHANGELOG -->
+  <section class="changelog" id="changelog">
+    <div class="container">
+      <div class="section-header">
+        <div class="sec-eyebrow">Changelog</div>
+        <h2 class="sec-title">Últimas versiones</h2>
+        <p class="sec-sub">Mejoras continuas, nuevas funciones y correcciones. Siempre actualizado, siempre mejorando.
+        </p>
+      </div>
+
+      <div class="changelog-list">
+        <div class="changelog-item">
+          <div class="changelog-header">
+            <div class="changelog-version">v2.4.0</div>
+            <span class="changelog-tag latest">Más reciente</span>
+            <span class="changelog-tag stable">Estable</span>
+            <div class="changelog-date">4 de julio, 2026</div>
+          </div>
+          <div class="changelog-body">
+            <div class="changelog-entry new">
+              <i class="fas fa-plus-circle"></i>
+              <span>Nuevo módulo de analytics avanzado con gráficos interactivos y exportación a PDF/Excel.</span>
+            </div>
+            <div class="changelog-entry new">
+              <i class="fas fa-plus-circle"></i>
+              <span>Soporte nativo para Apple Silicon M3 con optimización de rendimiento del 40%.</span>
+            </div>
+            <div class="changelog-entry improve">
+              <i class="fas fa-arrow-up"></i>
+              <span>Mejora del 60% en velocidad de carga del dashboard principal.</span>
+            </div>
+            <div class="changelog-entry fix">
+              <i class="fas fa-bug"></i>
+              <span>Corregido problema de sincronización en modo offline al reconectar.</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="changelog-item">
+          <div class="changelog-header">
+            <div class="changelog-version">v2.3.2</div>
+            <span class="changelog-tag stable">Estable</span>
+            <div class="changelog-date">15 de junio, 2026</div>
+          </div>
+          <div class="changelog-body">
+            <div class="changelog-entry improve">
+              <i class="fas fa-arrow-up"></i>
+              <span>Optimización del consumo de memoria RAM en un 25%.</span>
+            </div>
+            <div class="changelog-entry new">
+              <i class="fas fa-plus-circle"></i>
+              <span>Nuevos atajos de teclado personalizables para control de bots.</span>
+            </div>
+            <div class="changelog-entry fix">
+              <i class="fas fa-bug"></i>
+              <span>Corregido error de autenticación biométrica en Windows Hello.</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="changelog-item">
+          <div class="changelog-header">
+            <div class="changelog-version">v2.3.0</div>
+            <span class="changelog-tag stable">Estable</span>
+            <div class="changelog-date">28 de mayo, 2026</div>
+          </div>
+          <div class="changelog-body">
+            <div class="changelog-entry new">
+              <i class="fas fa-plus-circle"></i>
+              <span>Integración nativa con Oracle Database 23ai.</span>
+            </div>
+            <div class="changelog-entry new">
+              <i class="fas fa-plus-circle"></i>
+              <span>Terminal integrado para usuarios avanzados y administradores.</span>
+            </div>
+            <div class="changelog-entry improve">
+              <i class="fas fa-arrow-up"></i>
+              <span>Rediseño completo de la interfaz de gestión de bots RPA.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TESTIMONIALS -->
+  <section class="app-testimonials">
+    <div class="container">
+      <div class="section-header">
+        <div class="sec-eyebrow">Testimonios</div>
+        <h2 class="sec-title">Lo que dicen nuestros usuarios</h2>
+        <p class="sec-sub">Miles de profesionales enterprise ya usan Portal Pilot Desktop en su día a día.</p>
+      </div>
+
+      <div class="testimonials-grid">
+        <div class="testimonial-card">
+          <div class="testimonial-stars">
+            <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i
+              class="fas fa-star"></i>
+          </div>
+          <p class="testimonial-text">"La versión desktop es increíblemente rápida. Los atajos de teclado y la
+            multi-ventana me permiten gestionar 30+ bots simultáneamente sin perder el foco."</p>
+          <div class="testimonial-author">
+            <div class="testimonial-avatar">CM</div>
+            <div class="testimonial-info">
+              <div class="name">Carlos Mendoza</div>
+              <div class="role">CTO — TechCorp</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="testimonial-card">
+          <div class="testimonial-stars">
+            <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i
+              class="fas fa-star"></i>
+          </div>
+          <p class="testimonial-text">"El acceso al sistema de archivos y la terminal integrada son game changers. Puedo
+            ejecutar scripts locales y automatizar procesos complejos sin salir de la app."</p>
+          <div class="testimonial-author">
+            <div class="testimonial-avatar" style="background:linear-gradient(135deg,#10b981,#059669);">MR</div>
+            <div class="testimonial-info">
+              <div class="name">María Rodríguez</div>
+              <div class="role">CISO — FinanceLab</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="testimonial-card">
+          <div class="testimonial-stars">
+            <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i
+              class="fas fa-star"></i>
+          </div>
+          <p class="testimonial-text">"Probamos la versión web pero al pasar a desktop nuestro ROI se triplicó. Las
+            notificaciones nativas y el inicio automático hacen toda la diferencia."</p>
+          <div class="testimonial-author">
+            <div class="testimonial-avatar" style="background:linear-gradient(135deg,#f59e0b,#d97706);">JP</div>
+            <div class="testimonial-info">
+              <div class="name">Jorge Paredes</div>
+              <div class="role">COO — RetailPlus</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="app-faq" id="faq">
+    <div class="container">
+      <div class="section-header">
+        <div class="sec-eyebrow">FAQ</div>
+        <h2 class="sec-title">Preguntas sobre la app desktop</h2>
+        <p class="sec-sub">Todo lo que necesitas saber antes de instalar Portal Pilot en tu computadora.</p>
+      </div>
+
+      <div class="faq-list">
+        <div class="faq-item">
+          <div class="faq-q" onclick="toggleFaq(this)">
+            <div class="faq-q-text">¿La aplicación desktop es gratuita?</div>
+            <div class="faq-toggle"><i class="fas fa-plus"></i></div>
+          </div>
+          <div class="faq-a">Sí, la aplicación desktop es completamente gratuita para todos los usuarios de Portal Pilot
+            con cuenta enterprise activa. No hay compras dentro de la app ni suscripciones adicionales.</div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-q" onclick="toggleFaq(this)">
+            <div class="faq-q-text">¿Qué sistemas operativos son compatibles?</div>
+            <div class="faq-toggle"><i class="fas fa-plus"></i></div>
+          </div>
+          <div class="faq-a">Portal Pilot Desktop está disponible para Windows 10/11 (64-bit), macOS 12+ (incluyendo
+            Apple Silicon M1/M2/M3), y Linux (Ubuntu 20.04+, Fedora 36+, Debian 11+). La app está optimizada para
+            funcionar fluidamente incluso en hardware modesto.</div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-q" onclick="toggleFaq(this)">
+            <div class="faq-q-text">¿Puedo usar la app sin conexión a internet?</div>
+            <div class="faq-toggle"><i class="fas fa-plus"></i></div>
+          </div>
+          <div class="faq-a">Sí, Portal Pilot Desktop tiene un modo offline completo. Puedes consultar datos, revisar
+            logs, ejecutar bots locales y generar reportes sin conexión. Cuando recuperes internet, todo se sincroniza
+            automáticamente con tu portal.</div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-q" onclick="toggleFaq(this)">
+            <div class="faq-q-text">¿Cómo se actualiza la aplicación?</div>
+            <div class="faq-toggle"><i class="fas fa-plus"></i></div>
+          </div>
+          <div class="faq-a">La aplicación se actualiza automáticamente en segundo plano. Recibirás una notificación
+            cuando haya una nueva versión disponible, y puedes elegir instalarla inmediatamente o más tarde. Las
+            actualizaciones son delta (solo cambios), por lo que son muy rápidas.</div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-q" onclick="toggleFaq(this)">
+            <div class="faq-q-text">¿Mis datos están seguros en mi computadora?</div>
+            <div class="faq-toggle"><i class="fas fa-plus"></i></div>
+          </div>
+          <div class="faq-a">Absolutamente. La app utiliza cifrado AES-256 end-to-end, aprovecha la autenticación
+            biométrica nativa del sistema (Windows Hello, Touch ID) y Cyberyx Vantage. Ningún dato se almacena
+            localmente sin cifrar. Cumplimos con GDPR, SOC 2 e ISO 27001.</div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-q" onclick="toggleFaq(this)">
+            <div class="faq-q-text">¿Puedo tener la versión web y desktop al mismo tiempo?</div>
+            <div class="faq-toggle"><i class="fas fa-plus"></i></div>
+          </div>
+          <div class="faq-a">Sí, ambas versiones están sincronizadas en tiempo real. Puedes usar la versión web desde
+            cualquier navegador y la desktop en tu computadora simultáneamente. Todos los cambios se reflejan
+            instantáneamente en ambas plataformas.</div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-q" onclick="toggleFaq(this)">
+            <div class="faq-q-text">¿Cuánto espacio ocupa la aplicación?</div>
+            <div class="faq-toggle"><i class="fas fa-plus"></i></div>
+          </div>
+          <div class="faq-a">La instalación completa ocupa aproximadamente 150 MB en Windows, 142 MB en macOS y 156 MB
+            en Linux. Es increíblemente ligera gracias a nuestra arquitectura optimizada. No consume recursos
+            significativos en segundo plano.</div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-q" onclick="toggleFaq(this)">
+            <div class="faq-q-text">¿La app funciona con múltiples monitores?</div>
+            <div class="faq-toggle"><i class="fas fa-plus"></i></div>
+          </div>
+          <div class="faq-a">Sí, Portal Pilot Desktop soporta configuraciones multi-monitor. Puedes distribuir ventanas
+            de dashboard, bots y reportes en diferentes pantallas. Recuerda la posición de cada ventana al reiniciar la
+            aplicación.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA FINAL -->
+  <section class="app-cta">
+    <div class="container">
+      <h2>Lleva Portal Pilot <span>a tu escritorio.</span></h2>
+      <p>Descarga la aplicación desktop ahora y descubre el verdadero poder de la automatización enterprise. Disponible
+        para Windows, macOS y Linux.</p>
+
+      <div class="download-btns">
+        <a href="#" class="store-btn">
+          <i class="fab fa-windows" style="color:#0078d4;"></i>
+          <div class="store-text">
+            <small>Descargar para</small>
+            <strong>Windows</strong>
+          </div>
+        </a>
+        <a href="#" class="store-btn secondary">
+          <i class="fab fa-apple"></i>
+          <div class="store-text">
+            <small>Descargar para</small>
+            <strong>macOS</strong>
+          </div>
+        </a>
+        <a href="#" class="store-btn secondary">
+          <i class="fab fa-linux" style="color:#fbb824;"></i>
+          <div class="store-text">
+            <small>Descargar para</small>
+            <strong>Linux</strong>
+          </div>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="container">
+      <p>© 2026 Portal Pilot + Cyberyx Vantage · Made in Honduras 🇭🇳</p>
+      <p style="margin-top:8px;">
+        <a href="index.html">Inicio</a>·
+        <a href="#">Privacidad</a>·
+        <a href="#">Términos</a>·
+        <a href="#">Soporte</a>·
+        <a href="#changelog">Changelog</a>
+      </p>
+    </div>
+  </footer>
+
+  <script>
+    // FAQ toggle
+    function toggleFaq(btn) {
+      const item = btn.closest('.faq-item');
+      const isOpen = item.classList.contains('open');
+      document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('open'));
+      if (!isOpen) { item.classList.add('open'); }
+    }
+
+    // Smooth reveal on scroll
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.style.opacity = '1';
+          entry.target.style.transform = 'translateY(0)';
+        }
+      });
+    }, { threshold: 0.1 });
+
+    document.querySelectorAll('.feature-card, .testimonial-card, .screenshot-item, .integration-card, .req-card, .changelog-item').forEach(el => {
+      el.style.opacity = '0';
+      el.style.transform = 'translateY(20px)';
+      el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+      observer.observe(el);
+    });
+
+    // Detect OS and highlight appropriate download button
+    (function () {
+      const ua = navigator.userAgent.toLowerCase();
+      let detectedOS = null;
+      if (ua.includes('win')) detectedOS = 'windows';
+      else if (ua.includes('mac')) detectedOS = 'macos';
+      else if (ua.includes('linux')) detectedOS = 'linux';
+
+      if (detectedOS) {
+        const heroBtns = document.querySelectorAll('.app-hero .store-btn');
+        heroBtns.forEach(btn => {
+          const text = btn.textContent.toLowerCase();
+          if (text.includes(detectedOS === 'macos' ? 'macos' : detectedOS)) {
+            btn.classList.remove('secondary');
+            btn.style.boxShadow = '0 0 0 2px var(--accent-soft)';
+          } else {
+            btn.classList.add('secondary');
+          }
+        });
+      }
+    })();
+  </script>
+
+</body>
+
+</html>

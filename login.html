@@ -1774,8 +1774,7 @@
             localStorage.removeItem('pendingEmail');
             showMessage('Acceso concedido. Redirigiendo...', 'success');
             setTimeout(() => {
-              const targetPage = normalizedEmpresa && normalizedEmpresa !== 'ROOT' ? 'enterprise/inicio.html' : 'inicio.html';
-              window.location.href = targetPage;
+              window.location.href = 'pp/welcome.html';
             }, 1200);
           }
         } else {

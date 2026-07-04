@@ -200,7 +200,7 @@
         const storedTenantName = localStorage.getItem('empresaNombre') || null;
         
         let tenantName = "Portal Pilot";
-        let targetPath = "../inicio.html";
+        let targetPath = "dashboard.html";
         
         if (storedTenant.toUpperCase() !== "ROOT" && storedTenant.trim() !== "") {
             tenantName = storedTenantName || storedTenant; // Usar el nombre real si existe

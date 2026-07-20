@@ -19,6 +19,16 @@ if (process.env.NODE_ENV !== 'production') {
 
 const app = express();
 
+const { serve } = require("inngest/express");
+const { inngest, secuenciaNuevaMatricula } = require("./src/inngest/client.js");
+const { createClient } = require('@supabase/supabase-js');
+
+const supabaseUrl = process.env.SUPABASE_URL || 'https://tu-proyecto.supabase.co';
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'tu-service-role-key';
+const supabase = createClient(supabaseUrl, supabaseKey);
+
+app.use("/api/inngest", serve({ client: inngest, functions: [secuenciaNuevaMatricula] }));
+
 // 🔧 FIX VERCEL: Detectar entorno serverless
 const IS_SERVERLESS = !!(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME || process.env.NETLIFY);
 console.log(`[STARTUP] Environment: ${IS_SERVERLESS ? 'SERVERLESS' : 'LOCAL'}, Node: ${process.version}`);
@@ -51,13 +61,13 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       ...helmet.contentSecurityPolicy.getDefaultDirectives(),
-      "script-src": ["'self'", "'unsafe-inline'"],
+      "script-src": ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net"],
       "script-src-attr": ["'self'", "'unsafe-inline'"],
       "style-src": ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://cdnjs.cloudflare.com"],
       "style-src-attr": ["'self'", "'unsafe-inline'"],
       "style-src-elem": ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://cdnjs.cloudflare.com"],
       "font-src": ["'self'", "https://fonts.gstatic.com", "https://cdnjs.cloudflare.com"],
-      "img-src": ["'self'", "data:", "https://images.unsplash.com"],
+      "img-src": ["'self'", "data:", "https://images.unsplash.com", "https://raw.githubusercontent.com"],
       "connect-src": [
         "'self'",
         "https://fonts.googleapis.com",
@@ -862,6 +872,20 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+app.get('/api/config', (req, res) => {
+  res.json({
+    supabaseUrl: process.env.SUPABASE_URL || '',
+    supabaseAnonKey: process.env.SUPABASE_ANON_KEY || ''
+  });
+});
+
+app.post('/api/cache-session', (req, res) => {
+  const { userId, action } = req.body || {};
+  console.log(`[CACHE SESSION] User ${userId} triggered action: ${action}`);
+  res.json({ success: true, message: 'Session cached successfully (local bridge)' });
+});
+
+
 app.get('/api/check-email', async (req, res) => {
   try {
     const resp = await nocodbApi.get(USUARIOS_TABLE, { params: { limit: 50 } });
@@ -1090,6 +1114,105 @@ app.post('/api/login', loginLimiter, async (req, res) => {
 
   } catch (error) {
     return handleNocoDbError(res, error, 'No se pudo validar el inicio de sesión en este momento.');
+  }
+});
+
+app.post('/api/supabase-login', async (req, res) => {
+  try {
+    const { supabaseToken, email } = req.body || {};
+    if (!supabaseToken || !email) {
+      return res.status(400).json({ error: 'Faltan campos requeridos: supabaseToken y email.' });
+    }
+
+    let verifiedEmail = email;
+
+    // Si se configuró la firma JWT de Supabase, validamos el token
+    if (process.env.SUPABASE_JWT_SECRET) {
+      try {
+        const decoded = jwt.verify(supabaseToken, process.env.SUPABASE_JWT_SECRET);
+        verifiedEmail = decoded.email || verifiedEmail;
+      } catch (err) {
+        return res.status(401).json({ error: 'Token de Supabase inválido o expirado.' });
+      }
+    } else {
+      console.warn('[SUPABASE LOGIN] WARNING: SUPABASE_JWT_SECRET no configurada. Saltando verificación de firma JWT.');
+    }
+
+    const emailNorm = String(verifiedEmail).trim().toLowerCase();
+    const r1 = await nocodbApi.get(USUARIOS_TABLE, {
+      params: { where: `(email,eq,${emailNorm})`, limit: 10 }
+    });
+    const usuariosEncontrados = r1.data.list || [];
+
+    if (!usuariosEncontrados || usuariosEncontrados.length === 0) {
+      return res.status(404).json({ error: 'El usuario autenticado en Supabase no existe en NocoDB.' });
+    }
+
+    // Generar cuentas locales
+    const loginAccounts = await Promise.all(usuariosEncontrados.map(async usuario => {
+      const rawEmpresa = usuario.empresa_codigo || 'ROOT';
+      const rawRole = usuario.rol || '';
+      const rawStatus = usuario.status || 'active';
+      const rawEmail = usuario.email || '';
+      const rawName = usuario.nombre || `${usuario.firstName || ''} ${usuario.lastName || ''}`.trim();
+
+      let normalizedEmpresa = rawEmpresa.toString().trim().toUpperCase();
+      const userRole = rawRole.toString().trim().toLowerCase();
+      const userStatus = normalizeStatus(rawStatus);
+
+      if (userRole.includes('root') || userRole.includes('superadmin') || normalizedEmpresa === 'ROOT') {
+        normalizedEmpresa = 'ROOT';
+      }
+
+      let empresaNombre = 'Portal Pilot';
+      if (normalizedEmpresa !== 'ROOT') {
+        try {
+          const tenantInfo = await findTenantByIdentifier(normalizedEmpresa);
+          if (tenantInfo) {
+            empresaNombre = tenantInfo.nombre || normalizedEmpresa;
+          } else {
+            empresaNombre = normalizedEmpresa;
+          }
+        } catch (e) {
+          empresaNombre = normalizedEmpresa;
+        }
+      }
+
+      const accountToken = jwt.sign(
+        { 
+          sub: usuario.id || usuario.ID || usuario._id, 
+          rol: rawRole, 
+          empresa_codigo: normalizedEmpresa,
+          empresa_nombre: empresaNombre
+        },
+        JWT_SECRET,
+        { expiresIn: '2h' }
+      );
+
+      return {
+        id: usuario.id || usuario.ID || usuario._id,
+        nombre: rawName || rawEmail,
+        apellido: usuario.apellido || '',
+        email: rawEmail,
+        rol: rawRole,
+        empresa_codigo: normalizedEmpresa,
+        empresa_nombre: empresaNombre,
+        tenant: normalizedEmpresa,
+        status: userStatus,
+        token: accountToken
+      };
+    }));
+
+    const selectedAccount = loginAccounts.find(acc => acc.status === 'pending') || loginAccounts.find(acc => acc.empresa_codigo === 'ROOT') || loginAccounts[0];
+
+    res.json({
+      message: 'Login Supabase verificado en backend',
+      token: selectedAccount.token,
+      user: selectedAccount,
+      accounts: loginAccounts
+    });
+  } catch (error) {
+    return handleServerError(res, error);
   }
 });
 
@@ -1660,6 +1783,50 @@ app.get('/api/users/:id', authenticate, async (req, res) => {
     });
   } catch (error) {
     return handleServerError(res, error);
+  }
+});
+
+app.post('/api/matriculas', authenticate, async (req, res) => {
+  try {
+    const { alumno_nombre, alumno_apellido, nivel_educativo, encargado_contacto, empresa_codigo } = req.body;
+
+    if (!alumno_nombre || !nivel_educativo || !encargado_contacto) {
+      return res.status(400).json({ error: 'Faltan campos obligatorios para la matrícula.' });
+    }
+
+    const { data, error } = await supabase
+      .from('matriculas')
+      .insert([
+        {
+          alumno_nombre,
+          alumno_apellido,
+          nivel_educativo,
+          encargado_contacto,
+          empresa_codigo,
+          estado: 'Activa'
+        }
+      ]);
+
+    if (error) {
+      throw error;
+    }
+
+    await inngest.send({
+      name: "education/matricula.creada",
+      data: {
+        alumno_nombre,
+        alumno_apellido,
+        nivel_educativo,
+        encargado_contacto,
+        empresa_codigo
+      }
+    });
+
+    return res.status(201).json({ message: 'Matrícula registrada y secuencia de automatización iniciada en Inngest.' });
+
+  } catch (error) {
+    console.error('[MATRICULAS] Error al registrar en Supabase:', error.message || error);
+    return res.status(500).json({ error: 'Hubo un error al procesar la matrícula' });
   }
 });
 

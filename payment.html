@@ -1,0 +1,2314 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pagos — Portal Pilot</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    *,
+    *::before,
+    *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg: #000000;
+      --bg-soft: #0a0a0c;
+      --surface: #111114;
+      --surface-2: #16161a;
+      --border: rgba(255, 255, 255, 0.08);
+      --border-strong: rgba(255, 255, 255, 0.14);
+      --accent: #8b5cf6;
+      --accent-soft: #a78bfa;
+      --accent-glow: rgba(139, 92, 246, 0.25);
+      --white: #f5f5f7;
+      --text: #d2d2d7;
+      --text-dim: #86868b;
+      --text-muted: #6e6e73;
+      --green: #30d158;
+      --red: #ff453a;
+      --blue: #0a84ff;
+      --yellow: #ff9f0a;
+      --radius: 12px;
+      --radius-lg: 20px;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      font-size: 16px;
+    }
+
+    body {
+      font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow-x: hidden;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    a {
+      text-decoration: none;
+      color: inherit;
+    }
+
+    ul {
+      list-style: none;
+    }
+
+    button {
+      font-family: inherit;
+      cursor: pointer;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 clamp(16px, 4vw, 40px);
+    }
+
+    /* ─── FONDO SUTIL ────────────────────────────────────── */
+    .page-bg {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background:
+        radial-gradient(ellipse 80% 60% at 50% 0%, rgba(139, 92, 246, 0.06) 0%, transparent 50%),
+        radial-gradient(ellipse 60% 50% at 50% 100%, rgba(167, 139, 250, 0.03) 0%, transparent 60%);
+    }
+
+    /* ─── NAV ───────────────────────────────────────────── */
+    header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      padding: 0 clamp(16px, 4vw, 40px);
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    nav {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      height: 56px;
+      gap: 0;
+    }
+
+    .nav-logo {
+      font-family: 'Syne', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--white);
+      letter-spacing: 1.5px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .nav-logo .logo-icon {
+      width: 28px;
+      height: 28px;
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-soft) 100%);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      color: #fff;
+    }
+
+    .nav-back {
+      margin-left: auto;
+      font-size: 13px;
+      color: var(--text-dim);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: color .2s;
+    }
+
+    .nav-back:hover {
+      color: var(--white);
+    }
+
+    .nav-secure {
+      margin-left: 16px;
+      padding: 6px 14px;
+      border-radius: 40px;
+      background: rgba(48, 209, 88, 0.1);
+      border: 1px solid rgba(48, 209, 88, 0.2);
+      color: var(--green);
+      font-size: 11px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* ─── HERO ──────────────────────────────────────────── */
+    .checkout-hero {
+      padding: 120px 0 40px;
+      text-align: center;
+      position: relative;
+      z-index: 1;
+    }
+
+    .checkout-hero .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 40px;
+      padding: 7px 18px;
+      font-size: 11px;
+      color: var(--text-dim);
+      margin-bottom: 20px;
+      font-weight: 500;
+      letter-spacing: .5px;
+    }
+
+    .checkout-hero .eyebrow i {
+      color: var(--green);
+    }
+
+    .checkout-hero h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(32px, 5vw, 48px);
+      font-weight: 700;
+      color: var(--white);
+      letter-spacing: -1.5px;
+      line-height: 1.1;
+      margin-bottom: 12px;
+    }
+
+    .checkout-hero h1 span {
+      background: linear-gradient(135deg, var(--white) 30%, var(--accent-soft));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .checkout-hero p {
+      font-size: 15px;
+      color: var(--text-dim);
+      max-width: 520px;
+      margin: 0 auto;
+    }
+
+    /* ─── PROGRESS STEPS ───────────────────────────────── */
+    .progress-steps {
+      max-width: 720px;
+      margin: 40px auto 0;
+      display: flex;
+      align-items: center;
+      gap: 0;
+    }
+
+    .progress-step {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex: 1;
+    }
+
+    .progress-dot {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--surface);
+      border: 1px solid var(--border-strong);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Syne', sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-muted);
+      flex-shrink: 0;
+      transition: all .3s;
+    }
+
+    .progress-step.active .progress-dot {
+      background: var(--white);
+      color: #000;
+      border-color: var(--white);
+      box-shadow: 0 0 0 4px rgba(245, 245, 247, 0.1);
+    }
+
+    .progress-step.done .progress-dot {
+      background: var(--green);
+      color: #000;
+      border-color: var(--green);
+    }
+
+    .progress-info {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    .progress-info .label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--white);
+    }
+
+    .progress-info .sub {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .progress-step:not(.active) .progress-info .label {
+      color: var(--text-dim);
+    }
+
+    .progress-line {
+      flex: 1;
+      height: 1px;
+      background: var(--border-strong);
+      margin: 0 8px;
+      transition: background .3s;
+    }
+
+    .progress-line.done {
+      background: var(--green);
+    }
+
+    /* ─── CHECKOUT LAYOUT ──────────────────────────────── */
+    .checkout-layout {
+      display: grid;
+      grid-template-columns: 1.4fr 1fr;
+      gap: 32px;
+      padding: 60px 0 100px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ─── MAIN COLUMN ──────────────────────────────────── */
+    .checkout-main {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .section-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 28px;
+      transition: border-color .3s;
+    }
+
+    .section-card:hover {
+      border-color: var(--border-strong);
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .section-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: rgba(139, 92, 246, 0.1);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      color: var(--accent-soft);
+      flex-shrink: 0;
+    }
+
+    .section-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--white);
+    }
+
+    .section-sub {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    /* ─── PLAN SELECTOR ────────────────────────────────── */
+    .plan-options {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .plan-option {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px 16px;
+      cursor: pointer;
+      transition: all .25s;
+      position: relative;
+      text-align: center;
+    }
+
+    .plan-option:hover {
+      border-color: var(--border-strong);
+      transform: translateY(-2px);
+    }
+
+    .plan-option.selected {
+      border-color: var(--accent-soft);
+      background: rgba(139, 92, 246, 0.08);
+      box-shadow: 0 0 0 1px var(--accent-soft);
+    }
+
+    .plan-option.selected::before {
+      content: '\f00c';
+      font-family: 'Font Awesome 6 Free';
+      font-weight: 900;
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+    }
+
+    .plan-option .plan-name {
+      font-family: 'Syne', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--white);
+      margin-bottom: 6px;
+    }
+
+    .plan-option .plan-price {
+      font-family: 'Syne', sans-serif;
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--white);
+      margin-bottom: 4px;
+    }
+
+    .plan-option .plan-price sup {
+      font-size: 12px;
+      font-weight: 600;
+      vertical-align: top;
+    }
+
+    .plan-option .plan-price .period {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 400;
+    }
+
+    .plan-option .plan-desc {
+      font-size: 11px;
+      color: var(--text-dim);
+      line-height: 1.5;
+    }
+
+    .plan-option.featured {
+      border-color: var(--accent);
+      background: rgba(139, 92, 246, 0.05);
+    }
+
+    .plan-option.featured .plan-name::after {
+      content: 'POPULAR';
+      display: inline-block;
+      margin-left: 6px;
+      padding: 2px 6px;
+      background: var(--accent);
+      color: #fff;
+      font-size: 8px;
+      font-weight: 700;
+      border-radius: 4px;
+      vertical-align: middle;
+      letter-spacing: 0.5px;
+    }
+
+    /* Billing toggle */
+    .billing-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 12px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+    }
+
+    .billing-toggle span {
+      font-size: 13px;
+      color: var(--text-dim);
+      font-weight: 500;
+    }
+
+    .billing-toggle span.active {
+      color: var(--white);
+    }
+
+    .toggle-switch {
+      width: 44px;
+      height: 24px;
+      background: var(--surface);
+      border: 1px solid var(--border-strong);
+      border-radius: 20px;
+      position: relative;
+      cursor: pointer;
+      transition: background .2s;
+    }
+
+    .toggle-switch::after {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 18px;
+      height: 18px;
+      background: var(--white);
+      border-radius: 50%;
+      transition: transform .2s;
+    }
+
+    .toggle-switch.active {
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+
+    .toggle-switch.active::after {
+      transform: translateX(20px);
+    }
+
+    .billing-save {
+      font-size: 10px;
+      color: var(--green);
+      font-weight: 600;
+      padding: 2px 8px;
+      background: rgba(48, 209, 88, 0.1);
+      border-radius: 10px;
+    }
+
+    /* ─── FORM FIELDS ──────────────────────────────────── */
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .form-grid .full {
+      grid-column: span 2;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .field label {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-dim);
+      letter-spacing: 0.3px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .field label .required {
+      color: var(--red);
+      font-size: 10px;
+    }
+
+    .input-wrap {
+      position: relative;
+    }
+
+    .input-wrap i.field-icon {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 13px;
+      color: var(--text-muted);
+      pointer-events: none;
+      transition: color .2s;
+    }
+
+    .input-wrap input,
+    .input-wrap select {
+      width: 100%;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 14px 12px 40px;
+      font-size: 13px;
+      color: var(--white);
+      font-family: inherit;
+      outline: none;
+      transition: border-color .2s, background .2s;
+    }
+
+    .input-wrap input::placeholder {
+      color: var(--text-muted);
+    }
+
+    .input-wrap input:focus,
+    .input-wrap select:focus {
+      border-color: var(--accent-soft);
+      background: var(--surface);
+    }
+
+    .input-wrap input:focus+i.field-icon {
+      color: var(--accent-soft);
+    }
+
+    .input-wrap select {
+      appearance: none;
+      cursor: pointer;
+    }
+
+    .input-wrap .select-arrow {
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 10px;
+      color: var(--text-muted);
+      pointer-events: none;
+    }
+
+    .field-hint {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 4px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .field-hint i {
+      font-size: 10px;
+      color: var(--accent-soft);
+    }
+
+    /* ─── PAYMENT METHODS ──────────────────────────────── */
+    .payment-methods {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .payment-method {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 16px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: all .2s;
+    }
+
+    .payment-method:hover {
+      border-color: var(--border-strong);
+    }
+
+    .payment-method.selected {
+      border-color: var(--accent-soft);
+      background: rgba(139, 92, 246, 0.06);
+    }
+
+    .payment-method input[type="radio"] {
+      display: none;
+    }
+
+    .payment-radio {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      border: 2px solid var(--border-strong);
+      position: relative;
+      flex-shrink: 0;
+      transition: border-color .2s;
+    }
+
+    .payment-method.selected .payment-radio {
+      border-color: var(--accent-soft);
+    }
+
+    .payment-method.selected .payment-radio::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--accent-soft);
+    }
+
+    .payment-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    .payment-icon.visa {
+      color: #1a1f71;
+      background: #fff;
+    }
+
+    .payment-icon.mastercard {
+      color: #eb001b;
+      background: #fff;
+    }
+
+    .payment-icon.transfer {
+      color: var(--blue);
+    }
+
+    .payment-icon.paypal {
+      color: #003087;
+      background: #fff;
+    }
+
+    .payment-icon.crypto {
+      color: #f7931a;
+    }
+
+    .payment-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .payment-info .name {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--white);
+      margin-bottom: 2px;
+    }
+
+    .payment-info .desc {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .payment-badge {
+      font-size: 9px;
+      padding: 3px 8px;
+      border-radius: 10px;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+      text-transform: uppercase;
+      flex-shrink: 0;
+    }
+
+    .payment-badge.recommended {
+      background: rgba(48, 209, 88, 0.15);
+      color: var(--green);
+    }
+
+    .payment-badge.instant {
+      background: rgba(10, 132, 255, 0.15);
+      color: var(--blue);
+    }
+
+    /* Card form */
+    .card-form {
+      display: none;
+      padding: 20px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin-top: 16px;
+      animation: fadeIn .3s ease;
+    }
+
+    .card-form.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(-8px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .card-preview {
+      width: 100%;
+      max-width: 340px;
+      aspect-ratio: 1.586;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      border-radius: 14px;
+      padding: 20px;
+      margin: 0 auto 20px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+    }
+
+    .card-preview::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      right: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(139, 92, 246, 0.15) 0%, transparent 50%);
+      pointer-events: none;
+    }
+
+    .card-chip {
+      width: 36px;
+      height: 28px;
+      background: linear-gradient(135deg, #d4af37, #f9d423);
+      border-radius: 5px;
+      margin-bottom: 16px;
+      position: relative;
+    }
+
+    .card-chip::after {
+      content: '';
+      position: absolute;
+      inset: 4px;
+      border: 1px solid rgba(0, 0, 0, 0.2);
+      border-radius: 3px;
+    }
+
+    .card-number {
+      font-family: monospace;
+      font-size: 16px;
+      color: var(--white);
+      letter-spacing: 2px;
+      margin-bottom: 16px;
+    }
+
+    .card-bottom {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+    }
+
+    .card-holder {
+      font-size: 10px;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .card-holder .name {
+      font-size: 12px;
+      color: var(--white);
+      margin-top: 2px;
+    }
+
+    .card-expiry {
+      font-size: 10px;
+      color: var(--text-dim);
+      text-align: right;
+    }
+
+    .card-expiry .date {
+      font-size: 12px;
+      color: var(--white);
+      margin-top: 2px;
+    }
+
+    .card-brand {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      font-size: 24px;
+      color: var(--white);
+    }
+
+    /* Transfer info */
+    .transfer-info {
+      display: none;
+      padding: 20px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin-top: 16px;
+      animation: fadeIn .3s ease;
+    }
+
+    .transfer-info.active {
+      display: block;
+    }
+
+    .transfer-bank {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      margin-bottom: 12px;
+    }
+
+    .transfer-bank-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      background: rgba(10, 132, 255, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--blue);
+      font-size: 16px;
+    }
+
+    .transfer-bank-info {
+      flex: 1;
+    }
+
+    .transfer-bank-info .name {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--white);
+    }
+
+    .transfer-bank-info .desc {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .transfer-details {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .transfer-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 12px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+
+    .transfer-row .label {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .transfer-row .value {
+      font-size: 12px;
+      color: var(--white);
+      font-weight: 500;
+      font-family: monospace;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .copy-btn {
+      background: none;
+      border: none;
+      color: var(--accent-soft);
+      cursor: pointer;
+      font-size: 11px;
+      padding: 2px;
+      transition: color .2s;
+    }
+
+    .copy-btn:hover {
+      color: var(--white);
+    }
+
+    .transfer-note {
+      margin-top: 12px;
+      padding: 10px 12px;
+      background: rgba(255, 159, 10, 0.08);
+      border: 1px solid rgba(255, 159, 10, 0.2);
+      border-radius: 8px;
+      font-size: 11px;
+      color: var(--yellow);
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .transfer-note i {
+      margin-top: 1px;
+      flex-shrink: 0;
+    }
+
+    /* ─── SIDEBAR ──────────────────────────────────────── */
+    .checkout-sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      position: sticky;
+      top: 80px;
+      align-self: start;
+    }
+
+    .summary-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+    }
+
+    .summary-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 20px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .summary-header i {
+      color: var(--accent-soft);
+      font-size: 16px;
+    }
+
+    .summary-header h3 {
+      font-family: 'Syne', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--white);
+    }
+
+    .summary-plan {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      padding: 12px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      margin-bottom: 16px;
+    }
+
+    .summary-plan-info .name {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--white);
+      margin-bottom: 2px;
+    }
+
+    .summary-plan-info .billing {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .summary-plan .change-link {
+      font-size: 11px;
+      color: var(--accent-soft);
+      cursor: pointer;
+      transition: color .2s;
+    }
+
+    .summary-plan .change-link:hover {
+      color: var(--white);
+    }
+
+    .summary-rows {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13px;
+    }
+
+    .summary-row .label {
+      color: var(--text-dim);
+    }
+
+    .summary-row .value {
+      color: var(--white);
+      font-weight: 500;
+    }
+
+    .summary-row.discount .value {
+      color: var(--green);
+    }
+
+    .summary-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 8px 0;
+    }
+
+    .summary-total {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 0;
+    }
+
+    .summary-total .label {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--white);
+    }
+
+    .summary-total .amount {
+      font-family: 'Syne', sans-serif;
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--white);
+      letter-spacing: -1px;
+    }
+
+    .summary-total .amount sup {
+      font-size: 14px;
+      font-weight: 600;
+      vertical-align: top;
+    }
+
+    .summary-total .amount .period {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 400;
+    }
+
+    .summary-tax {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-align: right;
+      margin-top: -8px;
+      margin-bottom: 16px;
+    }
+
+    /* Promo code */
+    .promo-section {
+      padding: 12px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      margin-bottom: 16px;
+    }
+
+    .promo-input-wrap {
+      display: flex;
+      gap: 8px;
+    }
+
+    .promo-input-wrap input {
+      flex: 1;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-size: 12px;
+      color: var(--white);
+      font-family: inherit;
+      outline: none;
+      transition: border-color .2s;
+    }
+
+    .promo-input-wrap input::placeholder {
+      color: var(--text-muted);
+    }
+
+    .promo-input-wrap input:focus {
+      border-color: var(--accent-soft);
+    }
+
+    .promo-apply-btn {
+      padding: 10px 16px;
+      border-radius: 8px;
+      background: var(--white);
+      color: #000;
+      font-size: 12px;
+      font-weight: 500;
+      border: none;
+      transition: all .2s;
+    }
+
+    .promo-apply-btn:hover {
+      background: #e8e8ed;
+    }
+
+    /* Pay button */
+    .pay-btn {
+      width: 100%;
+      padding: 16px;
+      border-radius: 40px;
+      background: var(--white);
+      color: #000;
+      font-size: 15px;
+      font-weight: 600;
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      transition: all .25s;
+      margin-bottom: 12px;
+    }
+
+    .pay-btn:hover {
+      background: #e8e8ed;
+      transform: scale(1.01);
+      box-shadow: 0 10px 30px rgba(255, 255, 255, 0.1);
+    }
+
+    .pay-btn:active {
+      transform: scale(0.99);
+    }
+
+    .pay-btn i {
+      font-size: 14px;
+    }
+
+    .pay-secure {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+    }
+
+    .pay-secure span {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .pay-secure i {
+      color: var(--green);
+      font-size: 10px;
+    }
+
+    .payment-logos {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+    }
+
+    .payment-logo {
+      width: 40px;
+      height: 26px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      color: var(--text-dim);
+    }
+
+    /* Guarantees */
+    .guarantees {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .guarantee-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-size: 12px;
+      color: var(--text-dim);
+    }
+
+    .guarantee-item i {
+      color: var(--green);
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+
+    .guarantee-item strong {
+      color: var(--white);
+      font-weight: 600;
+    }
+
+    /* ─── TERMS ────────────────────────────────────────── */
+    .terms-section {
+      padding: 16px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin-top: 8px;
+    }
+
+    .terms-check {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .terms-check input {
+      margin-top: 2px;
+      accent-color: var(--accent);
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .terms-check label {
+      font-size: 12px;
+      color: var(--text-dim);
+      line-height: 1.6;
+      cursor: pointer;
+    }
+
+    .terms-check label a {
+      color: var(--accent-soft);
+      text-decoration: underline;
+    }
+
+    .terms-text {
+      font-size: 11px;
+      color: var(--text-muted);
+      line-height: 1.6;
+      padding: 12px;
+      background: var(--surface-2);
+      border-radius: 8px;
+      max-height: 120px;
+      overflow-y: auto;
+    }
+
+    .terms-text::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    .terms-text::-webkit-scrollbar-thumb {
+      background: var(--border-strong);
+      border-radius: 2px;
+    }
+
+    /* ─── FAQ SECTION ──────────────────────────────────── */
+    .faq-section {
+      padding: 80px 0;
+      background: var(--bg-soft);
+      position: relative;
+      z-index: 1;
+    }
+
+    .faq-list {
+      max-width: 800px;
+      margin: 40px auto 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+
+    .faq-item {
+      border-bottom: 1px solid var(--border);
+    }
+
+    .faq-item:last-child {
+      border-bottom: none;
+    }
+
+    .faq-q {
+      padding: 20px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      cursor: pointer;
+      transition: background .2s;
+    }
+
+    .faq-q:hover {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .faq-q-text {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--white);
+    }
+
+    .faq-toggle {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: var(--surface-2);
+      border: 1px solid var(--border-strong);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      color: var(--text-dim);
+      transition: all .3s;
+      flex-shrink: 0;
+    }
+
+    .faq-item.open .faq-toggle {
+      background: var(--white);
+      color: #000;
+      border-color: var(--white);
+      transform: rotate(45deg);
+    }
+
+    .faq-a {
+      font-size: 13px;
+      color: var(--text-dim);
+      line-height: 1.7;
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height .4s ease, padding .4s ease;
+      padding: 0 24px;
+    }
+
+    .faq-item.open .faq-a {
+      max-height: 300px;
+      padding-bottom: 20px;
+    }
+
+    /* ─── FOOTER ─────────────────────────────────────────── */
+    footer {
+      padding: 40px 0;
+      border-top: 1px solid var(--border);
+      text-align: center;
+      position: relative;
+      z-index: 1;
+    }
+
+    footer p {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    footer a {
+      color: var(--text-dim);
+      margin: 0 8px;
+      transition: color .2s;
+    }
+
+    footer a:hover {
+      color: var(--white);
+    }
+
+    /* ─── RESPONSIVE ─────────────────────────────────────── */
+    @media (max-width: 900px) {
+      .checkout-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .checkout-sidebar {
+        position: static;
+        order: -1;
+      }
+
+      .plan-options {
+        grid-template-columns: 1fr;
+      }
+
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .form-grid .full {
+        grid-column: span 1;
+      }
+
+      .progress-steps {
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .progress-line {
+        display: none;
+      }
+
+      .progress-info {
+        display: none;
+      }
+
+      .nav-secure {
+        display: none;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .section-card {
+        padding: 20px;
+      }
+
+      .card-preview {
+        max-width: 100%;
+      }
+
+      .pay-secure {
+        flex-direction: column;
+        gap: 8px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="page-bg"></div>
+
+  <!-- NAV -->
+  <header>
+    <nav>
+      <a href="index.html" class="nav-logo">
+        <div class="logo-icon"><i class="fas fa-robot"></i></div>
+        PORTAL PILOT
+      </a>
+      <a href="index.html" class="nav-back">
+        <i class="fas fa-arrow-left" style="font-size:11px;"></i> Volver al inicio
+      </a>
+      <div class="nav-secure">
+        <i class="fas fa-lock"></i> Pago seguro
+      </div>
+    </nav>
+  </header>
+
+  <!-- HERO -->
+  <section class="checkout-hero container">
+    <div class="eyebrow">
+      <i class="fas fa-circle-check"></i> Checkout seguro con Cyberyx Vantage
+    </div>
+    <h1>Finaliza tu <span>suscripción</span></h1>
+    <p>Completa los siguientes pasos para activar tu portal enterprise. Todos los pagos están protegidos con cifrado
+      AES-256.</p>
+
+    <!-- Progress Steps -->
+    <div class="progress-steps">
+      <div class="progress-step active">
+        <div class="progress-dot">1</div>
+        <div class="progress-info">
+          <div class="label">Plan</div>
+          <div class="sub">Selecciona tu plan</div>
+        </div>
+      </div>
+      <div class="progress-line"></div>
+      <div class="progress-step">
+        <div class="progress-dot">2</div>
+        <div class="progress-info">
+          <div class="label">Facturación</div>
+          <div class="sub">Datos fiscales</div>
+        </div>
+      </div>
+      <div class="progress-line"></div>
+      <div class="progress-step">
+        <div class="progress-dot">3</div>
+        <div class="progress-info">
+          <div class="label">Pago</div>
+          <div class="sub">Método de pago</div>
+        </div>
+      </div>
+      <div class="progress-line"></div>
+      <div class="progress-step">
+        <div class="progress-dot">4</div>
+        <div class="progress-info">
+          <div class="label">Confirmar</div>
+          <div class="sub">Revisar y pagar</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CHECKOUT LAYOUT -->
+  <div class="container">
+    <div class="checkout-layout">
+
+      <!-- MAIN COLUMN -->
+      <div class="checkout-main">
+
+        <!-- 1. PLAN SELECTION -->
+        <div class="section-card">
+          <div class="section-header">
+            <div class="section-icon"><i class="fas fa-layer-group"></i></div>
+            <div>
+              <div class="section-title">Selecciona tu plan</div>
+              <div class="section-sub">Elige el plan que mejor se adapte a tu empresa</div>
+            </div>
+          </div>
+
+          <div class="plan-options">
+            <div class="plan-option" onclick="selectPlan('startup', this)">
+              <div class="plan-name">Startup</div>
+              <div class="plan-price"><sup>L</sup>299<span class="period">/mes</span></div>
+              <div class="plan-desc">Hasta 5 automatizaciones · IA básica</div>
+            </div>
+            <div class="plan-option featured selected" onclick="selectPlan('business', this)">
+              <div class="plan-name">Business</div>
+              <div class="plan-price"><sup>L</sup>899<span class="period">/mes</span></div>
+              <div class="plan-desc">Hasta 25 automatizaciones · IA dedicada</div>
+            </div>
+            <div class="plan-option" onclick="selectPlan('enterprise', this)">
+              <div class="plan-name">Enterprise</div>
+              <div class="plan-price">Custom</div>
+              <div class="plan-desc">Ilimitadas · Cluster propio · CSM dedicado</div>
+            </div>
+          </div>
+
+          <div class="billing-toggle">
+            <span class="active" id="monthlyLabel">Mensual</span>
+            <div class="toggle-switch" id="billingToggle" onclick="toggleBilling()"></div>
+            <span id="yearlyLabel">Anual</span>
+            <span class="billing-save">Ahorra 20%</span>
+          </div>
+        </div>
+
+        <!-- 2. BILLING INFO -->
+        <div class="section-card">
+          <div class="section-header">
+            <div class="section-icon"><i class="fas fa-building"></i></div>
+            <div>
+              <div class="section-title">Información de facturación</div>
+              <div class="section-sub">Datos fiscales para tu factura electrónica</div>
+            </div>
+          </div>
+
+          <div class="form-grid">
+            <div class="field full">
+              <label>Razón social <span class="required">*</span></label>
+              <div class="input-wrap">
+                <i class="fas fa-building field-icon"></i>
+                <input type="text" placeholder="Nombre legal de la empresa">
+              </div>
+            </div>
+
+            <div class="field">
+              <label>RTN (Registro Tributario Nacional) <span class="required">*</span></label>
+              <div class="input-wrap">
+                <i class="fas fa-id-card field-icon"></i>
+                <input type="text" placeholder="0000-000000-000-0" maxlength="17">
+              </div>
+              <div class="field-hint">
+                <i class="fas fa-info-circle"></i>
+                Formato: 0000-000000-000-0
+              </div>
+            </div>
+
+            <div class="field">
+              <label>CAI (si aplica)</label>
+              <div class="input-wrap">
+                <i class="fas fa-barcode field-icon"></i>
+                <input type="text" placeholder="Código de autorización">
+              </div>
+            </div>
+
+            <div class="field full">
+              <label>Dirección fiscal <span class="required">*</span></label>
+              <div class="input-wrap">
+                <i class="fas fa-location-dot field-icon"></i>
+                <input type="text" placeholder="Calle, colonia, ciudad, departamento">
+              </div>
+            </div>
+
+            <div class="field">
+              <label>País <span class="required">*</span></label>
+              <div class="input-wrap" style="position:relative;">
+                <i class="fas fa-globe field-icon"></i>
+                <select>
+                  <option>Honduras</option>
+                  <option>El Salvador</option>
+                  <option>Guatemala</option>
+                  <option>Costa Rica</option>
+                  <option>Panamá</option>
+                  <option>México</option>
+                  <option>Colombia</option>
+                  <option>Estados Unidos</option>
+                  <option>Otro</option>
+                </select>
+                <i class="fas fa-chevron-down select-arrow"></i>
+              </div>
+            </div>
+
+            <div class="field">
+              <label>Código postal</label>
+              <div class="input-wrap">
+                <i class="fas fa-mail-bulk field-icon"></i>
+                <input type="text" placeholder="00000">
+              </div>
+            </div>
+
+            <div class="field">
+              <label>Correo de facturación <span class="required">*</span></label>
+              <div class="input-wrap">
+                <i class="fas fa-envelope field-icon"></i>
+                <input type="email" placeholder="facturacion@empresa.com">
+              </div>
+              <div class="field-hint">
+                <i class="fas fa-info-circle"></i>
+                Aquí recibirás tus facturas electrónicas
+              </div>
+            </div>
+
+            <div class="field">
+              <label>Teléfono de contacto <span class="required">*</span></label>
+              <div class="input-wrap">
+                <i class="fas fa-phone field-icon"></i>
+                <input type="tel" placeholder="+504 0000-0000">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. PAYMENT METHOD -->
+        <div class="section-card">
+          <div class="section-header">
+            <div class="section-icon"><i class="fas fa-credit-card"></i></div>
+            <div>
+              <div class="section-title">Método de pago</div>
+              <div class="section-sub">Selecciona cómo deseas pagar</div>
+            </div>
+          </div>
+
+          <div class="payment-methods">
+            <!-- Card -->
+            <label class="payment-method selected" onclick="selectPayment('card', this)">
+              <input type="radio" name="payment" checked>
+              <div class="payment-radio"></div>
+              <div class="payment-icon visa"><i class="fab fa-cc-visa"></i></div>
+              <div class="payment-info">
+                <div class="name">Tarjeta de crédito o débito</div>
+                <div class="desc">Visa, Mastercard, American Express · Activación instantánea</div>
+              </div>
+              <span class="payment-badge recommended">Recomendado</span>
+            </label>
+
+            <!-- Transfer -->
+            <label class="payment-method" onclick="selectPayment('transfer', this)">
+              <input type="radio" name="payment">
+              <div class="payment-radio"></div>
+              <div class="payment-icon transfer"><i class="fas fa-building-columns"></i></div>
+              <div class="payment-info">
+                <div class="name">Transferencia bancaria</div>
+                <div class="desc">BAC, Ficohsa, Atlántida, Banpaís · Activación en 24-48h</div>
+              </div>
+              <span class="payment-badge instant">Local</span>
+            </label>
+
+            <!-- PayPal -->
+            <label class="payment-method" onclick="selectPayment('paypal', this)">
+              <input type="radio" name="payment">
+              <div class="payment-radio"></div>
+              <div class="payment-icon paypal"><i class="fab fa-paypal"></i></div>
+              <div class="payment-info">
+                <div class="name">PayPal</div>
+                <div class="desc">Pago internacional · Activación instantánea</div>
+              </div>
+            </label>
+
+            <!-- Crypto -->
+            <label class="payment-method" onclick="selectPayment('crypto', this)">
+              <input type="radio" name="payment">
+              <div class="payment-radio"></div>
+              <div class="payment-icon crypto"><i class="fab fa-bitcoin"></i></div>
+              <div class="payment-info">
+                <div class="name">Criptomonedas</div>
+                <div class="desc">Bitcoin, Ethereum, USDT · Activación en 10-30 min</div>
+              </div>
+            </label>
+          </div>
+
+          <!-- Card Form -->
+          <div class="card-form active" id="cardForm">
+            <div class="card-preview">
+              <div class="card-brand"><i class="fab fa-cc-visa"></i></div>
+              <div class="card-chip"></div>
+              <div class="card-number" id="cardNumberPreview">•••• •••• •••• ••••</div>
+              <div class="card-bottom">
+                <div class="card-holder">
+                  <div>TITULAR</div>
+                  <div class="name" id="cardHolderPreview">NOMBRE COMPLETO</div>
+                </div>
+                <div class="card-expiry">
+                  <div>VENCE</div>
+                  <div class="date" id="cardExpiryPreview">MM/AA</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-grid">
+              <div class="field full">
+                <label>Número de tarjeta <span class="required">*</span></label>
+                <div class="input-wrap">
+                  <i class="fas fa-credit-card field-icon"></i>
+                  <input type="text" id="cardNumber" placeholder="1234 5678 9012 3456" maxlength="19"
+                    oninput="formatCardNumber(this)">
+                </div>
+              </div>
+
+              <div class="field full">
+                <label>Nombre del titular <span class="required">*</span></label>
+                <div class="input-wrap">
+                  <i class="fas fa-user field-icon"></i>
+                  <input type="text" id="cardHolder" placeholder="Como aparece en la tarjeta"
+                    oninput="updateCardPreview()">
+                </div>
+              </div>
+
+              <div class="field">
+                <label>Fecha de vencimiento <span class="required">*</span></label>
+                <div class="input-wrap">
+                  <i class="fas fa-calendar field-icon"></i>
+                  <input type="text" id="cardExpiry" placeholder="MM/AA" maxlength="5"
+                    oninput="formatExpiry(this)">
+                </div>
+              </div>
+
+              <div class="field">
+                <label>CVV <span class="required">*</span></label>
+                <div class="input-wrap">
+                  <i class="fas fa-lock field-icon"></i>
+                  <input type="password" id="cardCvv" placeholder="•••" maxlength="4">
+                </div>
+                <div class="field-hint">
+                  <i class="fas fa-shield"></i>
+                  Código de 3-4 dígitos en el reverso
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Transfer Info -->
+          <div class="transfer-info" id="transferForm">
+            <div class="transfer-bank">
+              <div class="transfer-bank-icon"><i class="fas fa-building-columns"></i></div>
+              <div class="transfer-bank-info">
+                <div class="name">Banco BAC Credomatic</div>
+                <div class="desc">Cuenta corporativa · Moneda: Lempiras (HNL) / USD</div>
+              </div>
+            </div>
+
+            <div class="transfer-details">
+              <div class="transfer-row">
+                <div class="label">Titular</div>
+                <div class="value">
+                  Portal Pilot S.A. de C.V.
+                  <button class="copy-btn" onclick="copyToClipboard('Portal Pilot S.A. de C.V.', this)"
+                    title="Copiar"><i class="fas fa-copy"></i></button>
+                </div>
+              </div>
+              <div class="transfer-row">
+                <div class="label">Cuenta HNL</div>
+                <div class="value">
+                  001-234-567-890
+                  <button class="copy-btn" onclick="copyToClipboard('001-234-567-890', this)" title="Copiar"><i
+                      class="fas fa-copy"></i></button>
+                </div>
+              </div>
+              <div class="transfer-row">
+                <div class="label">Cuenta USD</div>
+                <div class="value">
+                  001-234-567-891
+                  <button class="copy-btn" onclick="copyToClipboard('001-234-567-891', this)" title="Copiar"><i
+                      class="fas fa-copy"></i></button>
+                </div>
+              </div>
+              <div class="transfer-row">
+                <div class="label">RTN</div>
+                <div class="value">
+                  0801-9000-123456-001-0
+                  <button class="copy-btn" onclick="copyToClipboard('0801-9000-123456-001-0', this)" title="Copiar"><i
+                      class="fas fa-copy"></i></button>
+                </div>
+              </div>
+              <div class="transfer-row">
+                <div class="label">Concepto</div>
+                <div class="value" id="transferConcept">PP-BUSINESS-2026</div>
+              </div>
+            </div>
+
+            <div class="transfer-note">
+              <i class="fas fa-exclamation-triangle"></i>
+              <div>
+                <strong>Importante:</strong> Realiza la transferencia en un plazo máximo de 48 horas. Incluye el
+                concepto indicado para que podamos identificar tu pago. Envía el comprobante a
+                <strong>pagos@portalpilot.com</strong> para activar tu cuenta más rápido.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4. TERMS -->
+        <div class="section-card">
+          <div class="section-header">
+            <div class="section-icon"><i class="fas fa-file-contract"></i></div>
+            <div>
+              <div class="section-title">Términos y condiciones</div>
+              <div class="section-sub">Revisa y acepta para continuar</div>
+            </div>
+          </div>
+
+          <div class="terms-section">
+            <div class="terms-check">
+              <input type="checkbox" id="terms1">
+              <label for="terms1">
+                He leído y acepto los <a href="#">Términos de Servicio</a> y la <a href="#">Política de
+                  Privacidad</a> de Portal Pilot.
+              </label>
+            </div>
+
+            <div class="terms-check">
+              <input type="checkbox" id="terms2">
+              <label for="terms2">
+                Autorizo los cargos recurrentes según el plan seleccionado y entiendo que puedo cancelar en
+                cualquier momento desde mi panel de administración.
+              </label>
+            </div>
+
+            <div class="terms-check">
+              <input type="checkbox" id="terms3">
+              <label for="terms3">
+                Acepto recibir facturas electrónicas en el correo proporcionado y confirmo que los datos fiscales
+                son correctos.
+              </label>
+            </div>
+
+            <div class="terms-text">
+              <strong>Resumen de términos:</strong><br><br>
+              • <strong>Periodo de prueba:</strong> 14 días gratuitos con acceso completo a todas las funciones del
+              plan.<br>
+              • <strong>Facturación:</strong> Los cargos se realizan al inicio de cada periodo (mensual o anual).<br>
+              • <strong>Cancelación:</strong> Puedes cancelar en cualquier momento. No hay permanencia mínima.<br>
+              • <strong>Reembolsos:</strong> Disponibles dentro de los primeros 30 días si no estás satisfecho.<br>
+              • <strong>Impuestos:</strong> Los precios no incluyen IVA (15%). Se agregará en la factura final.<br>
+              • <strong>Seguridad:</strong> Todos los pagos están protegidos con cifrado AES-256 y Cyberyx Vantage.<br>
+              • <strong>Soporte:</strong> Disponible 24/7 para planes Business y Enterprise.<br>
+              • <strong>SLA:</strong> 99.9% de uptime garantizado con compensaciones en caso de incumplimiento.
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- SIDEBAR -->
+      <div class="checkout-sidebar">
+
+        <!-- Summary -->
+        <div class="summary-card">
+          <div class="summary-header">
+            <i class="fas fa-receipt"></i>
+            <h3>Resumen del pedido</h3>
+          </div>
+
+          <div class="summary-plan">
+            <div class="summary-plan-info">
+              <div class="name" id="summaryPlanName">Portal Pilot Business</div>
+              <div class="billing" id="summaryBilling">Facturación mensual</div>
+            </div>
+            <span class="change-link" onclick="document.querySelector('.plan-options').scrollIntoView({behavior:'smooth'})">Cambiar</span>
+          </div>
+
+          <div class="summary-rows">
+            <div class="summary-row">
+              <span class="label">Subtotal</span>
+              <span class="value" id="summarySubtotal">L 899.00</span>
+            </div>
+            <div class="summary-row discount" id="discountRow" style="display:none;">
+              <span class="label">Descuento anual (20%)</span>
+              <span class="value" id="summaryDiscount">- L 179.80</span>
+            </div>
+            <div class="summary-row">
+              <span class="label">IVA (15%)</span>
+              <span class="value" id="summaryTax">L 134.85</span>
+            </div>
+          </div>
+
+          <div class="summary-divider"></div>
+
+          <div class="summary-total">
+            <div class="label">Total a pagar</div>
+            <div class="amount"><sup>L</sup><span id="summaryTotal">1,033.85</span></div>
+          </div>
+
+          <div class="summary-tax">Incluye impuestos · Factura electrónica</div>
+
+          <!-- Promo -->
+          <div class="promo-section">
+            <div class="promo-input-wrap">
+              <input type="text" placeholder="Código promocional" id="promoInput">
+              <button class="promo-apply-btn" onclick="applyPromo()">Aplicar</button>
+            </div>
+          </div>
+
+          <!-- Pay Button -->
+          <button class="pay-btn" onclick="processPayment()">
+            <i class="fas fa-lock"></i>
+            Pagar ahora
+          </button>
+
+          <div class="pay-secure">
+            <span><i class="fas fa-shield-halved"></i> Cifrado SSL</span>
+            <span><i class="fas fa-lock"></i> PCI DSS</span>
+            <span><i class="fas fa-certificate"></i> 3D Secure</span>
+          </div>
+
+          <div class="payment-logos">
+            <div class="payment-logo"><i class="fab fa-cc-visa"></i></div>
+            <div class="payment-logo"><i class="fab fa-cc-mastercard"></i></div>
+            <div class="payment-logo"><i class="fab fa-cc-amex"></i></div>
+            <div class="payment-logo"><i class="fab fa-cc-paypal"></i></div>
+            <div class="payment-logo"><i class="fab fa-bitcoin"></i></div>
+          </div>
+        </div>
+
+        <!-- Guarantees -->
+        <div class="guarantees">
+          <div class="guarantee-item">
+            <i class="fas fa-circle-check"></i>
+            <div><strong>Garantía de 30 días</strong> · Reembolso completo sin preguntas</div>
+          </div>
+          <div class="guarantee-item">
+            <i class="fas fa-circle-check"></i>
+            <div><strong>Cancelación libre</strong> · Sin permanencia ni penalizaciones</div>
+          </div>
+          <div class="guarantee-item">
+            <i class="fas fa-circle-check"></i>
+            <div><strong>Soporte 24/7</strong> · Equipo dedicado para tu empresa</div>
+          </div>
+          <div class="guarantee-item">
+            <i class="fas fa-circle-check"></i>
+            <div><strong>SLA 99.9%</strong> · Uptime garantizado con compensaciones</div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <!-- FAQ -->
+  <section class="faq-section">
+    <div class="container">
+      <div style="text-align:center;">
+        <div class="sec-eyebrow" style="font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--accent-soft);margin-bottom:12px;">Preguntas frecuentes</div>
+        <h2 style="font-family:'Syne',sans-serif;font-size:clamp(28px,4vw,40px);font-weight:700;color:var(--white);letter-spacing:-1px;margin-bottom:14px;">Sobre pagos y facturación</h2>
+        <p style="font-size:15px;color:var(--text-dim);max-width:520px;margin:0 auto;line-height:1.8;">Resolvemos tus dudas sobre el proceso de pago, facturación y políticas de reembolso.</p>
+      </div>
+
+      <div class="faq-list">
+        <div class="faq-item">
+          <div class="faq-q" onclick="toggleFaq(this)">
+            <div class="faq-q-text">¿Qué métodos de pago aceptan?</div>
+            <div class="faq-toggle"><i class="fas fa-plus"></i></div>
+          </div>
+          <div class="faq-a">Aceptamos tarjetas de crédito y débito (Visa, Mastercard, American Express), transferencias bancarias locales (BAC, Ficohsa, Atlántida, Banpaís), PayPal para pagos internacionales, y criptomonedas (Bitcoin, Ethereum, USDT). Todos los métodos están protegidos con cifrado AES-256.</div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-q" onclick="toggleFaq(this)">
+            <div class="faq-q-text">¿Cuándo se activa mi cuenta después del pago?</div>
+            <div class="faq-toggle"><i class="fas fa-plus"></i></div>
+          </div>
+          <div class="faq-a">Con tarjeta de crédito/débito y PayPal, la activación es instantánea (menos de 1 minuto). Con transferencia bancaria, la activación toma 24-48 horas hábiles después de recibir y verificar el comprobante. Con criptomonedas, la activación toma entre 10-30 minutos según la confirmación de la blockchain.</div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-q" onclick="toggleFaq(this)">
+            <div class="faq-q-text">¿Emiten factura fiscal electrónica?</div>
+            <div class="faq-toggle"><i class="fas fa-plus"></i></div>
+          </div>
+          <div class="faq-a">Sí, emitimos factura electrónica (CAI) válida para Honduras y factura internacional para otros países. Las facturas se envían automáticamente al correo de facturación que proporciones. Puedes descargarlas en cualquier momento desde tu panel de administración.</div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-q" onclick="toggleFaq(this)">
+            <div class="faq-q-text">¿Puedo cancelar mi suscripción en cualquier momento?</div>
+            <div class="faq-toggle"><i class="fas fa-plus"></i></div>
+          </div>
+          <div class="faq-a">Absolutamente. No hay permanencia mínima ni penalizaciones. Puedes cancelar desde tu panel de administración con un clic. Si cancelas, mantendrás el acceso hasta el final del periodo pagado. Además, ofrecemos reembolso completo dentro de los primeros 30 días si no estás satisfecho.</div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-q" onclick="toggleFaq(this)">
+            <div class="faq-q-text">¿Mis datos de pago están seguros?</div>
+            <div class="faq-toggle"><i class="fas fa-plus"></i></div>
+          </div>
+          <div class="faq-a">Sí. Cumplimos con el estándar PCI DSS nivel 1 (el más alto). Todos los datos de tarjeta se procesan a través de pasarelas certificadas y nunca se almacenan en nuestros servidores. Además, utilizamos cifrado AES-256, autenticación 3D Secure y Cyberyx Vantage para máxima seguridad.</div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-q" onclick="toggleFaq(this)">
+            <div class="faq-q-text">¿Qué pasa si mi pago es rechazado?</div>
+            <div class="faq-toggle"><i class="fas fa-plus"></i></div>
+          </div>
+          <div class="faq-a">Si tu pago es rechazado, recibirás un correo explicando la razón (fondos insuficientes, límite excedido, etc.). Puedes intentar con otro método de pago inmediatamente. Nuestro equipo de soporte también está disponible 24/7 para ayudarte a resolver cualquier problema con el pago.</div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-q" onclick="toggleFaq(this)">
+            <div class="faq-q-text">¿Ofrecen descuentos para pagos anuales?</div>
+            <div class="faq-toggle"><i class="fas fa-plus"></i></div>
+          </div>
+          <div class="faq-a">Sí, ofrecemos un 20% de descuento al elegir facturación anual en lugar de mensual. También tenemos descuentos especiales para startups, ONGs y instituciones educativas. Contáctanos para conocer las opciones disponibles para tu organización.</div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-q" onclick="toggleFaq(this)">
+            <div class="faq-q-text">¿Puedo cambiar de plan después de pagar?</div>
+            <div class="faq-toggle"><i class="fas fa-plus"></i></div>
+          </div>
+          <div class="faq-a">Sí, puedes hacer upgrade o downgrade de plan en cualquier momento. Si haces upgrade, se prorratea la diferencia. Si haces downgrade, el crédito se aplica a tu próximo periodo de facturación. Los cambios se reflejan inmediatamente en tu portal.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="container">
+      <p>© 2026 Portal Pilot + Cyberyx Vantage · Made in Honduras 🇭🇳</p>
+      <p style="margin-top:8px;">
+        <a href="index.html">Inicio</a>·
+        <a href="#">Privacidad</a>·
+        <a href="#">Términos</a>·
+        <a href="#">Soporte</a>·
+        <a href="mailto:pagos@portalpilot.com">pagos@portalpilot.com</a>
+      </p>
+    </div>
+  </footer>
+
+  <script>
+    // Plan selection
+    const plans = {
+      startup: { name: 'Portal Pilot Startup', monthly: 299, yearly: 239 },
+      business: { name: 'Portal Pilot Business', monthly: 899, yearly: 719 },
+      enterprise: { name: 'Portal Pilot Enterprise', monthly: 0, yearly: 0 }
+    };
+
+    let currentPlan = 'business';
+    let isYearly = false;
+
+    function selectPlan(plan, el) {
+      currentPlan = plan;
+      document.querySelectorAll('.plan-option').forEach(p => p.classList.remove('selected'));
+      el.classList.add('selected');
+      updateSummary();
+    }
+
+    function toggleBilling() {
+      isYearly = !isYearly;
+      const toggle = document.getElementById('billingToggle');
+      const monthlyLabel = document.getElementById('monthlyLabel');
+      const yearlyLabel = document.getElementById('yearlyLabel');
+
+      toggle.classList.toggle('active', isYearly);
+      monthlyLabel.classList.toggle('active', !isYearly);
+      yearlyLabel.classList.toggle('active', isYearly);
+
+      updateSummary();
+    }
+
+    function updateSummary() {
+      const plan = plans[currentPlan];
+      const price = isYearly ? plan.yearly : plan.monthly;
+
+      document.getElementById('summaryPlanName').textContent = plan.name;
+      document.getElementById('summaryBilling').textContent = isYearly ? 'Facturación anual' : 'Facturación mensual';
+
+      if (currentPlan === 'enterprise') {
+        document.getElementById('summarySubtotal').textContent = 'A convenir';
+        document.getElementById('summaryTax').textContent = '-';
+        document.getElementById('summaryTotal').textContent = 'Custom';
+        document.getElementById('discountRow').style.display = 'none';
+        return;
+      }
+
+      const subtotal = price;
+      const discount = isYearly ? (plan.monthly * 12 - plan.yearly * 12) : 0;
+      const taxable = subtotal - (isYearly ? discount / 12 : 0);
+      const tax = taxable * 0.15;
+      const total = taxable + tax;
+
+      document.getElementById('summarySubtotal').textContent = `L ${subtotal.toFixed(2)}`;
+
+      if (isYearly) {
+        document.getElementById('discountRow').style.display = 'flex';
+        document.getElementById('summaryDiscount').textContent = `- L ${(discount / 12).toFixed(2)}`;
+      } else {
+        document.getElementById('discountRow').style.display = 'none';
+      }
+
+      document.getElementById('summaryTax').textContent = `L ${tax.toFixed(2)}`;
+      document.getElementById('summaryTotal').textContent = total.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+
+      // Update transfer concept
+      const month = new Date().toISOString().slice(0, 7).replace('-', '');
+      document.getElementById('transferConcept').textContent = `PP-${currentPlan.toUpperCase()}-${month}`;
+    }
+
+    // Payment method selection
+    function selectPayment(method, el) {
+      document.querySelectorAll('.payment-method').forEach(m => m.classList.remove('selected'));
+      el.classList.add('selected');
+
+      document.getElementById('cardForm').classList.toggle('active', method === 'card');
+      document.getElementById('transferForm').classList.toggle('active', method === 'transfer');
+    }
+
+    // Card formatting
+    function formatCardNumber(input) {
+      let value = input.value.replace(/\s/g, '').replace(/\D/g, '');
+      let formatted = value.match(/.{1,4}/g)?.join(' ') || '';
+      input.value = formatted;
+      updateCardPreview();
+    }
+
+    function formatExpiry(input) {
+      let value = input.value.replace(/\D/g, '');
+      if (value.length >= 2) {
+        value = value.slice(0, 2) + '/' + value.slice(2, 4);
+      }
+      input.value = value;
+      updateCardPreview();
+    }
+
+    function updateCardPreview() {
+      const number = document.getElementById('cardNumber').value || '•••• •••• •••• ••••';
+      const holder = document.getElementById('cardHolder').value || 'NOMBRE COMPLETO';
+      const expiry = document.getElementById('cardExpiry').value || 'MM/AA';
+
+      document.getElementById('cardNumberPreview').textContent = number.padEnd(19, ' •');
+      document.getElementById('cardHolderPreview').textContent = holder.toUpperCase();
+      document.getElementById('cardExpiryPreview').textContent = expiry;
+    }
+
+    // Copy to clipboard
+    function copyToClipboard(text, btn) {
+      navigator.clipboard.writeText(text).then(() => {
+        const originalIcon = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-check"></i>';
+        btn.style.color = 'var(--green)';
+        setTimeout(() => {
+          btn.innerHTML = originalIcon;
+          btn.style.color = '';
+        }, 1500);
+      });
+    }
+
+    // Promo code
+    function applyPromo() {
+      const code = document.getElementById('promoInput').value.trim().toUpperCase();
+      if (!code) return;
+
+      // Demo promo codes
+      const promos = {
+        'WELCOME20': 20,
+        'STARTUP50': 50,
+        'LAUNCH30': 30
+      };
+
+      if (promos[code]) {
+        alert(`¡Código aplicado! Descuento del ${promos[code]}%`);
+        document.getElementById('promoInput').value = '';
+      } else {
+        alert('Código no válido. Intenta con otro.');
+      }
+    }
+
+    // Process payment
+    function processPayment() {
+      const terms1 = document.getElementById('terms1').checked;
+      const terms2 = document.getElementById('terms2').checked;
+      const terms3 = document.getElementById('terms3').checked;
+
+      if (!terms1 || !terms2 || !terms3) {
+        alert('Por favor, acepta todos los términos y condiciones para continuar.');
+        return;
+      }
+
+      const btn = document.querySelector('.pay-btn');
+      const originalHTML = btn.innerHTML;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando pago...';
+      btn.disabled = true;
+      btn.style.opacity = '0.7';
+
+      // Simulate payment processing
+      setTimeout(() => {
+        btn.innerHTML = '<i class="fas fa-circle-check"></i> ¡Pago exitoso!';
+        btn.style.background = 'var(--green)';
+        btn.style.color = '#000';
+
+        setTimeout(() => {
+          alert('¡Gracias por tu compra! Serás redirigido a tu portal en unos momentos.');
+          // window.location.href = 'portal.html';
+        }, 1500);
+      }, 2500);
+    }
+
+    // FAQ toggle
+    function toggleFaq(btn) {
+      const item = btn.closest('.faq-item');
+      const isOpen = item.classList.contains('open');
+      document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('open'));
+      if (!isOpen) { item.classList.add('open'); }
+    }
+
+    // Initialize
+    updateSummary();
+  </script>
+
+</body>
+
+</html>

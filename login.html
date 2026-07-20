@@ -36,8 +36,6 @@
       --red: #ff453a;
       --radius: 12px;
       --radius-lg: 20px;
-
-      /* Variables del sistema de notificaciones */
       --isla-bg: rgba(20, 20, 20, 0.85);
       --isla-border: rgba(255, 255, 255, 0.12);
       --isla-text: #ffffff;
@@ -144,37 +142,7 @@
       line-height: 1.5;
     }
 
-    .tab-row {
-      display: flex;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 40px;
-      padding: 4px;
-      margin-bottom: 28px;
-    }
-
-    .tab-btn {
-      flex: 1;
-      padding: 10px 16px;
-      border-radius: 36px;
-      font-size: 13px;
-      font-weight: 500;
-      border: none;
-      cursor: pointer;
-      background: none;
-      color: var(--text-dim);
-      transition: all 0.25s ease;
-      font-family: inherit;
-    }
-
-    .tab-btn.active {
-      background: var(--white);
-      color: #000;
-    }
-
-    /* ═══════════════════════════════════════════════════════════════
-       SISTEMA DE NOTIFICACIONES ISLA DINÁMICA
-       ═══════════════════════════════════════════════════════════════ */
+    /* ─── NOTIFICACIONES ISLA ─── */
     #contenedor-pila {
       position: fixed;
       top: 20px;
@@ -220,12 +188,10 @@
       display: flex;
       align-items: center;
       padding: 0 12px;
-      box-shadow: 0px 10px 30px var(--isla-shadow),
-        0px 1px 3px rgba(255, 255, 255, 0.05) inset;
+      box-shadow: 0px 10px 30px var(--isla-shadow), 0px 1px 3px rgba(255, 255, 255, 0.05) inset;
       box-sizing: border-box;
       overflow: hidden;
-      transition: transform 0.5s cubic-bezier(0.28, 0.84, 0.42, 1),
-        opacity 0.5s ease;
+      transition: transform 0.5s cubic-bezier(0.28, 0.84, 0.42, 1), opacity 0.5s ease;
       pointer-events: none;
       cursor: pointer;
       will-change: transform, opacity;
@@ -251,8 +217,7 @@
       width: 36px;
       height: 36px;
       background-color: var(--cuadro-icono-bg);
-      box-shadow: inset 2px 2px 5px var(--cuadro-shadow-1),
-        inset -1px -1px 3px var(--cuadro-shadow-2);
+      box-shadow: inset 2px 2px 5px var(--cuadro-shadow-1), inset -1px -1px 3px var(--cuadro-shadow-2);
       border-radius: 50%;
       display: flex;
       justify-content: center;
@@ -303,7 +268,6 @@
       background: linear-gradient(90deg, #007aff, #00c6ff);
     }
 
-    /* Posiciones de la pila - apiladas hacia abajo */
     .notificacion.pos-0 {
       transform: translateY(0) scale(1);
       opacity: 1;
@@ -340,7 +304,6 @@
       z-index: 5;
     }
 
-    /* Animación de entrada - MISMA que la original pero sin translateX */
     .notificacion.entrando {
       animation: caerGelatina 1.5s forwards cubic-bezier(0.28, 0.84, 0.42, 1);
       z-index: 100;
@@ -412,8 +375,6 @@
       }
     }
 
-    /* ─── RESPONSIVE ─── */
-    /* Tablet */
     @media (max-width: 1024px) and (min-width: 601px) {
       #contenedor-pila {
         top: 16px;
@@ -431,7 +392,6 @@
       }
     }
 
-    /* Móvil - centrado arriba */
     @media (max-width: 600px) {
       #contenedor-pila {
         top: 12px;
@@ -460,7 +420,6 @@
         transform: translateX(50%);
       }
 
-      /* En móvil las posiciones usan left:0 en vez de right:0 */
       .notificacion.pos-0 {
         transform: translateY(0) scale(1);
       }
@@ -496,8 +455,7 @@
       }
     }
 
-    /* ─── FIN SISTEMA DE NOTIFICACIONES ─── */
-
+    /* ─── FORMULARIOS ─── */
     .biometric-row {
       display: flex;
       align-items: center;
@@ -584,8 +542,7 @@
       transition: color 0.2s ease;
     }
 
-    .input-wrap input,
-    .input-wrap select {
+    .input-wrap input {
       width: 100%;
       background: var(--surface);
       border: 1px solid var(--border);
@@ -598,67 +555,45 @@
       transition: border-color 0.2s ease, background 0.2s ease;
     }
 
+    .input-wrap input {
+      padding-right: 48px;
+    }
+
     .input-wrap input::placeholder {
       color: var(--text-muted);
     }
 
-    .input-wrap input:focus,
-    .input-wrap select:focus {
+    .input-wrap input:focus {
       border-color: var(--accent);
       background: var(--surface-2);
     }
 
-    .input-wrap select {
-      appearance: none;
-      cursor: pointer;
-    }
-
     .input-wrap .toggle-pw {
       position: absolute;
-      right: 16px;
+      right: 8px;
       top: 50%;
       transform: translateY(-50%);
-      background: none;
+      background: transparent;
       border: none;
       color: var(--text-muted);
-      font-size: 14px;
       cursor: pointer;
-      padding: 4px;
-      transition: color 0.2s ease;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      z-index: 2;
+      transition: color 0.2s ease, background 0.2s ease;
     }
 
     .input-wrap .toggle-pw:hover {
+      background: rgba(255, 255, 255, 0.05);
       color: var(--white);
     }
 
-    .strength-wrap {
-      margin-top: 10px;
-      display: none;
-    }
-
-    .strength-bar {
-      height: 3px;
-      border-radius: 2px;
-      background: rgba(255, 255, 255, 0.06);
-      margin-bottom: 6px;
-    }
-
-    .strength-fill {
-      height: 100%;
-      border-radius: 2px;
-      width: 0;
-      transition: width 0.3s ease, background 0.3s ease;
-    }
-
-    .strength-label {
-      font-size: 11px;
-      color: var(--text-dim);
-    }
-
-    .field-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
+    .input-wrap .toggle-pw i {
+      pointer-events: none;
     }
 
     .options-row {
@@ -726,16 +661,6 @@
       transform: scale(0.99);
     }
 
-    .btn-submit.secondary {
-      background: var(--surface);
-      color: var(--white);
-      border: 1px solid var(--border-strong);
-    }
-
-    .btn-submit.secondary:hover {
-      background: var(--surface-2);
-    }
-
     .divider {
       display: flex;
       align-items: center;
@@ -797,86 +722,12 @@
     .terms-note a {
       color: var(--accent-soft);
       text-decoration: none;
+      font-weight: 600;
     }
 
     .terms-note a:hover {
       text-decoration: underline;
-    }
-
-    .form-panel {
-      display: none;
-      animation: fadeIn 0.3s ease;
-    }
-
-    .form-panel.active {
-      display: block;
-    }
-
-    @keyframes fadeIn {
-      from {
-        opacity: 0;
-        transform: translateY(6px);
-      }
-
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    .steps-row {
-      display: flex;
-      align-items: center;
-      gap: 0;
-      margin-bottom: 28px;
-    }
-
-    .step-dot {
-      width: 28px;
-      height: 28px;
-      border-radius: 50%;
-      border: 1px solid var(--border-strong);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 11px;
-      font-weight: 600;
-      color: var(--text-muted);
-      transition: all 0.3s ease;
-      font-family: 'Syne', sans-serif;
-      flex-shrink: 0;
-      background: var(--surface);
-    }
-
-    .step-dot.done {
-      background: var(--green);
-      border-color: var(--green);
-      color: #000;
-    }
-
-    .step-dot.active {
-      background: var(--white);
-      border-color: var(--white);
-      color: #000;
-    }
-
-    .step-line {
-      flex: 1;
-      height: 1px;
-      background: var(--border);
-      transition: background 0.3s ease;
-    }
-
-    .step-line.done {
-      background: var(--green);
-    }
-
-    .step-label {
-      font-size: 11px;
-      color: var(--text-muted);
-      text-align: center;
-      margin-top: 6px;
-      transition: color 0.3s ease;
+      color: var(--white);
     }
 
     .page-footer {
@@ -898,900 +749,550 @@
     .page-footer a:hover {
       color: var(--white);
     }
+
+    /* ─── MODAL ─── */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      z-index: 9999;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .modal-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 36px 32px;
+      width: 100%;
+      max-width: 420px;
+      position: relative;
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 16px;
+      cursor: pointer;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+    }
+
+    .modal-close:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--white);
+    }
+
+    .modal-box .field label {
+      display: block;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-dim);
+      margin-bottom: 8px;
+      letter-spacing: 0.3px;
+    }
+
+    .modal-box .input-wrap {
+      position: relative;
+    }
+
+    .modal-box .input-wrap i {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 14px;
+      color: var(--text-muted);
+      pointer-events: none;
+    }
+
+    .modal-box .input-wrap input {
+      width: 100%;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 16px 14px 44px;
+      font-size: 15px;
+      color: var(--white);
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.2s ease, background 0.2s ease;
+    }
+
+    .modal-box .input-wrap input:focus {
+      border-color: var(--accent);
+      background: var(--bg-soft);
+    }
+
+    .modal-box .input-wrap input::placeholder {
+      color: var(--text-muted);
+    }
   </style>
 </head>
 
 <body>
 
   <div class="page-bg"></div>
-
-  <!-- ─── SISTEMA DE NOTIFICACIONES ISLA ─── -->
   <div id="contenedor-pila"></div>
   <div id="contador-pila"></div>
 
   <div class="page-wrap">
-
-    <!-- Brand -->
     <div class="brand">
       <div class="brand-icon"><i class="fas fa-robot"></i></div>
       <div class="brand-name">PORTAL PILOT</div>
     </div>
 
-    <!-- Auth container -->
     <div class="auth-container">
-
-      <!-- Heading -->
       <div class="auth-heading">
         <h1>Inicia sesión</h1>
         <p>Accede a tu portal corporativo seguro</p>
       </div>
 
-      <!-- Tabs -->
-      <div class="tab-row">
-        <button class="tab-btn active" id="tabLogin" onclick="switchTab('login')">Iniciar Sesión</button>
-        <button class="tab-btn" id="tabRegister" onclick="switchTab('register')">Crear Cuenta</button>
+      <div class="biometric-row">
+        <div class="bio-icon"><i class="fas fa-mobile-screen"></i></div>
+        <div class="bio-text">
+          <strong>2FA DISPONIBLE</strong>
+          Autenticación de dos factores
+        </div>
+        <button class="btn-bio" onclick="trigger2FA()"><i class="fas fa-key" style="margin-right:5px;"></i>Usar</button>
       </div>
 
-      <!-- ─── LOGIN PANEL ────────── -->
-      <div class="form-panel active" id="panelLogin">
-
-        <!-- Biometric strip -->
-        <div class="biometric-row">
-          <div class="bio-icon"><i class="fas fa-mobile-screen"></i></div>
-          <div class="bio-text">
-            <strong>2FA DISPONIBLE</strong>
-            Autenticación de dos factores
+      <form id="loginForm">
+        <div class="field">
+          <label>CORREO CORPORATIVO</label>
+          <div class="input-wrap">
+            <i class="fas fa-envelope"></i>
+            <input type="email" id="loginEmail" name="email" placeholder="tu@empresa.com" autocomplete="email" required>
           </div>
-          <button class="btn-bio" onclick="trigger2FA()">
-            <i class="fas fa-key" style="margin-right:5px;"></i>Usar
-          </button>
         </div>
-
-        <form id="loginForm">
-          <div class="field">
-            <label>CORREO CORPORATIVO</label>
-            <div class="input-wrap">
-              <i class="fas fa-envelope"></i>
-              <input type="email" id="loginEmail" name="email" placeholder="tu@empresa.com" autocomplete="email"
-                required>
-            </div>
+        <div class="field">
+          <label>CONTRASEÑA</label>
+          <div class="input-wrap">
+            <i class="fas fa-lock"></i>
+            <input type="password" id="loginPass" name="password" placeholder="••••••••" autocomplete="current-password"
+              required>
+            <button type="button" class="toggle-pw" tabindex="-1"><i class="fas fa-eye"></i></button>
           </div>
-
-          <div class="field">
-            <label>CONTRASEÑA</label>
-            <div class="input-wrap">
-              <i class="fas fa-lock"></i>
-              <input type="password" id="loginPass" name="password" placeholder="••••••••"
-                autocomplete="current-password" required>
-              <button type="button" class="toggle-pw" onclick="togglePw('loginPass', this)" tabindex="-1">
-                <i class="fas fa-eye"></i>
-              </button>
-            </div>
-          </div>
-
-          <div class="options-row">
-            <label class="check-label">
-              <input type="checkbox" id="rememberMe">
-              <span>Recordarme</span>
-            </label>
-            <a href="#" class="forgot-link" onclick="forgotPw(event)">¿Olvidaste tu contraseña?</a>
-          </div>
-
-          <button type="submit" class="btn-submit">
-            Continuar <i class="fas fa-chevron-right" style="font-size:12px;"></i>
-          </button>
-        </form>
-
-        <div class="divider"><span>O CONTINÚA CON</span></div>
-        <div class="sso-row">
-          <button class="btn-sso" onclick="ssoClick('Microsoft')">
-            <i class="fab fa-microsoft" style="color:#00A4EF;font-size:16px;"></i> Microsoft
-          </button>
-          <button class="btn-sso" onclick="ssoClick('Google')">
-            <i class="fab fa-google" style="color:#EA4335;font-size:16px;"></i> Google
-          </button>
         </div>
-
-        <div class="terms-note">
-          ¿No tienes cuenta? <a href="#" onclick="switchTab('register');return false;">Crear una cuenta</a>
+        <div class="options-row">
+          <label class="check-label"><input type="checkbox" id="rememberMe"><span>Recordarme</span></label>
+          <a href="#" class="forgot-link" onclick="forgotPw(event)">¿Olvidaste tu contraseña?</a>
         </div>
+        <button type="submit" class="btn-submit">Continuar <i class="fas fa-chevron-right"
+            style="font-size:12px;"></i></button>
+      </form>
+
+      <div class="divider"><span>O CONTINÚA CON</span></div>
+      <div class="sso-row">
+        <button class="btn-sso" onclick="ssoClick('Microsoft')"><i class="fab fa-microsoft"
+            style="color:#00A4EF;font-size:16px;"></i> Microsoft</button>
+        <button class="btn-sso" onclick="ssoClick('Google')"><i class="fab fa-google"
+            style="color:#EA4335;font-size:16px;"></i> Google</button>
       </div>
-
-      <!-- ─── REGISTER PANEL ─────── -->
-      <div class="form-panel" id="panelRegister">
-
-        <!-- Step progress -->
-        <div>
-          <div class="steps-row" id="stepsRow">
-            <div class="step-dot active" id="sdot1">1</div>
-            <div class="step-line" id="sline1"></div>
-            <div class="step-dot" id="sdot2">2</div>
-            <div class="step-line" id="sline2"></div>
-            <div class="step-dot" id="sdot3">3</div>
-          </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0;text-align:center;margin-bottom:24px;">
-            <div class="step-label" id="slabel1" style="color:var(--white);">Empresa</div>
-            <div class="step-label" id="slabel2">Cuenta</div>
-            <div class="step-label" id="slabel3">Seguridad</div>
-          </div>
-        </div>
-
-        <!-- Step 1 -->
-        <div id="regStep1">
-          <div class="field">
-            <label>NOMBRE DE LA EMPRESA</label>
-            <div class="input-wrap">
-              <i class="fas fa-building"></i>
-              <input type="text" id="regCompany" placeholder="TechCorp Enterprise S.A.">
-            </div>
-          </div>
-          <div class="field">
-            <label>CÓDIGO DE EMPRESA</label>
-            <div class="input-wrap">
-              <i class="fas fa-hashtag"></i>
-              <input type="text" id="regCode" placeholder="PP-XXXX-CORP"
-                style="font-family:monospace;letter-spacing:1px;">
-            </div>
-          </div>
-          <div class="field">
-            <label>SECTOR CORPORATIVO</label>
-            <div class="input-wrap" style="position:relative;">
-              <i class="fas fa-briefcase"></i>
-              <select id="regSector">
-                <option value="">Seleccionar sector...</option>
-                <option>Tecnología</option>
-                <option>Manufactura</option>
-                <option>Retail & E-commerce</option>
-                <option>Salud & Farmacéutica</option>
-                <option>Finanzas & Banca</option>
-                <option>Logística</option>
-                <option>Otro</option>
-              </select>
-              <i class="fas fa-chevron-down"
-                style="position:absolute;right:16px;top:50%;transform:translateY(-50%);pointer-events:none;font-size:11px;color:var(--text-muted);"></i>
-            </div>
-          </div>
-          <button class="btn-submit" onclick="goStep(2)" style="margin-top:8px;">
-            Continuar <i class="fas fa-chevron-right" style="font-size:12px;"></i>
-          </button>
-        </div>
-
-        <!-- Step 2 -->
-        <div id="regStep2" style="display:none;">
-          <div class="field-row">
-            <div class="field">
-              <label>NOMBRE</label>
-              <div class="input-wrap">
-                <i class="fas fa-user"></i>
-                <input type="text" id="regFirst" placeholder="Carlos">
-              </div>
-            </div>
-            <div class="field">
-              <label>APELLIDO</label>
-              <div class="input-wrap">
-                <i class="fas fa-user"></i>
-                <input type="text" id="regLast" placeholder="Mendoza">
-              </div>
-            </div>
-          </div>
-          <div class="field">
-            <label>CORREO CORPORATIVO</label>
-            <div class="input-wrap">
-              <i class="fas fa-envelope"></i>
-              <input type="email" id="regEmail" placeholder="carlos@empresa.com">
-            </div>
-          </div>
-          <div class="field">
-            <label>ROL EN LA EMPRESA</label>
-            <div class="input-wrap" style="position:relative;">
-              <i class="fas fa-id-badge"></i>
-              <select id="regRole">
-                <option value="">Seleccionar rol...</option>
-                <option>CEO / Director General</option>
-                <option>CTO / Director Tecnología</option>
-                <option>COO / Director Operaciones</option>
-                <option>Gerente de Área</option>
-                <option>Analista</option>
-                <option>Otro</option>
-              </select>
-              <i class="fas fa-chevron-down"
-                style="position:absolute;right:16px;top:50%;transform:translateY(-50%);pointer-events:none;font-size:11px;color:var(--text-muted);"></i>
-            </div>
-          </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px;">
-            <button class="btn-submit secondary" onclick="goStep(1)">
-              <i class="fas fa-chevron-left" style="font-size:12px;"></i> Atrás
-            </button>
-            <button class="btn-submit" onclick="goStep(3)">
-              Continuar <i class="fas fa-chevron-right" style="font-size:12px;"></i>
-            </button>
-          </div>
-        </div>
-
-        <!-- Step 3 -->
-        <div id="regStep3" style="display:none;">
-          <div class="field">
-            <label>CONTRASEÑA</label>
-            <div class="input-wrap">
-              <i class="fas fa-lock"></i>
-              <input type="password" id="regPass" placeholder="Mínimo 8 caracteres" oninput="checkStrength(this)"
-                autocomplete="new-password">
-              <button class="toggle-pw" onclick="togglePw('regPass',this)" tabindex="-1">
-                <i class="fas fa-eye"></i>
-              </button>
-            </div>
-            <div class="strength-wrap" id="strengthWrap">
-              <div class="strength-bar">
-                <div class="strength-fill" id="strengthFill"></div>
-              </div>
-              <div class="strength-label" id="strengthLabel">Contraseña débil</div>
-            </div>
-          </div>
-          <div class="field">
-            <label>CONFIRMAR CONTRASEÑA</label>
-            <div class="input-wrap">
-              <i class="fas fa-lock"></i>
-              <input type="password" id="regPass2" placeholder="Repite la contraseña" autocomplete="new-password">
-              <button class="toggle-pw" onclick="togglePw('regPass2',this)" tabindex="-1">
-                <i class="fas fa-eye"></i>
-              </button>
-            </div>
-          </div>
-
-          <div class="biometric-row" style="margin:20px 0;">
-            <div class="bio-icon"><i class="fas fa-shield-halved"></i></div>
-            <div class="bio-text">
-              <strong>SEGURIDAD 2FA</strong>
-              Activa autenticación de dos factores
-            </div>
-            <button class="btn-bio" onclick="toggle2FAEnroll(this)">
-              Activar
-            </button>
-          </div>
-
-          <label class="check-label" style="margin-bottom:20px;">
-            <input type="checkbox" id="acceptTerms">
-            <span style="font-size:12px;">Acepto los <a href="#"
-                style="color:var(--accent-soft);text-decoration:none;">Términos</a> y la <a href="#"
-                style="color:var(--accent-soft);text-decoration:none;">Privacidad</a></span>
-          </label>
-
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-            <button class="btn-submit secondary" onclick="goStep(2)">
-              <i class="fas fa-chevron-left" style="font-size:12px;"></i> Atrás
-            </button>
-            <button class="btn-submit" onclick="doRegister()">
-              <i class="fas fa-check"></i> Crear Cuenta
-            </button>
-          </div>
-
-          <div class="terms-note">
-            ¿Ya tienes cuenta? <a href="#" onclick="switchTab('login');return false;">Iniciar sesión</a>
-          </div>
-        </div>
-
-      </div>
-
+      <div class="terms-note">¿No tienes cuenta? <a href="registro.html">Crear una cuenta</a></div>
     </div>
 
-    <!-- Footer -->
     <div class="page-footer">
-      <span>© 2026 Portal Pilot</span>
-      <span>·</span>
-      <a href="#">Privacidad</a>
-      <span>·</span>
-      <a href="#">Términos</a>
+      <span>© 2026 Portal Pilot</span><span>·</span><a href="#">Privacidad</a><span>·</span><a href="#">Términos</a>
     </div>
-
   </div>
 
   <!-- RECOVERY MODAL -->
-  <div class="modal-overlay" id="recoveryModal"
-    style="position:fixed;inset:0;background:rgba(0,0,0,0.75);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);z-index:9999;display:none;align-items:center;justify-content:center;padding:20px;">
-    <div class="modal-box"
-      style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:36px 32px;width:100%;max-width:420px;position:relative;">
-      <button onclick="closeRecoveryModal()"
-        style="position:absolute;top:16px;right:16px;background:none;border:none;color:var(--text-muted);font-size:16px;cursor:pointer;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:all 0.2s ease;">
-        <i class="fas fa-times"></i>
-      </button>
-
+  <div class="modal-overlay" id="recoveryModal">
+    <div class="modal-box">
+      <button class="modal-close" onclick="closeRecoveryModal()"><i class="fas fa-times"></i></button>
       <div id="recStepEmail">
         <h3
           style="font-family:'Syne',sans-serif;font-size:24px;font-weight:700;color:var(--white);margin-bottom:8px;letter-spacing:-0.5px;">
           Recuperar contraseña</h3>
         <p style="font-size:14px;color:var(--text-dim);margin-bottom:24px;line-height:1.5;">Introduce tu correo para
           recibir un código de verificación de 6 dígitos.</p>
-
-        <div class="field" style="margin-bottom:20px;">
-          <label>CORREO CORPORATIVO</label>
-          <div class="input-wrap">
-            <i class="fas fa-envelope"></i>
-            <input type="email" id="recoveryEmailInput" placeholder="tu@empresa.com" required>
-          </div>
+        <div class="field" style="margin-bottom:20px;"><label>CORREO CORPORATIVO</label>
+          <div class="input-wrap"><i class="fas fa-envelope"></i><input type="email" id="recoveryEmailInput"
+              placeholder="tu@empresa.com" required></div>
         </div>
-        <button class="btn-submit" onclick="requestRecoveryCode()">
-          Enviar Código <i class="fas fa-chevron-right" style="font-size:12px;"></i>
-        </button>
+        <button class="btn-submit" onclick="requestRecoveryCode()">Enviar Código <i class="fas fa-chevron-right"
+            style="font-size:12px;"></i></button>
       </div>
-
       <div id="recStepVerify" style="display:none;">
         <h3
           style="font-family:'Syne',sans-serif;font-size:24px;font-weight:700;color:var(--white);margin-bottom:8px;letter-spacing:-0.5px;">
           Verificar código</h3>
-        <p style="font-size:14px;color:var(--text-dim);margin-bottom:24px;line-height:1.5;">Hemos enviado un código a
-          tu correo. Introdúcelo junto con tu nueva contraseña.</p>
-
-        <div class="field" style="margin-bottom:16px;">
-          <label>CÓDIGO DE 6 DÍGITOS</label>
-          <div class="input-wrap">
-            <i class="fas fa-key"></i>
-            <input type="text" id="recoveryCodeInput" placeholder="123456" maxlength="6"
-              style="letter-spacing:8px;text-align:center;font-family:monospace;">
+        <p style="font-size:14px;color:var(--text-dim);margin-bottom:24px;line-height:1.5;">Hemos enviado un código a tu
+          correo. Introdúcelo junto con tu nueva contraseña.</p>
+        <div class="field" style="margin-bottom:16px;"><label>CÓDIGO DE 6 DÍGITOS</label>
+          <div class="input-wrap"><i class="fas fa-key"></i><input type="text" id="recoveryCodeInput"
+              placeholder="123456" maxlength="6" style="letter-spacing:8px;text-align:center;font-family:monospace;">
           </div>
         </div>
-
-        <div class="field" style="margin-bottom:20px;">
-          <label>NUEVA CONTRASEÑA</label>
-          <div class="input-wrap">
-            <i class="fas fa-lock"></i>
-            <input type="password" id="recoveryNewPassInput" placeholder="••••••••">
-          </div>
+        <div class="field" style="margin-bottom:20px;"><label>NUEVA CONTRASEÑA</label>
+          <div class="input-wrap"><i class="fas fa-lock"></i><input type="password" id="recoveryNewPassInput"
+              placeholder="••••••••"></div>
         </div>
-        <button class="btn-submit" onclick="verifyRecoveryAndChange()">
-          Restablecer <i class="fas fa-check"></i>
-        </button>
+        <button class="btn-submit" onclick="verifyRecoveryAndChange()">Restablecer <i class="fas fa-check"></i></button>
       </div>
     </div>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
-    const API_ROOT = window.location.origin;
+    (function () {
+      const isLocalhost = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+      const API_ROOT = isLocalhost ? 'https://portal-pilot.vercel.app' : '';
 
-    async function readJsonResponse(response) {
-      const text = await response.text();
-      if (!text) return {};
-      try {
-        return JSON.parse(text);
-      } catch (error) {
-        return { error: text || 'Respuesta inválida del servidor' };
-      }
-    }
-
-    /* ═══════════════════════════════════════════════════════════════
-       SISTEMA DE NOTIFICACIONES ISLA DINÁMICA
-       ═══════════════════════════════════════════════════════════════ */
-    const contenedorPila = document.getElementById('contenedor-pila');
-    const contadorPila = document.getElementById('contador-pila');
-
-    let notificaciones = [];
-    let idCounter = 0;
-    let animacionEnCurso = false;
-
-    const EMOJIS = {
-      error: 'Cross%20mark/3D/cross_mark_3d.png',
-      success: 'Check%20mark%20button/3D/check_mark_button_3d.png',
-      info: 'Information/3D/information_3d.png',
-      warning: 'Warning/3D/warning_3d.png'
-    };
-
-    const DURACION_BARRA = 4500;
-
-    function crearNotificacion(texto, tipo = 'info') {
-      if (animacionEnCurso) {
-        setTimeout(() => crearNotificacion(texto, tipo), 100);
-        return;
+      let supabase = null;
+      async function getSupabaseClient() {
+        if (supabase) return supabase;
+        try {
+          const res = await fetch(`${API_ROOT}/api/config`);
+          const config = await res.json();
+          if (config.supabaseUrl && config.supabaseAnonKey) {
+            supabase = window.supabase.createClient(config.supabaseUrl, config.supabaseAnonKey);
+            return supabase;
+          }
+        } catch (err) {
+          console.error('Error fetching Supabase config:', err);
+        }
+        return null;
       }
 
-      const id = idCounter++;
-      const emoji = EMOJIS[tipo] || EMOJIS.info;
+      async function readJsonResponse(response) {
+        const text = await response.text();
+        if (!text) return {};
+        try {
+          return JSON.parse(text);
+        } catch (error) {
+          return { error: text || 'Respuesta inválida del servidor' };
+        }
+      }
 
-      const notif = document.createElement('div');
-      notif.className = 'notificacion';
-      notif.dataset.id = id;
-      notif.innerHTML = `
-        <div class="contenido-notificacion">
-          <div class="cuadro-icono">
-            <img src="https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/${emoji}" alt="${tipo}">
+      /* ═══ NOTIFICACIONES ISLA ═══ */
+      const contenedorPila = document.getElementById('contenedor-pila');
+      const contadorPila = document.getElementById('contador-pila');
+      let notificaciones = [];
+      let idCounter = 0;
+      let animacionEnCurso = false;
+
+      const EMOJIS = {
+        error: 'Cross%20mark/3D/cross_mark_3d.png',
+        success: 'Check%20mark%20button/3D/check_mark_button_3d.png',
+        info: 'Information/3D/information_3d.png',
+        warning: 'Warning/3D/warning_3d.png'
+      };
+      const DURACION_BARRA = 4500;
+
+      function crearNotificacion(texto, tipo = 'info') {
+        if (animacionEnCurso) {
+          setTimeout(() => crearNotificacion(texto, tipo), 100);
+          return;
+        }
+        const id = idCounter++;
+        const emoji = EMOJIS[tipo] || EMOJIS.info;
+        const notif = document.createElement('div');
+        notif.className = 'notificacion';
+        notif.dataset.id = id;
+        notif.innerHTML = `
+          <div class="contenido-notificacion">
+            <div class="cuadro-icono">
+              <img src="https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/${emoji}" alt="${tipo}">
+            </div>
+            <p class="texto-notificacion">${texto}</p>
           </div>
-          <p class="texto-notificacion">${texto}</p>
-        </div>
-        <div class="barra-carga ${tipo}"></div>
-      `;
+          <div class="barra-carga ${tipo}"></div>
+        `;
+        contenedorPila.appendChild(notif);
 
-      contenedorPila.appendChild(notif);
-
-      if (notificaciones.length > 0 && notificaciones[0].estado === 'visible') {
-        pausarBarra(notificaciones[0]);
-      }
-
-      notificaciones.unshift({
-        id: id,
-        elemento: notif,
-        timeout: null,
-        estado: 'entrando',
-        progresoBarra: 0,
-        tiempoInicio: null
-      });
-
-      if (notificaciones.length > 6) {
-        const ultima = notificaciones.pop();
-        if (ultima.timeout) clearTimeout(ultima.timeout);
-        ultima.elemento.remove();
-      }
-
-      animacionEnCurso = true;
-      notif.classList.add('entrando');
-
-      notif.addEventListener('animationend', function handler() {
-        notif.removeEventListener('animationend', handler);
-        notif.classList.remove('entrando');
-        notif.classList.add('pos-0', 'visible', 'activa');
-        animacionEnCurso = false;
-
-        actualizarPosiciones();
-        iniciarBarra(notificaciones[0]);
-        notificaciones[0].estado = 'visible';
-      });
-
-      notif.addEventListener('click', (e) => {
-        e.stopPropagation();
-        if (notificaciones[0] && notificaciones[0].id === id) {
-          dismissNotificacion(id);
-        }
-      });
-
-      actualizarContador();
-    }
-
-    function iniciarBarra(notifData) {
-      const barra = notifData.elemento.querySelector('.barra-carga');
-      const progreso = notifData.progresoBarra;
-      const tiempoRestante = DURACION_BARRA * (1 - progreso);
-
-      barra.style.transform = `scaleX(${progreso})`;
-      barra.offsetHeight;
-      barra.style.transition = `transform ${tiempoRestante}ms linear`;
-      barra.style.transform = 'scaleX(1)';
-
-      notifData.tiempoInicio = Date.now();
-
-      notifData.timeout = setTimeout(() => {
-        dismissNotificacion(notifData.id);
-      }, tiempoRestante);
-    }
-
-    function pausarBarra(notifData) {
-      const barra = notifData.elemento.querySelector('.barra-carga');
-
-      if (notifData.tiempoInicio) {
-        const tiempoTranscurrido = Date.now() - notifData.tiempoInicio;
-        const progresoTotal = (tiempoTranscurrido / DURACION_BARRA) + notifData.progresoBarra;
-        notifData.progresoBarra = Math.min(progresoTotal, 1);
-      }
-
-      barra.style.transition = 'none';
-      barra.style.transform = `scaleX(${notifData.progresoBarra})`;
-
-      if (notifData.timeout) {
-        clearTimeout(notifData.timeout);
-        notifData.timeout = null;
-      }
-
-      notifData.tiempoInicio = null;
-    }
-
-    function actualizarPosiciones() {
-      notificaciones.forEach((notif, index) => {
-        const el = notif.elemento;
-
-        for (let i = 0; i <= 5; i++) {
-          el.classList.remove(`pos-${i}`);
+        if (notificaciones.length > 0 && notificaciones[0].estado === 'visible') {
+          pausarBarra(notificaciones[0]);
         }
 
-        if (index <= 5) {
-          el.classList.add(`pos-${index}`);
+        notificaciones.unshift({ id, elemento: notif, timeout: null, estado: 'entrando', progresoBarra: 0, tiempoInicio: null });
+        if (notificaciones.length > 6) {
+          const ultima = notificaciones.pop();
+          if (ultima.timeout) clearTimeout(ultima.timeout);
+          ultima.elemento.remove();
         }
 
-        if (index === 0 && notif.estado === 'visible') {
-          el.classList.add('activa');
-        } else {
-          el.classList.remove('activa');
-        }
-      });
-    }
+        animacionEnCurso = true;
+        notif.classList.add('entrando');
 
-    function dismissNotificacion(id) {
-      const index = notificaciones.findIndex(n => n.id === id);
-      if (index === -1 || animacionEnCurso) return;
+        notif.addEventListener('animationend', function handler() {
+          notif.removeEventListener('animationend', handler);
+          notif.classList.remove('entrando');
+          notif.classList.add('pos-0', 'visible', 'activa');
+          animacionEnCurso = false;
+          actualizarPosiciones();
+          iniciarBarra(notificaciones[0]);
+          notificaciones[0].estado = 'visible';
+        });
 
-      const notif = notificaciones[index];
-      if (index !== 0) return;
+        notif.addEventListener('click', (e) => {
+          e.stopPropagation();
+          if (notificaciones[0] && notificaciones[0].id === id) dismissNotificacion(id);
+        });
 
-      if (notif.timeout) clearTimeout(notif.timeout);
-
-      animacionEnCurso = true;
-      notif.estado = 'saliendo';
-      notif.elemento.classList.remove('activa', 'pos-0');
-      notif.elemento.classList.add('saliendo');
-
-      notif.elemento.addEventListener('animationend', function handler() {
-        notif.elemento.removeEventListener('animationend', handler);
-        notif.elemento.remove();
-        notificaciones.splice(0, 1);
-        animacionEnCurso = false;
-
-        if (notificaciones.length > 0) {
-          const siguiente = notificaciones[0];
-          siguiente.estado = 'visible';
-          siguiente.elemento.classList.add('activa');
-          siguiente.elemento.classList.remove('pos-1', 'pos-2', 'pos-3', 'pos-4', 'pos-5');
-          siguiente.elemento.classList.add('pos-0');
-          iniciarBarra(siguiente);
-        }
-
-        actualizarPosiciones();
         actualizarContador();
-      });
-    }
-
-    function actualizarContador() {
-      if (notificaciones.length > 1) {
-        contadorPila.textContent = `${notificaciones.length} notificaciones`;
-        contadorPila.classList.add('visible');
-      } else {
-        contadorPila.classList.remove('visible');
       }
-    }
 
-    function showMessage(text, type) {
-      const tipoValido = ['error', 'success', 'info', 'warning'].includes(type) ? type : 'info';
-      crearNotificacion(text, tipoValido);
-    }
-
-    /* ═══════════════════════════════════════════════════════════════
-       LÓGICA DEL LOGIN
-       ═══════════════════════════════════════════════════════════════ */
-
-    function togglePw(inputId, btn) {
-      const input = document.getElementById(inputId);
-      const icon = btn.querySelector('i');
-      if (input.type === 'password') {
-        input.type = 'text';
-        icon.classList.remove('fa-eye');
-        icon.classList.add('fa-eye-slash');
-      } else {
-        input.type = 'password';
-        icon.classList.remove('fa-eye-slash');
-        icon.classList.add('fa-eye');
+      function iniciarBarra(notifData) {
+        const barra = notifData.elemento.querySelector('.barra-carga');
+        const progreso = notifData.progresoBarra;
+        const tiempoRestante = DURACION_BARRA * (1 - progreso);
+        barra.style.transform = `scaleX(${progreso})`;
+        barra.offsetHeight;
+        barra.style.transition = `transform ${tiempoRestante}ms linear`;
+        barra.style.transform = 'scaleX(1)';
+        notifData.tiempoInicio = Date.now();
+        notifData.timeout = setTimeout(() => dismissNotificacion(notifData.id), tiempoRestante);
       }
-    }
 
-    function switchTab(tab) {
-      document.getElementById('panelLogin').classList.toggle('active', tab === 'login');
-      document.getElementById('panelRegister').classList.toggle('active', tab === 'register');
-      document.getElementById('tabLogin').classList.toggle('active', tab === 'login');
-      document.getElementById('tabRegister').classList.toggle('active', tab === 'register');
-
-      const heading = document.querySelector('.auth-heading');
-      if (tab === 'login') {
-        heading.querySelector('h1').textContent = 'Inicia sesión';
-        heading.querySelector('p').textContent = 'Accede a tu portal corporativo seguro';
-      } else {
-        heading.querySelector('h1').textContent = 'Crea tu cuenta';
-        heading.querySelector('p').textContent = 'Configura tu portal corporativo en minutos';
-      }
-    }
-
-    let regStep = 1;
-
-    function goStep(n) {
-      if (n === 2 && regStep === 1) {
-        const c = document.getElementById('regCompany').value.trim();
-        const code = document.getElementById('regCode').value.trim();
-        if (!c || !code) { showMessage('Completa el nombre y código de empresa.', 'error'); return; }
-      }
-      if (n === 3 && regStep === 2) {
-        const e = document.getElementById('regEmail').value.trim();
-        const f = document.getElementById('regFirst').value.trim();
-        if (!f || !e) { showMessage('Completa nombre y correo corporativo.', 'error'); return; }
-        if (!e.includes('@')) { showMessage('Ingresa un correo válido.', 'error'); return; }
-      }
-      document.getElementById('regStep' + regStep).style.display = 'none';
-      regStep = n;
-      document.getElementById('regStep' + regStep).style.display = 'block';
-      updateSteps();
-    }
-
-    function updateSteps() {
-      [1, 2, 3].forEach(i => {
-        const dot = document.getElementById('sdot' + i);
-        const lbl = document.getElementById('slabel' + i);
-        if (i < regStep) {
-          dot.className = 'step-dot done';
-          dot.innerHTML = '<i class="fas fa-check" style="font-size:11px;"></i>';
-          lbl.style.color = 'var(--text-dim)';
-        } else if (i === regStep) {
-          dot.className = 'step-dot active';
-          dot.textContent = i;
-          lbl.style.color = 'var(--white)';
-        } else {
-          dot.className = 'step-dot';
-          dot.textContent = i;
-          lbl.style.color = 'var(--text-muted)';
+      function pausarBarra(notifData) {
+        const barra = notifData.elemento.querySelector('.barra-carga');
+        if (notifData.tiempoInicio) {
+          const tiempoTranscurrido = Date.now() - notifData.tiempoInicio;
+          const progresoTotal = (tiempoTranscurrido / DURACION_BARRA) + notifData.progresoBarra;
+          notifData.progresoBarra = Math.min(progresoTotal, 1);
         }
-      });
-      [1, 2].forEach(i => {
-        const line = document.getElementById('sline' + i);
-        line.className = 'step-line' + (i < regStep ? ' done' : '');
-      });
-    }
+        barra.style.transition = 'none';
+        barra.style.transform = `scaleX(${notifData.progresoBarra})`;
+        if (notifData.timeout) { clearTimeout(notifData.timeout); notifData.timeout = null; }
+        notifData.tiempoInicio = null;
+      }
 
-    function checkStrength(inp) {
-      const v = inp.value;
-      const w = document.getElementById('strengthWrap');
-      const fill = document.getElementById('strengthFill');
-      const lbl = document.getElementById('strengthLabel');
-      if (!v) { w.style.display = 'none'; return; }
-      w.style.display = 'block';
-      let score = 0;
-      if (v.length >= 8) score++;
-      if (/[A-Z]/.test(v)) score++;
-      if (/[0-9]/.test(v)) score++;
-      if (/[^A-Za-z0-9]/.test(v)) score++;
-      const levels = [
-        { pct: '25%', bg: '#ff453a', txt: 'Contraseña débil' },
-        { pct: '50%', bg: '#ff9f0a', txt: 'Contraseña regular' },
-        { pct: '75%', bg: '#ffd60a', txt: 'Contraseña buena' },
-        { pct: '100%', bg: '#30d158', txt: 'Contraseña fuerte' }
-      ];
-      const l = levels[Math.max(0, score - 1)];
-      fill.style.width = l.pct; fill.style.background = l.bg; lbl.textContent = l.txt; lbl.style.color = l.bg;
-    }
+      function actualizarPosiciones() {
+        notificaciones.forEach((notif, index) => {
+          const el = notif.elemento;
+          for (let i = 0; i <= 5; i++) el.classList.remove(`pos-${i}`);
+          if (index <= 5) el.classList.add(`pos-${index}`);
+          if (index === 0 && notif.estado === 'visible') el.classList.add('activa');
+          else el.classList.remove('activa');
+        });
+      }
 
-    async function doRegister() {
-      const p = document.getElementById('regPass').value;
-      const p2 = document.getElementById('regPass2').value;
-      const terms = document.getElementById('acceptTerms').checked;
-      if (!p || !p2) { showMessage('Ingresa y confirma tu contraseña.', 'error'); return; }
-      if (p !== p2) { showMessage('Las contraseñas no coinciden.', 'error'); return; }
-      if (p.length < 8) { showMessage('La contraseña debe tener al menos 8 caracteres.', 'error'); return; }
-      if (!terms) { showMessage('Debes aceptar los términos y condiciones.', 'error'); return; }
+      function dismissNotificacion(id) {
+        const index = notificaciones.findIndex(n => n.id === id);
+        if (index === -1 || animacionEnCurso) return;
+        const notif = notificaciones[index];
+        if (index !== 0) return;
+        if (notif.timeout) clearTimeout(notif.timeout);
+        animacionEnCurso = true;
+        notif.estado = 'saliendo';
+        notif.elemento.classList.remove('activa', 'pos-0');
+        notif.elemento.classList.add('saliendo');
+        notif.elemento.addEventListener('animationend', function handler() {
+          notif.elemento.removeEventListener('animationend', handler);
+          notif.elemento.remove();
+          notificaciones.splice(0, 1);
+          animacionEnCurso = false;
+          if (notificaciones.length > 0) {
+            const siguiente = notificaciones[0];
+            siguiente.estado = 'visible';
+            siguiente.elemento.classList.add('activa');
+            siguiente.elemento.classList.remove('pos-1', 'pos-2', 'pos-3', 'pos-4', 'pos-5');
+            siguiente.elemento.classList.add('pos-0');
+            iniciarBarra(siguiente);
+          }
+          actualizarPosiciones();
+          actualizarContador();
+        });
+      }
 
-      const payload = {
-        empresaNombre: document.getElementById('regCompany').value.trim(),
-        empresaCodigo: document.getElementById('regCode').value.trim(),
-        empresaSector: document.getElementById('regSector').value,
-        usuarioNombre: document.getElementById('regFirst').value.trim(),
-        usuarioApellido: document.getElementById('regLast').value.trim(),
-        email: document.getElementById('regEmail').value.trim(),
-        rol: document.getElementById('regRole').value,
-        password: p,
-        dosFaActivo: document.querySelector('#panelRegister .btn-bio').textContent.includes('Activo'),
-        terminosAceptados: terms
+      function actualizarContador() {
+        if (notificaciones.length > 1) {
+          contadorPila.textContent = `${notificaciones.length} notificaciones`;
+          contadorPila.classList.add('visible');
+        } else {
+          contadorPila.classList.remove('visible');
+        }
+      }
+
+      window.showMessage = function (text, type) {
+        const tipoValido = ['error', 'success', 'info', 'warning'].includes(type) ? type : 'info';
+        crearNotificacion(text, tipoValido);
       };
 
-      const btns = document.querySelectorAll('#regStep3 .btn-submit');
-      btns[1].innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creando...'; btns[1].disabled = true;
-
-      try {
-        const res = await fetch(`${API_ROOT}/api/registro`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
+      /* ═══ TOGGLE PASSWORD ═══ */
+      function setupToggleButtons() {
+        document.querySelectorAll('.toggle-pw').forEach(btn => {
+          btn.addEventListener('click', function (e) {
+            e.preventDefault();
+            const input = this.parentElement.querySelector('input');
+            const icon = this.querySelector('i');
+            if (!input || !icon) return;
+            if (input.type === 'password') {
+              input.type = 'text';
+              icon.classList.remove('fa-eye');
+              icon.classList.add('fa-eye-slash');
+            } else {
+              input.type = 'password';
+              icon.classList.remove('fa-eye-slash');
+              icon.classList.add('fa-eye');
+            }
+          });
         });
-        const data = await readJsonResponse(res);
-        btns[1].innerHTML = '<i class="fas fa-check"></i> Crear Cuenta'; btns[1].disabled = false;
-
-        if (!res.ok) {
-          showMessage(data.error || 'Error al crear la cuenta', 'error');
-        } else {
-          showMessage('¡Cuenta creada! Inicia sesión para continuar.', 'success');
-          setTimeout(() => switchTab('login'), 2000);
-        }
-      } catch (error) {
-        btns[1].innerHTML = '<i class="fas fa-check"></i> Crear Cuenta'; btns[1].disabled = false;
-        showMessage('Error de conexión con el servidor.', 'error');
       }
-    }
 
-    function trigger2FA() {
-      const strip = document.querySelector('#panelLogin .biometric-row .bio-text');
-      const btn = document.querySelector('#panelLogin .btn-bio');
-      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-      setTimeout(() => {
-        btn.innerHTML = '<i class="fas fa-check"></i> Listo';
-        btn.style.background = 'rgba(48,209,88,0.15)'; btn.style.color = 'var(--green)'; btn.style.borderColor = 'rgba(48,209,88,0.3)';
-        strip.innerHTML = '<strong style="color:var(--green);">2FA VERIFICADO</strong>Redirigiendo...';
-        showMessage('Autenticación 2FA verificada correctamente', 'success');
-      }, 2200);
-    }
+      /* ═══ LOGIN ═══ */
+      document.addEventListener('DOMContentLoaded', function () {
+        setupToggleButtons();
 
-    function toggle2FAEnroll(btn) {
-      if (btn.textContent.trim() === 'Activar') {
+        document.getElementById('loginForm').addEventListener('submit', async function (e) {
+          e.preventDefault();
+          const email = document.getElementById('loginEmail').value.trim();
+          const password = document.getElementById('loginPass').value.trim();
+          const btn = document.querySelector('#loginForm .btn-submit');
+
+          if (!email || !password) {
+            showMessage('Por favor, completa correo y contraseña', 'error');
+            return;
+          }
+
+          btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verificando...';
+          btn.disabled = true;
+
+          try {
+            const res = await fetch(`${API_ROOT}/api/login`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ email: email.toLowerCase(), password })
+            });
+            const data = await readJsonResponse(res);
+            if (!res.ok) {
+              showMessage(data.error || 'Credenciales inválidas.', 'error');
+              btn.innerHTML = 'Continuar <i class="fas fa-chevron-right" style="font-size:12px;"></i>';
+              btn.disabled = false;
+              return;
+            }
+            const user = data.user;
+            const normalizedEmpresa = (user.empresa_codigo || '').toString().trim().toUpperCase();
+            const empresaNombre = user.empresa_nombre || (normalizedEmpresa === 'ROOT' ? 'Portal Pilot' : normalizedEmpresa);
+            localStorage.setItem('token', data.token);
+            localStorage.setItem('userRole', user.rol || '');
+            localStorage.setItem('userName', user.nombre || '');
+            localStorage.setItem('userEmail', user.email || '');
+            localStorage.setItem('empresaCodigo', normalizedEmpresa);
+            localStorage.setItem('empresaNombre', empresaNombre);
+            localStorage.setItem('currentAccountId', user.id || '');
+
+            const pendingStates = ['pending', 'pendiente', 'pending_activation', 'pendiente_activacion', 'pendiente-activacion', 'first_access', 'primer_acceso', 'pending-first-access'];
+            if (pendingStates.includes((user.status || '').toString().toLowerCase())) {
+              localStorage.setItem('pendingUserId', user.id);
+              localStorage.setItem('pendingEmail', user.email);
+              showMessage('Primer acceso detectado. Redirigiendo...', 'info');
+              setTimeout(() => window.location.href = `primer_acceso.html?email=${encodeURIComponent(user.email)}`, 1200);
+            } else {
+              localStorage.removeItem('pendingUserId');
+              localStorage.removeItem('pendingEmail');
+              showMessage('Acceso concedido. Redirigiendo...', 'success');
+              setTimeout(() => window.location.href = 'pp/welcome.html', 1200);
+            }
+          } catch (err) {
+            console.error(err);
+            showMessage('Error de conexión. Verifica que el servidor esté corriendo.', 'error');
+            btn.innerHTML = 'Continuar <i class="fas fa-chevron-right" style="font-size:12px;"></i>';
+            btn.disabled = false;
+          }
+        });
+      });
+
+      /* ═══ 2FA LOGIN ═══ */
+      window.trigger2FA = function () {
+        const strip = document.querySelector('.biometric-row .bio-text');
+        const btn = document.querySelector('.biometric-row .btn-bio');
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
         setTimeout(() => {
-          btn.innerHTML = '<i class="fas fa-check"></i> Activo';
+          btn.innerHTML = '<i class="fas fa-check"></i> Listo';
           btn.style.background = 'rgba(48,209,88,0.15)'; btn.style.color = 'var(--green)'; btn.style.borderColor = 'rgba(48,209,88,0.3)';
-        }, 1500);
-      }
-    }
+          strip.innerHTML = '<strong style="color:var(--green);">2FA VERIFICADO</strong>Redirigiendo...';
+          showMessage('Autenticación 2FA verificada correctamente', 'success');
+        }, 2200);
+      };
 
-    function ssoClick(p) {
-      showMessage(`Redirigiendo a ${p}...`, 'info');
-    }
+      window.ssoClick = function (p) { showMessage(`Redirigiendo a ${p}...`, 'info'); };
 
-    function forgotPw(e) {
-      e.preventDefault();
-      document.getElementById('recoveryModal').style.display = 'flex';
-      document.getElementById('recStepEmail').style.display = 'block';
-      document.getElementById('recStepVerify').style.display = 'none';
-      const email = document.getElementById('loginEmail').value.trim();
-      if (email) {
-        document.getElementById('recoveryEmailInput').value = email;
-      }
-    }
+      /* ═══ RECUPERACIÓN DE CONTRASEÑA ═══ */
+      window.forgotPw = function (e) {
+        e.preventDefault();
+        document.getElementById('recoveryModal').style.display = 'flex';
+        document.getElementById('recStepEmail').style.display = 'block';
+        document.getElementById('recStepVerify').style.display = 'none';
+        const email = document.getElementById('loginEmail').value.trim();
+        if (email) document.getElementById('recoveryEmailInput').value = email;
+      };
 
-    function closeRecoveryModal() {
-      document.getElementById('recoveryModal').style.display = 'none';
-    }
+      window.closeRecoveryModal = function () {
+        document.getElementById('recoveryModal').style.display = 'none';
+      };
 
-    async function requestRecoveryCode() {
-      const email = document.getElementById('recoveryEmailInput').value.trim();
-      if (!email || !email.includes('@')) {
-        showMessage('Ingresa un correo electrónico válido.', 'error');
-        return;
-      }
-
-      const btn = document.querySelector('#recStepEmail .btn-submit');
-      const orig = btn.innerHTML;
-      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
-      btn.disabled = true;
-
-      try {
-        const res = await fetch(`${API_ROOT}/api/recuperacion`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email })
-        });
-        const data = await readJsonResponse(res);
-
-        btn.innerHTML = orig;
-        btn.disabled = false;
-
-        if (res.ok) {
-          document.getElementById('recStepEmail').style.display = 'none';
-          document.getElementById('recStepVerify').style.display = 'block';
-          showMessage('Código enviado a tu correo', 'success');
-        } else {
-          showMessage(data.error || 'Error al enviar código.', 'error');
-        }
-      } catch (err) {
-        btn.innerHTML = orig;
-        btn.disabled = false;
-        showMessage('Error de conexión con el servidor.', 'error');
-      }
-    }
-
-    async function verifyRecoveryAndChange() {
-      const email = document.getElementById('recoveryEmailInput').value.trim();
-      const code = document.getElementById('recoveryCodeInput').value.trim();
-      const newPassword = document.getElementById('recoveryNewPassInput').value;
-
-      if (!code || code.length !== 6) {
-        showMessage('Introduce el código de 6 dígitos.', 'error');
-        return;
-      }
-
-      if (!newPassword || newPassword.length < 8) {
-        showMessage('La nueva contraseña debe tener al menos 8 caracteres.', 'error');
-        return;
-      }
-
-      const btn = document.querySelector('#recStepVerify .btn-submit');
-      const orig = btn.innerHTML;
-      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Restableciendo...';
-      btn.disabled = true;
-
-      try {
-        const res = await fetch(`${API_ROOT}/api/recuperacion/verificar`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, code, newPassword })
-        });
-        const data = await readJsonResponse(res);
-
-        btn.innerHTML = orig;
-        btn.disabled = false;
-
-        if (res.ok) {
-          showMessage('✓ Contraseña restablecida correctamente', 'success');
-          setTimeout(() => {
-            closeRecoveryModal();
-            switchTab('login');
-          }, 1500);
-        } else {
-          showMessage(data.error || 'Código incorrecto o expirado.', 'error');
-        }
-      } catch (err) {
-        btn.innerHTML = orig;
-        btn.disabled = false;
-        showMessage('Error de conexión con el servidor.', 'error');
-      }
-    }
-
-    document.getElementById('loginForm').addEventListener('submit', async function (e) {
-      e.preventDefault();
-
-      const email = document.getElementById('loginEmail').value;
-      const password = document.getElementById('loginPass').value;
-      const btn = document.querySelector('#panelLogin .btn-submit');
-
-      if (!email || !password) {
-        showMessage('Por favor, completa correo y contraseña', 'error');
-        return;
-      }
-
-      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verificando...';
-      btn.disabled = true;
-
-      try {
-        const response = await fetch(`${API_ROOT}/api/login`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, password })
-        });
-
-        const data = await readJsonResponse(response);
-
-        if (response.ok) {
-          const normalizedEmpresa = (data.user.empresa_codigo || '').toString().trim().toUpperCase();
-          localStorage.setItem('token', data.token);
-          localStorage.setItem('userRole', data.user.rol);
-          localStorage.setItem('userName', data.user.nombre);
-          localStorage.setItem('userEmail', data.user.email);
-          localStorage.setItem('empresaCodigo', normalizedEmpresa);
-          localStorage.setItem('currentAccountId', data.user.id);
-
-          if (data.accounts && data.accounts.length > 1) {
-            const normAccounts = data.accounts.map(a => ({ ...a, empresa_codigo: (a.empresa_codigo || '').toString().trim().toUpperCase() }));
-            localStorage.setItem('linkedAccounts', JSON.stringify(normAccounts));
+      window.requestRecoveryCode = async function () {
+        const email = document.getElementById('recoveryEmailInput').value.trim();
+        if (!email || !email.includes('@')) { showMessage('Ingresa un correo electrónico válido.', 'error'); return; }
+        const btn = document.querySelector('#recStepEmail .btn-submit');
+        const orig = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...'; btn.disabled = true;
+        try {
+          const res = await fetch(`${API_ROOT}/api/recuperacion`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email })
+          });
+          const data = await readJsonResponse(res);
+          btn.innerHTML = orig; btn.disabled = false;
+          if (res.ok) {
+            document.getElementById('recStepEmail').style.display = 'none';
+            document.getElementById('recStepVerify').style.display = 'block';
+            showMessage('Código enviado a tu correo', 'success');
           } else {
-            localStorage.removeItem('linkedAccounts');
+            showMessage(data.error || 'Error al enviar código.', 'error');
           }
-
-          const userStatus = (data.user.status || '').toString().toLowerCase();
-          const pendingStates = ['pending', 'pendiente', 'pending_activation', 'pendiente_activacion', 'pendiente-activacion', 'first_access', 'primer_acceso', 'pending-first-access'];
-          if (pendingStates.includes(userStatus)) {
-            localStorage.setItem('pendingUserId', data.user.id);
-            localStorage.setItem('pendingEmail', data.user.email);
-            localStorage.setItem('currentAccountId', data.user.id);
-            showMessage('Primer acceso detectado. Redirigiendo...', 'info');
-            setTimeout(() => {
-              window.location.href = `primer_acceso.html?email=${encodeURIComponent(data.user.email)}`;
-            }, 1200);
-          } else {
-            localStorage.removeItem('pendingUserId');
-            localStorage.removeItem('pendingEmail');
-            showMessage('Acceso concedido. Redirigiendo...', 'success');
-            setTimeout(() => {
-              window.location.href = 'pp/welcome.html';
-            }, 1200);
-          }
-        } else {
-          showMessage(data.error || 'Credenciales inválidas', 'error');
-          btn.innerHTML = 'Continuar <i class="fas fa-chevron-right" style="font-size:12px;"></i>';
-          btn.disabled = false;
+        } catch (err) {
+          btn.innerHTML = orig; btn.disabled = false;
+          showMessage('Error de conexión con el servidor.', 'error');
         }
-      } catch (error) {
-        console.error('Error de conexión:', error);
-        showMessage('Error de conexión. Verifica el servidor.', 'error');
-        btn.innerHTML = 'Continuar <i class="fas fa-chevron-right" style="font-size:12px;"></i>';
-        btn.disabled = false;
-      }
-    });
+      };
+
+      window.verifyRecoveryAndChange = async function () {
+        const email = document.getElementById('recoveryEmailInput').value.trim();
+        const code = document.getElementById('recoveryCodeInput').value.trim();
+        const newPassword = document.getElementById('recoveryNewPassInput').value;
+        if (!code || code.length !== 6) { showMessage('Introduce el código de 6 dígitos.', 'error'); return; }
+        if (!newPassword || newPassword.length < 8) { showMessage('La nueva contraseña debe tener al menos 8 caracteres.', 'error'); return; }
+        const btn = document.querySelector('#recStepVerify .btn-submit');
+        const orig = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Restableciendo...'; btn.disabled = true;
+        try {
+          const res = await fetch(`${API_ROOT}/api/recuperacion/verificar`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, code, newPassword })
+          });
+          const data = await readJsonResponse(res);
+          btn.innerHTML = orig; btn.disabled = false;
+          if (res.ok) {
+            showMessage('✓ Contraseña restablecida correctamente', 'success');
+            setTimeout(() => { closeRecoveryModal(); }, 1500);
+          } else {
+            showMessage(data.error || 'Código incorrecto o expirado.', 'error');
+          }
+        } catch (err) {
+          btn.innerHTML = orig; btn.disabled = false;
+          showMessage('Error de conexión con el servidor.', 'error');
+        }
+      };
+    })();
   </script>
-
 </body>
 
 </html>
-

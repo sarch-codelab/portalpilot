@@ -937,9 +937,10 @@ app.post('/api/registro', async (req, res) => {
     if (!requireNocoDbToken(res)) return;
 
     const {
-      empresaNombre, empresaCodigo, empresaSector,
-      usuarioNombre, usuarioApellido, email, rol,
-      password, dosFaActivo, terminosAceptados
+      empresaNombre, empresaCodigo, dominioWorkspace, landPage,
+      empresaSize, sise, empresaSector, empresaCountry,
+      usuarioNombre, usuarioApellido, email, cargo,
+      password, dosFaActivo, dosFaSecret, dosFaBackupCodes, terminosAceptados
     } = req.body;
 
     if (!email || !password || !empresaCodigo || !usuarioNombre || !usuarioApellido) {
@@ -959,7 +960,12 @@ app.post('/api/registro', async (req, res) => {
       await nocodbApi.post(EMPRESAS_TABLE, {
         nombre: empresaNombre,
         codigo: empresaCodigo,
-        sector: empresaSector
+        dominio: dominioWorkspace || null,
+        land_page: landPage || null,
+        size: empresaSize || null,
+        sise: sise || null,
+        sector: empresaSector || null,
+        pais: empresaCountry || null
       });
     } catch (err) {
       console.log('Nota: La empresa podría ya existir.', err.response?.data || err.message);
@@ -972,11 +978,15 @@ app.post('/api/registro', async (req, res) => {
       nombre: usuarioNombre,
       apellido: usuarioApellido,
       email: emailNorm,
-      rol: rol,
+      cargo: cargo || null,
+      rol: 'owner',           // Siempre owner para el creador del tenant
       password: passwordHash,
-      dosfa_activo: dosFaActivo,
-      terminos_aceptados: terminosAceptados,
+      dosfa_activo: dosFaActivo || false,
+      dosfa_secret: dosFaSecret || null,
+      dosfa_backup_codes: dosFaBackupCodes ? JSON.stringify(dosFaBackupCodes) : null,
+      terminos_aceptados: terminosAceptados || false,
       empresa_codigo: empresaCodigo,
+      dominio_workspace: dominioWorkspace || null,
       status: 'pending'
     };
 
@@ -984,9 +994,49 @@ app.post('/api/registro', async (req, res) => {
 
     await enviarOnboardingEmail(emailNorm);
 
-    res.status(201).json({ message: 'Usuario y Empresa registrados con éxito' });
+    res.status(201).json({ 
+      message: 'Tenant creado con éxito',
+      empresaCodigo,
+      dominioWorkspace: dominioWorkspace || null
+    });
   } catch (error) {
     return handleNocoDbError(res, error, 'No se pudo completar el registro en este momento.');
+  }
+});
+
+// Endpoint para enviar código de verificación de email durante el registro
+app.post('/api/enviar-codigo-verificacion', async (req, res) => {
+  try {
+    const { email, codigo } = req.body;
+    if (!email || !codigo) {
+      return res.status(400).json({ error: 'Faltan parámetros: email y codigo son requeridos' });
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ error: 'Correo inválido' });
+    }
+    await transporter.sendMail({
+      from: `"Portal Pilot" <${EMAIL_FROM}>`,
+      to: email,
+      subject: `🔐 Tu código de verificación de Portal Pilot: ${codigo}`,
+      html: `
+        <div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;background:#0f0f1a;color:#e0e0f0;border-radius:12px;overflow:hidden;">
+          <div style="background:linear-gradient(135deg,#6366f1,#8b5cf6);padding:32px;text-align:center;">
+            <h1 style="margin:0;font-size:24px;color:#fff;">Portal Pilot</h1>
+            <p style="margin:8px 0 0;color:rgba(255,255,255,0.8);">Código de verificación</p>
+          </div>
+          <div style="padding:32px;text-align:center;">
+            <p style="margin:0 0 24px;font-size:15px;color:#a0a0c0;">Usa este código para verificar tu cuenta. Expira en 10 minutos.</p>
+            <div style="font-size:42px;font-weight:800;letter-spacing:14px;color:#6366f1;font-family:monospace;background:rgba(99,102,241,0.1);padding:20px;border-radius:10px;display:inline-block;">${codigo}</div>
+            <p style="margin:24px 0 0;font-size:13px;color:#666;">¿No solicitaste esto? Ignora este mensaje.</p>
+          </div>
+        </div>
+      `
+    });
+    res.json({ success: true, message: 'Código enviado correctamente' });
+  } catch (err) {
+    console.error('[CODIGO-VERIFICACION] Error:', err);
+    res.status(500).json({ success: false, error: err.message });
   }
 });
 

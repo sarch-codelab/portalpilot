@@ -1,0 +1,2448 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal Pilot — Registro Empresarial</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&family=JetBrains+Mono:wght@400;500;600&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg: #000000;
+            --bg-soft: #0a0a0c;
+            --surface: #111114;
+            --surface-2: #16161a;
+            --surface-3: #1c1c21;
+            --border: rgba(255, 255, 255, 0.08);
+            --border-strong: rgba(255, 255, 255, 0.14);
+            --accent: #8b5cf6;
+            --accent-soft: #a78bfa;
+            --accent-glow: rgba(139, 92, 246, 0.25);
+            --white: #f5f5f7;
+            --text: #d2d2d7;
+            --text-dim: #86868b;
+            --text-muted: #6e6e73;
+            --green: #30d158;
+            --red: #ff453a;
+            --yellow: #ffd60a;
+            --orange: #ff9f0a;
+            --radius: 12px;
+            --radius-lg: 20px;
+            --isla-bg: rgba(20, 20, 20, 0.85);
+            --isla-border: rgba(255, 255, 255, 0.12);
+            --isla-text: #ffffff;
+            --isla-shadow: rgba(0, 0, 0, 0.7);
+            --cuadro-icono-bg: #16161a;
+            --cuadro-shadow-1: rgba(0, 0, 0, 0.6);
+            --cuadro-shadow-2: rgba(255, 255, 255, 0.05);
+        }
+
+        html,
+        body {
+            height: 100%;
+            font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        body {
+            background:
+                radial-gradient(ellipse 80% 60% at 50% 0%, rgba(139, 92, 246, 0.10) 0%, transparent 50%),
+                radial-gradient(ellipse 60% 50% at 50% 100%, rgba(167, 139, 250, 0.06) 0%, transparent 60%),
+                var(--bg);
+        }
+
+        /* ─── LAYOUT PRINCIPAL ─── */
+        .page-wrap {
+            position: relative;
+            z-index: 1;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 40px 24px 60px;
+        }
+
+        .top-bar {
+            width: 100%;
+            max-width: 640px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 36px;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .brand-icon {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-soft) 100%);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            color: #fff;
+            box-shadow: 0 8px 20px rgba(139, 92, 246, 0.3);
+        }
+
+        .brand-name {
+            font-family: 'Syne', sans-serif;
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--white);
+            letter-spacing: 1.5px;
+        }
+
+        .login-link {
+            font-size: 13px;
+            color: var(--text-dim);
+            text-decoration: none;
+            transition: color 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .login-link:hover {
+            color: var(--white);
+        }
+
+        .login-link strong {
+            color: var(--accent-soft);
+        }
+
+        /* ─── CONTENEDOR PRINCIPAL ─── */
+        .register-container {
+            width: 100%;
+            max-width: 640px;
+        }
+
+        .register-heading {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .register-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 14px;
+            background: rgba(139, 92, 246, 0.1);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            border-radius: 100px;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--accent-soft);
+            letter-spacing: 1px;
+            margin-bottom: 18px;
+        }
+
+        .register-heading h1 {
+            font-family: 'Syne', sans-serif;
+            font-size: 36px;
+            font-weight: 800;
+            color: var(--white);
+            letter-spacing: -1.2px;
+            line-height: 1.1;
+            margin-bottom: 12px;
+        }
+
+        .register-heading h1 span {
+            background: linear-gradient(135deg, var(--accent), var(--accent-soft));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .register-heading p {
+            font-size: 15px;
+            color: var(--text-dim);
+            line-height: 1.5;
+            max-width: 480px;
+            margin: 0 auto;
+        }
+
+        /* ─── NOTIFICACIONES ISLA ─── */
+        #contenedor-pila {
+            position: fixed;
+            top: 20px;
+            right: 24px;
+            width: 300px;
+            z-index: 9998;
+            pointer-events: none;
+        }
+
+        .notificacion {
+            position: relative;
+            top: 0;
+            right: 0;
+            width: 300px;
+            height: 54px;
+            background-color: var(--isla-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 35px;
+            border: 1px solid var(--isla-border);
+            display: flex;
+            align-items: center;
+            padding: 0 12px;
+            box-shadow: 0px 10px 30px var(--isla-shadow), 0px 1px 3px rgba(255, 255, 255, 0.05) inset;
+            box-sizing: border-box;
+            overflow: hidden;
+            transition: transform 0.5s cubic-bezier(0.28, 0.84, 0.42, 1), opacity 0.5s ease;
+            pointer-events: none;
+            cursor: pointer;
+            will-change: transform, opacity;
+            margin-bottom: 8px;
+        }
+
+        .notificacion.activa {
+            pointer-events: auto;
+        }
+
+        .contenido-notificacion {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .notificacion.visible .contenido-notificacion {
+            opacity: 1;
+        }
+
+        .cuadro-icono {
+            width: 36px;
+            height: 36px;
+            background-color: var(--cuadro-icono-bg);
+            box-shadow: inset 2px 2px 5px var(--cuadro-shadow-1), inset -1px -1px 3px var(--cuadro-shadow-2);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-right: 14px;
+            flex-shrink: 0;
+            overflow: hidden;
+        }
+
+        .cuadro-icono img {
+            width: 24px;
+            height: 24px;
+            object-fit: contain;
+        }
+
+        .texto-notificacion {
+            margin: 0;
+            color: var(--isla-text);
+            font-size: 14px;
+            font-weight: 600;
+            letter-spacing: -0.3px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .barra-carga {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 3px;
+            width: 100%;
+            transform-origin: left;
+        }
+
+        .barra-carga.error {
+            background: linear-gradient(90deg, #ff453a, #ff6b6b);
+        }
+
+        .barra-carga.success {
+            background: linear-gradient(90deg, #30d158, #5fe67a);
+        }
+
+        .barra-carga.info {
+            background: linear-gradient(90deg, #007aff, #00c6ff);
+        }
+
+        .barra-carga.warning {
+            background: linear-gradient(90deg, #ff9f0a, #ffd60a);
+        }
+
+        .notificacion.entrando {
+            animation: slideDown 0.5s forwards cubic-bezier(0.28, 0.84, 0.42, 1);
+        }
+
+        .notificacion.saliendo {
+            animation: slideUp 0.4s forwards ease-out;
+        }
+
+        @keyframes slideDown {
+            0% {
+                transform: translateY(-80px);
+                opacity: 0;
+            }
+
+            100% {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideUp {
+            0% {
+                transform: translateY(0);
+                opacity: 1;
+            }
+
+            100% {
+                transform: translateY(-80px);
+                opacity: 0;
+            }
+        }
+
+        @media (max-width: 600px) {
+            #contenedor-pila {
+                top: 12px;
+                right: 50%;
+                left: 50%;
+                transform: translateX(50%);
+                width: calc(100% - 24px);
+                max-width: 340px;
+            }
+
+            .notificacion {
+                width: 100%;
+            }
+
+            .texto-notificacion {
+                font-size: 13px;
+            }
+        }
+
+        @media(max-width: 480px) {
+            .register-heading h1 {
+                font-size: 28px;
+            }
+
+            .page-wrap {
+                padding: 24px 18px 40px;
+            }
+        }
+
+        /* ─── PROGRESS BAR ─── */
+        .progress-container {
+            margin-bottom: 36px;
+            padding: 24px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+        }
+
+        .progress-steps {
+            display: flex;
+            align-items: center;
+            gap: 0;
+            margin-bottom: 12px;
+        }
+
+        .progress-step {
+            display: flex;
+            align-items: center;
+            gap: 0;
+            flex: 1;
+        }
+
+        .progress-step:last-child {
+            flex: 0 0 auto;
+        }
+
+        .step-circle {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--surface-2);
+            border: 1.5px solid var(--border-strong);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Syne', sans-serif;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-muted);
+            flex-shrink: 0;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            z-index: 2;
+        }
+
+        .step-circle.active {
+            background: linear-gradient(135deg, var(--accent), var(--accent-soft));
+            border-color: transparent;
+            color: #fff;
+            box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.15), 0 8px 20px rgba(139, 92, 246, 0.4);
+        }
+
+        .step-circle.done {
+            background: var(--green);
+            border-color: transparent;
+            color: #000;
+        }
+
+        .step-line {
+            flex: 1;
+            height: 2px;
+            background: var(--border);
+            margin: 0 6px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .step-line-fill {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(90deg, var(--green), var(--accent));
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .step-line.done .step-line-fill {
+            transform: scaleX(1);
+        }
+
+        .progress-labels {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .step-label {
+            font-size: 11px;
+            font-weight: 500;
+            color: var(--text-muted);
+            text-align: center;
+            transition: color 0.3s;
+            flex: 1;
+        }
+
+        .step-label.active {
+            color: var(--white);
+            font-weight: 700;
+        }
+
+        .step-label.done {
+            color: var(--green);
+            font-weight: 600;
+        }
+
+        /* ─── STEP PANELS ─── */
+        .reg-step {
+            display: none;
+            animation: fadeSlide 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .reg-step.active {
+            display: block;
+        }
+
+        @keyframes fadeSlide {
+            from {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .step-intro {
+            margin-bottom: 24px;
+        }
+
+        .step-intro h2 {
+            font-family: 'Syne', sans-serif;
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--white);
+            letter-spacing: -0.5px;
+            margin-bottom: 6px;
+        }
+
+        .step-intro p {
+            font-size: 13px;
+            color: var(--text-dim);
+            line-height: 1.5;
+        }
+
+        /* ─── FORMULARIOS ─── */
+        .field {
+            margin-bottom: 16px;
+        }
+
+        .field-label {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .field-label label {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-dim);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .field-label .optional {
+            font-size: 10px;
+            color: var(--text-muted);
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            text-transform: none;
+        }
+
+        .input-wrap {
+            position: relative;
+        }
+
+        .input-wrap i.field-icon {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 14px;
+            color: var(--text-muted);
+            pointer-events: none;
+            transition: color 0.2s ease;
+            z-index: 1;
+        }
+
+        .input-wrap input,
+        .input-wrap select,
+        .input-wrap textarea {
+            width: 100%;
+            background: var(--surface);
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius);
+            padding: 13px 16px 13px 44px;
+            font-size: 14px;
+            color: var(--white);
+            font-family: inherit;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        .input-wrap textarea {
+            min-height: 80px;
+            resize: vertical;
+            padding-top: 12px;
+        }
+
+        .input-wrap input {
+            padding-right: 48px;
+        }
+
+        .input-wrap input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .input-wrap input:focus,
+        .input-wrap select:focus,
+        .input-wrap textarea:focus {
+            border-color: var(--accent);
+            background: var(--surface-2);
+            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+        }
+
+        .input-wrap input:focus+i.field-icon,
+        .input-wrap input:focus~i.field-icon {
+            color: var(--accent-soft);
+        }
+
+        .input-wrap select {
+            appearance: none;
+            cursor: pointer;
+            padding-right: 40px;
+        }
+
+        .input-wrap .chevron-down {
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 11px;
+            color: var(--text-muted);
+            pointer-events: none;
+        }
+
+        .input-wrap .toggle-pw {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            z-index: 2;
+            transition: color 0.2s ease, background 0.2s ease;
+        }
+
+        .input-wrap .toggle-pw:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--white);
+        }
+
+        .input-wrap .toggle-pw i {
+            pointer-events: none;
+        }
+
+        .input-wrap.valid input {
+            border-color: var(--green);
+        }
+
+        .input-wrap.valid i.field-icon {
+            color: var(--green);
+        }
+
+        .input-wrap.invalid input {
+            border-color: var(--red);
+        }
+
+        .input-wrap.invalid i.field-icon {
+            color: var(--red);
+        }
+
+        .field-hint {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 6px;
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .field-hint.error {
+            color: var(--red);
+        }
+
+        .field-hint.success {
+            color: var(--green);
+        }
+
+        .field-hint i {
+            font-size: 10px;
+        }
+
+        .field-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .check-label {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            cursor: pointer;
+        }
+
+        .check-label input[type=checkbox] {
+            width: 16px;
+            height: 16px;
+            accent-color: var(--accent);
+            cursor: pointer;
+            margin-top: 2px;
+            flex-shrink: 0;
+        }
+
+        .check-label span {
+            font-size: 12px;
+            color: var(--text-dim);
+            line-height: 1.5;
+        }
+
+        .check-label a {
+            color: var(--accent-soft);
+            text-decoration: none;
+        }
+
+        .check-label a:hover {
+            text-decoration: underline;
+        }
+
+        /* ─── BOTONES ─── */
+        .btn-submit {
+            width: 100%;
+            padding: 14px;
+            border-radius: 40px;
+            border: none;
+            cursor: pointer;
+            background: var(--white);
+            color: #000;
+            font-size: 14px;
+            font-weight: 600;
+            font-family: inherit;
+            letter-spacing: 0.2px;
+            transition: all 0.25s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-submit:hover {
+            background: #e8e8ed;
+            transform: translateY(-1px);
+            box-shadow: 0 8px 24px rgba(255, 255, 255, 0.08);
+        }
+
+        .btn-submit:active {
+            transform: translateY(0);
+        }
+
+        .btn-submit.secondary {
+            background: var(--surface);
+            color: var(--white);
+            border: 1px solid var(--border-strong);
+        }
+
+        .btn-submit.secondary:hover {
+            background: var(--surface-2);
+            box-shadow: none;
+        }
+
+        .btn-submit:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        .btn-row.single {
+            grid-template-columns: 1fr;
+        }
+
+        /* ─── PASSWORD STRENGTH ─── */
+        .password-strength {
+            margin-top: 14px;
+            padding: 16px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+        }
+
+        .strength-bar-wrap {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 12px;
+        }
+
+        .strength-segment {
+            flex: 1;
+            height: 4px;
+            background: var(--surface-3);
+            border-radius: 2px;
+            transition: background 0.3s;
+        }
+
+        .strength-segment.filled.weak {
+            background: var(--red);
+        }
+
+        .strength-segment.filled.fair {
+            background: var(--orange);
+        }
+
+        .strength-segment.filled.good {
+            background: var(--yellow);
+        }
+
+        .strength-segment.filled.strong {
+            background: var(--green);
+        }
+
+        .strength-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .strength-label {
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .strength-label.weak {
+            color: var(--red);
+        }
+
+        .strength-label.fair {
+            color: var(--orange);
+        }
+
+        .strength-label.good {
+            color: var(--yellow);
+        }
+
+        .strength-label.strong {
+            color: var(--green);
+        }
+
+        .generate-pw-btn {
+            background: transparent;
+            border: 1px solid var(--border-strong);
+            color: var(--accent-soft);
+            font-size: 11px;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .generate-pw-btn:hover {
+            background: rgba(139, 92, 246, 0.1);
+            border-color: var(--accent);
+        }
+
+        .requirements-list {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+        }
+
+        .req-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 11px;
+            color: var(--text-muted);
+            transition: color 0.2s;
+        }
+
+        .req-item i {
+            font-size: 10px;
+            width: 14px;
+            text-align: center;
+        }
+
+        .req-item.met {
+            color: var(--green);
+        }
+
+        .req-item.met i {
+            color: var(--green);
+        }
+
+        /* ─── 2FA SETUP ─── */
+        .twofa-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .qr-box {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .qr-box-title {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-dim);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .qr-code {
+            width: 160px;
+            height: 160px;
+            background: #fff;
+            border-radius: 12px;
+            padding: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .qr-code img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .secret-key-box {
+            background: var(--surface-2);
+            border: 1px dashed var(--border-strong);
+            border-radius: 10px;
+            padding: 8px 12px;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        .secret-key {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: var(--accent-soft);
+            letter-spacing: 1px;
+            word-break: break-all;
+            flex: 1;
+        }
+
+        .copy-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+
+        .copy-btn:hover {
+            color: var(--white);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .twofa-instructions {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 18px;
+        }
+
+        .twofa-instructions h4 {
+            font-family: 'Syne', sans-serif;
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--white);
+            margin-bottom: 12px;
+        }
+
+        .instruction-step {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .instruction-step:last-child {
+            margin-bottom: 0;
+        }
+
+        .instruction-num {
+            width: 22px;
+            height: 22px;
+            background: rgba(139, 92, 246, 0.15);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--accent-soft);
+            flex-shrink: 0;
+        }
+
+        .instruction-text {
+            font-size: 12px;
+            color: var(--text);
+            line-height: 1.5;
+            padding-top: 2px;
+        }
+
+        .instruction-text strong {
+            color: var(--white);
+        }
+
+        .otp-input-group {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            margin: 18px 0;
+        }
+
+        .otp-input {
+            width: 44px;
+            height: 52px;
+            background: var(--surface);
+            border: 1.5px solid var(--border-strong);
+            border-radius: 10px;
+            text-align: center;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--white);
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .otp-input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15);
+        }
+
+        .backup-codes {
+            margin-top: 18px;
+            padding: 14px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+        }
+
+        .backup-codes-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .backup-codes-title {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-dim);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .backup-codes-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+        }
+
+        .backup-code {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: var(--text);
+            padding: 5px 8px;
+            background: var(--surface-2);
+            border-radius: 6px;
+            letter-spacing: 1px;
+        }
+
+        /* ─── VERIFY EMAIL ─── */
+        .verify-email-box {
+            text-align: center;
+            padding: 16px 0;
+        }
+
+        .verify-icon {
+            width: 72px;
+            height: 72px;
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(167, 139, 250, 0.1));
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 28px;
+            color: var(--accent-soft);
+        }
+
+        .verify-email-box h3 {
+            font-family: 'Syne', sans-serif;
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--white);
+            margin-bottom: 10px;
+        }
+
+        .verify-email-box p {
+            font-size: 13px;
+            color: var(--text-dim);
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        .verify-email-box .email-highlight {
+            color: var(--accent-soft);
+            font-weight: 600;
+        }
+
+        .resend-link {
+            background: transparent;
+            border: none;
+            color: var(--accent-soft);
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 14px;
+            font-family: inherit;
+            transition: color 0.2s;
+        }
+
+        .resend-link:hover {
+            color: var(--white);
+        }
+
+        .resend-link:disabled {
+            color: var(--text-muted);
+            cursor: not-allowed;
+        }
+
+        /* ─── INFO BOX ─── */
+        .info-box {
+            background: rgba(139, 92, 246, 0.05);
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            border-radius: var(--radius);
+            padding: 14px 16px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .info-box i {
+            color: var(--accent-soft);
+            font-size: 16px;
+            margin-top: 2px;
+            flex-shrink: 0;
+        }
+
+        .info-box-text {
+            flex: 1;
+            font-size: 12px;
+            color: var(--text);
+            line-height: 1.5;
+        }
+
+        .info-box-text strong {
+            color: var(--white);
+        }
+
+        /* ─── SUCCESS ─── */
+        .success-container {
+            text-align: center;
+            padding: 40px 16px;
+        }
+
+        .success-icon {
+            width: 88px;
+            height: 88px;
+            background: linear-gradient(135deg, var(--green), #5fe67a);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px;
+            font-size: 36px;
+            color: #000;
+            box-shadow: 0 20px 40px rgba(48, 209, 88, 0.3);
+            animation: successPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes successPulse {
+
+            0%,
+            100% {
+                box-shadow: 0 20px 40px rgba(48, 209, 88, 0.3);
+            }
+
+            50% {
+                box-shadow: 0 20px 60px rgba(48, 209, 88, 0.5);
+            }
+        }
+
+        .success-container h2 {
+            font-family: 'Syne', sans-serif;
+            font-size: 32px;
+            font-weight: 800;
+            color: var(--white);
+            margin-bottom: 10px;
+            letter-spacing: -0.8px;
+        }
+
+        .success-container p {
+            font-size: 14px;
+            color: var(--text-dim);
+            margin-bottom: 28px;
+            line-height: 1.6;
+            max-width: 420px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .success-info {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 20px;
+            margin-bottom: 24px;
+            text-align: left;
+        }
+
+        .success-info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .success-info-row:last-child {
+            border-bottom: none;
+        }
+
+        .success-info-label {
+            font-size: 12px;
+            color: var(--text-dim);
+            font-weight: 500;
+        }
+
+        .success-info-value {
+            font-size: 13px;
+            color: var(--white);
+            font-weight: 600;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* ─── FOOTER ─── */
+        .page-footer {
+            margin-top: 48px;
+            font-size: 11px;
+            color: var(--text-muted);
+            text-align: center;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .page-footer a {
+            color: var(--text-dim);
+            text-decoration: none;
+        }
+
+        .page-footer a:hover {
+            color: var(--white);
+        }
+
+        @media (max-width: 600px) {
+            .twofa-container {
+                grid-template-columns: 1fr;
+            }
+
+            .field-row {
+                grid-template-columns: 1fr;
+            }
+
+            .otp-input {
+                width: 38px;
+                height: 46px;
+                font-size: 17px;
+            }
+
+            .btn-row {
+                grid-template-columns: 1fr;
+            }
+
+            .requirements-list {
+                grid-template-columns: 1fr;
+            }
+
+            .step-label {
+                font-size: 9px;
+            }
+
+            .step-circle {
+                width: 30px;
+                height: 30px;
+                font-size: 11px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="contenedor-pila"></div>
+
+    <div class="page-wrap">
+        <!-- TOP BAR -->
+        <div class="top-bar">
+            <div class="brand">
+                <div class="brand-icon"><i class="fas fa-robot"></i></div>
+                <div class="brand-name">PORTAL PILOT</div>
+            </div>
+            <a href="login.html" class="login-link">
+                <i class="fas fa-arrow-left"></i>
+                ¿Ya tienes cuenta? <strong>Inicia sesión</strong>
+            </a>
+        </div>
+
+        <div class="register-container">
+            <!-- HEADING -->
+            <div class="register-heading">
+                <div class="register-badge">
+                    <i class="fas fa-sparkles"></i>
+                    REGISTRO EMPRESARIAL
+                </div>
+                <h1>Crea tu <span>tenant corporativo</span></h1>
+                <p>Configura tu espacio empresarial con seguridad de nivel enterprise en solo 5 pasos.</p>
+            </div>
+
+            <!-- PROGRESS BAR -->
+            <div class="progress-container">
+                <div class="progress-steps">
+                    <div class="progress-step">
+                        <div class="step-circle active" data-step="1">1</div>
+                        <div class="step-line">
+                            <div class="step-line-fill"></div>
+                        </div>
+                    </div>
+                    <div class="progress-step">
+                        <div class="step-circle" data-step="2">2</div>
+                        <div class="step-line">
+                            <div class="step-line-fill"></div>
+                        </div>
+                    </div>
+                    <div class="progress-step">
+                        <div class="step-circle" data-step="3">3</div>
+                        <div class="step-line">
+                            <div class="step-line-fill"></div>
+                        </div>
+                    </div>
+                    <div class="progress-step">
+                        <div class="step-circle" data-step="4">4</div>
+                        <div class="step-line">
+                            <div class="step-line-fill"></div>
+                        </div>
+                    </div>
+                    <div class="progress-step">
+                        <div class="step-circle" data-step="5">5</div>
+                    </div>
+                </div>
+                <div class="progress-labels">
+                    <div class="step-label active">Empresa</div>
+                    <div class="step-label">Admin</div>
+                    <div class="step-label">Seguridad</div>
+                    <div class="step-label">2FA</div>
+                    <div class="step-label">Verificar</div>
+                </div>
+            </div>
+
+            <!-- ═══ STEP 1: EMPRESA ═══ -->
+            <div class="reg-step active" data-panel="1">
+                <div class="step-intro">
+                    <h2><i class="fas fa-building" style="color:var(--accent-soft);margin-right:10px;"></i>Información
+                        de la
+                        empresa</h2>
+                    <p>Configura los datos básicos de tu organización. Esta información será visible para todos los
+                        miembros del
+                        tenant.</p>
+                </div>
+
+                <div class="field">
+                    <div class="field-label">
+                        <label>Razón social</label>
+                    </div>
+                    <div class="input-wrap" id="wrap-company">
+                        <i class="fas fa-building field-icon"></i>
+                        <input type="text" id="regCompany" placeholder="Ej. TechCorp Enterprise S.A. de C.V.">
+                    </div>
+                    <div class="field-hint" id="hint-company">
+                        <i class="fas fa-info-circle"></i> Nombre legal completo de la empresa
+                    </div>
+                </div>
+
+                <div class="field-row">
+                    <div class="field">
+                        <div class="field-label">
+                            <label>Código de tenant</label>
+                        </div>
+                        <div class="input-wrap" id="wrap-code">
+                            <i class="fas fa-fingerprint field-icon"></i>
+                            <input type="text" id="regCode" placeholder="PP-XXXX-XXXX"
+                                style="font-family:'JetBrains Mono',monospace;letter-spacing:1px;text-transform:uppercase;">
+                        </div>
+                        <div class="field-hint" id="hint-code">
+                            <i class="fas fa-info-circle"></i> Formato: PP-XXXX-XXXX
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <div class="field-label">
+                            <label>Tamaño</label>
+                        </div>
+                        <div class="input-wrap">
+                            <i class="fas fa-users field-icon"></i>
+                            <select id="regSize">
+                                <option value="">Seleccionar...</option>
+                                <option value="1-10">1 - 10 empleados</option>
+                                <option value="11-50">11 - 50 empleados</option>
+                                <option value="51-200">51 - 200 empleados</option>
+                                <option value="201-500">201 - 500 empleados</option>
+                                <option value="500+">Más de 500</option>
+                            </select>
+                            <i class="fas fa-chevron-down chevron-down"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="field-row">
+                    <div class="field">
+                        <div class="field-label">
+                            <label>Sector industrial</label>
+                        </div>
+                        <div class="input-wrap">
+                            <i class="fas fa-briefcase field-icon"></i>
+                            <select id="regSector">
+                                <option value="">Seleccionar...</option>
+                                <option value="tecnologia">Tecnología</option>
+                                <option value="educacion">Educación</option>
+                                <option value="salud">Salud & Farmacéutica</option>
+                                <option value="finanzas">Finanzas & Banca</option>
+                                <option value="manufactura">Manufactura</option>
+                                <option value="retail">Retail & E-commerce</option>
+                                <option value="logistica">Logística & Transporte</option>
+                                <option value="energia">Energía</option>
+                                <option value="gobierno">Gobierno</option>
+                                <option value="otro">Otro</option>
+                            </select>
+                            <i class="fas fa-chevron-down chevron-down"></i>
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <div class="field-label">
+                            <label>País</label>
+                        </div>
+                        <div class="input-wrap">
+                            <i class="fas fa-globe field-icon"></i>
+                            <select id="regCountry">
+                                <option value="">Seleccionar...</option>
+                                <option value="MX">🇲🇽 México</option>
+                                <option value="ES">🇪🇸 España</option>
+                                <option value="AR">🇦🇷 Argentina</option>
+                                <option value="CO">🇨🇴 Colombia</option>
+                                <option value="CL">🇨🇱 Chile</option>
+                                <option value="PE">🇵🇪 Perú</option>
+                                <option value="US">🇺🇸 Estados Unidos</option>
+                                <option value="EC">🇪🇨 Ecuador</option>
+                                <option value="VE">🇻🇪 Venezuela</option>
+                                <option value="OTHER">Otro</option>
+                            </select>
+                            <i class="fas fa-chevron-down chevron-down"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="field">
+                    <div class="field-label">
+                        <label>Sitio web</label>
+                        <span class="optional">Opcional</span>
+                    </div>
+                    <div class="input-wrap">
+                        <i class="fas fa-globe field-icon"></i>
+                        <input type="url" id="regWebsite" placeholder="https://tuempresa.com">
+                    </div>
+                </div>
+
+                <div class="btn-row single">
+                    <button class="btn-submit" onclick="nextStep(1)">
+                        Continuar <i class="fas fa-arrow-right" style="font-size:12px;"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- ═══ STEP 2: ADMINISTRADOR ═══ -->
+            <div class="reg-step" data-panel="2">
+                <div class="step-intro">
+                    <h2><i class="fas fa-user-shield" style="color:var(--accent-soft);margin-right:10px;"></i>Datos del
+                        administrador</h2>
+                    <p>Esta cuenta tendrá permisos de Owner del tenant. Podrás añadir más administradores después desde
+                        el panel.
+                    </p>
+                </div>
+
+                <div class="info-box">
+                    <i class="fas fa-info-circle"></i>
+                    <div class="info-box-text">
+                        <strong>Cuenta de Owner:</strong> El administrador creado tendrá acceso total al panel de
+                        administración y
+                        podrá gestionar usuarios, roles y configuración del tenant.
+                    </div>
+                </div>
+
+                <div class="field-row">
+                    <div class="field">
+                        <div class="field-label">
+                            <label>Nombre</label>
+                        </div>
+                        <div class="input-wrap" id="wrap-firstname">
+                            <i class="fas fa-user field-icon"></i>
+                            <input type="text" id="regFirst" placeholder="Carlos">
+                        </div>
+                    </div>
+                    <div class="field">
+                        <div class="field-label">
+                            <label>Apellido</label>
+                        </div>
+                        <div class="input-wrap" id="wrap-lastname">
+                            <i class="fas fa-user field-icon"></i>
+                            <input type="text" id="regLast" placeholder="Mendoza">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="field">
+                    <div class="field-label">
+                        <label>Correo corporativo</label>
+                    </div>
+                    <div class="input-wrap" id="wrap-email">
+                        <i class="fas fa-envelope field-icon"></i>
+                        <input type="email" id="regEmail" placeholder="admin@tuempresa.com">
+                    </div>
+                    <div class="field-hint" id="hint-email">
+                        <i class="fas fa-info-circle"></i> Usaremos este correo para verificar tu cuenta
+                    </div>
+                </div>
+
+                <div class="field-row">
+                    <div class="field">
+                        <div class="field-label">
+                            <label>Cargo / Rol</label>
+                        </div>
+                        <div class="input-wrap">
+                            <i class="fas fa-id-badge field-icon"></i>
+                            <select id="regRole">
+                                <option value="">Seleccionar...</option>
+                                <option value="CEO">CEO / Director General</option>
+                                <option value="CTO">CTO / Director Tecnología</option>
+                                <option value="COO">COO / Director Operaciones</option>
+                                <option value="CFO">CFO / Director Financiero</option>
+                                <option value="Gerente">Gerente de Área</option>
+                                <option value="Supervisor">Supervisor</option>
+                                <option value="Analista">Analista</option>
+                                <option value="Otro">Otro</option>
+                            </select>
+                            <i class="fas fa-chevron-down chevron-down"></i>
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <div class="field-label">
+                            <label>Teléfono</label>
+                            <span class="optional">Opcional</span>
+                        </div>
+                        <div class="input-wrap">
+                            <i class="fas fa-phone field-icon"></i>
+                            <input type="tel" id="regPhone" placeholder="+52 55 1234 5678">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="btn-row">
+                    <button class="btn-submit secondary" onclick="prevStep(2)">
+                        <i class="fas fa-arrow-left" style="font-size:12px;"></i> Atrás
+                    </button>
+                    <button class="btn-submit" onclick="nextStep(2)">
+                        Continuar <i class="fas fa-arrow-right" style="font-size:12px;"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- ═══ STEP 3: SEGURIDAD ═══ -->
+            <div class="reg-step" data-panel="3">
+                <div class="step-intro">
+                    <h2><i class="fas fa-lock" style="color:var(--accent-soft);margin-right:10px;"></i>Seguridad de la
+                        cuenta
+                    </h2>
+                    <p>Crea una contraseña robusta. Te recomendamos usar al menos 12 caracteres con mezcla de
+                        mayúsculas, números
+                        y símbolos.</p>
+                </div>
+
+                <div class="field">
+                    <div class="field-label">
+                        <label>Contraseña</label>
+                    </div>
+                    <div class="input-wrap" id="wrap-password">
+                        <i class="fas fa-lock field-icon"></i>
+                        <input type="password" id="regPass" placeholder="Mínimo 8 caracteres"
+                            oninput="checkPasswordStrength(this.value)">
+                        <button type="button" class="toggle-pw" onclick="togglePassword('regPass', this)"><i
+                                class="fas fa-eye"></i></button>
+                    </div>
+
+                    <div class="password-strength" id="passwordStrength" style="display:none;">
+                        <div class="strength-header">
+                            <span class="strength-label" id="strengthLabel">Contraseña débil</span>
+                            <button type="button" class="generate-pw-btn" onclick="generatePassword()">
+                                <i class="fas fa-wand-magic-sparkles"></i> Generar
+                            </button>
+                        </div>
+                        <div class="strength-bar-wrap">
+                            <div class="strength-segment" data-seg="1"></div>
+                            <div class="strength-segment" data-seg="2"></div>
+                            <div class="strength-segment" data-seg="3"></div>
+                            <div class="strength-segment" data-seg="4"></div>
+                        </div>
+                        <div class="requirements-list">
+                            <div class="req-item" data-req="length">
+                                <i class="fas fa-circle"></i> Mínimo 8 caracteres
+                            </div>
+                            <div class="req-item" data-req="upper">
+                                <i class="fas fa-circle"></i> Una mayúscula
+                            </div>
+                            <div class="req-item" data-req="lower">
+                                <i class="fas fa-circle"></i> Una minúscula
+                            </div>
+                            <div class="req-item" data-req="number">
+                                <i class="fas fa-circle"></i> Un número
+                            </div>
+                            <div class="req-item" data-req="symbol">
+                                <i class="fas fa-circle"></i> Un símbolo
+                            </div>
+                            <div class="req-item" data-req="strong">
+                                <i class="fas fa-circle"></i> 12+ caracteres
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="field">
+                    <div class="field-label">
+                        <label>Confirmar contraseña</label>
+                    </div>
+                    <div class="input-wrap" id="wrap-password2">
+                        <i class="fas fa-lock field-icon"></i>
+                        <input type="password" id="regPass2" placeholder="Repite la contraseña">
+                        <button type="button" class="toggle-pw" onclick="togglePassword('regPass2', this)"><i
+                                class="fas fa-eye"></i></button>
+                    </div>
+                    <div class="field-hint" id="hint-password2"></div>
+                </div>
+
+                <div class="btn-row">
+                    <button class="btn-submit secondary" onclick="prevStep(3)">
+                        <i class="fas fa-arrow-left" style="font-size:12px;"></i> Atrás
+                    </button>
+                    <button class="btn-submit" onclick="nextStep(3)">
+                        Continuar <i class="fas fa-arrow-right" style="font-size:12px;"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- ═══ STEP 4: 2FA ═══ -->
+            <div class="reg-step" data-panel="4">
+                <div class="step-intro">
+                    <h2><i class="fas fa-shield-halved"
+                            style="color:var(--accent-soft);margin-right:10px;"></i>Autenticación de
+                        dos factores</h2>
+                    <p>Protege tu cuenta con un segundo factor de autenticación. Escanea el código QR con tu app
+                        favorita.</p>
+                </div>
+
+                <div class="info-box">
+                    <i class="fas fa-shield-halved"></i>
+                    <div class="info-box-text">
+                        <strong>Seguridad enterprise:</strong> El 2FA es obligatorio para cuentas de Owner. Esto protege
+                        tu tenant
+                        contra accesos no autorizados.
+                    </div>
+                </div>
+
+                <div class="twofa-container">
+                    <div class="qr-box">
+                        <div class="qr-box-title">Código QR</div>
+                        <div class="qr-code">
+                            <img id="qrImage" src="" alt="QR Code 2FA">
+                        </div>
+                        <div class="secret-key-box">
+                            <span class="secret-key" id="secretKey">XXXX XXXX XXXX XXXX</span>
+                            <button class="copy-btn" onclick="copySecretKey()" title="Copiar">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="twofa-instructions">
+                        <h4><i class="fas fa-mobile-screen" style="color:var(--accent-soft);margin-right:6px;"></i> Cómo
+                            configurar
+                        </h4>
+                        <div class="instruction-step">
+                            <div class="instruction-num">1</div>
+                            <div class="instruction-text">Descarga <strong>Google Authenticator</strong>,
+                                <strong>Authy</strong> o
+                                <strong>1Password</strong>
+                            </div>
+                        </div>
+                        <div class="instruction-step">
+                            <div class="instruction-num">2</div>
+                            <div class="instruction-text">Escanea el código QR o ingresa la <strong>clave
+                                    secreta</strong> manualmente
+                            </div>
+                        </div>
+                        <div class="instruction-step">
+                            <div class="instruction-num">3</div>
+                            <div class="instruction-text">Ingresa el <strong>código de 6 dígitos</strong> que aparece en
+                                tu app</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="text-align:center;">
+                    <div
+                        style="font-size:11px;font-weight:600;color:var(--text-dim);letter-spacing:1px;text-transform:uppercase;margin-bottom:12px;">
+                        Código de verificación
+                    </div>
+                    <div class="otp-input-group" id="otpGroup">
+                        <input type="text" class="otp-input" maxlength="1" data-otp="0" inputmode="numeric">
+                        <input type="text" class="otp-input" maxlength="1" data-otp="1" inputmode="numeric">
+                        <input type="text" class="otp-input" maxlength="1" data-otp="2" inputmode="numeric">
+                        <input type="text" class="otp-input" maxlength="1" data-otp="3" inputmode="numeric">
+                        <input type="text" class="otp-input" maxlength="1" data-otp="4" inputmode="numeric">
+                        <input type="text" class="otp-input" maxlength="1" data-otp="5" inputmode="numeric">
+                    </div>
+                </div>
+
+                <div class="backup-codes" id="backupCodesBox" style="display:none;">
+                    <div class="backup-codes-header">
+                        <div class="backup-codes-title">
+                            <i class="fas fa-key" style="margin-right:6px;"></i> Códigos de respaldo
+                        </div>
+                        <button class="copy-btn" onclick="copyBackupCodes()" title="Copiar todos">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                    </div>
+                    <div class="backup-codes-grid" id="backupCodesGrid"></div>
+                    <div style="font-size:11px;color:var(--text-muted);margin-top:10px;line-height:1.5;">
+                        <i class="fas fa-exclamation-triangle" style="color:var(--orange);"></i>
+                        Guarda estos códigos en un lugar seguro. Cada uno puede usarse una sola vez si pierdes acceso a
+                        tu app 2FA.
+                    </div>
+                </div>
+
+                <div class="btn-row">
+                    <button class="btn-submit secondary" onclick="prevStep(4)">
+                        <i class="fas fa-arrow-left" style="font-size:12px;"></i> Atrás
+                    </button>
+                    <button class="btn-submit" onclick="verify2FA()">
+                        <i class="fas fa-shield-check"></i> Verificar y continuar
+                    </button>
+                </div>
+            </div>
+
+            <!-- ═══ STEP 5: VERIFICAR EMAIL ═══ -->
+            <div class="reg-step" data-panel="5">
+                <div class="verify-email-box">
+                    <div class="verify-icon">
+                        <i class="fas fa-envelope-circle-check"></i>
+                    </div>
+                    <h3>Verifica tu correo electrónico</h3>
+                    <p>Hemos enviado un código de 6 dígitos a <br>
+                        <span class="email-highlight" id="verifyEmailDisplay">tu@correo.com</span>
+                    </p>
+
+                    <div class="otp-input-group" id="emailOtpGroup">
+                        <input type="text" class="otp-input" maxlength="1" data-email-otp="0" inputmode="numeric">
+                        <input type="text" class="otp-input" maxlength="1" data-email-otp="1" inputmode="numeric">
+                        <input type="text" class="otp-input" maxlength="1" data-email-otp="2" inputmode="numeric">
+                        <input type="text" class="otp-input" maxlength="1" data-email-otp="3" inputmode="numeric">
+                        <input type="text" class="otp-input" maxlength="1" data-email-otp="4" inputmode="numeric">
+                        <input type="text" class="otp-input" maxlength="1" data-email-otp="5" inputmode="numeric">
+                    </div>
+
+                    <button class="resend-link" id="resendBtn" onclick="resendEmailCode()">
+                        <i class="fas fa-rotate-right"></i> Reenviar código
+                    </button>
+                </div>
+
+                <label class="check-label" style="margin:20px 0;">
+                    <input type="checkbox" id="acceptTerms">
+                    <span>Acepto los <a href="#">Términos de Servicio</a>, la <a href="#">Política de Privacidad</a> y
+                        el
+                        tratamiento de mis datos personales conforme a la ley.</span>
+                </label>
+
+                <div class="info-box">
+                    <i class="fas fa-gavel"></i>
+                    <div class="info-box-text">
+                        <strong>Resumen:</strong> Al crear el tenant, aceptas que tus datos serán tratados conforme a
+                        nuestra
+                        Política de Privacidad. Puedes eliminar tu cuenta en cualquier momento desde el panel de
+                        administración.
+                    </div>
+                </div>
+
+                <div class="btn-row">
+                    <button class="btn-submit secondary" onclick="prevStep(5)">
+                        <i class="fas fa-arrow-left" style="font-size:12px;"></i> Atrás
+                    </button>
+                    <button class="btn-submit" id="finalizeBtn" onclick="finalizeRegistration()">
+                        <i class="fas fa-rocket"></i> Crear mi tenant
+                    </button>
+                </div>
+            </div>
+
+            <!-- ═══ SUCCESS ═══ -->
+            <div class="reg-step" data-panel="6">
+                <div class="success-container">
+                    <div class="success-icon">
+                        <i class="fas fa-check"></i>
+                    </div>
+                    <h2>¡Tenant creado exitosamente!</h2>
+                    <p>Tu espacio empresarial está listo. Ya puedes acceder al panel de administración y comenzar a
+                        configurar tu
+                        organización.</p>
+
+                    <div class="success-info">
+                        <div class="success-info-row">
+                            <span class="success-info-label">Código de tenant</span>
+                            <span class="success-info-value" id="finalCode">PP-XXXX</span>
+                        </div>
+                        <div class="success-info-row">
+                            <span class="success-info-label">URL de acceso</span>
+                            <span class="success-info-value" id="finalUrl">portal-pilot.vercel.app</span>
+                        </div>
+                        <div class="success-info-row">
+                            <span class="success-info-label">Administrador</span>
+                            <span class="success-info-value" id="finalAdmin">admin@empresa.com</span>
+                        </div>
+                        <div class="success-info-row">
+                            <span class="success-info-label">2FA</span>
+                            <span class="success-info-value" style="color:var(--green);">
+                                <i class="fas fa-shield-halved"></i> Activado
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="btn-row single">
+                        <button class="btn-submit" onclick="goToDashboard()">
+                            <i class="fas fa-arrow-right-to-bracket"></i> Acceder al dashboard
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="page-footer">
+            <span>© 2026 Portal Pilot</span><span>·</span><a href="#">Privacidad</a><span>·</span><a
+                href="#">Términos</a>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        (function () {
+            const isLocalhost = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+            const API_ROOT = isLocalhost ? 'https://portal-pilot.vercel.app' : '';
+
+            let supabase = null;
+            async function getSupabaseClient() {
+                if (supabase) return supabase;
+                try {
+                    const res = await fetch(`${API_ROOT}/api/config`);
+                    const config = await res.json();
+                    if (config.supabaseUrl && config.supabaseAnonKey) {
+                        supabase = window.supabase.createClient(config.supabaseUrl, config.supabaseAnonKey);
+                        return supabase;
+                    }
+                } catch (err) {
+                    console.error('Error fetching Supabase config:', err);
+                }
+                return null;
+            }
+
+            async function readJsonResponse(response) {
+                const text = await response.text();
+                if (!text) return {};
+                try {
+                    return JSON.parse(text);
+                } catch (error) {
+                    return { error: text || 'Respuesta inválida' };
+                }
+            }
+
+            /* ═══ NOTIFICACIONES ISLA ═══ */
+            const contenedorPila = document.getElementById('contenedor-pila');
+
+            const EMOJIS = {
+                error: 'Cross%20mark/3D/cross_mark_3d.png',
+                success: 'Check%20mark%20button/3D/check_mark_button_3d.png',
+                info: 'Information/3D/information_3d.png',
+                warning: 'Warning/3D/warning_3d.png'
+            };
+
+            function crearNotificacion(texto, tipo = 'info') {
+                const notif = document.createElement('div');
+                notif.className = 'notificacion entrando';
+                notif.innerHTML = `
+          <div class="contenido-notificacion">
+            <div class="cuadro-icono">
+              <img src="https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/${EMOJIS[tipo] || EMOJIS.info}" alt="${tipo}">
+            </div>
+            <p class="texto-notificacion">${texto}</p>
+          </div>
+          <div class="barra-carga ${tipo}"></div>
+        `;
+                contenedorPila.appendChild(notif);
+
+                setTimeout(() => {
+                    notif.classList.remove('entrando');
+                    notif.classList.add('visible', 'activa');
+                }, 500);
+
+                notif.addEventListener('click', () => dismissNotificacion(notif));
+
+                setTimeout(() => dismissNotificacion(notif), 4500);
+            }
+
+            function dismissNotificacion(notif) {
+                if (!notif || !notif.parentElement) return;
+                notif.classList.add('saliendo');
+                setTimeout(() => {
+                    if (notif.parentElement) notif.remove();
+                }, 400);
+            }
+
+            window.showMessage = function (text, type) {
+                const tipoValido = ['error', 'success', 'info', 'warning'].includes(type) ? type : 'info';
+                crearNotificacion(text, tipoValido);
+            };
+
+            /* ═══ TOGGLE PASSWORD ═══ */
+            document.querySelectorAll('.toggle-pw').forEach(btn => {
+                if (btn.onclick) return;
+                btn.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const input = this.parentElement.querySelector('input');
+                    const icon = this.querySelector('i');
+                    if (!input || !icon) return;
+                    if (input.type === 'password') {
+                        input.type = 'text';
+                        icon.classList.remove('fa-eye');
+                        icon.classList.add('fa-eye-slash');
+                    } else {
+                        input.type = 'password';
+                        icon.classList.remove('fa-eye-slash');
+                        icon.classList.add('fa-eye');
+                    }
+                });
+            });
+
+            /* ═══ NAVEGACIÓN ═══ */
+            let regStep = 1;
+            let twoFASecret = '';
+            let backupCodes = [];
+            let emailVerificationCode = '';
+
+            function updateProgress() {
+                document.querySelectorAll('.step-circle').forEach((circle, i) => {
+                    const stepNum = i + 1;
+                    circle.classList.remove('active', 'done');
+                    if (stepNum < regStep) {
+                        circle.classList.add('done');
+                        circle.innerHTML = '<i class="fas fa-check" style="font-size:12px;"></i>';
+                    } else if (stepNum === regStep) {
+                        circle.classList.add('active');
+                        circle.textContent = stepNum;
+                    } else {
+                        circle.textContent = stepNum;
+                    }
+                });
+
+                document.querySelectorAll('.step-line').forEach((line, i) => {
+                    line.classList.toggle('done', i + 1 < regStep);
+                });
+
+                document.querySelectorAll('.step-label').forEach((label, i) => {
+                    label.classList.remove('active', 'done');
+                    if (i + 1 < regStep) label.classList.add('done');
+                    else if (i + 1 === regStep) label.classList.add('active');
+                });
+
+                document.querySelectorAll('.reg-step').forEach(panel => {
+                    panel.classList.remove('active');
+                });
+                const activePanel = document.querySelector(`.reg-step[data-panel="${regStep}"]`);
+                if (activePanel) activePanel.classList.add('active');
+
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+
+            window.nextStep = function (from) {
+                if (!validateStep(from)) return;
+                if (from === 3) generate2FASetup();
+                if (from === 4) sendEmailVerificationCode();
+                regStep = from + 1;
+                updateProgress();
+            };
+
+            window.prevStep = function (from) {
+                regStep = from - 1;
+                updateProgress();
+            };
+
+            /* ═══ VALIDACIONES ═══ */
+            function validateStep(step) {
+                if (step === 1) {
+                    const company = document.getElementById('regCompany').value.trim();
+                    const code = document.getElementById('regCode').value.trim();
+                    const size = document.getElementById('regSize').value;
+                    const sector = document.getElementById('regSector').value;
+                    const country = document.getElementById('regCountry').value;
+
+                    if (!company || company.length < 3) {
+                        setFieldState('company', 'invalid', 'Mínimo 3 caracteres');
+                        return false;
+                    }
+                    setFieldState('company', 'valid');
+
+                    if (!code) {
+                        setFieldState('code', 'invalid', 'Obligatorio');
+                        return false;
+                    }
+                    const codeRegex = /^PP-[A-Z0-9]{4}-[A-Z0-9]{4}$/;
+                    if (!codeRegex.test(code.toUpperCase())) {
+                        setFieldState('code', 'invalid', 'Formato: PP-XXXX-XXXX');
+                        return false;
+                    }
+                    setFieldState('code', 'valid');
+
+                    if (!size) { showMessage('Selecciona el tamaño de la empresa', 'error'); return false; }
+                    if (!sector) { showMessage('Selecciona el sector industrial', 'error'); return false; }
+                    if (!country) { showMessage('Selecciona el país', 'error'); return false; }
+
+                    return true;
+                }
+
+                if (step === 2) {
+                    const first = document.getElementById('regFirst').value.trim();
+                    const last = document.getElementById('regLast').value.trim();
+                    const email = document.getElementById('regEmail').value.trim();
+                    const role = document.getElementById('regRole').value;
+
+                    if (!first) { setFieldState('firstname', 'invalid', 'Obligatorio'); return false; }
+                    setFieldState('firstname', 'valid');
+
+                    if (!last) { setFieldState('lastname', 'invalid', 'Obligatorio'); return false; }
+                    setFieldState('lastname', 'valid');
+
+                    if (!email) { setFieldState('email', 'invalid', 'Obligatorio'); return false; }
+                    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                    if (!emailRegex.test(email)) {
+                        setFieldState('email', 'invalid', 'Correo inválido');
+                        return false;
+                    }
+                    const publicDomains = ['gmail.com', 'hotmail.com', 'yahoo.com', 'outlook.com', 'live.com', 'icloud.com'];
+                    const domain = email.split('@')[1]?.toLowerCase();
+                    if (publicDomains.includes(domain)) {
+                        setFieldState('email', 'invalid', 'Usa un correo corporativo, no personal');
+                        return false;
+                    }
+                    setFieldState('email', 'valid');
+
+                    if (!role) { showMessage('Selecciona tu cargo', 'error'); return false; }
+
+                    return true;
+                }
+
+                if (step === 3) {
+                    const pass = document.getElementById('regPass').value;
+                    const pass2 = document.getElementById('regPass2').value;
+
+                    if (pass.length < 8) {
+                        setFieldState('password', 'invalid', 'Mínimo 8 caracteres');
+                        return false;
+                    }
+                    if (!/[A-Z]/.test(pass) || !/[a-z]/.test(pass) || !/[0-9]/.test(pass)) {
+                        setFieldState('password', 'invalid', 'Incluye mayúsculas, minúsculas y números');
+                        return false;
+                    }
+                    setFieldState('password', 'valid');
+
+                    if (pass !== pass2) {
+                        setFieldState('password2', 'invalid', 'Las contraseñas no coinciden');
+                        return false;
+                    }
+                    setFieldState('password2', 'valid');
+
+                    return true;
+                }
+
+                return true;
+            }
+
+            function setFieldState(fieldName, state, message = '') {
+                const wrap = document.getElementById(`wrap-${fieldName}`);
+                const hint = document.getElementById(`hint-${fieldName}`);
+                if (!wrap) return;
+
+                wrap.classList.remove('valid', 'invalid');
+                if (state) wrap.classList.add(state);
+
+                if (hint) {
+                    hint.className = 'field-hint';
+                    if (state === 'invalid') {
+                        hint.classList.add('error');
+                        hint.innerHTML = `<i class="fas fa-circle-exclamation"></i> ${message}`;
+                    } else if (state === 'valid') {
+                        hint.classList.add('success');
+                        hint.innerHTML = `<i class="fas fa-circle-check"></i> Correcto`;
+                    }
+                }
+            }
+
+            /* ═══ PASSWORD STRENGTH ═══ */
+            window.checkPasswordStrength = function (password) {
+                const strengthBox = document.getElementById('passwordStrength');
+                const label = document.getElementById('strengthLabel');
+                const segments = document.querySelectorAll('.strength-segment');
+
+                if (!password) {
+                    strengthBox.style.display = 'none';
+                    return;
+                }
+                strengthBox.style.display = 'block';
+
+                const checks = {
+                    length: password.length >= 8,
+                    upper: /[A-Z]/.test(password),
+                    lower: /[a-z]/.test(password),
+                    number: /[0-9]/.test(password),
+                    symbol: /[^A-Za-z0-9]/.test(password),
+                    strong: password.length >= 12
+                };
+
+                document.querySelectorAll('.req-item').forEach(item => {
+                    const req = item.dataset.req;
+                    if (checks[req]) {
+                        item.classList.add('met');
+                        item.querySelector('i').className = 'fas fa-circle-check';
+                    } else {
+                        item.classList.remove('met');
+                        item.querySelector('i').className = 'fas fa-circle';
+                    }
+                });
+
+                const score = Object.values(checks).filter(Boolean).length;
+                let level, levelClass;
+                if (score <= 2) { level = 'Muy débil'; levelClass = 'weak'; }
+                else if (score <= 3) { level = 'Débil'; levelClass = 'weak'; }
+                else if (score <= 4) { level = 'Aceptable'; levelClass = 'fair'; }
+                else if (score <= 5) { level = 'Fuerte'; levelClass = 'good'; }
+                else { level = 'Muy fuerte'; levelClass = 'strong'; }
+
+                label.textContent = level;
+                label.className = `strength-label ${levelClass}`;
+
+                segments.forEach((seg, i) => {
+                    seg.classList.remove('filled', 'weak', 'fair', 'good', 'strong');
+                    if (i < score) seg.classList.add('filled', levelClass);
+                });
+            };
+
+            window.generatePassword = function () {
+                const chars = {
+                    upper: 'ABCDEFGHJKLMNPQRSTUVWXYZ',
+                    lower: 'abcdefghjkmnpqrstuvwxyz',
+                    numbers: '23456789',
+                    symbols: '!@#$%^&*_-+='
+                };
+                let password = '';
+                password += chars.upper[Math.floor(Math.random() * chars.upper.length)];
+                password += chars.lower[Math.floor(Math.random() * chars.lower.length)];
+                password += chars.numbers[Math.floor(Math.random() * chars.numbers.length)];
+                password += chars.symbols[Math.floor(Math.random() * chars.symbols.length)];
+                const all = chars.upper + chars.lower + chars.numbers + chars.symbols;
+                for (let i = 0; i < 10; i++) {
+                    password += all[Math.floor(Math.random() * all.length)];
+                }
+                password = password.split('').sort(() => Math.random() - 0.5).join('');
+
+                document.getElementById('regPass').value = password;
+                document.getElementById('regPass').type = 'text';
+                checkPasswordStrength(password);
+                showMessage('Contraseña segura generada', 'success');
+            };
+
+            window.togglePassword = function (inputId, btn) {
+                const input = document.getElementById(inputId);
+                const icon = btn.querySelector('i');
+                if (input.type === 'password') {
+                    input.type = 'text';
+                    icon.classList.replace('fa-eye', 'fa-eye-slash');
+                } else {
+                    input.type = 'password';
+                    icon.classList.replace('fa-eye-slash', 'fa-eye');
+                }
+            };
+
+            /* ═══ 2FA ═══ */
+            function generate2FASetup() {
+                const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+                let secret = '';
+                for (let i = 0; i < 20; i++) {
+                    secret += chars[Math.floor(Math.random() * chars.length)];
+                }
+                twoFASecret = secret;
+
+                const formatted = secret.match(/.{1,4}/g).join(' ');
+                document.getElementById('secretKey').textContent = formatted;
+
+                const email = document.getElementById('regEmail').value;
+                const company = document.getElementById('regCompany').value;
+                const issuer = encodeURIComponent(`PortalPilot:${company}`);
+                const account = encodeURIComponent(email);
+                const uri = `otpauth://totp/${issuer}:${account}?secret=${secret}&issuer=${issuer}&algorithm=SHA1&digits=6&period=30`;
+                const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(uri)}`;
+                document.getElementById('qrImage').src = qrUrl;
+
+                backupCodes = [];
+                for (let i = 0; i < 8; i++) {
+                    const code = Math.random().toString(36).substring(2, 10).toUpperCase();
+                    backupCodes.push(code);
+                }
+
+                setupOTPInputs('otpGroup');
+            }
+
+            window.copySecretKey = function () {
+                navigator.clipboard.writeText(twoFASecret);
+                showMessage('Clave secreta copiada', 'success');
+            };
+
+            function setupOTPInputs(groupId) {
+                const inputs = document.querySelectorAll(`#${groupId} .otp-input`);
+                inputs.forEach((input, i) => {
+                    input.value = '';
+                    input.addEventListener('input', (e) => {
+                        const val = e.target.value.replace(/[^0-9]/g, '');
+                        e.target.value = val;
+                        if (val && i < inputs.length - 1) inputs[i + 1].focus();
+                    });
+                    input.addEventListener('keydown', (e) => {
+                        if (e.key === 'Backspace' && !e.target.value && i > 0) inputs[i - 1].focus();
+                    });
+                    input.addEventListener('paste', (e) => {
+                        e.preventDefault();
+                        const paste = (e.clipboardData.getData('text') || '').replace(/[^0-9]/g, '');
+                        paste.split('').forEach((char, idx) => {
+                            if (inputs[i + idx]) inputs[i + idx].value = char;
+                        });
+                        const nextIdx = Math.min(i + paste.length, inputs.length - 1);
+                        inputs[nextIdx].focus();
+                    });
+                });
+            }
+
+            function getOTPValue(groupId) {
+                const inputs = document.querySelectorAll(`#${groupId} .otp-input`);
+                return Array.from(inputs).map(i => i.value).join('');
+            }
+
+            window.verify2FA = function () {
+                const code = getOTPValue('otpGroup');
+                if (code.length !== 6) {
+                    showMessage('Ingresa el código completo de 6 dígitos', 'error');
+                    return;
+                }
+                showMessage('✓ 2FA verificado correctamente', 'success');
+                const grid = document.getElementById('backupCodesGrid');
+                grid.innerHTML = backupCodes.map(c => `<div class="backup-code">${c}</div>`).join('');
+                document.getElementById('backupCodesBox').style.display = 'block';
+                setTimeout(() => nextStep(4), 1000);
+            };
+
+            window.copyBackupCodes = function () {
+                navigator.clipboard.writeText(backupCodes.join('\n'));
+                showMessage('Códigos de respaldo copiados', 'success');
+            };
+
+            /* ═══ EMAIL VERIFICATION ═══ */
+            function sendEmailVerificationCode() {
+                const email = document.getElementById('regEmail').value;
+                document.getElementById('verifyEmailDisplay').textContent = email;
+                setupOTPInputs('emailOtpGroup');
+                emailVerificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+                console.log('🔐 Código de verificación (demo):', emailVerificationCode);
+                showMessage(`Código enviado a ${email}`, 'success');
+            }
+
+            window.resendEmailCode = function () {
+                const btn = document.getElementById('resendBtn');
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
+                setTimeout(() => {
+                    emailVerificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+                    btn.innerHTML = '<i class="fas fa-rotate-right"></i> Reenviar código';
+                    btn.disabled = false;
+                    showMessage('Nuevo código enviado', 'success');
+                }, 1500);
+            };
+
+            /* ═══ FINALIZAR ═══ */
+            window.finalizeRegistration = async function () {
+                const terms = document.getElementById('acceptTerms').checked;
+                if (!terms) {
+                    showMessage('Debes aceptar los términos y condiciones', 'error');
+                    return;
+                }
+
+                const emailCode = getOTPValue('emailOtpGroup');
+                if (emailCode.length !== 6) {
+                    showMessage('Ingresa el código de verificación completo', 'error');
+                    return;
+                }
+
+                if (emailCode !== emailVerificationCode) {
+                    showMessage('Código incorrecto', 'error');
+                    return;
+                }
+
+                const btn = document.getElementById('finalizeBtn');
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creando tenant...';
+                btn.disabled = true;
+
+                try {
+                    const payload = {
+                        empresaNombre: document.getElementById('regCompany').value.trim(),
+                        empresaCodigo: document.getElementById('regCode').value.trim().toUpperCase(),
+                        empresaSize: document.getElementById('regSize').value,
+                        empresaSector: document.getElementById('regSector').value,
+                        empresaCountry: document.getElementById('regCountry').value,
+                        empresaWebsite: document.getElementById('regWebsite').value.trim(),
+                        usuarioNombre: document.getElementById('regFirst').value.trim(),
+                        usuarioApellido: document.getElementById('regLast').value.trim(),
+                        email: document.getElementById('regEmail').value.trim().toLowerCase(),
+                        rol: document.getElementById('regRole').value,
+                        phone: document.getElementById('regPhone').value.trim(),
+                        password: document.getElementById('regPass').value,
+                        dosFaActivo: true,
+                        dosFaSecret: twoFASecret,
+                        terminosAceptados: true
+                    };
+
+                    const res = await fetch(`${API_ROOT}/api/registro`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    const data = await readJsonResponse(res);
+                    if (!res.ok) throw new Error(data.error || 'Error al crear el tenant');
+
+                    document.getElementById('finalCode').textContent = payload.empresaCodigo;
+                    document.getElementById('finalUrl').textContent = `${payload.empresaCodigo.toLowerCase()}.portal-pilot.app`;
+                    document.getElementById('finalAdmin').textContent = payload.email;
+
+                    regStep = 6;
+                    updateProgress();
+                    showMessage('¡Tenant creado exitosamente!', 'success');
+
+                } catch (err) {
+                    console.error(err);
+                    showMessage(err.message || 'Error de conexión', 'error');
+                    btn.innerHTML = '<i class="fas fa-rocket"></i> Crear mi tenant';
+                    btn.disabled = false;
+                }
+            };
+
+            window.goToDashboard = function () {
+                const code = document.getElementById('regCode').value.trim().toUpperCase();
+                window.location.href = `login.html?tenant=${code}&welcome=1`;
+            };
+
+            /* ═══ VALIDACIÓN EN TIEMPO REAL ═══ */
+            document.getElementById('regCode').addEventListener('input', function (e) {
+                let val = e.target.value.toUpperCase().replace(/[^A-Z0-9-]/g, '');
+                val = val.replace(/^PP-?/, 'PP-');
+                if (val.length > 3 && val[2] !== '-') val = val.slice(0, 2) + '-' + val.slice(2);
+                if (val.length > 8 && val[7] !== '-') val = val.slice(0, 7) + '-' + val.slice(7);
+                if (val.length > 12) val = val.slice(0, 12);
+                e.target.value = val;
+            });
+
+            document.getElementById('regEmail').addEventListener('blur', function (e) {
+                const email = e.target.value.trim();
+                if (!email) return;
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(email)) {
+                    setFieldState('email', 'invalid', 'Correo inválido');
+                } else {
+                    const publicDomains = ['gmail.com', 'hotmail.com', 'yahoo.com', 'outlook.com', 'live.com', 'icloud.com'];
+                    const domain = email.split('@')[1]?.toLowerCase();
+                    if (publicDomains.includes(domain)) {
+                        setFieldState('email', 'invalid', 'Usa un correo corporativo');
+                    } else {
+                        setFieldState('email', 'valid');
+                    }
+                }
+            });
+
+            document.getElementById('regPass2').addEventListener('input', function (e) {
+                const pass = document.getElementById('regPass').value;
+                const pass2 = e.target.value;
+                if (!pass2) {
+                    setFieldState('password2', null);
+                    return;
+                }
+                if (pass !== pass2) {
+                    setFieldState('password2', 'invalid', 'Las contraseñas no coinciden');
+                } else {
+                    setFieldState('password2', 'valid');
+                }
+            });
+
+            updateProgress();
+        })();
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,1296 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Solicitar Demo — Portal Pilot</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    *,
+    *::before,
+    *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg: #000000;
+      --bg-soft: #0a0a0c;
+      --surface: #111114;
+      --surface-2: #16161a;
+      --border: rgba(255, 255, 255, 0.08);
+      --border-strong: rgba(255, 255, 255, 0.14);
+      --accent: #8b5cf6;
+      --accent-soft: #a78bfa;
+      --accent-glow: rgba(139, 92, 246, 0.25);
+      --white: #f5f5f7;
+      --text: #d2d2d7;
+      --text-dim: #86868b;
+      --text-muted: #6e6e73;
+      --green: #30d158;
+      --red: #ff453a;
+      --radius: 12px;
+      --radius-lg: 20px;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      font-size: 16px;
+    }
+
+    body {
+      font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow-x: hidden;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    a {
+      text-decoration: none;
+      color: inherit;
+    }
+
+    ul {
+      list-style: none;
+    }
+
+    button {
+      font-family: inherit;
+      cursor: pointer;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 clamp(16px, 4vw, 40px);
+    }
+
+    /* ─── FONDO SUTIL ────────────────────────────────────── */
+    .page-bg {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background:
+        radial-gradient(ellipse 80% 60% at 50% 0%, rgba(139, 92, 246, 0.06) 0%, transparent 50%),
+        radial-gradient(ellipse 60% 50% at 50% 100%, rgba(167, 139, 250, 0.03) 0%, transparent 60%);
+    }
+
+    /* ─── NAV ───────────────────────────────────────────── */
+    header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      padding: 0 clamp(16px, 4vw, 40px);
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    nav {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      height: 56px;
+      gap: 0;
+    }
+
+    .nav-logo {
+      font-family: 'Syne', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--white);
+      letter-spacing: 1.5px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .nav-logo .logo-icon {
+      width: 28px;
+      height: 28px;
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-soft) 100%);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      color: #fff;
+    }
+
+    .nav-back {
+      margin-left: auto;
+      font-size: 13px;
+      color: var(--text-dim);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: color .2s;
+    }
+
+    .nav-back:hover {
+      color: var(--white);
+    }
+
+    /* ─── HERO SECTION ──────────────────────────────────── */
+    .demo-hero {
+      padding: 140px 0 60px;
+      text-align: center;
+      position: relative;
+      z-index: 1;
+    }
+
+    .demo-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 40px;
+      padding: 7px 18px;
+      font-size: 11px;
+      color: var(--text-dim);
+      margin-bottom: 24px;
+      font-weight: 500;
+      letter-spacing: .5px;
+    }
+
+    .demo-badge .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--green);
+      animation: blink 2s infinite;
+    }
+
+    @keyframes blink {
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: .3;
+      }
+    }
+
+    .demo-hero h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(36px, 6vw, 64px);
+      font-weight: 700;
+      color: var(--white);
+      letter-spacing: -2px;
+      line-height: 1.05;
+      margin-bottom: 16px;
+    }
+
+    .demo-hero h1 span {
+      background: linear-gradient(135deg, var(--white) 30%, var(--accent-soft));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .demo-hero p {
+      font-size: 16px;
+      color: var(--text-dim);
+      max-width: 560px;
+      margin: 0 auto;
+      line-height: 1.7;
+    }
+
+    /* ─── MAIN LAYOUT ──────────────────────────────────── */
+    .demo-layout {
+      display: grid;
+      grid-template-columns: 1fr 1.2fr;
+      gap: clamp(32px, 5vw, 64px);
+      padding: 40px 0 100px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ─── LEFT: BENEFITS ───────────────────────────────── */
+    .benefits {
+      position: sticky;
+      top: 100px;
+      align-self: start;
+    }
+
+    .benefits-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--white);
+      margin-bottom: 24px;
+    }
+
+    .benefit-item {
+      display: flex;
+      gap: 16px;
+      padding: 20px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .benefit-item:last-child {
+      border-bottom: none;
+    }
+
+    .benefit-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: rgba(139, 92, 246, 0.1);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      color: var(--accent-soft);
+      flex-shrink: 0;
+    }
+
+    .benefit-content h4 {
+      font-family: 'Syne', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--white);
+      margin-bottom: 4px;
+    }
+
+    .benefit-content p {
+      font-size: 13px;
+      color: var(--text-dim);
+      line-height: 1.6;
+    }
+
+    /* Trust box */
+    .trust-box {
+      margin-top: 32px;
+      padding: 24px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+    }
+
+    .trust-box h5 {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+    }
+
+    .trust-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .trust-stat .n {
+      font-family: 'Syne', sans-serif;
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--white);
+    }
+
+    .trust-stat .l {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    /* ─── RIGHT: FORM ──────────────────────────────────── */
+    .form-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: clamp(28px, 4vw, 44px);
+    }
+
+    .form-header {
+      margin-bottom: 32px;
+    }
+
+    .form-header h2 {
+      font-family: 'Syne', sans-serif;
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--white);
+      margin-bottom: 8px;
+    }
+
+    .form-header p {
+      font-size: 14px;
+      color: var(--text-dim);
+    }
+
+    /* Steps indicator */
+    .form-steps {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      margin-bottom: 32px;
+    }
+
+    .step-dot {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: 1px solid var(--border-strong);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      font-family: 'Syne', sans-serif;
+      flex-shrink: 0;
+      background: var(--surface-2);
+      transition: all .3s;
+    }
+
+    .step-dot.active {
+      background: var(--white);
+      border-color: var(--white);
+      color: #000;
+    }
+
+    .step-dot.done {
+      background: var(--green);
+      border-color: var(--green);
+      color: #000;
+    }
+
+    .step-line {
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+      transition: background .3s;
+    }
+
+    .step-line.done {
+      background: var(--green);
+    }
+
+    .step-labels {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 0;
+      text-align: center;
+      margin-bottom: 28px;
+    }
+
+    .step-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      transition: color .3s;
+    }
+
+    /* Form fields */
+    .form-step {
+      display: none;
+      animation: fadeIn .4s ease;
+    }
+
+    .form-step.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .field {
+      margin-bottom: 18px;
+    }
+
+    .field-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .field label {
+      display: block;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-dim);
+      margin-bottom: 8px;
+      letter-spacing: 0.3px;
+    }
+
+    .input-wrap {
+      position: relative;
+    }
+
+    .input-wrap i.field-icon {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 14px;
+      color: var(--text-muted);
+      pointer-events: none;
+      transition: color 0.2s ease;
+    }
+
+    .input-wrap input,
+    .input-wrap select,
+    .input-wrap textarea {
+      width: 100%;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 13px 16px 13px 44px;
+      font-size: 14px;
+      color: var(--white);
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.2s ease, background 0.2s ease;
+    }
+
+    .input-wrap textarea {
+      resize: vertical;
+      min-height: 100px;
+      padding-left: 44px;
+    }
+
+    .input-wrap input::placeholder,
+    .input-wrap textarea::placeholder {
+      color: var(--text-muted);
+    }
+
+    .input-wrap input:focus,
+    .input-wrap select:focus,
+    .input-wrap textarea:focus {
+      border-color: var(--accent-soft);
+      background: var(--surface);
+    }
+
+    .input-wrap input:focus+i.field-icon {
+      color: var(--accent-soft);
+    }
+
+    .input-wrap select {
+      appearance: none;
+      cursor: pointer;
+    }
+
+    .input-wrap .select-arrow {
+      position: absolute;
+      right: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 11px;
+      color: var(--text-muted);
+      pointer-events: none;
+    }
+
+    /* Checkboxes */
+    .check-group {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+
+    .check-option {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 14px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: all .2s;
+    }
+
+    .check-option:hover {
+      border-color: var(--border-strong);
+    }
+
+    .check-option input {
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+
+    .check-option span {
+      font-size: 13px;
+      color: var(--text-dim);
+    }
+
+    .check-option.selected {
+      border-color: var(--accent-soft);
+      background: rgba(139, 92, 246, 0.05);
+    }
+
+    .check-option.selected span {
+      color: var(--white);
+    }
+
+    /* Terms */
+    .terms-check {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin: 24px 0;
+    }
+
+    .terms-check input {
+      margin-top: 2px;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+
+    .terms-check span {
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    .terms-check a {
+      color: var(--accent-soft);
+    }
+
+    /* Buttons */
+    .form-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 24px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 13px 24px;
+      border-radius: 40px;
+      font-size: 13px;
+      font-weight: 500;
+      border: none;
+      transition: all .25s ease;
+      white-space: nowrap;
+      font-family: inherit;
+    }
+
+    .btn-primary {
+      background: var(--white);
+      color: #000;
+    }
+
+    .btn-primary:hover {
+      background: #e8e8ed;
+      transform: scale(1.01);
+    }
+
+    .btn-secondary {
+      background: var(--surface-2);
+      color: var(--white);
+      border: 1px solid var(--border-strong);
+    }
+
+    .btn-secondary:hover {
+      background: var(--surface);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    /* Success state */
+    .success-state {
+      display: none;
+      text-align: center;
+      padding: 40px 20px;
+      animation: fadeIn .5s ease;
+    }
+
+    .success-state.active {
+      display: block;
+    }
+
+    .success-icon {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      background: rgba(48, 209, 88, 0.1);
+      border: 1px solid rgba(48, 209, 88, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+      color: var(--green);
+      margin: 0 auto 24px;
+    }
+
+    .success-state h3 {
+      font-family: 'Syne', sans-serif;
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--white);
+      margin-bottom: 12px;
+    }
+
+    .success-state p {
+      font-size: 14px;
+      color: var(--text-dim);
+      line-height: 1.7;
+      margin-bottom: 24px;
+    }
+
+    .success-details {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      text-align: left;
+      margin-bottom: 24px;
+    }
+
+    .success-details .detail-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+    }
+
+    .success-details .detail-row:last-child {
+      border-bottom: none;
+    }
+
+    .success-details .detail-row span:first-child {
+      color: var(--text-muted);
+    }
+
+    .success-details .detail-row span:last-child {
+      color: var(--white);
+      font-weight: 500;
+    }
+
+    /* Error message */
+    .form-error {
+      padding: 12px 16px;
+      border-radius: var(--radius);
+      background: rgba(255, 69, 58, 0.1);
+      border: 1px solid rgba(255, 69, 58, 0.2);
+      color: var(--red);
+      font-size: 13px;
+      margin-bottom: 16px;
+      display: none;
+    }
+
+    .form-error.show {
+      display: block;
+      animation: fadeIn .3s ease;
+    }
+
+    /* ─── FOOTER ─────────────────────────────────────────── */
+    footer {
+      padding: 40px 0;
+      border-top: 1px solid var(--border);
+      text-align: center;
+      position: relative;
+      z-index: 1;
+    }
+
+    footer p {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    footer a {
+      color: var(--text-dim);
+      margin: 0 8px;
+      transition: color .2s;
+    }
+
+    footer a:hover {
+      color: var(--white);
+    }
+
+    /* ─── RESPONSIVE ─────────────────────────────────────── */
+    @media (max-width: 900px) {
+      .demo-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .benefits {
+        position: static;
+        order: 2;
+      }
+
+      .form-card {
+        order: 1;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .field-row,
+      .check-group,
+      .form-actions {
+        grid-template-columns: 1fr;
+      }
+
+      .trust-stats {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="page-bg"></div>
+
+  <!-- NAV -->
+  <header>
+    <nav>
+      <a href="index.html" class="nav-logo">
+        <div class="logo-icon"><i class="fas fa-robot"></i></div>
+        PORTAL PILOT
+      </a>
+      <a href="index.html" class="nav-back">
+        <i class="fas fa-arrow-left" style="font-size:11px;"></i> Volver al inicio
+      </a>
+    </nav>
+  </header>
+
+  <!-- HERO -->
+  <section class="demo-hero container">
+    <div class="demo-badge">
+      <div class="dot"></div>
+      <i class="fas fa-calendar-check"></i>&nbsp; Respuesta en menos de 24h
+    </div>
+    <h1>Solicita tu <span>auditoria empresarial</span></h1>
+    <p>Descubre cómo Portal Pilot puede transformar las operaciones de tu empresa. Nuestro equipo te contactará para
+      agendar una sesión personalizada.</p>
+  </section>
+
+  <!-- MAIN LAYOUT -->
+  <div class="container">
+    <div class="demo-layout">
+
+      <!-- LEFT: BENEFITS -->
+      <aside class="benefits">
+        <h3 class="benefits-title">Qué incluye tu demo</h3>
+
+        <div class="benefit-item">
+          <div class="benefit-icon"><i class="fas fa-play-circle"></i></div>
+          <div class="benefit-content">
+            <h4>Sesión personalizada</h4>
+            <p>30 minutos con un especialista que analizará tus procesos y mostrará cómo automatizarlos.</p>
+          </div>
+        </div>
+
+        <div class="benefit-item">
+          <div class="benefit-icon"><i class="fas fa-chart-line"></i></div>
+          <div class="benefit-content">
+            <h4>Estimación de ROI</h4>
+            <p>Calculamos el retorno de inversión específico para tu caso, basado en horas ahorradas.</p>
+          </div>
+        </div>
+
+        <div class="benefit-item">
+          <div class="benefit-icon"><i class="fas fa-rocket"></i></div>
+          <div class="benefit-content">
+            <h4>Acceso a prueba gratuita</h4>
+            <p>14 días de acceso completo al portal para que pruebes la plataforma con tus propios datos.</p>
+          </div>
+        </div>
+
+        <div class="benefit-item">
+          <div class="benefit-icon"><i class="fas fa-shield-halved"></i></div>
+          <div class="benefit-content">
+            <h4>Confidencialidad total</h4>
+            <p>Firmamos NDA antes de la sesión. Tu información está 100% protegida con Cyberyx Vantage.</p>
+          </div>
+        </div>
+
+        <div class="trust-box">
+          <h5>Empresas que confían en nosotros</h5>
+          <div class="trust-stats">
+            <div class="trust-stat">
+              <div class="n">500+</div>
+              <div class="l">Empresas activas</div>
+            </div>
+            <div class="trust-stat">
+              <div class="n">99.9%</div>
+              <div class="l">Uptime garantizado</div>
+            </div>
+            <div class="trust-stat">
+              <div class="n">73%</div>
+              <div class="l">Ahorro promedio</div>
+            </div>
+            <div class="trust-stat">
+              <div class="n">24/7</div>
+              <div class="l">Soporte técnico</div>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- RIGHT: FORM -->
+      <div class="form-card">
+        <div class="form-header">
+          <h2>Completa el formulario</h2>
+          <p>Todos los campos son requeridos para agendar tu demo.</p>
+        </div>
+
+        <!-- Steps indicator -->
+        <div class="form-steps">
+          <div class="step-dot active" id="sdot1">1</div>
+          <div class="step-line" id="sline1"></div>
+          <div class="step-dot" id="sdot2">2</div>
+          <div class="step-line" id="sline2"></div>
+          <div class="step-dot" id="sdot3">3</div>
+        </div>
+        <div class="step-labels">
+          <div class="step-label" id="slabel1" style="color:var(--white);">Contacto</div>
+          <div class="step-label" id="slabel2">Empresa</div>
+          <div class="step-label" id="slabel3">Intereses</div>
+        </div>
+
+        <div class="form-error" id="formError"></div>
+
+        <form id="demoForm">
+
+          <!-- STEP 1: Contact Info -->
+          <div class="form-step active" id="step1">
+            <div class="field-row">
+              <div class="field">
+                <label>NOMBRE</label>
+                <div class="input-wrap">
+                  <i class="fas fa-user field-icon"></i>
+                  <input type="text" id="firstName" placeholder="Gissel" required>
+                </div>
+              </div>
+              <div class="field">
+                <label>APELLIDO</label>
+                <div class="input-wrap">
+                  <i class="fas fa-user field-icon"></i>
+                  <input type="text" id="lastName" placeholder="Guzman" required>
+                </div>
+              </div>
+            </div>
+
+            <div class="field">
+              <label>CORREO CORPORATIVO</label>
+              <div class="input-wrap">
+                <i class="fas fa-envelope field-icon"></i>
+                <input type="email" id="email" placeholder="tu@empresa.com" required>
+              </div>
+            </div>
+
+            <div class="field">
+              <label>TELÉFONO</label>
+              <div class="input-wrap">
+                <i class="fas fa-phone field-icon"></i>
+                <input type="tel" id="phone" placeholder="+504 0000 0000" required>
+              </div>
+            </div>
+
+            <div class="field">
+              <label>CARGO</label>
+              <div class="input-wrap" style="position:relative;">
+                <i class="fas fa-id-badge field-icon"></i>
+                <select id="role" required>
+                  <option value="">Seleccionar cargo...</option>
+                  <option>CEO / Director General</option>
+                  <option>CTO / Director Tecnología</option>
+                  <option>COO / Director Operaciones</option>
+                  <option>Gerente de Área</option>
+                  <option>Analista</option>
+                  <option>Otro</option>
+                </select>
+                <i class="fas fa-chevron-down select-arrow"></i>
+              </div>
+            </div>
+
+            <div class="form-actions">
+              <button type="button" class="btn btn-secondary" onclick="window.location.href='index.html'">
+                <i class="fas fa-arrow-left" style="font-size:11px;"></i> Cancelar
+              </button>
+              <button type="button" class="btn btn-primary" onclick="goToStep(2)">
+                Continuar <i class="fas fa-arrow-right" style="font-size:11px;"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- STEP 2: Company Info -->
+          <div class="form-step" id="step2">
+            <div class="field">
+              <label>NOMBRE DE LA EMPRESA</label>
+              <div class="input-wrap">
+                <i class="fas fa-building field-icon"></i>
+                <input type="text" id="company" placeholder="TechCorp Enterprise S.A." required>
+              </div>
+            </div>
+
+            <div class="field-row">
+              <div class="field">
+                <label>SECTOR</label>
+                <div class="input-wrap" style="position:relative;">
+                  <i class="fas fa-briefcase field-icon"></i>
+                  <select id="sector" required>
+                    <option value="">Seleccionar...</option>
+                    <option>Tecnología</option>
+                    <option>Manufactura</option>
+                    <option>Retail & E-commerce</option>
+                    <option>Salud & Farmacéutica</option>
+                    <option>Finanzas & Banca</option>
+                    <option>Logística</option>
+                    <option>Otro</option>
+                  </select>
+                  <i class="fas fa-chevron-down select-arrow"></i>
+                </div>
+              </div>
+              <div class="field">
+                <label>TAMAÑO DE EMPRESA</label>
+                <div class="input-wrap" style="position:relative;">
+                  <i class="fas fa-users field-icon"></i>
+                  <select id="size" required>
+                    <option value="">Seleccionar...</option>
+                    <option>1-10 empleados</option>
+                    <option>11-50 empleados</option>
+                    <option>51-200 empleados</option>
+                    <option>201-1000 empleados</option>
+                    <option>+1000 empleados</option>
+                  </select>
+                  <i class="fas fa-chevron-down select-arrow"></i>
+                </div>
+              </div>
+            </div>
+
+            <div class="field">
+              <label>SITIO WEB (opcional)</label>
+              <div class="input-wrap">
+                <i class="fas fa-globe field-icon"></i>
+                <input type="url" id="website" placeholder="https://tuempresa.com">
+              </div>
+            </div>
+
+            <div class="field">
+              <label>PAÍS</label>
+              <div class="input-wrap" style="position:relative;">
+                <i class="fas fa-flag field-icon"></i>
+                <select id="country" required>
+                  <option value="">Seleccionar país...</option>
+                  <option>Honduras</option>
+                  <option>El Salvador</option>
+                  <option>Guatemala</option>
+                  <option>Costa Rica</option>
+                  <option>Panamá</option>
+                  <option>México</option>
+                  <option>Colombia</option>
+                  <option>Estados Unidos</option>
+                  <option>Otro</option>
+                </select>
+                <i class="fas fa-chevron-down select-arrow"></i>
+              </div>
+            </div>
+
+            <div class="form-actions">
+              <button type="button" class="btn btn-secondary" onclick="goToStep(1)">
+                <i class="fas fa-arrow-left" style="font-size:11px;"></i> Atrás
+              </button>
+              <button type="button" class="btn btn-primary" onclick="goToStep(3)">
+                Continuar <i class="fas fa-arrow-right" style="font-size:11px;"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- STEP 3: Interests -->
+          <div class="form-step" id="step3">
+            <div class="field">
+              <label>¿QUÉ TE INTERESA AUTOMATIZAR?</label>
+              <div class="check-group">
+                <label class="check-option">
+                  <input type="checkbox" value="rpa">
+                  <span>Bots RPA</span>
+                </label>
+                <label class="check-option">
+                  <input type="checkbox" value="ia">
+                  <span>IA Generativa</span>
+                </label>
+                <label class="check-option">
+                  <input type="checkbox" value="blockchain">
+                  <span>Auditoría Blockchain</span>
+                </label>
+                <label class="check-option">
+                  <input type="checkbox" value="biometria">
+                  <span>Biometría Cyberyx</span>
+                </label>
+                <label class="check-option">
+                  <input type="checkbox" value="dashboard">
+                  <span>Dashboard Analytics</span>
+                </label>
+                <label class="check-option">
+                  <input type="checkbox" value="multiempresa">
+                  <span>Multi-Empresa</span>
+                </label>
+              </div>
+            </div>
+
+            <div class="field">
+              <label>Cuéntanos más sobre tus necesidades</label>
+              <div class="input-wrap">
+                <i class="fas fa-comment field-icon" style="top:20px;transform:none;"></i>
+                <textarea id="message" placeholder="Describe los procesos que te gustaría automatizar, desafíos actuales, objetivos..."></textarea>
+              </div>
+            </div>
+
+            <div class="field">
+              <label>¿CUÁNDO TE GUSTARÍA LA AUDITORIA?</label>
+              <div class="input-wrap">
+                <i class="fas fa-calendar field-icon"></i>
+                <input type="date" id="demoDate" required>
+              </div>
+            </div>
+
+            <label class="terms-check">
+              <input type="checkbox" id="terms" required>
+              <span>Acepto la <a href="#">Política de Privacidad</a> y los <a href="#">Términos de Servicio</a>. Entiendo que mis datos serán procesados de forma segura con Cyberyx Vantage.</span>
+            </label>
+
+            <div class="form-actions">
+              <button type="button" class="btn btn-secondary" onclick="goToStep(2)">
+                <i class="fas fa-arrow-left" style="font-size:11px;"></i> Atrás
+              </button>
+              <button type="submit" class="btn btn-primary">
+                <i class="fas fa-rocket"></i> Solicitar Demo
+              </button>
+            </div>
+          </div>
+
+          <!-- SUCCESS STATE -->
+          <div class="success-state" id="successState">
+            <div class="success-icon">
+              <i class="fas fa-check"></i>
+            </div>
+            <h3>¡Solicitud enviada!</h3>
+            <p>Hemos recibido tu solicitud. Un especialista de Portal Pilot te contactará en las próximas 24 horas para
+              coordinar tu demo personalizada.</p>
+
+            <div class="success-details">
+              <div class="detail-row">
+                <span>Referencia</span>
+                <span id="refCode">PP-DEMO-000000</span>
+              </div>
+              <div class="detail-row">
+                <span>Fecha de demo</span>
+                <span id="refDate">—</span>
+              </div>
+              <div class="detail-row">
+                <span>Contacto</span>
+                <span id="refEmail">—</span>
+              </div>
+            </div>
+
+            <button type="button" class="btn btn-primary" onclick="window.location.href='index.html'">
+              Volver al inicio <i class="fas fa-arrow-right" style="font-size:11px;"></i>
+            </button>
+          </div>
+
+        </form>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="container">
+      <p>© 2026 Portal Pilot + Cyberyx Vantage · Made in Honduras 🇭🇳</p>
+      <p style="margin-top:8px;">
+        <a href="#">Privacidad</a>·
+        <a href="#">Términos</a>·
+        <a href="index.html">Inicio</a>
+      </p>
+    </div>
+  </footer>
+
+  <script>
+    let currentStep = 1;
+
+    // Check option selection visual
+    document.querySelectorAll('.check-option input').forEach(cb => {
+      cb.addEventListener('change', function () {
+        this.closest('.check-option').classList.toggle('selected', this.checked);
+      });
+    });
+
+    // Set min date to today
+    const dateInput = document.getElementById('demoDate');
+    const today = new Date().toISOString().split('T')[0];
+    dateInput.min = today;
+
+    function showError(msg) {
+      const err = document.getElementById('formError');
+      err.textContent = msg;
+      err.classList.add('show');
+      setTimeout(() => err.classList.remove('show'), 4000);
+    }
+
+    function goToStep(n) {
+      // Validate current step before moving forward
+      if (n > currentStep) {
+        if (!validateStep(currentStep)) return;
+      }
+
+      // Hide current
+      document.getElementById('step' + currentStep).classList.remove('active');
+
+      // Update current
+      currentStep = n;
+
+      // Show new
+      document.getElementById('step' + currentStep).classList.add('active');
+
+      // Update step indicators
+      updateStepIndicators();
+    }
+
+    function updateStepIndicators() {
+      [1, 2, 3].forEach(i => {
+        const dot = document.getElementById('sdot' + i);
+        const lbl = document.getElementById('slabel' + i);
+
+        if (i < currentStep) {
+          dot.className = 'step-dot done';
+          dot.innerHTML = '<i class="fas fa-check" style="font-size:11px;"></i>';
+          lbl.style.color = 'var(--text-dim)';
+        } else if (i === currentStep) {
+          dot.className = 'step-dot active';
+          dot.textContent = i;
+          lbl.style.color = 'var(--white)';
+        } else {
+          dot.className = 'step-dot';
+          dot.textContent = i;
+          lbl.style.color = 'var(--text-muted)';
+        }
+      });
+
+      [1, 2].forEach(i => {
+        const line = document.getElementById('sline' + i);
+        line.className = 'step-line' + (i < currentStep ? ' done' : '');
+      });
+    }
+
+    function validateStep(step) {
+      if (step === 1) {
+        const firstName = document.getElementById('firstName').value.trim();
+        const lastName = document.getElementById('lastName').value.trim();
+        const email = document.getElementById('email').value.trim();
+        const phone = document.getElementById('phone').value.trim();
+        const role = document.getElementById('role').value;
+
+        if (!firstName || !lastName) { showError('Por favor, ingresa tu nombre completo.'); return false; }
+        if (!email || !email.includes('@')) { showError('Ingresa un correo electrónico válido.'); return false; }
+        if (!phone) { showError('Ingresa tu número de teléfono.'); return false; }
+        if (!role) { showError('Selecciona tu cargo.'); return false; }
+      }
+
+      if (step === 2) {
+        const company = document.getElementById('company').value.trim();
+        const sector = document.getElementById('sector').value;
+        const size = document.getElementById('size').value;
+        const country = document.getElementById('country').value;
+
+        if (!company) { showError('Ingresa el nombre de tu empresa.'); return false; }
+        if (!sector) { showError('Selecciona el sector de tu empresa.'); return false; }
+        if (!size) { showError('Selecciona el tamaño de tu empresa.'); return false; }
+        if (!country) { showError('Selecciona tu país.'); return false; }
+      }
+
+      return true;
+    }
+
+    // Form submission
+    document.getElementById('demoForm').addEventListener('submit', function (e) {
+      e.preventDefault();
+
+      const terms = document.getElementById('terms').checked;
+      if (!terms) {
+        showError('Debes aceptar los términos y condiciones.');
+        return;
+      }
+
+      const demoDate = document.getElementById('demoDate').value;
+      if (!demoDate) {
+        showError('Selecciona una fecha para la demo.');
+        return;
+      }
+
+      // Collect data
+      const data = {
+        firstName: document.getElementById('firstName').value.trim(),
+        lastName: document.getElementById('lastName').value.trim(),
+        email: document.getElementById('email').value.trim(),
+        phone: document.getElementById('phone').value.trim(),
+        role: document.getElementById('role').value,
+        company: document.getElementById('company').value.trim(),
+        sector: document.getElementById('sector').value,
+        size: document.getElementById('size').value,
+        website: document.getElementById('website').value.trim(),
+        country: document.getElementById('country').value,
+        interests: Array.from(document.querySelectorAll('.check-option input:checked')).map(cb => cb.value),
+        message: document.getElementById('message').value.trim(),
+        demoDate: demoDate
+      };
+
+      // Show loading
+      const submitBtn = this.querySelector('button[type="submit"]');
+      const origText = submitBtn.innerHTML;
+      submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
+      submitBtn.disabled = true;
+
+      // Simulate API call
+      setTimeout(() => {
+        // Generate reference code
+        const refCode = 'PP-DEMO-' + Math.floor(100000 + Math.random() * 900000);
+        const formattedDate = new Date(demoDate).toLocaleDateString('es-ES', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        });
+
+        document.getElementById('refCode').textContent = refCode;
+        document.getElementById('refDate').textContent = formattedDate;
+        document.getElementById('refEmail').textContent = data.email;
+
+        // Hide form, show success
+        document.getElementById('step3').classList.remove('active');
+        document.querySelectorAll('.form-steps, .step-labels, .form-header').forEach(el => el.style.display = 'none');
+        document.getElementById('successState').classList.add('active');
+
+        console.log('Demo request submitted:', data);
+      }, 1500);
+    });
+  </script>
+
+</body>
+
+</html>

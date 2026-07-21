@@ -1402,15 +1402,18 @@
                 <div class="field-row">
                     <div class="field">
                         <div class="field-label">
-                            <label>Código de tenant</label>
+                            <label>Dominio del workspace</label>
                         </div>
-                        <div class="input-wrap" id="wrap-code">
-                            <i class="fas fa-fingerprint field-icon"></i>
-                            <input type="text" id="regCode" placeholder="PP-XXXX-XXXX"
-                                style="font-family:'JetBrains Mono',monospace;letter-spacing:1px;text-transform:uppercase;">
+                        <div class="input-wrap" id="wrap-dominio" style="display:flex;align-items:center;gap:0;">
+                            <i class="fas fa-globe field-icon"></i>
+                            <input type="text" id="regDominio" placeholder="miempresa"
+                                style="font-family:'JetBrains Mono',monospace;letter-spacing:0.5px;flex:1;border-radius:var(--radius) 0 0 var(--radius);">
+                            <span
+                                style="background:rgba(99,102,241,0.15);color:var(--accent-soft);padding:0 14px;height:100%;display:flex;align-items:center;border:1.5px solid rgba(99,102,241,0.3);border-left:none;border-radius:0 var(--radius) var(--radius) 0;font-family:'JetBrains Mono',monospace;font-size:13px;white-space:nowrap;">.pp.ia</span>
                         </div>
-                        <div class="field-hint" id="hint-code">
-                            <i class="fas fa-info-circle"></i> Formato: PP-XXXX-XXXX
+                        <div class="field-hint" id="hint-dominio">
+                            <i class="fas fa-info-circle"></i> Solo letras, números y guiones. Ej:
+                            <strong>acme</strong>.pp.ia
                         </div>
                     </div>
 
@@ -1463,18 +1466,20 @@
                         </div>
                         <div class="input-wrap">
                             <i class="fas fa-globe field-icon"></i>
-                            <select id="regCountry">
+                            <select id="regCountry" onchange="updatePhoneByCountry(this.value)">
                                 <option value="">Seleccionar...</option>
-                                <option value="HN">🇲🇽 Honduras</option>
-                                <option value="SV">🇪🇸 El Salvador</option>
-                                <option value="GT">🇲🇽 Guatemala</option>
-                                <option value="NI">🇨🇴 Nicaragua</option>
-                                <option value="CR">🇨🇱 Costa Rica</option>
-                                <option value="PA">🇵🇪 Panamá</option>
+                                <option value="HN">🇭🇳 Honduras</option>
+                                <option value="SV">🇸🇻 El Salvador</option>
+                                <option value="GT">🇬🇹 Guatemala</option>
+                                <option value="NI">🇳🇮 Nicaragua</option>
+                                <option value="CR">🇨🇷 Costa Rica</option>
+                                <option value="PA">🇵🇦 Panamá</option>
                                 <option value="MX">🇲🇽 México</option>
                                 <option value="ES">🇪🇸 España</option>
-                                <option value="US">🇲🇽 Estados Unidos</option>
-                                <option value="OTHER">Otro</option>
+                                <option value="CO">🇨🇴 Colombia</option>
+                                <option value="AR">🇦🇷 Argentina</option>
+                                <option value="US">🇺🇸 Estados Unidos</option>
+                                <option value="OTHER">🌍 Otro</option>
                             </select>
                             <i class="fas fa-chevron-down chevron-down"></i>
                         </div>
@@ -1483,13 +1488,15 @@
 
                 <div class="field">
                     <div class="field-label">
-                        <label>Sitio web</label>
+                        <label>Página web de la empresa</label>
                         <span class="optional">Opcional</span>
                     </div>
                     <div class="input-wrap">
                         <i class="fas fa-globe field-icon"></i>
-                        <input type="url" id="regWebsite" placeholder="https://tuempresa.com">
+                        <input type="text" id="regWebsite" placeholder="portalpilot.com">
                     </div>
+                    <div class="field-hint"><i class="fas fa-info-circle"></i> Dominio de tu empresa (sin https://). Se
+                        guarda como referencia.</div>
                 </div>
 
                 <div class="btn-row single">
@@ -1541,11 +1548,11 @@
 
                 <div class="field">
                     <div class="field-label">
-                        <label>Correo corporativo</label>
+                        <label>Correo electrónico</label>
                     </div>
                     <div class="input-wrap" id="wrap-email">
                         <i class="fas fa-envelope field-icon"></i>
-                        <input type="email" id="regEmail" placeholder="admin@tuempresa.com">
+                        <input type="email" id="regEmail" placeholder="tu@correo.com">
                     </div>
                     <div class="field-hint" id="hint-email">
                         <i class="fas fa-info-circle"></i> Usaremos este correo para verificar tu cuenta
@@ -1555,11 +1562,11 @@
                 <div class="field-row">
                     <div class="field">
                         <div class="field-label">
-                            <label>Rol</label>
+                            <label>¿Cuál es tu cargo principal?</label>
                         </div>
                         <div class="input-wrap">
                             <i class="fas fa-id-badge field-icon"></i>
-                            <select id="regRole">
+                            <select id="regCargo">
                                 <option value="">Seleccionar...</option>
                                 <option value="CEO">CEO / Director General</option>
                                 <option value="CTO">CTO / Director Tecnología</option>
@@ -1568,6 +1575,7 @@
                                 <option value="Gerente">Gerente de Área</option>
                                 <option value="Supervisor">Supervisor</option>
                                 <option value="Analista">Analista</option>
+                                <option value="Dueño">Dueño / Propietario</option>
                                 <option value="Otro">Otro</option>
                             </select>
                             <i class="fas fa-chevron-down chevron-down"></i>
@@ -1579,10 +1587,14 @@
                             <label>Teléfono</label>
                             <span class="optional">Opcional</span>
                         </div>
-                        <div class="input-wrap">
-                            <i class="fas fa-phone field-icon"></i>
-                            <input type="tel" id="regPhone" placeholder="+52 55 1234 5678">
+                        <div class="input-wrap" id="wrap-phone" style="display:flex;align-items:center;gap:0;">
+                            <span id="phonePrefix"
+                                style="background:rgba(99,102,241,0.12);color:var(--accent-soft);padding:0 12px;height:100%;display:flex;align-items:center;border:1.5px solid rgba(99,102,241,0.25);border-right:none;border-radius:var(--radius) 0 0 var(--radius);font-size:14px;white-space:nowrap;min-width:58px;justify-content:center;">+504</span>
+                            <input type="tel" id="regPhone" placeholder="9999-9999"
+                                style="border-radius:0 var(--radius) var(--radius) 0;flex:1;">
                         </div>
+                        <div class="field-hint"><i class="fas fa-info-circle"></i> Se asigna según el país. Si eliges
+                            Otro, el prefijo es editable.</div>
                     </div>
                 </div>
 
@@ -1682,100 +1694,105 @@
             <div class="reg-step" data-panel="4">
                 <div class="step-intro">
                     <h2><i class="fas fa-shield-halved"
-                            style="color:var(--accent-soft);margin-right:10px;"></i>Autenticación de
-                        dos factores</h2>
-                    <p>Protege tu cuenta con un segundo factor de autenticación. Escanea el código QR con tu app
-                        favorita.</p>
+                            style="color:var(--accent-soft);margin-right:10px;"></i>Autenticación de dos factores</h2>
+                    <p>Protege tu cuenta con 2FA. Escanea el QR con tu app autenticadora y verifica el código.</p>
                 </div>
 
                 <div class="info-box">
                     <i class="fas fa-shield-halved"></i>
                     <div class="info-box-text">
-                        <strong>Seguridad enterprise:</strong> El 2FA es obligatorio para cuentas de Owner. Esto protege
-                        tu tenant
-                        contra accesos no autorizados.
+                        <strong>2FA obligatorio para Owner:</strong> Protege tu workspace contra accesos no autorizados.
                     </div>
                 </div>
 
-                <div class="twofa-container">
-                    <div class="qr-box">
-                        <div class="qr-box-title">Código QR</div>
-                        <div class="qr-code">
-                            <img id="qrImage" src="" alt="QR Code 2FA">
-                        </div>
-                        <div class="secret-key-box">
-                            <span class="secret-key" id="secretKey">XXXX XXXX XXXX XXXX</span>
-                            <button class="copy-btn" onclick="copySecretKey()" title="Copiar">
-                                <i class="fas fa-copy"></i>
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="twofa-instructions">
-                        <h4><i class="fas fa-mobile-screen" style="color:var(--accent-soft);margin-right:6px;"></i> Cómo
-                            configurar
-                        </h4>
-                        <div class="instruction-step">
-                            <div class="instruction-num">1</div>
-                            <div class="instruction-text">Descarga <strong>Google Authenticator</strong>,
-                                <strong>Authy</strong> o
-                                <strong>1Password</strong>
+                <!-- FASE A: Escanear QR -->
+                <div id="twofa-phase-scan">
+                    <div class="twofa-container">
+                        <div class="qr-box">
+                            <div class="qr-box-title">Código QR</div>
+                            <div class="qr-code">
+                                <img id="qrImage" src="" alt="QR Code 2FA">
+                            </div>
+                            <div class="secret-key-box">
+                                <span class="secret-key" id="secretKey">XXXX XXXX XXXX XXXX</span>
+                                <button class="copy-btn" onclick="copySecretKey()" title="Copiar">
+                                    <i class="fas fa-copy"></i>
+                                </button>
                             </div>
                         </div>
-                        <div class="instruction-step">
-                            <div class="instruction-num">2</div>
-                            <div class="instruction-text">Escanea el código QR o ingresa la <strong>clave
-                                    secreta</strong> manualmente
+                        <div class="twofa-instructions">
+                            <h4><i class="fas fa-mobile-screen" style="color:var(--accent-soft);margin-right:6px;"></i>
+                                Cómo configurar</h4>
+                            <div class="instruction-step">
+                                <div class="instruction-num">1</div>
+                                <div class="instruction-text">Descarga <strong>Google Authenticator</strong>,
+                                    <strong>Authy</strong> o <strong>1Password</strong>
+                                </div>
+                            </div>
+                            <div class="instruction-step">
+                                <div class="instruction-num">2</div>
+                                <div class="instruction-text">Escanea el código QR o ingresa la <strong>clave
+                                        secreta</strong> manualmente</div>
+                            </div>
+                            <div class="instruction-step">
+                                <div class="instruction-num">3</div>
+                                <div class="instruction-text">Ingresa el <strong>código de 6 dígitos</strong> que
+                                    aparece en tu app</div>
                             </div>
                         </div>
-                        <div class="instruction-step">
-                            <div class="instruction-num">3</div>
-                            <div class="instruction-text">Ingresa el <strong>código de 6 dígitos</strong> que aparece en
-                                tu app</div>
+                    </div>
+                    <div style="text-align:center;margin-top:18px;">
+                        <div
+                            style="font-size:11px;font-weight:600;color:var(--text-dim);letter-spacing:1px;text-transform:uppercase;margin-bottom:12px;">
+                            Código de verificación</div>
+                        <div class="otp-input-group" id="otpGroup">
+                            <input type="text" class="otp-input" maxlength="1" data-otp="0" inputmode="numeric">
+                            <input type="text" class="otp-input" maxlength="1" data-otp="1" inputmode="numeric">
+                            <input type="text" class="otp-input" maxlength="1" data-otp="2" inputmode="numeric">
+                            <input type="text" class="otp-input" maxlength="1" data-otp="3" inputmode="numeric">
+                            <input type="text" class="otp-input" maxlength="1" data-otp="4" inputmode="numeric">
+                            <input type="text" class="otp-input" maxlength="1" data-otp="5" inputmode="numeric">
+                        </div>
+                        <div id="twofa-verify-error"
+                            style="color:var(--red,#f87171);font-size:13px;margin-top:8px;display:none;"><i
+                                class="fas fa-circle-exclamation"></i> Código incorrecto, inténtalo de nuevo.</div>
+                    </div>
+                    <div class="btn-row">
+                        <button class="btn-submit secondary" onclick="prevStep(4)"><i class="fas fa-arrow-left"
+                                style="font-size:12px;"></i> Atrás</button>
+                        <button class="btn-submit" onclick="verify2FA()"><i class="fas fa-shield-check"></i> Verificar
+                            código</button>
+                    </div>
+                </div>
+
+                <!-- FASE B: Códigos de respaldo (se muestran DESPUÉS de verificar) -->
+                <div id="twofa-phase-backup" style="display:none;">
+                    <div class="backup-codes" style="display:block;">
+                        <div class="backup-codes-header">
+                            <div class="backup-codes-title"><i class="fas fa-key" style="margin-right:6px;"></i> Códigos
+                                de respaldo</div>
+                            <button class="copy-btn" onclick="copyBackupCodes()" title="Copiar todos"><i
+                                    class="fas fa-copy"></i></button>
+                        </div>
+                        <div class="backup-codes-grid" id="backupCodesGrid"></div>
+                        <div
+                            style="font-size:12px;color:var(--text-muted);margin-top:12px;line-height:1.6;background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.25);border-radius:8px;padding:12px;">
+                            <i class="fas fa-exclamation-triangle" style="color:#fbbf24;"></i>
+                            <strong>Guarda estos 8 códigos ahora.</strong> Cada uno es de un solo uso y te permiten
+                            acceder si pierdes tu app 2FA. No los podrás ver de nuevo.
                         </div>
                     </div>
-                </div>
-
-                <div style="text-align:center;">
-                    <div
-                        style="font-size:11px;font-weight:600;color:var(--text-dim);letter-spacing:1px;text-transform:uppercase;margin-bottom:12px;">
-                        Código de verificación
-                    </div>
-                    <div class="otp-input-group" id="otpGroup">
-                        <input type="text" class="otp-input" maxlength="1" data-otp="0" inputmode="numeric">
-                        <input type="text" class="otp-input" maxlength="1" data-otp="1" inputmode="numeric">
-                        <input type="text" class="otp-input" maxlength="1" data-otp="2" inputmode="numeric">
-                        <input type="text" class="otp-input" maxlength="1" data-otp="3" inputmode="numeric">
-                        <input type="text" class="otp-input" maxlength="1" data-otp="4" inputmode="numeric">
-                        <input type="text" class="otp-input" maxlength="1" data-otp="5" inputmode="numeric">
+                    <label class="check-label" style="margin:16px 0 8px;">
+                        <input type="checkbox" id="backupSavedCheck">
+                        <span>He guardado mis códigos de respaldo en un lugar seguro</span>
+                    </label>
+                    <div class="btn-row single">
+                        <button class="btn-submit" onclick="confirmBackupSaved()"><i class="fas fa-arrow-right"></i>
+                            Continuar al siguiente paso</button>
                     </div>
                 </div>
 
-                <div class="backup-codes" id="backupCodesBox" style="display:none;">
-                    <div class="backup-codes-header">
-                        <div class="backup-codes-title">
-                            <i class="fas fa-key" style="margin-right:6px;"></i> Códigos de respaldo
-                        </div>
-                        <button class="copy-btn" onclick="copyBackupCodes()" title="Copiar todos">
-                            <i class="fas fa-copy"></i>
-                        </button>
-                    </div>
-                    <div class="backup-codes-grid" id="backupCodesGrid"></div>
-                    <div style="font-size:11px;color:var(--text-muted);margin-top:10px;line-height:1.5;">
-                        <i class="fas fa-exclamation-triangle" style="color:var(--orange);"></i>
-                        Guarda estos códigos en un lugar seguro. Cada uno puede usarse una sola vez si pierdes acceso a
-                        tu app 2FA.
-                    </div>
-                </div>
 
-                <div class="btn-row">
-                    <button class="btn-submit secondary" onclick="prevStep(4)">
-                        <i class="fas fa-arrow-left" style="font-size:12px;"></i> Atrás
-                    </button>
-                    <button class="btn-submit" onclick="verify2FA()">
-                        <i class="fas fa-shield-check"></i> Verificar y continuar
-                    </button>
-                </div>
             </div>
 
             <!-- ═══ STEP 5: VERIFICAR EMAIL ═══ -->
@@ -2019,9 +2036,11 @@
             window.nextStep = function (from) {
                 if (!validateStep(from)) return;
                 if (from === 3) generate2FASetup();
-                if (from === 4) sendEmailVerificationCode();
-                regStep = from + 1;
-                updateProgress();
+                // El paso 4 -> 5 se maneja via confirmBackupSaved() tras verificar 2FA
+                if (from !== 4) {
+                    regStep = from + 1;
+                    updateProgress();
+                }
             };
 
             window.prevStep = function (from) {
@@ -2033,7 +2052,7 @@
             function validateStep(step) {
                 if (step === 1) {
                     const company = document.getElementById('regCompany').value.trim();
-                    const code = document.getElementById('regCode').value.trim();
+                    const dominio = document.getElementById('regDominio').value.trim().toLowerCase();
                     const size = document.getElementById('regSize').value;
                     const sector = document.getElementById('regSector').value;
                     const country = document.getElementById('regCountry').value;
@@ -2044,16 +2063,16 @@
                     }
                     setFieldState('company', 'valid');
 
-                    if (!code) {
-                        setFieldState('code', 'invalid', 'Obligatorio');
+                    if (!dominio) {
+                        setFieldState('dominio', 'invalid', 'Obligatorio');
                         return false;
                     }
-                    const codeRegex = /^PP-[A-Z0-9]{4}-[A-Z0-9]{4}$/;
-                    if (!codeRegex.test(code.toUpperCase())) {
-                        setFieldState('code', 'invalid', 'Formato: PP-XXXX-XXXX');
+                    const dominioRegex = /^[a-z0-9][a-z0-9-]{1,30}[a-z0-9]$/;
+                    if (!dominioRegex.test(dominio)) {
+                        setFieldState('dominio', 'invalid', 'Solo letras, números y guiones. Mínimo 3 caracteres.');
                         return false;
                     }
-                    setFieldState('code', 'valid');
+                    setFieldState('dominio', 'valid');
 
                     if (!size) { showMessage('Selecciona el tamaño de la empresa', 'error'); return false; }
                     if (!sector) { showMessage('Selecciona el sector industrial', 'error'); return false; }
@@ -2066,7 +2085,7 @@
                     const first = document.getElementById('regFirst').value.trim();
                     const last = document.getElementById('regLast').value.trim();
                     const email = document.getElementById('regEmail').value.trim();
-                    const role = document.getElementById('regRole').value;
+                    const cargo = document.getElementById('regCargo').value;
 
                     if (!first) { setFieldState('firstname', 'invalid', 'Obligatorio'); return false; }
                     setFieldState('firstname', 'valid');
@@ -2080,15 +2099,10 @@
                         setFieldState('email', 'invalid', 'Correo inválido');
                         return false;
                     }
-                    const publicDomains = ['gmail.com', 'hotmail.com', 'yahoo.com', 'outlook.com', 'live.com', 'icloud.com'];
-                    const domain = email.split('@')[1]?.toLowerCase();
-                    if (publicDomains.includes(domain)) {
-                        setFieldState('email', 'invalid', 'Usa un correo corporativo, no personal');
-                        return false;
-                    }
+
                     setFieldState('email', 'valid');
 
-                    if (!role) { showMessage('Selecciona tu cargo', 'error'); return false; }
+                    if (!cargo) { showMessage('Selecciona tu cargo principal', 'error'); return false; }
 
                     return true;
                 }
@@ -2224,7 +2238,76 @@
                 }
             };
 
-            /* ═══ 2FA ═══ */
+            /* ═══ TELÉFONO POR PAÍS ═══ */
+            const PHONE_PREFIXES = {
+                HN: { prefix: '+504', placeholder: '9999-9999' },
+                SV: { prefix: '+503', placeholder: '7777-7777' },
+                GT: { prefix: '+502', placeholder: '5555-5555' },
+                NI: { prefix: '+505', placeholder: '8888-8888' },
+                CR: { prefix: '+506', placeholder: '6666-6666' },
+                PA: { prefix: '+507', placeholder: '6666-6666' },
+                MX: { prefix: '+52', placeholder: '55 1234 5678' },
+                ES: { prefix: '+34', placeholder: '612 345 678' },
+                CO: { prefix: '+57', placeholder: '310 123 4567' },
+                AR: { prefix: '+54', placeholder: '11 1234 5678' },
+                US: { prefix: '+1', placeholder: '(555) 123-4567' },
+                OTHER: { prefix: '+', placeholder: 'Ingresa tu número' }
+            };
+            window.updatePhoneByCountry = function (country) {
+                const info = PHONE_PREFIXES[country] || PHONE_PREFIXES['OTHER'];
+                const prefixEl = document.getElementById('phonePrefix');
+                const phoneEl = document.getElementById('regPhone');
+                prefixEl.textContent = info.prefix;
+                phoneEl.placeholder = info.placeholder;
+                phoneEl.value = '';
+                if (country === 'OTHER') {
+                    prefixEl.contentEditable = 'true';
+                    prefixEl.style.cursor = 'text';
+                    prefixEl.title = 'Edita el prefijo';
+                } else {
+                    prefixEl.contentEditable = 'false';
+                    prefixEl.style.cursor = 'default';
+                    prefixEl.title = '';
+                }
+            };
+            /* ═══ 2FA — TOTP REAL EN JS PURO ═══ */
+            // Base32 decode para TOTP
+            function base32Decode(s) {
+                const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+                let bits = 0, value = 0;
+                const output = [];
+                for (const c of s.toUpperCase().replace(/=+$/, '')) {
+                    const idx = alphabet.indexOf(c);
+                    if (idx === -1) continue;
+                    value = (value << 5) | idx;
+                    bits += 5;
+                    if (bits >= 8) {
+                        output.push((value >>> (bits - 8)) & 255);
+                        bits -= 8;
+                    }
+                }
+                return new Uint8Array(output);
+            }
+            async function computeTOTP(secret, offset = 0) {
+                const epoch = Math.floor(Date.now() / 1000);
+                const counter = Math.floor(epoch / 30) + offset;
+                const buf = new ArrayBuffer(8);
+                const view = new DataView(buf);
+                view.setUint32(4, counter, false);
+                const keyData = base32Decode(secret);
+                const cryptoKey = await crypto.subtle.importKey(
+                    'raw', keyData, { name: 'HMAC', hash: 'SHA-1' }, false, ['sign']
+                );
+                const sig = await crypto.subtle.sign('HMAC', cryptoKey, buf);
+                const arr = new Uint8Array(sig);
+                const offset2 = arr[arr.length - 1] & 0x0f;
+                const code = ((arr[offset2] & 0x7f) << 24 |
+                    (arr[offset2 + 1] & 0xff) << 16 |
+                    (arr[offset2 + 2] & 0xff) << 8 |
+                    (arr[offset2 + 3] & 0xff)) % 1000000;
+                return code.toString().padStart(6, '0');
+            }
+
             function generate2FASetup() {
                 const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
                 let secret = '';
@@ -2238,17 +2321,23 @@
 
                 const email = document.getElementById('regEmail').value;
                 const company = document.getElementById('regCompany').value;
-                const issuer = encodeURIComponent(`PortalPilot:${company}`);
+                const issuer = `PortalPilot`;
                 const account = encodeURIComponent(email);
-                const uri = `otpauth://totp/${issuer}:${account}?secret=${secret}&issuer=${issuer}&algorithm=SHA1&digits=6&period=30`;
+                const uri = `otpauth://totp/${encodeURIComponent(issuer)}:${account}?secret=${secret}&issuer=${encodeURIComponent(issuer)}&algorithm=SHA1&digits=6&period=30`;
                 const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(uri)}`;
                 document.getElementById('qrImage').src = qrUrl;
 
                 backupCodes = [];
                 for (let i = 0; i < 8; i++) {
-                    const code = Math.random().toString(36).substring(2, 10).toUpperCase();
-                    backupCodes.push(code);
+                    const part1 = Math.random().toString(36).substring(2, 7).toUpperCase();
+                    const part2 = Math.random().toString(36).substring(2, 7).toUpperCase();
+                    backupCodes.push(`${part1}-${part2}`);
                 }
+
+                // Reset fases
+                document.getElementById('twofa-phase-scan').style.display = 'block';
+                document.getElementById('twofa-phase-backup').style.display = 'none';
+                document.getElementById('twofa-verify-error').style.display = 'none';
 
                 setupOTPInputs('otpGroup');
             }
@@ -2262,22 +2351,28 @@
                 const inputs = document.querySelectorAll(`#${groupId} .otp-input`);
                 inputs.forEach((input, i) => {
                     input.value = '';
+                    // Evitar listeners duplicados
+                    const newInput = input.cloneNode(true);
+                    input.parentNode.replaceChild(newInput, input);
+                });
+                const freshInputs = document.querySelectorAll(`#${groupId} .otp-input`);
+                freshInputs.forEach((input, i) => {
                     input.addEventListener('input', (e) => {
                         const val = e.target.value.replace(/[^0-9]/g, '');
                         e.target.value = val;
-                        if (val && i < inputs.length - 1) inputs[i + 1].focus();
+                        if (val && i < freshInputs.length - 1) freshInputs[i + 1].focus();
                     });
                     input.addEventListener('keydown', (e) => {
-                        if (e.key === 'Backspace' && !e.target.value && i > 0) inputs[i - 1].focus();
+                        if (e.key === 'Backspace' && !e.target.value && i > 0) freshInputs[i - 1].focus();
                     });
                     input.addEventListener('paste', (e) => {
                         e.preventDefault();
                         const paste = (e.clipboardData.getData('text') || '').replace(/[^0-9]/g, '');
                         paste.split('').forEach((char, idx) => {
-                            if (inputs[i + idx]) inputs[i + idx].value = char;
+                            if (freshInputs[i + idx]) freshInputs[i + idx].value = char
                         });
-                        const nextIdx = Math.min(i + paste.length, inputs.length - 1);
-                        inputs[nextIdx].focus();
+                        const nextIdx = Math.min(i + paste.length, freshInputs.length - 1);
+                        freshInputs[nextIdx].focus();
                     });
                 });
             }
@@ -2287,17 +2382,43 @@
                 return Array.from(inputs).map(i => i.value).join('');
             }
 
-            window.verify2FA = function () {
+            window.verify2FA = async function () {
                 const code = getOTPValue('otpGroup');
                 if (code.length !== 6) {
                     showMessage('Ingresa el código completo de 6 dígitos', 'error');
                     return;
                 }
+                // Verificar TOTP real (ventana ±1 periodo de 30s)
+                const [t0, t1, t_1] = await Promise.all([
+                    computeTOTP(twoFASecret, 0),
+                    computeTOTP(twoFASecret, 1),
+                    computeTOTP(twoFASecret, -1)
+                ]);
+                const errEl = document.getElementById('twofa-verify-error');
+                if (code !== t0 && code !== t1 && code !== t_1) {
+                    errEl.style.display = 'block';
+                    showMessage('Código incorrecto — asegúrate de que la hora de tu dispositivo esté sincronizada', 'error');
+                    return;
+                }
+                errEl.style.display = 'none';
                 showMessage('✓ 2FA verificado correctamente', 'success');
+
+
+                // Mostrar fase de códigos de respaldo
                 const grid = document.getElementById('backupCodesGrid');
                 grid.innerHTML = backupCodes.map(c => `<div class="backup-code">${c}</div>`).join('');
-                document.getElementById('backupCodesBox').style.display = 'block';
-                setTimeout(() => nextStep(4), 1000);
+                document.getElementById('twofa-phase-scan').style.display = 'none';
+                document.getElementById('twofa-phase-backup').style.display = 'block';
+            };
+
+            window.confirmBackupSaved = function () {
+                if (!document.getElementById('backupSavedCheck').checked) {
+                    showMessage('Confirma que guardaste tus códigos de respaldo', 'warning');
+                    return;
+                }
+                sendEmailVerificationCode();
+                regStep = 5;
+                updateProgress();
             };
 
             window.copyBackupCodes = function () {
@@ -2306,25 +2427,39 @@
             };
 
             /* ═══ EMAIL VERIFICATION ═══ */
-            function sendEmailVerificationCode() {
+            async function sendEmailVerificationCode() {
                 const email = document.getElementById('regEmail').value;
                 document.getElementById('verifyEmailDisplay').textContent = email;
                 setupOTPInputs('emailOtpGroup');
                 emailVerificationCode = Math.floor(100000 + Math.random() * 900000).toString();
-                console.log('🔐 Código de verificación (demo):', emailVerificationCode);
-                showMessage(`Código enviado a ${email}`, 'success');
+                try {
+                    await fetch(`${API_ROOT}/api/enviar-codigo-verificacion`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email, codigo: emailVerificationCode })
+                    });
+                } catch (e) {
+                    console.warn('No se pudo enviar código por API, modo local activo.');
+                }
+                showMessage(`Código de verificación enviado a ${email}`, 'success');
             }
 
-            window.resendEmailCode = function () {
+            window.resendEmailCode = async function () {
                 const btn = document.getElementById('resendBtn');
                 btn.disabled = true;
                 btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
-                setTimeout(() => {
-                    emailVerificationCode = Math.floor(100000 + Math.random() * 900000).toString();
-                    btn.innerHTML = '<i class="fas fa-rotate-right"></i> Reenviar código';
-                    btn.disabled = false;
-                    showMessage('Nuevo código enviado', 'success');
-                }, 1500);
+                emailVerificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+                const email = document.getElementById('regEmail').value;
+                try {
+                    await fetch(`${API_ROOT}/api/enviar-codigo-verificacion`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email, codigo: emailVerificationCode })
+                    });
+                } catch (e) { }
+                btn.innerHTML = '<i class="fas fa-rotate-right"></i> Reenviar código';
+                btn.disabled = false;
+                showMessage('Nuevo código enviado', 'success');
             };
 
             /* ═══ FINALIZAR ═══ */
@@ -2351,21 +2486,43 @@
                 btn.disabled = true;
 
                 try {
+                    // Calcular sise automáticamente según tamaño de empleados
+                    const sizeMap = {
+                        '1-10': 'micro', '11-50': 'small', '51-200': 'medium',
+                        '201-500': 'large', '500+': 'enterprise'
+                    };
+                    const empresaSize = document.getElementById('regSize').value;
+                    const sise = sizeMap[empresaSize] || 'small';
+                    const dominio = document.getElementById('regDominio').value.trim().toLowerCase();
+                    const workspace = `${dominio}.pp.ia`;
+                    // Generar código de tenant automáticamente
+                    const randomPart1 = Math.random().toString(36).substring(2, 6).toUpperCase();
+                    const randomPart2 = Math.random().toString(36).substring(2, 6).toUpperCase();
+                    const empresaCodigo = `PP-${randomPart1}-${randomPart2}`;
+                    const phonePrefix = document.getElementById('phonePrefix').textContent.trim();
+                    const phoneNum = document.getElementById('regPhone').value.trim();
+                    const fullPhone = phoneNum ? `${phonePrefix} ${phoneNum}` : '';
+                    const landPage = document.getElementById('regWebsite').value.trim()
+                        .replace(/^https?:\/\//, '').replace(/\/$/, '');
+
                     const payload = {
                         empresaNombre: document.getElementById('regCompany').value.trim(),
-                        empresaCodigo: document.getElementById('regCode').value.trim().toUpperCase(),
-                        empresaSize: document.getElementById('regSize').value,
+                        empresaCodigo,
+                        dominioWorkspace: workspace,
+                        landPage,
+                        empresaSize,
+                        sise,
                         empresaSector: document.getElementById('regSector').value,
                         empresaCountry: document.getElementById('regCountry').value,
-                        empresaWebsite: document.getElementById('regWebsite').value.trim(),
                         usuarioNombre: document.getElementById('regFirst').value.trim(),
                         usuarioApellido: document.getElementById('regLast').value.trim(),
                         email: document.getElementById('regEmail').value.trim().toLowerCase(),
-                        rol: document.getElementById('regRole').value,
-                        phone: document.getElementById('regPhone').value.trim(),
+                        cargo: document.getElementById('regCargo').value,
+                        rol: 'owner',
+                        phone: fullPhone,
                         password: document.getElementById('regPass').value,
                         dosFaActivo: true,
-                        dosFaSecret: twoFASecret,
+                        dosFaBackupCodes: backupCodes,
                         terminosAceptados: true
                     };
 
@@ -2378,8 +2535,8 @@
                     const data = await readJsonResponse(res);
                     if (!res.ok) throw new Error(data.error || 'Error al crear el tenant');
 
-                    document.getElementById('finalCode').textContent = payload.empresaCodigo;
-                    document.getElementById('finalUrl').textContent = `${payload.empresaCodigo.toLowerCase()}.portal-pilot.app`;
+                    document.getElementById('finalCode').textContent = empresaCodigo;
+                    document.getElementById('finalUrl').textContent = workspace;
                     document.getElementById('finalAdmin').textContent = payload.email;
 
                     regStep = 6;
@@ -2395,17 +2552,16 @@
             };
 
             window.goToDashboard = function () {
-                const code = document.getElementById('regCode').value.trim().toUpperCase();
-                window.location.href = `login.html?tenant=${code}&welcome=1`;
+
+                const dominio = document.getElementById('regDominio').value.trim().toLowerCase();
+                window.location.href = `login.html?tenant=${dominio}.pp.ia&welcome=1`;
             };
 
             /* ═══ VALIDACIÓN EN TIEMPO REAL ═══ */
-            document.getElementById('regCode').addEventListener('input', function (e) {
-                let val = e.target.value.toUpperCase().replace(/[^A-Z0-9-]/g, '');
-                val = val.replace(/^PP-?/, 'PP-');
-                if (val.length > 3 && val[2] !== '-') val = val.slice(0, 2) + '-' + val.slice(2);
-                if (val.length > 8 && val[7] !== '-') val = val.slice(0, 7) + '-' + val.slice(7);
-                if (val.length > 12) val = val.slice(0, 12);
+
+            document.getElementById('regDominio').addEventListener('input', function (e) {
+                let val = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '');
+                if (val.startsWith('-')) val = val.replace(/^-+/, '');
                 e.target.value = val;
             });
 
@@ -2416,13 +2572,8 @@
                 if (!emailRegex.test(email)) {
                     setFieldState('email', 'invalid', 'Correo inválido');
                 } else {
-                    const publicDomains = ['gmail.com', 'hotmail.com', 'yahoo.com', 'outlook.com', 'live.com', 'icloud.com'];
-                    const domain = email.split('@')[1]?.toLowerCase();
-                    if (publicDomains.includes(domain)) {
-                        setFieldState('email', 'invalid', 'Usa un correo corporativo');
-                    } else {
-                        setFieldState('email', 'valid');
-                    }
+
+                    setFieldState('email', 'valid');
                 }
             });
 

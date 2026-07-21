@@ -521,11 +521,17 @@ async function findTenantByIdentifierDebug(identifier) {
 // MÓDULO DE EMAIL
 // ======================================================================
 const transporter = nodemailer.createTransport({
-  service: 'gmail',
+  host: 'smtp.gmail.com',
+  port: 465,
+  secure: true,
   auth: {
     user: process.env.EMAIL_USER || 'portalpilot.hn@gmail.com',
     pass: process.env.EMAIL_PASS
-  }
+  },
+  pool: false, // 🔧 FIX VERCEL: Desactivar pool de sockets para evitar conexiones muertas en serverless
+  connectionTimeout: 10000,
+  greetingTimeout: 5000,
+  socketTimeout: 10000
 });
 
 const EMAIL_FROM = process.env.EMAIL_FROM || process.env.EMAIL_USER || 'portalpilot.hn@gmail.com';
@@ -901,6 +907,29 @@ app.get('/api/diagnostico', async (req, res) => {
   }
 
   res.json(result);
+});
+
+app.get('/api/test-email', async (req, res) => {
+  const targetEmail = req.query.to || process.env.EMAIL_USER || 'portalpilot.hn@gmail.com';
+  try {
+    await transporter.verify();
+    const info = await transporter.sendMail({
+      from: `"Prueba Portal Pilot" <${EMAIL_FROM}>`,
+      to: targetEmail,
+      subject: '🧪 Prueba de Notificación por Correo — Portal Pilot',
+      text: 'Este es un correo de prueba enviado exitosamente desde el backend de Portal Pilot.'
+    });
+    res.json({ success: true, message: 'Correo enviado con éxito', messageId: info.messageId, recipient: targetEmail });
+  } catch (err) {
+    console.error('[TEST EMAIL] Error:', err);
+    res.status(500).json({
+      success: false,
+      error: err.message || 'Error desconocido al enviar correo',
+      code: err.code || null,
+      command: err.command || null,
+      response: err.response || null
+    });
+  }
 });
 
 app.post('/api/registro', async (req, res) => {

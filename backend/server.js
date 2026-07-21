@@ -956,19 +956,40 @@ app.post('/api/registro', async (req, res) => {
       return res.status(409).json({ error: 'El correo ya está registrado.' });
     }
 
+    const empresaData = {
+      nombre: empresaNombre || 'Portal Pilot',
+      codigo: empresaCodigo,
+      dominio: dominioWorkspace || null,
+      land_page: landPage || null,
+      size: empresaSize || null,
+      sise: sise || null,
+      sector: empresaSector || null,
+      pais: empresaCountry || null,
+      status: 'active',
+      Status: 'active',
+      estado: 'active',
+      Estado: 'active'
+    };
+
     try {
-      await nocodbApi.post(EMPRESAS_TABLE, {
-        nombre: empresaNombre,
-        codigo: empresaCodigo,
-        dominio: dominioWorkspace || null,
-        land_page: landPage || null,
-        size: empresaSize || null,
-        sise: sise || null,
-        sector: empresaSector || null,
-        pais: empresaCountry || null
+      const empresaExistenteRes = await nocodbApi.get(EMPRESAS_TABLE, {
+        params: { where: buildNocoWhereFilter('codigo', empresaCodigo), limit: 1 }
       });
+      const empresaExistente = empresaExistenteRes.data?.list?.[0] || null;
+
+      if (empresaExistente) {
+        const empresaRecordId = extractNocoRecordId(empresaExistente);
+        if (empresaRecordId) {
+          await nocodbApi.patch(buildNocoRecordPath(EMPRESAS_TABLE, empresaRecordId), empresaData);
+        } else {
+          await nocodbApi.post(EMPRESAS_TABLE, empresaData);
+        }
+      } else {
+        await nocodbApi.post(EMPRESAS_TABLE, empresaData);
+      }
     } catch (err) {
-      console.log('Nota: La empresa podría ya existir.', err.response?.data || err.message);
+      console.error('[REGISTRO] Error al crear/actualizar la empresa:', err.response?.data || err.message);
+      throw err;
     }
 
     const salt = await bcrypt.genSalt(10);
@@ -987,7 +1008,10 @@ app.post('/api/registro', async (req, res) => {
       terminos_aceptados: terminosAceptados || false,
       empresa_codigo: empresaCodigo,
       dominio_workspace: dominioWorkspace || null,
-      status: 'pending'
+      status: 'active',
+      Status: 'active',
+      estado: 'active',
+      Estado: 'active'
     };
 
     await nocodbApi.post(USUARIOS_TABLE, nuevoUsuario);

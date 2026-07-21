@@ -2463,6 +2463,24 @@
             };
 
             /* ═══ FINALIZAR ═══ */
+            const SECTOR_OPTIONS = {
+                tecnologia: 'Tecnología',
+                educacion: 'Educación',
+                salud: 'Salud & Farmacéutica',
+                finanzas: 'Finanzas & Banca',
+                manufactura: 'Manufactura',
+                retail: 'Retail & E-commerce',
+                logistica: 'Logística & Transporte',
+                energia: 'Energía',
+                gobierno: 'Gobierno',
+                otro: 'Otro'
+            };
+
+            function normalizeSectorValue(value) {
+                if (!value) return '';
+                return SECTOR_OPTIONS[value.toLowerCase()] || value;
+            }
+
             window.finalizeRegistration = async function () {
                 const terms = document.getElementById('acceptTerms').checked;
                 if (!terms) {
@@ -2493,6 +2511,8 @@
                     };
                     const empresaSize = document.getElementById('regSize').value;
                     const sise = sizeMap[empresaSize] || 'small';
+                    const sectorRaw = document.getElementById('regSector').value;
+                    const empresaSector = normalizeSectorValue(sectorRaw);
                     const dominio = document.getElementById('regDominio').value.trim().toLowerCase();
                     const workspace = `${dominio}.pp.ia`;
                     // Generar código de tenant automáticamente
@@ -2512,7 +2532,7 @@
                         landPage,
                         empresaSize,
                         sise,
-                        empresaSector: document.getElementById('regSector').value,
+                        empresaSector,
                         empresaCountry: document.getElementById('regCountry').value,
                         usuarioNombre: document.getElementById('regFirst').value.trim(),
                         usuarioApellido: document.getElementById('regLast').value.trim(),

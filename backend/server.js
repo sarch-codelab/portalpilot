@@ -169,6 +169,24 @@ function normalizeStatus(rawStatus) {
   return status || 'active';
 }
 
+function normalizeSectorValue(value) {
+  if (!value) return '';
+  const normalized = String(value).trim();
+  const mapping = {
+    tecnologia: 'Tecnología',
+    educacion: 'Educación',
+    salud: 'Salud & Farmacéutica',
+    finanzas: 'Finanzas & Banca',
+    manufactura: 'Manufactura',
+    retail: 'Retail & E-commerce',
+    logistica: 'Logística & Transporte',
+    energia: 'Energía',
+    gobierno: 'Gobierno',
+    otro: 'Otro'
+  };
+  return mapping[normalized.toLowerCase()] || normalized;
+}
+
 function isDeletedStatus(rawStatus) {
   const status = normalizeStatus(rawStatus);
   return ['inactive', 'deleted'].includes(status);
@@ -948,6 +966,7 @@ app.post('/api/registro', async (req, res) => {
     }
 
     const emailNorm = String(email).trim().toLowerCase();
+    const empresaSectorNormalizado = normalizeSectorValue(empresaSector);
     const existingUsers = await nocodbApi.get(USUARIOS_TABLE, {
       params: { where: buildNocoWhereFilter('email', emailNorm), limit: 1 }
     });
@@ -963,7 +982,7 @@ app.post('/api/registro', async (req, res) => {
       land_page: landPage || null,
       size: empresaSize || null,
       sise: sise || null,
-      sector: empresaSector || null,
+      sector: empresaSectorNormalizado || null,
       pais: empresaCountry || null,
       status: 'active',
       Status: 'active',

@@ -460,64 +460,6 @@
             }
         }
 
-        .biometric-row {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 20px;
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 14px 16px;
-        }
-
-        .bio-icon {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            background: rgba(139, 92, 246, 0.1);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--accent-soft);
-            font-size: 15px;
-            flex-shrink: 0;
-        }
-
-        .bio-text {
-            font-size: 12px;
-            color: var(--text-dim);
-            line-height: 1.4;
-            flex: 1;
-        }
-
-        .bio-text strong {
-            color: var(--white);
-            font-size: 11px;
-            font-weight: 600;
-            letter-spacing: 0.5px;
-            display: block;
-            margin-bottom: 2px;
-        }
-
-        .btn-bio {
-            padding: 7px 14px;
-            border-radius: 20px;
-            background: var(--surface-2);
-            border: 1px solid var(--border-strong);
-            color: var(--white);
-            font-size: 12px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            white-space: nowrap;
-            font-family: inherit;
-        }
-
-        .btn-bio:hover {
-            background: rgba(255, 255, 255, 0.08);
-        }
-
         .field {
             margin-bottom: 16px;
         }
@@ -673,34 +615,6 @@
             letter-spacing: 0.5px;
         }
 
-        .sso-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-        }
-
-        .btn-sso {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            padding: 12px;
-            border-radius: var(--radius);
-            background: var(--surface);
-            border: 1px solid var(--border);
-            color: var(--white);
-            font-size: 13px;
-            font-weight: 500;
-            font-family: inherit;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .btn-sso:hover {
-            background: var(--surface-2);
-            border-color: var(--border-strong);
-        }
-
         .terms-note {
             font-size: 12px;
             color: var(--text-muted);
@@ -849,16 +763,6 @@
                 <p>Accede a tu portal corporativo seguro</p>
             </div>
 
-            <div class="biometric-row">
-                <div class="bio-icon"><i class="fas fa-mobile-screen"></i></div>
-                <div class="bio-text">
-                    <strong>2FA DISPONIBLE</strong>
-                    Autenticación de dos factores
-                </div>
-                <button class="btn-bio" onclick="trigger2FA()"><i class="fas fa-key"
-                        style="margin-right:5px;"></i>Usar</button>
-            </div>
-
             <form id="loginForm">
                 <div class="field">
                     <label>CORREO CORPORATIVO</label>
@@ -885,13 +789,6 @@
                         style="font-size:12px;"></i></button>
             </form>
 
-            <div class="divider"><span>O CONTINÚA CON</span></div>
-            <div class="sso-row">
-                <button class="btn-sso" onclick="ssoClick('Microsoft')"><i class="fab fa-microsoft"
-                        style="color:#00A4EF;font-size:16px;"></i> Microsoft</button>
-                <button class="btn-sso" onclick="ssoClick('Google')"><i class="fab fa-google"
-                        style="color:#EA4335;font-size:16px;"></i> Google</button>
-            </div>
             <div class="terms-note">¿No tienes cuenta? <a href="registro.html">Crear una cuenta</a></div>
         </div>
 
@@ -1209,21 +1106,6 @@
                     }
                 });
             });
-
-            /* ═══ 2FA LOGIN ═══ */
-            window.trigger2FA = function () {
-                const strip = document.querySelector('.biometric-row .bio-text');
-                const btn = document.querySelector('.biometric-row .btn-bio');
-                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-                setTimeout(() => {
-                    btn.innerHTML = '<i class="fas fa-check"></i> Listo';
-                    btn.style.background = 'rgba(48,209,88,0.15)'; btn.style.color = 'var(--green)'; btn.style.borderColor = 'rgba(48,209,88,0.3)';
-                    strip.innerHTML = '<strong style="color:var(--green);">2FA VERIFICADO</strong>Redirigiendo...';
-                    showMessage('Autenticación 2FA verificada correctamente', 'success');
-                }, 2200);
-            };
-
-            window.ssoClick = function (p) { showMessage(`Redirigiendo a ${p}...`, 'info'); };
 
             /* ═══ RECUPERACIÓN DE CONTRASEÑA ═══ */
             window.forgotPw = function (e) {

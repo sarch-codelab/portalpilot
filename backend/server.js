@@ -958,7 +958,7 @@ app.post('/api/registro', async (req, res) => {
       empresaNombre, empresaCodigo, dominioWorkspace, landPage,
       empresaSize, sise, empresaSector, empresaCountry, zonaHoraria,
       logoUrl, bannerUrl,
-      usuarioNombre, usuarioApellido, email, cargo, area, areaRol,
+      usuarioNombre, usuarioApellido, email, cargo, area, rango,
       perfilFotoUrl, perfilBannerUrl,
       password, dosFaActivo, dosFaSecret, dosFaBackupCodes, terminosAceptados,
       plan
@@ -1027,7 +1027,7 @@ app.post('/api/registro', async (req, res) => {
       email: emailNorm,
       cargo: cargo || null,
       area: area || 'Sin asignar',
-      area_rol: areaRol || 'administrador',
+      rango: rango || 'Administrador',
       rol: 'owner',
       foto_perfil_url: perfilFotoUrl || null,
       banner_perfil_url: perfilBannerUrl || null,

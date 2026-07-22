@@ -956,8 +956,8 @@ app.post('/api/registro', async (req, res) => {
 
     const {
       empresaNombre, empresaCodigo, dominioWorkspace, landPage,
-      empresaSize, sise, empresaSector, empresaCountry,
-      usuarioNombre, usuarioApellido, email, cargo,
+      empresaSize, sise, empresaSector, empresaCountry, zonaHoraria,
+      usuarioNombre, usuarioApellido, email, cargo, area,
       password, dosFaActivo, dosFaSecret, dosFaBackupCodes, terminosAceptados,
       plan
     } = req.body;
@@ -985,6 +985,8 @@ app.post('/api/registro', async (req, res) => {
       sise: sise || null,
       sector: empresaSectorNormalizado || null,
       pais: empresaCountry || null,
+      zona_horaria: zonaHoraria || null,
+      plan: plan || 'startup',
       status: 'active',
       Status: 'active',
       estado: 'active',
@@ -1020,7 +1022,8 @@ app.post('/api/registro', async (req, res) => {
       apellido: usuarioApellido,
       email: emailNorm,
       cargo: cargo || null,
-      rol: 'owner',           // Siempre owner para el creador del tenant
+      area: area || 'Administración',
+      rol: 'administrador',
       password: passwordHash,
       dosfa_activo: dosFaActivo || false,
       dosfa_secret: dosFaSecret || null,

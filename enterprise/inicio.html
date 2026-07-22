@@ -767,7 +767,7 @@
       <span>Portal Pilot</span>
     </div>
     <div class="brand-right">
-      <span class="company-name">InfiniMex</span>
+      <span class="company-name" id="companyName">Empresa</span>
       <div class="company-icon"><i class="fas fa-infinity"></i></div>
     </div>
   </header>
@@ -777,7 +777,7 @@
     <div class="welcome-section">
 
       <!-- Profile Circle -->
-      <div class="profile-circle-large">VT</div>
+      <div class="profile-circle-large" id="profileInitials">VT</div>
 
       <!-- Greeting -->
       <h1 id="greeting">Cargando...</h1>
@@ -797,35 +797,42 @@
         <i class="fas fa-arrow-right"></i> Ingresar al Panel
       </a>
 
-      <!-- Areas Section -->
+      <!-- Módulos Section -->
       <div class="areas-section">
-        <h2 class="areas-title">Áreas de Trabajo</h2>
+        <h2 class="areas-title">Módulos de Negocio</h2>
         <div class="areas-grid">
+          <div class="area-card">
+            <div class="area-icon"><i class="fas fa-file-invoice-dollar"></i></div>
+            <h3>Facturación SAR</h3>
+            <button class="btn-acceder" onclick="window.location.href='dashboard.html'">
+              <i class="fas fa-arrow-right"></i> Acceder
+            </button>
+          </div>
+          <div class="area-card">
+            <div class="area-icon"><i class="fas fa-boxes-stacked"></i></div>
+            <h3>Inventario</h3>
+            <button class="btn-acceder" onclick="window.location.href='dashboard.html'">
+              <i class="fas fa-arrow-right"></i> Acceder
+            </button>
+          </div>
           <div class="area-card">
             <div class="area-icon"><i class="fas fa-calculator"></i></div>
             <h3>Contabilidad</h3>
-            <button class="btn-acceder" onclick="navigateTo('contabilidad')">
+            <button class="btn-acceder" onclick="window.location.href='dashboard.html'">
               <i class="fas fa-arrow-right"></i> Acceder
             </button>
           </div>
           <div class="area-card">
-            <div class="area-icon"><i class="fas fa-palette"></i></div>
-            <h3>Diseño Gráfico</h3>
-            <button class="btn-acceder" onclick="navigateTo('diseno')">
-              <i class="fas fa-arrow-right"></i> Acceder
-            </button>
-          </div>
-          <div class="area-card">
-            <div class="area-icon"><i class="fas fa-code"></i></div>
-            <h3>Programación</h3>
-            <button class="btn-acceder" onclick="navigateTo('programacion')">
+            <div class="area-icon"><i class="fas fa-graduation-cap"></i></div>
+            <h3>Educación</h3>
+            <button class="btn-acceder" onclick="window.location.href='dashboard.html'">
               <i class="fas fa-arrow-right"></i> Acceder
             </button>
           </div>
           <div class="area-card">
             <div class="area-icon"><i class="fas fa-users"></i></div>
-            <h3>Recursos Humanos</h3>
-            <button class="btn-acceder" onclick="navigateTo('rrhh')">
+            <h3>RRHH</h3>
+            <button class="btn-acceder" onclick="window.location.href='dashboard.html'">
               <i class="fas fa-arrow-right"></i> Acceder
             </button>
           </div>
@@ -836,13 +843,20 @@
   </main>
 
   <script>
-    // ─── Greeting Logic ───────────────────────────────────
-    const hour = new Date().getHours();
-    const greetingEl = document.getElementById('greeting');
-    let timeGreeting = 'Buenas noches';
-    if (hour >= 5 && hour < 12) timeGreeting = 'Buenos días';
-    else if (hour >= 12 && hour < 19) timeGreeting = 'Buenas tardes';
-    greetingEl.innerHTML = `${timeGreeting}, <span>Administrador</span><br><span style="opacity:.5;font-weight:400;font-size:0.65em;display:block;margin-top:6px">ROL: SUPERVISOR</span>`;
+    // ─── Load Profile from localStorage ────
+    (function() {
+      const name = localStorage.getItem('userName') || 'Admin';
+      const role = localStorage.getItem('userRole') || 'Administrador';
+      const empresa = localStorage.getItem('empresaNombre') || 'Empresa';
+      const initials = name.split(' ').map(w => w[0]).join('').substring(0,2).toUpperCase();
+      document.getElementById('profileInitials').textContent = initials;
+      document.getElementById('companyName').textContent = empresa;
+      const hour = new Date().getHours();
+      let timeGreeting = 'Buenas noches';
+      if (hour >= 5 && hour < 12) timeGreeting = 'Buenos días';
+      else if (hour >= 12 && hour < 19) timeGreeting = 'Buenas tardes';
+      document.getElementById('greeting').innerHTML = `${timeGreeting}, <span>${name}</span><br><span style="opacity:.5;font-weight:400;font-size:0.65em;display:block;margin-top:6px">ROL: ${role.toUpperCase()}</span>`;
+    })();
 
     // ─── Header Scroll Effect ─────────────────────────────
     window.addEventListener('scroll', () => {

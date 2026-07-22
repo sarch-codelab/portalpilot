@@ -32,9 +32,9 @@
 
             <!-- Profile -->
             <div class="profile-section">
-                <img src="../img/asuka.png" alt="Perfil" class="avatar"
+                <img src="../img/asuka.png" alt="Perfil" class="avatar" id="sidebarAvatar"
                     onerror="this.src='https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80'">
-                <div class="profile-info"><span class="name">Asuka Langley Soryu</span><span class="role">Admin de
+                <div class="profile-info"><span class="name" id="sidebarName">Asuka Langley Soryu</span><span class="role" id="sidebarRole">Admin de
                         Tenant</span>
                 </div>
             </div>
@@ -631,9 +631,22 @@
         </div>
     </div>
 
-    <script src="auth-check.js"></script>
+    <script src="../auth-check.js"></script>
     <script src="js/portal-admin-guard.js"></script>
     <script src="js/perfil.js"></script>
+    <script>
+    (function() {
+      const name = localStorage.getItem('userName') || 'Admin';
+      const role = localStorage.getItem('userRole') || 'Administrador';
+      const initials = name.split(' ').map(w => w[0]).join('').substring(0,2).toUpperCase();
+      const sn = document.getElementById('sidebarName');
+      const sr = document.getElementById('sidebarRole');
+      const sa = document.getElementById('sidebarAvatar');
+      if(sn) sn.textContent = name;
+      if(sr) sr.textContent = role;
+      if(sa) sa.textContent = initials;
+    })();
+    </script>
 </body>
 
 </html>

@@ -354,16 +354,16 @@ a{text-decoration:none;color:inherit}ul{list-style:none}img{max-width:100%;displ
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-logo"><div class="logo-icon"><i class="fas fa-robot"></i></div>PORTAL PILOT</div>
     <nav class="sidebar-nav">
-      <a href="dashboard-amy.html" class="sidebar-link"><i class="fas fa-home"></i> <span>Dashboard</span></a>
-      <a href="team-amy.html" class="sidebar-link active"><i class="fas fa-users"></i> <span>Equipo</span></a>
-      <a href="fleet-sofia.html" class="sidebar-link"><i class="fas fa-truck"></i> <span>Flota</span></a>
-      <a href="automation-amy.html" class="sidebar-link"><i class="fas fa-robot"></i> <span>Bots RPA</span></a>
-      <a href="security-sofia.html" class="sidebar-link"><i class="fas fa-shield-alt"></i> <span>Auditoría</span></a>
+      <a href="dashboard.html" class="sidebar-link"><i class="fas fa-home"></i> <span>Dashboard</span></a>
+      <a href="team.html" class="sidebar-link active"><i class="fas fa-users"></i> <span>Equipo</span></a>
+      <a href="fleet.html" class="sidebar-link"><i class="fas fa-truck"></i> <span>Flota</span></a>
+      <a href="automation.html" class="sidebar-link"><i class="fas fa-robot"></i> <span>Bots RPA</span></a>
+      <a href="security.html" class="sidebar-link"><i class="fas fa-shield-alt"></i> <span>Auditoría</span></a>
     </nav>
     <div class="sidebar-footer">
       <a href="#" class="sidebar-link"><i class="fas fa-question-circle"></i> Ayuda</a>
       <a href="#" class="sidebar-link"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</a>
-      <div class="sidebar-user"><div class="sidebar-avatar">VT</div><div><div class="sidebar-username">Valeria Torres</div><div class="sidebar-role">Admin Principal</div></div></div>
+      <div class="sidebar-user"><div class="sidebar-avatar" id="sidebarAvatar">VT</div><div><div class="sidebar-username" id="sidebarName">Valeria Torres</div><div class="sidebar-role" id="sidebarRole">Admin Principal</div></div></div>
     </div>
   </aside>
 
@@ -709,6 +709,19 @@ window.addEventListener('load',()=>{
   renderTable();updateStats();
   setTimeout(()=>{document.querySelectorAll('.reveal').forEach((el,i)=>{setTimeout(()=>el.classList.add('in'),i*50)})},100);
 });
+
+// Load Profile from localStorage
+(function() {
+  const name = localStorage.getItem('userName') || 'Admin';
+  const role = localStorage.getItem('userRole') || 'Administrador';
+  const initials = name.split(' ').map(w => w[0]).join('').substring(0,2).toUpperCase();
+  const sn = document.getElementById('sidebarName');
+  const sr = document.getElementById('sidebarRole');
+  const sa = document.getElementById('sidebarAvatar');
+  if(sn) sn.textContent = name;
+  if(sr) sr.textContent = role;
+  if(sa) sa.textContent = initials;
+})();
 document.querySelectorAll('.modal-overlay,.confirm-dialog').forEach(o=>{o.addEventListener('click',e=>{if(e.target===o){o.classList.remove('active');if(o.id==='confirmDialog')closeConfirm()}})});
 document.addEventListener('keydown',e=>{
   if(e.key==='Escape'){document.querySelectorAll('.modal-overlay.active,.confirm-dialog.active').forEach(m=>m.classList.remove('active'))}

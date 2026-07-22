@@ -266,19 +266,17 @@
       
       <!-- Profile -->
       <div class="profile-section">
-        <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80" alt="Perfil" class="avatar">
-        <div class="profile-info"><span class="name">Ajendra S.</span><span class="role">UI/UX Designer</span></div>
+        <div class="avatar" id="sidebarAvatar" style="background:linear-gradient(135deg,var(--accent),var(--accent-soft));display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:18px;">VT</div>
+        <div class="profile-info"><span class="name" id="sidebarName">Admin</span><span class="role" id="sidebarRole">Administrador</span></div>
       </div>
 
       <!-- Nav -->
       <nav class="sidebar-nav">
         <a href="dashboard.html" class="sidebar-link"><i class="fas fa-home"></i> <span>Dashboard</span></a>
-        <a href="tenants.html" class="sidebar-link"><i class="fas fa-building"></i> <span>Tenants</span></a>
-        <a href="usuarios.html" class="sidebar-link"><i class="fas fa-users"></i> <span>Usuarios</span></a>
-        <a href="#" class="sidebar-link"><i class="fas fa-robot"></i> <span>Bots RPA</span></a>
-        <a href="#" class="sidebar-link"><i class="fas fa-link"></i> <span>Auditoría</span></a>
-        <a href="#" class="sidebar-link"><i class="fas fa-chart-line"></i> <span>Analytics</span></a>
-        <a href="global_settings.html" class="sidebar-link"><i class="fas fa-cog"></i> <span>Configuración Global</span></a>
+        <a href="team.html" class="sidebar-link"><i class="fas fa-users"></i> <span>Equipo</span></a>
+        <a href="fleet.html" class="sidebar-link"><i class="fas fa-truck"></i> <span>Flota</span></a>
+        <a href="automation.html" class="sidebar-link"><i class="fas fa-robot"></i> <span>Bots RPA</span></a>
+        <a href="security.html" class="sidebar-link"><i class="fas fa-shield-alt"></i> <span>Auditoría</span></a>
       </nav>
 
       <!-- Footer -->
@@ -308,14 +306,12 @@
 
       <!-- PROFILE HEADER -->
       <div class="profile-header">
-        <div class="profile-avatar-large">
-          AS<span class="online-dot"></span>
-        </div>
+        <div class="profile-avatar-large" id="profileAvatarLarge" style="background:linear-gradient(135deg,var(--accent),var(--accent-soft));display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:28px;">AS</div>
         <div class="profile-info-large">
-          <h1 class="profile-name">Ajendra Sánchez</h1>
-          <p class="profile-email">ajendra@portalpilot.io</p>
+          <h1 class="profile-name" id="profileName">Admin</h1>
+          <p class="profile-email" id="profileEmail">admin@portalpilot.io</p>
           <div class="profile-badges">
-            <span class="profile-badge role"><i class="fas fa-id-badge"></i> UI/UX Designer</span>
+            <span class="profile-badge role" id="profileRole"><i class="fas fa-id-badge"></i> Administrador</span>
             <span class="profile-badge verified"><i class="fas fa-check-circle"></i> Verificado</span>
             <span class="profile-badge premium"><i class="fas fa-crown"></i> Enterprise</span>
           </div>
@@ -679,7 +675,19 @@
     </div>
   </div>
 
-  <script src="auth-check.js"></script>
+  <!-- LOGOUT MODAL -->
+  <div class="modal-overlay" id="logoutModal" onclick="if(event.target===this)closeModal('logoutModal')">
+    <div class="modal-box">
+      <h3 style="font-family:'Syne',sans-serif;font-size:20px;font-weight:700;color:var(--white);margin-bottom:8px;">Cerrar Sesión</h3>
+      <p style="font-size:14px;color:var(--text-dim);margin-bottom:20px;">¿Estás seguro que deseas cerrar sesión?</p>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" id="modalCancel" onclick="closeModal('logoutModal')">Cancelar</button>
+        <button class="btn btn-acc" id="modalConfirm" onclick="window.location.href='../login.html'">Cerrar Sesión</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../auth-check.js"></script>
   <script>
     // ── Custom Cursor ─────────────────
     const dot = document.getElementById('cursor-dot'), ring = document.getElementById('cursor-ring'), glow = document.getElementById('cursor-glow');
@@ -715,6 +723,26 @@
     // ── Dark Mode ────────────────────
     const darkModeBtn = document.getElementById('darkModeToggle');
     darkModeBtn.addEventListener('click', () => { document.body.classList.toggle('light-mode'); const isLight = document.body.classList.contains('light-mode'); darkModeBtn.innerHTML = isLight ? '<i class="fas fa-sun"></i> <span>Light Mode</span>' : '<i class="fas fa-moon"></i> <span>Dark Mode</span>'; });
+
+    // ── Load Profile from localStorage ────
+    (function loadProfile() {
+      const name = localStorage.getItem('userName') || 'Admin';
+      const email = localStorage.getItem('userEmail') || '';
+      const role = localStorage.getItem('userRole') || 'Administrador';
+      const initials = name.split(' ').map(w => w[0]).join('').substring(0,2).toUpperCase();
+      const sidebarName = document.getElementById('sidebarName');
+      const sidebarRole = document.getElementById('sidebarRole');
+      const sidebarAvatar = document.getElementById('sidebarAvatar');
+      if(sidebarName) sidebarName.textContent = name;
+      if(sidebarRole) sidebarRole.textContent = role;
+      if(sidebarAvatar) sidebarAvatar.textContent = initials;
+      const profileName = document.getElementById('profileName');
+      const profileEmail = document.getElementById('profileEmail');
+      const profileRole = document.getElementById('profileRole');
+      if(profileName) profileName.textContent = name;
+      if(profileEmail) profileEmail.textContent = email;
+      if(profileRole) profileRole.textContent = role;
+    })();
 
     // ── Logout Modal ─────────────────
     const logoutBtn = document.getElementById('logoutBtn'), logoutModal = document.getElementById('logoutModal'), modalCancel = document.getElementById('modalCancel'), modalConfirm = document.getElementById('modalConfirm');

@@ -2592,7 +2592,8 @@
                 return;
             }
 
-            // 2. Lee el ID desde la URL: tenant_detail-original.html?id=PP-123456
+            // 2. Lee el ID desde la URL: tenant_detail.html?id=PP-123456
+            const params = new URLSearchParams(window.location.search);
             const tenantId = params.get('id') || params.get('tenant');
 
             if (!tenantId) {

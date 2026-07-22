@@ -33,8 +33,8 @@
             <a href="perfil.html" class="profile-section" style="text-decoration:none;cursor:pointer;"
                 title="Ver perfil">
                 <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80"
-                    alt="Admin" class="avatar">
-                <div class="profile-info"><span class="name">Admin User</span><span class="role">Super Admin</span>
+                    alt="Admin" class="avatar" id="sidebarAvatar">
+                <div class="profile-info"><span class="name" id="sidebarName">Admin User</span><span class="role" id="sidebarRole">Super Admin</span>
                 </div>
             </a>
 
@@ -621,6 +621,19 @@
     <script src="../auth-check.js"></script>
     <script src="js/portal-admin-guard.js"></script>
     <script src="js/usuario_detail.js"></script>
+    <script>
+    (function() {
+      const name = localStorage.getItem('userName') || 'Admin';
+      const role = localStorage.getItem('userRole') || 'Administrador';
+      const initials = name.split(' ').map(w => w[0]).join('').substring(0,2).toUpperCase();
+      const sn = document.getElementById('sidebarName');
+      const sr = document.getElementById('sidebarRole');
+      const sa = document.getElementById('sidebarAvatar');
+      if(sn) sn.textContent = name;
+      if(sr) sr.textContent = role;
+      if(sa) sa.textContent = initials;
+    })();
+    </script>
 </body>
 
 </html>

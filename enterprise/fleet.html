@@ -1079,19 +1079,17 @@
 
             <!-- Profile -->
             <div class="profile-section">
-                <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80"
-                    alt="Perfil" class="avatar">
-                <div class="profile-info"><span class="name">Ajendra S.</span><span class="role">Fleet Manager</span>
-                </div>
+                <div id="sidebarAvatar" class="avatar" style="display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;color:#fff;background:linear-gradient(135deg,var(--accent),var(--cyan))">AS</div>
+                <div class="profile-info"><span class="name" id="sidebarName">Ajendra S.</span><span class="role" id="sidebarRole">Fleet Manager</span></div>
             </div>
 
             <!-- Nav -->
             <nav class="sidebar-nav">
-                <a href="dashboard-amy.html" class="sidebar-link"><i class="fas fa-home"></i> <span>Dashboard</span></a>
-                <a href="team-amy.html" class="sidebar-link"><i class="fas fa-users"></i> <span>Equipo</span></a>
-                <a href="fleet-sofia.html" class="sidebar-link active"><i class="fas fa-truck"></i> <span>Flota</span></a>
-                <a href="automation-amy.html" class="sidebar-link"><i class="fas fa-robot"></i> <span>Bots RPA</span></a>
-                <a href="security-sofia.html" class="sidebar-link"><i class="fas fa-shield-alt"></i> <span>Auditoría</span></a>
+                <a href="dashboard.html" class="sidebar-link"><i class="fas fa-home"></i> <span>Dashboard</span></a>
+                <a href="team.html" class="sidebar-link"><i class="fas fa-users"></i> <span>Equipo</span></a>
+                <a href="fleet.html" class="sidebar-link active"><i class="fas fa-truck"></i> <span>Flota</span></a>
+                <a href="automation.html" class="sidebar-link"><i class="fas fa-robot"></i> <span>Bots RPA</span></a>
+                <a href="security.html" class="sidebar-link"><i class="fas fa-shield-alt"></i> <span>Auditoría</span></a>
             </nav>
 
             <!-- Footer -->
@@ -1329,6 +1327,19 @@
             </div>
 
         </main>
+
+        <!-- Logout Modal -->
+        <div class="modal-overlay" id="logoutModal" onclick="if(event.target===this)this.classList.remove('active')">
+            <div class="modal-box">
+                <div class="modal-icon"><i class="fas fa-sign-out-alt"></i></div>
+                <h3>¿Cerrar sesión?</h3>
+                <p>Serás redirigido a la página de inicio de sesión.</p>
+                <div class="modal-actions">
+                    <button class="btn btn-ghost" id="modalCancel">Cancelar</button>
+                    <button class="btn btn-acc" id="modalConfirm">Cerrar Sesión</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -1371,7 +1382,7 @@
         const logoutBtn = document.getElementById('logoutBtn'), logoutModal = document.getElementById('logoutModal'), modalCancel = document.getElementById('modalCancel'), modalConfirm = document.getElementById('modalConfirm');
         logoutBtn.addEventListener('click', (e) => { e.preventDefault(); logoutModal.classList.add('active'); });
         modalCancel.addEventListener('click', () => { logoutModal.classList.remove('active'); });
-        modalConfirm.addEventListener('click', () => { logoutModal.classList.remove('active'); alert('Sesión cerrada. Redirigiendo...'); });
+        modalConfirm.addEventListener('click', () => { logoutModal.classList.remove('active'); window.location.href='../login.html'; });
         logoutModal.addEventListener('click', (e) => { if (e.target === logoutModal) { logoutModal.classList.remove('active'); } });
 
         // ── Fleet Functions ──────────────
@@ -1415,6 +1426,19 @@
         window.addEventListener('load', () => {
             setTimeout(() => document.querySelectorAll('.reveal').forEach((el, i) => setTimeout(() => el.classList.add('in'), i * 50)), 100);
         });
+
+        // Load Profile from localStorage
+        (function() {
+          const name = localStorage.getItem('userName') || 'Admin';
+          const role = localStorage.getItem('userRole') || 'Administrador';
+          const initials = name.split(' ').map(w => w[0]).join('').substring(0,2).toUpperCase();
+          const sn = document.getElementById('sidebarName');
+          const sr = document.getElementById('sidebarRole');
+          const sa = document.getElementById('sidebarAvatar');
+          if(sn) sn.textContent = name;
+          if(sr) sr.textContent = role;
+          if(sa) sa.textContent = initials;
+        })();
     </script>
 <script src="../auth-check.js"></script>
 </body>

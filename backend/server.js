@@ -11,6 +11,7 @@ const http = require('http');
 const https = require('https');
 const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
+const { supabase, requireSupabase } = require('./supabaseClient');
 
 // 🔧 FIX VERCEL: dotenv solo en desarrollo local
 if (process.env.NODE_ENV !== 'production') {
@@ -882,7 +883,15 @@ app.get('/api/health', (req, res) => {
     timestamp: new Date().toISOString(),
     environment: IS_SERVERLESS ? 'serverless' : 'local',
     nocodb_configured: !!API_TOKEN,
+    supabase_configured: !!supabase,
     jwt_configured: !!process.env.JWT_SECRET
+  });
+});
+
+app.get('/api/config', (req, res) => {
+  res.json({
+    supabaseUrl: process.env.SUPABASE_URL || '',
+    supabaseAnonKey: process.env.SUPABASE_ANON_KEY || ''
   });
 });
 
@@ -1098,9 +1107,7 @@ app.post('/api/enviar-codigo-verificacion', async (req, res) => {
 app.post('/api/login', loginLimiter, async (req, res) => {
   try {
     console.log('[LOGIN] start', { hasToken: !!API_TOKEN, body: req.body });
-    if (!requireNocoDbToken(res)) return;
 
-    const routeStart = Date.now();
     const { email, password } = req.body;
 
     if (!email || !password) {
@@ -1108,119 +1115,173 @@ app.post('/api/login', loginLimiter, async (req, res) => {
     }
 
     const emailNorm = email.trim().toLowerCase();
-    const queryStart = Date.now();
 
-    const r1 = await nocodbApi.get(USUARIOS_TABLE, {
-      params: { where: `(email,eq,${emailNorm})`, limit: 10 }
-    });
-    const responseData = r1.data.list || [];
-    const queryDuration = Date.now() - queryStart;
+    // ═══ PASO 1: Intentar login en NocoDB (owners/admins) ═══
+    let nocodbUser = null;
+    if (API_TOKEN) {
+      try {
+        const r1 = await nocodbApi.get(USUARIOS_TABLE, {
+          params: { where: `(email,eq,${emailNorm})`, limit: 10 }
+        });
+        const responseData = r1.data.list || [];
 
-    const usuariosEncontrados = responseData;
+        if (responseData.length > 0) {
+          const matchedUsers = (await Promise.all(responseData.map(async usuario => {
+            if (!usuario.password) return null;
+            const isMatch = await bcrypt.compare(password, usuario.password);
+            if (isMatch) return usuario;
+            if (usuario.password === password) return usuario;
+            return null;
+          }))).filter(Boolean);
 
-    if (!usuariosEncontrados || usuariosEncontrados.length === 0) {
-      if (emailNorm.includes('@')) {
-        // 🔧 FIX VERCEL: await en lugar de fire-and-forget
-        await enviarAlertaNuevoAcceso(emailNorm, req, false);
+          if (matchedUsers.length > 0) {
+            nocodbUser = matchedUsers[0];
+          }
+        }
+      } catch (err) {
+        console.warn('[LOGIN] NocoDB lookup falló, intentando Supabase:', err.message);
       }
-      return res.status(401).json({ error: 'Credenciales inválidas (usuario no encontrado).' });
     }
 
-    const pwdStart = Date.now();
-    const matchedUsers = (await Promise.all(usuariosEncontrados.map(async usuario => {
-      if (!usuario.password) return null;
-      const isMatch = await bcrypt.compare(password, usuario.password);
-      if (isMatch) return usuario;
-      if (usuario.password === password) return usuario;
-      return null;
-    }))).filter(Boolean);
-    const pwdDuration = Date.now() - pwdStart;
+    // ═══ PASO 2: Si no se encontró en NocoDB, intentar Supabase Auth (trabajadores) ═══
+    if (!nocodbUser && supabase) {
+      try {
+        const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+          email: emailNorm,
+          password: password
+        });
 
-    if (matchedUsers.length === 0) {
-      const hasPendingUser = usuariosEncontrados.some(u => normalizeStatus(u.status || u.Status || u.estado || u.Estado || '') === 'pending');
-      if (!hasPendingUser) {
-        await enviarAlertaNuevoAcceso(usuariosEncontrados[0].email || email, req, false);
+        if (!authError && authData?.user) {
+          // Buscar perfil en tabla usuarios
+          const { data: perfil } = await supabase
+            .from('usuarios')
+            .select('id, empresa_id, nombre, apellido, email, rol_global, activo, empresas(id, codigo, nombre)')
+            .eq('id', authData.user.id)
+            .single();
+
+          if (perfil) {
+            const emp = perfil.empresas || {};
+            const empresaCodigo = emp.codigo || '';
+            const empresaNombre = emp.nombre || empresaCodigo || 'Portal Pilot';
+
+            const accountToken = jwt.sign(
+              {
+                sub: perfil.id,
+                rol: perfil.rol_global || 'user',
+                empresa_codigo: empresaCodigo,
+                empresa_nombre: empresaNombre
+              },
+              JWT_SECRET,
+              { expiresIn: '2h' }
+            );
+
+            await enviarAlertaNuevoAcceso(emailNorm, req, true);
+
+            return res.status(200).json({
+              message: 'Login exitoso',
+              token: accountToken,
+              user: {
+                id: perfil.id,
+                nombre: perfil.nombre || '',
+                apellido: perfil.apellido || '',
+                email: perfil.email || emailNorm,
+                rol: perfil.rol_global || 'user',
+                empresa_codigo: empresaCodigo,
+                empresa_nombre: empresaNombre,
+                tenant: empresaCodigo,
+                status: perfil.activo ? 'active' : 'inactive',
+                token: accountToken
+              },
+              accounts: []
+            });
+          }
+        }
+      } catch (err) {
+        console.warn('[LOGIN] Supabase Auth falló:', err.message);
       }
-      return res.status(401).json({ error: 'Credenciales inválidas (contraseña incorrecta).' });
     }
 
-    const loginAccounts = await Promise.all(matchedUsers.map(async usuario => {
-      const rawEmpresa = usuario.empresa_codigo || usuario.Empresa_Codigo || usuario.EmpresaCodigo || usuario.empresaCodigo || 'ROOT';
-      const rawRole = usuario.rol || usuario.Rol || usuario.role || usuario.Role || '';
-      const rawStatus = usuario.status || usuario.Status || usuario.estado || usuario.Estado || 'active';
-      const rawEmail = usuario.email || usuario.Email || usuario.EMAIL || '';
-      const rawName = usuario.nombre || usuario.Nombre || `${usuario.firstName || ''} ${usuario.lastName || ''}`.trim();
+    // ═══ PASO 3: Si se encontró en NocoDB, procesar respuesta ═══
+    if (nocodbUser) {
+      const loginAccounts = await Promise.all([nocodbUser].map(async usuario => {
+        const rawEmpresa = usuario.empresa_codigo || usuario.Empresa_Codigo || usuario.EmpresaCodigo || usuario.empresaCodigo || 'ROOT';
+        const rawRole = usuario.rol || usuario.Rol || usuario.role || usuario.Role || '';
+        const rawStatus = usuario.status || usuario.Status || usuario.estado || usuario.Estado || 'active';
+        const rawEmail = usuario.email || usuario.Email || usuario.EMAIL || '';
+        const rawName = usuario.nombre || usuario.Nombre || `${usuario.firstName || ''} ${usuario.lastName || ''}`.trim();
 
-      let normalizedEmpresa = rawEmpresa.toString().trim();
-      const userRole = rawRole.toString().trim().toLowerCase();
-      const userStatus = normalizeStatus(rawStatus);
+        let normalizedEmpresa = rawEmpresa.toString().trim();
+        const userRole = rawRole.toString().trim().toLowerCase();
+        const userStatus = normalizeStatus(rawStatus);
 
-      // Solo forzar a ROOT a los roles de superusuario global o si ya pertenece a ROOT
-      if (userRole.includes('root') || userRole.includes('superadmin') || normalizedEmpresa.toUpperCase() === 'ROOT') {
-        normalizedEmpresa = 'ROOT';
-      }
+        if (userRole.includes('root') || userRole.includes('superadmin') || normalizedEmpresa.toUpperCase() === 'ROOT') {
+          normalizedEmpresa = 'ROOT';
+        }
+        normalizedEmpresa = normalizedEmpresa.toString().trim().toUpperCase() || 'ROOT';
 
-      normalizedEmpresa = normalizedEmpresa.toString().trim().toUpperCase() || 'ROOT';
-
-      let empresaNombre = 'Portal Pilot';
-      if (normalizedEmpresa !== 'ROOT') {
-        try {
-          const tenantInfo = await findTenantByIdentifier(normalizedEmpresa);
-          if (tenantInfo) {
-            empresaNombre = tenantInfo.nombre || tenantInfo.Nombre || normalizedEmpresa;
-          } else {
+        let empresaNombre = 'Portal Pilot';
+        if (normalizedEmpresa !== 'ROOT') {
+          try {
+            const tenantInfo = await findTenantByIdentifier(normalizedEmpresa);
+            if (tenantInfo) {
+              empresaNombre = tenantInfo.nombre || tenantInfo.Nombre || normalizedEmpresa;
+            } else {
+              empresaNombre = normalizedEmpresa;
+            }
+          } catch (e) {
+            console.warn('[LOGIN] Error al buscar empresa:', e.message);
             empresaNombre = normalizedEmpresa;
           }
-        } catch (e) {
-          console.warn('[LOGIN] Error al buscar empresa:', e.message);
-          empresaNombre = normalizedEmpresa;
         }
+
+        const accountToken = jwt.sign(
+          {
+            sub: usuario.id || usuario.ID || usuario.Id || usuario._id,
+            rol: rawRole,
+            empresa_codigo: normalizedEmpresa,
+            empresa_nombre: empresaNombre
+          },
+          JWT_SECRET,
+          { expiresIn: '2h' }
+        );
+
+        return {
+          id: usuario.id || usuario.ID || usuario.Id || usuario._id,
+          nombre: rawName || rawEmail,
+          apellido: usuario.apellido || usuario.Apellido || '',
+          email: rawEmail,
+          rol: rawRole,
+          empresa_codigo: normalizedEmpresa,
+          empresa_nombre: empresaNombre,
+          tenant: normalizedEmpresa,
+          status: userStatus,
+          token: accountToken
+        };
+      }));
+
+      const hasPendingAccount = loginAccounts.some(acc => acc.status === 'pending');
+      const pendingAccount = loginAccounts.find(acc => acc.status === 'pending');
+      const rootAccount = loginAccounts.find(acc =>
+        (acc.empresa_codigo || '').toString().trim().toUpperCase() === 'ROOT' ||
+        (acc.rol || '').toString().toLowerCase().includes('root')
+      );
+      const selectedAccount = pendingAccount || rootAccount || loginAccounts[0];
+
+      if (!hasPendingAccount) {
+        await enviarAlertaNuevoAcceso(selectedAccount.email, req, true);
       }
 
-      const accountToken = jwt.sign(
-        { 
-          sub: usuario.id || usuario.ID || usuario.Id || usuario._id, 
-          rol: rawRole, 
-          empresa_codigo: normalizedEmpresa,
-          empresa_nombre: empresaNombre
-        },
-        JWT_SECRET,
-        { expiresIn: '2h' }
-      );
-
-      return {
-        id: usuario.id || usuario.ID || usuario.Id || usuario._id,
-        nombre: rawName || rawEmail,
-        apellido: usuario.apellido || usuario.Apellido || '',
-        email: rawEmail,
-        rol: rawRole,
-        empresa_codigo: normalizedEmpresa,
-        empresa_nombre: empresaNombre,
-        tenant: normalizedEmpresa,
-        status: userStatus,
-        token: accountToken
-      };
-    }));
-
-    const hasPendingAccount = loginAccounts.some(acc => acc.status === 'pending');
-    const pendingAccount = loginAccounts.find(acc => acc.status === 'pending');
-    const rootAccount = loginAccounts.find(acc =>
-      (acc.empresa_codigo || '').toString().trim().toUpperCase() === 'ROOT' ||
-      (acc.rol || '').toString().toLowerCase().includes('root')
-    );
-    const selectedAccount = pendingAccount || rootAccount || loginAccounts[0];
-
-    // 🔧 FIX VERCEL: await en lugar de setTimeout
-    if (!hasPendingAccount) {
-      await enviarAlertaNuevoAcceso(selectedAccount.email, req, true);
+      return res.status(200).json({
+        message: 'Login exitoso',
+        token: selectedAccount.token,
+        user: selectedAccount,
+        accounts: loginAccounts
+      });
     }
 
-    res.status(200).json({
-      message: 'Login exitoso',
-      token: selectedAccount.token,
-      user: selectedAccount,
-      accounts: loginAccounts
-    });
+    // ═══ PASO 4: No se encontró en ninguna base ═══
+    await enviarAlertaNuevoAcceso(emailNorm, req, false);
+    return res.status(401).json({ error: 'Credenciales inválidas (usuario no encontrado).' });
 
   } catch (error) {
     return handleNocoDbError(res, error, 'No se pudo validar el inicio de sesión en este momento.');
@@ -1690,54 +1751,40 @@ app.post('/api/recuperacion/verificar', recoveryLimiter, async (req, res) => {
 });
 
 app.get('/api/users', authenticate, async (req, res) => {
-  if (!requireNocoDbToken(res)) return;
+  if (!requireSupabase(res)) return;
   try {
-    const empresasRes = await nocodbApi.get(EMPRESAS_TABLE, { params: { limit: 200 } });
-    const empresasList = empresasRes.data.list || [];
-    const codigoToName = {};
-    empresasList.forEach(e => {
-      const codigo = e.codigo || e.Codigo || e.id || e.Id;
-      const nombre = e.nombre || e.Nombre || '';
-      if (codigo) codigoToName[codigo] = nombre;
-    });
+    let query = supabase
+      .from('usuarios')
+      .select('id, empresa_id, nombre, apellido, email, rol_global, activo, created_at, updated_at, empresas(nombre, codigo)');
 
-    let whereFilter = null;
-    let tenantFilterCode = null;
-    if (req.query.empresa) {
-      const q = req.query.empresa;
-      tenantFilterCode = q;
-      whereFilter = `(empresa_codigo,eq,${formatNocoFilter(tenantFilterCode)})`;
-    }
-
-    const params = { limit: 200 };
     if (!isRootUser(req)) {
       const currentTenant = getTenantCode(req);
       if (!currentTenant) return res.status(403).json({ error: 'Acceso restringido.' });
-      params.where = `(empresa_codigo,eq,${formatNocoFilter(currentTenant)})`;
-    } else if (whereFilter) {
-      params.where = whereFilter;
+      const { data: emp } = await supabase.from('empresas').select('id').eq('codigo', currentTenant).single();
+      if (emp) query = query.eq('empresa_id', emp.id);
+    } else if (req.query.empresa) {
+      const { data: emp } = await supabase.from('empresas').select('id').eq('codigo', req.query.empresa).single();
+      if (emp) query = query.eq('empresa_id', emp.id);
     }
 
-    const response = await nocodbApi.get(USUARIOS_TABLE, { params });
-    const list = response.data.list || [];
-    const visibleUsers = list.filter(u => !isDeletedStatus(u.status || u.Status || u.estado || u.Estado || 'active'));
+    const { data: users, error } = await query.order('created_at', { ascending: false });
+    if (error) throw error;
 
-    const usersMapped = visibleUsers.map(u => {
-      const codigo = u.empresa_codigo || u.Empresa_Codigo || '';
-      const rawId = u._id || u._recordId || u.recordId || u.id || u.Id || '';
+    const usersMapped = (users || []).filter(u => u.activo !== false).map(u => {
+      const emp = u.empresas || {};
       return {
-        id: String(rawId),
-        displayId: String(u.Id || u.id || rawId),
-        nombre: u.nombre || u.Nombre || '',
-        apellido: u.apellido || u.Apellido || '',
-        email: u.email || u.Email || '',
-        rol: u.rol || u.Rol || 'viewer',
-        tenant_code: codigo || '',
-        tenant: codigoToName[codigo] || codigo || 'N/A',
-        status: normalizeStatus(u.status || u.Status || u.estado || u.Estado || 'active'),
-        registered: u.CreatedAt || u.created_at || new Date().toISOString(),
-        lastActivity: u.last_activity || null,
-        notas: u.notas || ''
+        id: u.id,
+        displayId: u.id,
+        nombre: u.nombre || '',
+        apellido: u.apellido || '',
+        email: u.email || '',
+        rol: u.rol_global || 'user',
+        tenant_code: emp.codigo || '',
+        tenant: emp.nombre || emp.codigo || 'N/A',
+        status: u.activo ? 'active' : 'inactive',
+        registered: u.created_at || new Date().toISOString(),
+        lastActivity: u.updated_at || null,
+        notas: ''
       };
     });
 
@@ -1748,49 +1795,37 @@ app.get('/api/users', authenticate, async (req, res) => {
 });
 
 app.get('/api/users/:id', authenticate, async (req, res) => {
+  if (!requireSupabase(res)) return;
   try {
     const { id } = req.params;
-    const empresasRes = await nocodbApi.get(EMPRESAS_TABLE, { params: { limit: 200 } });
-    const empresasList = empresasRes.data.list || [];
-    const codigoToName = {};
-    empresasList.forEach(e => {
-      const codigo = e.codigo || e.Codigo || e.id || e.Id;
-      const nombre = e.nombre || e.Nombre || '';
-      if (codigo) codigoToName[codigo] = nombre;
-    });
 
-    let usuario = null;
-    try {
-      const response = await nocodbApi.get(`${USUARIOS_TABLE}/${encodeURIComponent(id)}`);
-      usuario = response.data;
-    } catch (err) {
-      const response = await nocodbApi.get(USUARIOS_TABLE, {
-        params: { where: `(Id,eq,${formatNocoFilter(id, { numeric: true })})`, limit: 1 }
-      });
-      usuario = response.data.list?.[0];
-    }
+    const { data: usuario, error } = await supabase
+      .from('usuarios')
+      .select('id, empresa_id, nombre, apellido, email, rol_global, activo, created_at, updated_at, empresas(nombre, codigo)')
+      .eq('id', id)
+      .single();
 
-    if (!usuario) return res.status(404).json({ error: 'Usuario no encontrado.' });
+    if (error || !usuario) return res.status(404).json({ error: 'Usuario no encontrado.' });
 
-    const codigo = usuario.empresa_codigo || usuario.Empresa_Codigo || '';
+    const emp = usuario.empresas || {};
+    const codigo = emp.codigo || '';
     if (!isRootUser(req) && !assertTenantAccess(req, codigo)) {
       return res.status(403).json({ error: 'No tienes permiso para ver este usuario.' });
     }
 
-    const rawId = usuario._id || usuario._recordId || usuario.recordId || usuario.id || usuario.Id || '';
     res.json({
-      id: String(rawId),
-      displayId: String(usuario.Id || usuario.id || rawId),
-      nombre: usuario.nombre || usuario.Nombre || '',
-      apellido: usuario.apellido || usuario.Apellido || '',
-      email: usuario.email || usuario.Email || '',
-      rol: usuario.rol || usuario.Rol || 'viewer',
-      tenant_code: codigo || '',
-      tenant: codigoToName[codigo] || codigo || 'N/A',
-      status: normalizeStatus(usuario.status || usuario.Status || usuario.estado || usuario.Estado || 'active'),
-      registered: usuario.CreatedAt || usuario.created_at || new Date().toISOString(),
-      lastActivity: usuario.last_activity || null,
-      notas: usuario.notas || ''
+      id: usuario.id,
+      displayId: usuario.id,
+      nombre: usuario.nombre || '',
+      apellido: usuario.apellido || '',
+      email: usuario.email || '',
+      rol: usuario.rol_global || 'user',
+      tenant_code: codigo,
+      tenant: emp.nombre || codigo || 'N/A',
+      status: usuario.activo ? 'active' : 'inactive',
+      registered: usuario.created_at || new Date().toISOString(),
+      lastActivity: usuario.updated_at || null,
+      notas: ''
     });
   } catch (error) {
     return handleServerError(res, error);
@@ -1798,82 +1833,120 @@ app.get('/api/users/:id', authenticate, async (req, res) => {
 });
 
 app.post('/api/users', authenticate, async (req, res) => {
+  if (!requireSupabase(res)) return;
   try {
-    const { nombre, apellido, email, rol, tenant, notas, password } = req.body;
+    const { nombre, apellido, email, rol, tenant, notas, password, modulos } = req.body;
 
-    if (!nombre || !email || !rol) {
-      return res.status(400).json({ error: 'Nombre, Email y Rol son obligatorios.' });
+    if (!nombre || !email) {
+      return res.status(400).json({ error: 'Nombre y Email son obligatorios.' });
     }
 
-    const passwordTemporal = password || generateSecurePassword();
-    const salt = await bcrypt.genSalt(10);
-    const passwordHash = await bcrypt.hash(passwordTemporal, salt);
-
-    let empresaCodigo = tenant || '';
-    if (tenant && tenant.toString().trim().toUpperCase() !== 'ROOT') {
-      try {
-        const empresasRes = await nocodbApi.get(EMPRESAS_TABLE, { params: { limit: 200 } });
-        const found = (empresasRes.data.list || []).find(e => {
-          const n = e.nombre || e.Nombre || '';
-          const c = e.codigo || e.Codigo || e.id || e.Id;
-          return (tenant === n) || (tenant === c);
-        });
-        if (found) empresaCodigo = found.codigo || found.Codigo || found.id || found.Id;
-      } catch (e) { /* continuar */ }
-    }
-
-    if (!empresaCodigo && !isRootUser(req)) empresaCodigo = getTenantCode(req);
-    if (!isRootUser(req) && empresaCodigo && empresaCodigo !== getTenantCode(req)) {
+    // 1. Resolve empresa — buscar por código o nombre del tenant en Supabase
+    let empresaCodigo = tenant || getTenantCode(req) || '';
+    if (!isRootUser(req) && empresaCodigo !== getTenantCode(req)) {
       return res.status(403).json({ error: 'No puedes crear usuarios fuera de tu tenant.' });
     }
 
-    const nuevoUsuario = {
-      nombre, apellido: apellido || '', email, rol, password: passwordHash,
-      empresa_codigo: empresaCodigo,
-      status: 'pending', Status: 'pending', estado: 'pending', Estado: 'pending',
-      notas: notas || ''
-    };
+    let empresaRecord = null;
+    if (empresaCodigo) {
+      // Intentar por código primero
+      const { data: empByCode } = await supabase
+        .from('empresas')
+        .select('id, nombre')
+        .eq('codigo', empresaCodigo)
+        .single();
+      empresaRecord = empByCode;
 
-    const existingResponse = await nocodbApi.get(USUARIOS_TABLE, {
-      params: { where: `(email,eq,${email})`, limit: 1 }
-    });
-    if (existingResponse.data.list && existingResponse.data.list.length > 0) {
-      return res.status(400).json({ error: 'El correo ya está registrado' });
+      // Si no encontró por código, intentar por nombre
+      if (!empresaRecord) {
+        const { data: empByName } = await supabase
+          .from('empresas')
+          .select('id, nombre, codigo')
+          .ilike('nombre', empresaCodigo)
+          .single();
+        empresaRecord = empByName;
+        if (empresaRecord) empresaCodigo = empresaRecord.codigo || empresaCodigo;
+      }
     }
 
-    const response = await nocodbApi.post(USUARIOS_TABLE, nuevoUsuario);
-    const creado = response.data;
+    if (!empresaRecord) {
+      return res.status(400).json({ error: `No se encontró empresa con código "${empresaCodigo}". Primero sincroniza la empresa en Supabase.` });
+    }
 
-    let tenantDisplayName = null;
-    try {
-      if (empresaCodigo) {
-        const foundTenant = await findTenantByIdentifier(empresaCodigo);
-        tenantDisplayName = foundTenant?.nombre || foundTenant?.Nombre || null;
-      }
-    } catch (e) { /* continuar */ }
+    // 2. Check duplicado
+    const { data: existing } = await supabase
+      .from('usuarios')
+      .select('id')
+      .eq('email', email.toLowerCase().trim())
+      .maybeSingle();
+    if (existing) {
+      return res.status(400).json({ error: 'El correo ya está registrado.' });
+    }
 
-    // 🔧 FIX VERCEL: await en lugar de dispatchEmailAsync
-    await enviarAlertaActivacionCuenta(email, passwordTemporal, null, tenantDisplayName);
+    // 3. Crear usuario en Supabase Auth
+    const passwordTemporal = password || generateSecurePassword();
+    const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+      email: email.toLowerCase().trim(),
+      password: passwordTemporal,
+      email_confirm: true
+    });
+    if (authError) {
+      console.error('[SUPABASE AUTH] Error creando usuario:', authError.message);
+      return res.status(400).json({ error: `Error al crear cuenta: ${authError.message}` });
+    }
 
-    // 🔧 FIX VERCEL: await en lugar de fire-and-forget
+    // 4. Insertar perfil en tabla usuarios
+    const { error: insertError } = await supabase.from('usuarios').insert({
+      id: authData.user.id,
+      empresa_id: empresaRecord.id,
+      nombre: nombre.trim(),
+      apellido: (apellido || '').trim(),
+      email: email.toLowerCase().trim(),
+      rol_global: rol || 'user',
+      activo: true
+    });
+    if (insertError) {
+      console.error('[SUPABASE] Error insertando perfil:', insertError.message);
+      await supabase.auth.admin.deleteUser(authData.user.id);
+      return res.status(500).json({ error: `Error al guardar perfil: ${insertError.message}` });
+    }
+
+    // 5. Asignar módulos al trabajador
+    if (Array.isArray(modulos) && modulos.length > 0) {
+      const moduloInserts = modulos.map(m => ({
+        usuario_id: authData.user.id,
+        empresa_id: empresaRecord.id,
+        modulo_id: m.modulo_id || m,
+        rol: m.rol || 'user'
+      }));
+      const { error: modError } = await supabase.from('usuario_modulos').insert(moduloInserts);
+      if (modError) console.warn('[SUPABASE] Error asignando módulos:', modError.message);
+    }
+
+    // 6. Enviar email de activación
+    await enviarAlertaActivacionCuenta(email, passwordTemporal, null, empresaRecord.nombre);
+
+    // 7. Notificar al admin
     await enviarCorreoPortalPilot(
       process.env.EMAIL_USER || 'portalpilot.hn@gmail.com',
-      '👤 Nuevo Usuario Registrado',
-      'Nuevo Usuario Creado',
-      'Se ha creado un nuevo usuario.',
+      '👤 Nuevo Trabajador Registrado',
+      'Nuevo Trabajador Creado',
+      'Se ha creado un nuevo trabajador en Supabase.',
       `<ul style="list-style: none; padding: 0;">
         <li><strong>Nombre:</strong> ${nombre} ${apellido || ''}</li>
         <li><strong>Email:</strong> ${email}</li>
-        <li><strong>Rol:</strong> ${rol}</li>
-        <li><strong>Tenant:</strong> ${tenant || req.user.empresa_codigo || 'N/A'}</li>
+        <li><strong>Tenant:</strong> ${empresaRecord.nombre}</li>
+        <li><strong>Módulos:</strong> ${modulos?.map(m => m.modulo_id || m).join(', ') || 'Ninguno'}</li>
       </ul>`
     );
 
     res.status(201).json({
-      message: 'Usuario creado exitosamente',
+      message: 'Trabajador creado exitosamente',
       user: {
-        id: creado._id || creado._recordId || creado.recordId || creado.id || creado.Id,
-        nombre: creado.nombre, email: creado.email, rol: creado.rol, status: 'pending'
+        id: authData.user.id,
+        nombre, apellido: apellido || '',
+        email, rol: rol || 'user',
+        status: 'active'
       }
     });
   } catch (error) {
@@ -1882,94 +1955,94 @@ app.post('/api/users', authenticate, async (req, res) => {
 });
 
 app.put('/api/users/:id', authenticate, async (req, res) => {
+  if (!requireSupabase(res)) return;
   try {
     const { id } = req.params;
-    const { nombre, apellido, email, rol, tenant, notas, status, password, reason } = req.body;
+    const { nombre, apellido, email, rol, tenant, notas, status, password, reason, modulos } = req.body;
 
-    let usuarioActual = null;
-    try {
-      const currentResponse = await nocodbApi.get(`${USUARIOS_TABLE}/${encodeURIComponent(id)}`);
-      usuarioActual = currentResponse.data;
-    } catch (err) {
-      const currentResponse = await nocodbApi.get(USUARIOS_TABLE, {
-        params: { where: `(Id,eq,${formatNocoFilter(id, { numeric: true })})`, limit: 1 }
-      });
-      usuarioActual = currentResponse.data.list?.[0];
-    }
+    // 1. Fetch current user
+    const { data: usuarioActual, error: fetchErr } = await supabase
+      .from('usuarios')
+      .select('id, empresa_id, nombre, apellido, email, rol_global, activo, empresas(codigo, nombre)')
+      .eq('id', id)
+      .single();
 
-    if (!usuarioActual) return res.status(404).json({ error: 'Usuario no encontrado.' });
+    if (fetchErr || !usuarioActual) return res.status(404).json({ error: 'Usuario no encontrado.' });
 
-    const actualTenant = usuarioActual.empresa_codigo || usuarioActual.Empresa_Codigo || '';
-    if (!isRootUser(req) && !assertTenantAccess(req, actualTenant)) {
+    const codigo = usuarioActual.empresas?.codigo || '';
+    if (!isRootUser(req) && !assertTenantAccess(req, codigo)) {
       return res.status(403).json({ error: 'No tienes permiso para modificar este usuario.' });
     }
 
+    // 2. Check email uniqueness
     if (email && email !== usuarioActual.email) {
-      const existingResponse = await nocodbApi.get(USUARIOS_TABLE, {
-        params: { where: `(email,eq,${email})`, limit: 1 }
-      });
-      if (existingResponse.data.list && existingResponse.data.list.length > 0) {
-        return res.status(400).json({ error: 'El correo ya está en uso.' });
+      const { data: existing } = await supabase
+        .from('usuarios')
+        .select('id')
+        .eq('email', email.toLowerCase().trim())
+        .maybeSingle();
+      if (existing) return res.status(400).json({ error: 'El correo ya está en uso.' });
+    }
+
+    // 3. Build update fields
+    const updateFields = {};
+    if (typeof nombre !== 'undefined') updateFields.nombre = nombre;
+    if (typeof apellido !== 'undefined') updateFields.apellido = apellido;
+    if (typeof email !== 'undefined') updateFields.email = email.toLowerCase().trim();
+    if (typeof rol !== 'undefined') updateFields.rol_global = rol;
+    if (typeof notas !== 'undefined') updateFields.notas = notas;
+    if (typeof status !== 'undefined') updateFields.activo = normalizeStatus(status) === 'active';
+
+    if (Object.keys(updateFields).length > 0) {
+      const { error: updateErr } = await supabase
+        .from('usuarios')
+        .update(updateFields)
+        .eq('id', id);
+      if (updateErr) throw updateErr;
+    }
+
+    // 4. Update password in Supabase Auth if provided
+    if (password) {
+      const { error: pwdErr } = await supabase.auth.admin.updateUser(id, { password });
+      if (pwdErr) console.warn('[SUPABASE] Error actualizando contraseña:', pwdErr.message);
+    }
+
+    // 5. Update email in Supabase Auth if changed
+    if (email && email !== usuarioActual.email) {
+      const { error: emailErr } = await supabase.auth.admin.updateUser(id, { email: email.toLowerCase().trim() });
+      if (emailErr) console.warn('[SUPABASE] Error actualizando email:', emailErr.message);
+    }
+
+    // 6. Update modules if provided
+    if (Array.isArray(modulos)) {
+      await supabase.from('usuario_modulos').delete().eq('usuario_id', id);
+      if (modulos.length > 0) {
+        const inserts = modulos.map(m => ({
+          usuario_id: id,
+          empresa_id: usuarioActual.empresa_id,
+          modulo_id: m.modulo_id || m,
+          rol: m.rol || 'user'
+        }));
+        await supabase.from('usuario_modulos').insert(inserts);
       }
     }
 
-    let empresaCodigoActualizado = tenant;
-    if (tenant && tenant.toString().trim().toUpperCase() !== 'ROOT') {
-      try {
-        const empresasRes = await nocodbApi.get(EMPRESAS_TABLE, { params: { limit: 200 } });
-        const found = (empresasRes.data.list || []).find(e => {
-          const n = e.nombre || e.Nombre || '';
-          const c = e.codigo || e.Codigo || e.id || e.Id;
-          return tenant === n || tenant === c;
-        });
-        if (found) empresaCodigoActualizado = found.codigo || found.Codigo || found.id || found.Id;
-      } catch (e) { /* continuar */ }
-    }
-
-    const targetRecordId = usuarioActual._id || usuarioActual._recordId || usuarioActual.recordId || usuarioActual.id || usuarioActual.Id || id;
-    const normalizedStatus = typeof status !== 'undefined' ? normalizeStatus(status) : undefined;
-    const updateFields = {};
-
-    if (typeof nombre !== 'undefined') updateFields.nombre = nombre;
-    if (typeof apellido !== 'undefined') updateFields.apellido = apellido;
-    if (typeof email !== 'undefined') updateFields.email = email;
-    if (typeof rol !== 'undefined') updateFields.rol = rol;
-    if (typeof notas !== 'undefined') updateFields.notas = notas;
-    if (typeof normalizedStatus !== 'undefined') {
-      updateFields.status = normalizedStatus;
-      updateFields.Status = normalizedStatus;
-      updateFields.estado = normalizedStatus;
-      updateFields.Estado = normalizedStatus;
-    }
-    if (typeof empresaCodigoActualizado !== 'undefined') {
-      updateFields.empresa_codigo = empresaCodigoActualizado;
-    }
-    if (password) {
-      const salt = await bcrypt.genSalt(10);
-      updateFields.password = await bcrypt.hash(password, salt);
-    }
-
-    const patchPayload = { id: targetRecordId, Id: targetRecordId, ...updateFields };
-    await nocodbApi.patch(USUARIOS_TABLE, patchPayload);
-
-    const currentStatus = normalizeStatus(usuarioActual.status || usuarioActual.Status || usuarioActual.estado || usuarioActual.Estado || '');
-    const shouldSendOnboarding = currentStatus === 'pending' && normalizedStatus === 'active';
+    // 7. Send notifications
     const updatedEmail = email || usuarioActual.email;
+    const normalizedStatus = typeof status !== 'undefined' ? normalizeStatus(status) : null;
 
-    if (shouldSendOnboarding && updatedEmail) {
+    if (normalizedStatus === 'active' && !usuarioActual.activo && updatedEmail) {
       await enviarOnboardingEmail(updatedEmail);
     }
-
     if (normalizedStatus && ['active', 'suspended'].includes(normalizedStatus) && updatedEmail) {
       await enviarCambioEstadoUsuario(updatedEmail, normalizedStatus, req.user.email || 'admin@portalpilot.io', reason || '');
     }
 
-    // 🔧 FIX VERCEL: await en lugar de dispatchEmailAsync
     const esAccion = status === 'suspended' ? 'Suspensión' : status === 'active' ? 'Activación' : 'Actualización';
     await enviarCorreoPortalPilot(
       process.env.EMAIL_USER || 'portalpilot.hn@gmail.com',
-      `✏️ ${esAccion} de Usuario`,
-      `Usuario ${esAccion}`,
+      `✏️ ${esAccion} de Trabajador`,
+      `Trabajador ${esAccion}`,
       `Operación de ${esAccion} realizada.`,
       `<ul style="list-style: none; padding: 0;">
         <li><strong>ID:</strong> ${id}</li>
@@ -1980,84 +2053,43 @@ app.put('/api/users/:id', authenticate, async (req, res) => {
       </ul>`
     );
 
-    res.json({ message: 'Usuario actualizado exitosamente' });
+    res.json({ message: 'Trabajador actualizado exitosamente' });
   } catch (error) {
     return handleServerError(res, error);
   }
 });
 
 app.delete('/api/users/:id', authenticate, async (req, res) => {
+  if (!requireSupabase(res)) return;
   try {
     const { id } = req.params;
-    console.info(`[DELETE USER] Intenta eliminar usuario ID=${id}`);
 
-    let nombreUsuario = `ID: ${id}`, emailUsuario = 'N/A';
-    let userRecord = null;
-    try {
-      // Intentar GET directo primero
-      const findRes = await nocodbApi.get(`${USUARIOS_TABLE}/${encodeURIComponent(id)}`);
-      userRecord = findRes.data;
-    } catch (err) {
-      try {
-        const findRes = await nocodbApi.get(USUARIOS_TABLE, {
-          params: { where: `(Id,eq,${formatNocoFilter(id, { numeric: true })})` }
-        });
-        userRecord = findRes.data.list?.[0];
-      } catch (err2) {
-        try {
-          const findRes = await nocodbApi.get(USUARIOS_TABLE, {
-            params: { where: `(id,eq,${formatNocoFilter(id)})` }
-          });
-          userRecord = findRes.data.list?.[0];
-        } catch (err3) {
-          // continuar con userRecord como null
-        }
-      }
-    }
+    // 1. Fetch user data before deleting
+    const { data: userRecord } = await supabase
+      .from('usuarios')
+      .select('id, nombre, apellido, email, empresas(nombre)')
+      .eq('id', id)
+      .single();
 
-    if (userRecord) {
-      nombreUsuario = `${userRecord.nombre || ''} ${userRecord.apellido || ''}`.trim() || `ID: ${id}`;
-      emailUsuario = userRecord.email || 'N/A';
-    }
+    const nombreUsuario = userRecord ? `${userRecord.nombre || ''} ${userRecord.apellido || ''}`.trim() : `ID: ${id}`;
+    const emailUsuario = userRecord?.email || 'N/A';
 
-    const userIdentifier = extractNocoRecordId(userRecord) || id;
-    let deleted = false;
+    // 2. Delete module assignments
+    await supabase.from('usuario_modulos').delete().eq('usuario_id', id);
 
-    try {
-      if (userIdentifier && !isBusinessRecordCode(userIdentifier)) {
-        await deleteNocoRecord(USUARIOS_TABLE, userIdentifier);
-        deleted = true;
-      } else {
-        const userWhereByEmail = userRecord?.email ? buildNocoWhereFilter('email', userRecord.email) : null;
-        if (userWhereByEmail) {
-          await deleteNocoRecordByFilter(USUARIOS_TABLE, userWhereByEmail);
-          deleted = true;
-        }
-      }
-    } catch (deleteError) {
-      console.warn(`[DELETE USER] DELETE falló: ${deleteError.message}`);
-      if (!deleted) {
-        try {
-          const patchFilter = userRecord?.email ? buildNocoWhereFilter('email', userRecord.email) : null;
-          if (patchFilter) {
-            await patchNocoRecordByFilter(USUARIOS_TABLE, patchFilter, {
-              estado: 'Inactivo', eliminado_en: new Date().toISOString()
-            });
-            deleted = true;
-          }
-        } catch (patchError) {
-          console.error(`[DELETE USER] Soft delete falló: ${patchError.message}`);
-          throw patchError;
-        }
-      }
-    }
+    // 3. Delete profile
+    await supabase.from('usuarios').delete().eq('id', id);
 
-    // 🔧 FIX VERCEL: await en lugar de dispatchEmailAsync
+    // 4. Delete Supabase Auth user
+    const { error: authErr } = await supabase.auth.admin.deleteUser(id);
+    if (authErr) console.warn('[SUPABASE] Error eliminando auth user:', authErr.message);
+
+    // 5. Notify admin
     await enviarCorreoPortalPilot(
       process.env.EMAIL_USER || 'portalpilot.hn@gmail.com',
-      '🗑️ Usuario Eliminado',
-      'Eliminación de Usuario',
-      'Se ha eliminado un usuario.',
+      '🗑️ Trabajador Eliminado',
+      'Eliminación de Trabajador',
+      'Se ha eliminado un trabajador.',
       `<ul style="list-style: none; padding: 0;">
         <li><strong>ID:</strong> ${id}</li>
         <li><strong>Nombre:</strong> ${nombreUsuario}</li>
@@ -2065,7 +2097,7 @@ app.delete('/api/users/:id', authenticate, async (req, res) => {
       </ul>`
     );
 
-    res.json({ message: 'Usuario eliminado exitosamente' });
+    res.json({ message: 'Trabajador eliminado exitosamente' });
   } catch (error) {
     return handleServerError(res, error);
   }

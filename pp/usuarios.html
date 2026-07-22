@@ -1642,8 +1642,8 @@
             <!-- Profile -->
             <a href="perfil.html" class="profile-section" style="text-decoration:none;cursor:pointer;" title="Ver perfil">
                 <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80"
-                    alt="Perfil" class="avatar">
-                <div class="profile-info"><span class="name">Ajendra S.</span><span class="role">UI/UX Designer</span>
+                    alt="Perfil" class="avatar" id="sidebarAvatar">
+                <div class="profile-info"><span class="name" id="sidebarName">Ajendra S.</span><span class="role" id="sidebarRole">UI/UX Designer</span>
                 </div>
             </a>
 
@@ -2472,6 +2472,17 @@
             if (e.key === '/' && document.activeElement.tagName !== 'INPUT') { e.preventDefault(); document.getElementById('globalSearch').focus(); }
             if (e.key === 'n' && e.ctrlKey) { e.preventDefault(); openModal('createUserModal'); }
         });
+        (function() {
+          const name = localStorage.getItem('userName') || 'Admin';
+          const role = localStorage.getItem('userRole') || 'Administrador';
+          const initials = name.split(' ').map(w => w[0]).join('').substring(0,2).toUpperCase();
+          const sn = document.getElementById('sidebarName');
+          const sr = document.getElementById('sidebarRole');
+          const sa = document.getElementById('sidebarAvatar');
+          if(sn) sn.textContent = name;
+          if(sr) sr.textContent = role;
+          if(sa) sa.textContent = initials;
+        })();
     </script>
 </body>
 

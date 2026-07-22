@@ -1430,10 +1430,10 @@
         <a href="#" class="sidebar-link"><i class="fas fa-question-circle"></i> Ayuda</a>
         <a href="#" class="sidebar-link"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</a>
         <div class="sidebar-user">
-          <div class="sidebar-avatar">AD</div>
+          <div class="sidebar-avatar" id="sidebarAvatar">AD</div>
           <div>
-            <div class="sidebar-username">Admin User</div>
-            <div class="sidebar-role">Super Admin</div>
+            <div class="sidebar-username" id="sidebarName">Admin User</div>
+            <div class="sidebar-role" id="sidebarRole">Super Admin</div>
           </div>
         </div>
       </div>
@@ -1798,6 +1798,17 @@
       if (e.key === '/' && document.activeElement.tagName !== 'INPUT') { e.preventDefault(); document.querySelector('.topbar-search input')?.focus(); }
       if (e.key === 's' && e.ctrlKey) { e.preventDefault(); if (hasChanges) saveAllSettings(); }
     });
+    (function() {
+      const name = localStorage.getItem('userName') || 'Admin';
+      const role = localStorage.getItem('userRole') || 'Administrador';
+      const initials = name.split(' ').map(w => w[0]).join('').substring(0,2).toUpperCase();
+      const sn = document.getElementById('sidebarName');
+      const sr = document.getElementById('sidebarRole');
+      const sa = document.getElementById('sidebarAvatar');
+      if(sn) sn.textContent = name;
+      if(sr) sr.textContent = role;
+      if(sa) sa.textContent = initials;
+    })();
   </script>
 </body>
 

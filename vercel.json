@@ -19,7 +19,10 @@
       "src": "**/*.css",
       "use": "@vercel/static"
     },
-
+    {
+      "src": "**/*.js",
+      "use": "@vercel/static"
+    },
     {
       "src": "**/*.png",
       "use": "@vercel/static"
@@ -48,7 +51,7 @@
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "/api/index.js"
+      "dest": "/backend/server.js"
     },
     {
       "src": "/(.*\\.html)",

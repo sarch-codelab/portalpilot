@@ -1,3 +1,8 @@
-module.exports = (req, res) => {
-  res.status(200).json({ ok: true, time: new Date().toISOString() });
-};
+try {
+  const app = require('../backend/server');
+  module.exports = app;
+} catch (err) {
+  module.exports = (req, res) => {
+    res.status(500).json({ error: 'Failed to load server', message: err.message });
+  };
+}

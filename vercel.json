@@ -6,6 +6,7 @@
       "use": "@vercel/node",
       "config": {
         "includeFiles": [
+          "backend/supabaseClient.js",
           "EMAIL PORTAL PILOT/**",
           "enterprise/**"
         ]

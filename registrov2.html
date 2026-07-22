@@ -1242,30 +1242,46 @@
             document.getElementById('verifyEmailDisplay').textContent = email;
             setupOTPInputs('emailOtpGroup');
             emailVerificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+            let emailSent = false;
             try {
-                await fetch(`${API_ROOT}/api/enviar-codigo-verificacion`, {
+                const resp = await fetch(`${API_ROOT}/api/enviar-codigo-verificacion`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email, codigo: emailVerificationCode })
                 });
+                const data = await resp.json();
+                emailSent = resp.ok && data.success;
+                if (!emailSent) console.warn('API envió error:', data.error || resp.status);
             } catch (error) {
-                console.warn('No se pudo enviar el código por API, se mantiene el flujo local.', error);
+                console.warn('No se pudo enviar el código por API:', error.message);
             }
-            showMessage(`Código de verificación enviado a ${email}`, 'success');
+            if (emailSent) {
+                showMessage(`Código de verificación enviado a ${email}`, 'success');
+            } else {
+                showMessage(`No se pudo enviar el correo. Verifica tu conexión o contacta soporte.`, 'warning');
+            }
         }
         window.resendEmailCode = async function () {
             const btn = document.getElementById('resendBtn'); btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
             emailVerificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+            let emailSent = false;
             try {
-                await fetch(`${API_ROOT}/api/enviar-codigo-verificacion`, {
+                const resp = await fetch(`${API_ROOT}/api/enviar-codigo-verificacion`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email: document.getElementById('regEmail').value, codigo: emailVerificationCode })
                 });
+                const data = await resp.json();
+                emailSent = resp.ok && data.success;
             } catch (error) {
-                console.warn('No se pudo reenviar el código por API.', error);
+                console.warn('No se pudo reenviar el código por API:', error.message);
             }
-            btn.innerHTML = '<i class="fas fa-rotate-right"></i> Reenviar código'; btn.disabled = false; showMessage('Nuevo código enviado', 'success');
+            btn.innerHTML = '<i class="fas fa-rotate-right"></i> Reenviar código'; btn.disabled = false;
+            if (emailSent) {
+                showMessage('Nuevo código enviado', 'success');
+            } else {
+                showMessage('No se pudo enviar el correo. Intenta de nuevo.', 'error');
+            }
         };
 
         // ─── FINALIZAR ───

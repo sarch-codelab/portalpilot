@@ -1165,7 +1165,7 @@ app.post('/api/login', loginLimiter, async (req, res) => {
           // Buscar perfil en tabla usuarios
           const { data: perfil } = await supabase
             .from('usuarios')
-            .select('id, empresa_id, nombre, apellido, email, rol_global, activo, empresas(id, codigo, nombre)')
+            .select('id, empresa_id, nombre, apellido, email, rol_global, activo, foto_perfil_url, banner_perfil_url, empresas(id, codigo, nombre)')
             .eq('id', authData.user.id)
             .single();
 
@@ -1200,6 +1200,8 @@ app.post('/api/login', loginLimiter, async (req, res) => {
                 empresa_nombre: empresaNombre,
                 tenant: empresaCodigo,
                 status: perfil.activo ? 'active' : 'inactive',
+                foto_perfil_url: perfil.foto_perfil_url || null,
+                banner_perfil_url: perfil.banner_perfil_url || null,
                 token: accountToken
               },
               accounts: []
@@ -1265,6 +1267,8 @@ app.post('/api/login', loginLimiter, async (req, res) => {
           empresa_nombre: empresaNombre,
           tenant: normalizedEmpresa,
           status: userStatus,
+          foto_perfil_url: usuario.foto_perfil_url || usuario.Foto_Perfil_Url || null,
+          banner_perfil_url: usuario.banner_perfil_url || usuario.Banner_Perfil_Url || null,
           token: accountToken
         };
       }));

@@ -2472,18 +2472,8 @@
             if (e.key === '/' && document.activeElement.tagName !== 'INPUT') { e.preventDefault(); document.getElementById('globalSearch').focus(); }
             if (e.key === 'n' && e.ctrlKey) { e.preventDefault(); openModal('createUserModal'); }
         });
-        (function() {
-          const name = localStorage.getItem('userName') || 'Admin';
-          const role = localStorage.getItem('userRole') || 'Administrador';
-          const initials = name.split(' ').map(w => w[0]).join('').substring(0,2).toUpperCase();
-          const sn = document.getElementById('sidebarName');
-          const sr = document.getElementById('sidebarRole');
-          const sa = document.getElementById('sidebarAvatar');
-          if(sn) sn.textContent = name;
-          if(sr) sr.textContent = role;
-          if(sa) sa.textContent = initials;
-        })();
     </script>
+    <script src="../js/sidebar-loader.js"></script>
 </body>
 
 </html>

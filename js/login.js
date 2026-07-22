@@ -293,7 +293,10 @@ document.addEventListener('DOMContentLoaded', function () {
       localStorage.setItem('token', data.token);
       localStorage.setItem('userRole', user.rol || '');
       localStorage.setItem('userName', user.nombre || '');
+      localStorage.setItem('userApellido', user.apellido || '');
       localStorage.setItem('userEmail', user.email || '');
+      localStorage.setItem('userFoto', user.foto_perfil_url || '');
+      localStorage.setItem('userBanner', user.banner_perfil_url || '');
       localStorage.setItem('empresaCodigo', normalizedEmpresa);
       localStorage.setItem('empresaNombre', empresaNombre);
       localStorage.setItem('currentAccountId', user.id || '');

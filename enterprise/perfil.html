@@ -729,13 +729,6 @@
       const name = localStorage.getItem('userName') || 'Admin';
       const email = localStorage.getItem('userEmail') || '';
       const role = localStorage.getItem('userRole') || 'Administrador';
-      const initials = name.split(' ').map(w => w[0]).join('').substring(0,2).toUpperCase();
-      const sidebarName = document.getElementById('sidebarName');
-      const sidebarRole = document.getElementById('sidebarRole');
-      const sidebarAvatar = document.getElementById('sidebarAvatar');
-      if(sidebarName) sidebarName.textContent = name;
-      if(sidebarRole) sidebarRole.textContent = role;
-      if(sidebarAvatar) sidebarAvatar.textContent = initials;
       const profileName = document.getElementById('profileName');
       const profileEmail = document.getElementById('profileEmail');
       const profileRole = document.getElementById('profileRole');
@@ -959,5 +952,38 @@
       document.querySelectorAll('.field input, .field select, .field textarea').forEach(el => el.disabled = true);
     });
   </script>
+<script src="../js/sidebar-loader.js"></script>
+<script>
+(function() {
+  var name = localStorage.getItem('userName') || 'Admin';
+  var apellido = localStorage.getItem('userApellido') || '';
+  var email = localStorage.getItem('userEmail') || '';
+  var role = localStorage.getItem('userRole') || 'Administrador';
+  var foto = localStorage.getItem('userFoto') || '';
+  var banner = localStorage.getItem('userBanner') || '';
+  var fullName = apellido ? name + ' ' + apellido : name;
+  var initials = fullName.split(' ').map(function(w){ return w[0]; }).join('').substring(0,2).toUpperCase();
+
+  var pn = document.getElementById('profileName');
+  var pe = document.getElementById('profileEmail');
+  var pr = document.getElementById('profileRole');
+  var fn = document.getElementById('fullName');
+  var em = document.getElementById('email');
+  var pa = document.getElementById('profileAvatarLarge');
+
+  if(pn) pn.textContent = fullName;
+  if(pe) pe.textContent = email;
+  if(pr) pr.innerHTML = '<i class="fas fa-id-badge"></i> ' + role;
+  if(fn) fn.value = fullName;
+  if(em) em.value = email;
+  if(pa) {
+    if(foto) {
+      pa.innerHTML = '<img src="' + foto + '" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;">';
+    } else {
+      pa.textContent = initials;
+    }
+  }
+})();
+</script>
 </body>
 </html>

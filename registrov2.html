@@ -1313,8 +1313,13 @@
                 const dominio = document.getElementById('regDominio').value.trim().toLowerCase();
                 const empresaCodigo = `PP-${Math.random().toString(36).substring(2, 6).toUpperCase()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
 
-                // Subir imágenes pendientes antes de crear el tenant
-                const imageUrls = await uploadPendingImages(empresaCodigo);
+                // Imágenes: pasar base64 directamente (no funciona upload en Vercel)
+                const imageUrls = {
+                    company_banner: pendingUploads.company_banner || null,
+                    company_logo: pendingUploads.company_logo || null,
+                    profile_banner: pendingUploads.profile_banner || null,
+                    profile_pic: pendingUploads.profile_pic || null
+                };
 
                 const email = document.getElementById('regEmail').value.trim().toLowerCase();
                 const password = document.getElementById('regPass').value;

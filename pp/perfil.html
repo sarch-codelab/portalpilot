@@ -634,17 +634,34 @@
     <script src="../auth-check.js"></script>
     <script src="js/portal-admin-guard.js"></script>
     <script src="js/perfil.js"></script>
+    <script src="../js/sidebar-loader.js"></script>
     <script>
     (function() {
       const name = localStorage.getItem('userName') || 'Admin';
+      const apellido = localStorage.getItem('userApellido') || '';
+      const email = localStorage.getItem('userEmail') || '';
       const role = localStorage.getItem('userRole') || 'Administrador';
-      const initials = name.split(' ').map(w => w[0]).join('').substring(0,2).toUpperCase();
-      const sn = document.getElementById('sidebarName');
-      const sr = document.getElementById('sidebarRole');
-      const sa = document.getElementById('sidebarAvatar');
-      if(sn) sn.textContent = name;
-      if(sr) sr.textContent = role;
-      if(sa) sa.textContent = initials;
+      const foto = localStorage.getItem('userFoto') || '';
+      const banner = localStorage.getItem('userBanner') || '';
+      const plan = localStorage.getItem('empresaNombre') || '';
+      const fullName = apellido ? name + ' ' + apellido : name;
+      const initials = fullName.split(' ').map(function(w){ return w[0]; }).join('').substring(0,2).toUpperCase();
+
+      var pn = document.getElementById('profileName');
+      var pe = document.getElementById('profileEmail');
+      var fn = document.getElementById('fullName');
+      if(pn) pn.textContent = fullName;
+      if(pe) pe.textContent = email;
+      if(fn) fn.value = fullName;
+
+      if(foto) {
+        var pa = document.querySelector('.user-avatar-large img');
+        if(pa) { pa.src = foto; pa.onerror = function(){ this.style.display='none'; this.parentElement.innerHTML = initials; }; }
+      }
+      if(banner) {
+        var pb = document.getElementById('profileBanner');
+        if(pb) pb.style.backgroundImage = 'url(' + banner + ')';
+      }
     })();
     </script>
 </body>

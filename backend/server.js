@@ -958,7 +958,8 @@ app.post('/api/registro', async (req, res) => {
       empresaNombre, empresaCodigo, dominioWorkspace, landPage,
       empresaSize, sise, empresaSector, empresaCountry,
       usuarioNombre, usuarioApellido, email, cargo,
-      password, dosFaActivo, dosFaSecret, dosFaBackupCodes, terminosAceptados
+      password, dosFaActivo, dosFaSecret, dosFaBackupCodes, terminosAceptados,
+      plan
     } = req.body;
 
     if (!email || !password || !empresaCodigo || !usuarioNombre || !usuarioApellido) {
@@ -1040,7 +1041,8 @@ app.post('/api/registro', async (req, res) => {
     res.status(201).json({ 
       message: 'Tenant creado con éxito',
       empresaCodigo,
-      dominioWorkspace: dominioWorkspace || null
+      dominioWorkspace: dominioWorkspace || null,
+      plan: plan || null
     });
   } catch (error) {
     return handleNocoDbError(res, error, 'No se pudo completar el registro en este momento.');

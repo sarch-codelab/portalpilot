@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Finalizar Pago — Portal Pilot</title>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg: #000000; --bg-soft: #0a0a0c; --surface: #111114; --surface-2: #16161a; --surface-3: #1c1c21;
+            --border: rgba(255, 255, 255, 0.08); --border-strong: rgba(255, 255, 255, 0.14);
+            --accent: #8b5cf6; --accent-soft: #a78bfa; --accent-glow: rgba(139, 92, 246, 0.25);
+            --white: #f5f5f7; --text: #d2d2d7; --text-dim: #86868b; --text-muted: #6e6e73;
+            --green: #30d158; --red: #ff453a; --radius: 12px; --radius-lg: 20px;
+        }
+
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg); color: var(--text); overflow-x: hidden; line-height: 1.6;
+            -webkit-font-smoothing: antialiased; min-height: 100vh;
+            background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(139, 92, 246, 0.08) 0%, transparent 50%), var(--bg);
+        }
+
+        .container { max-width: 1100px; margin: 0 auto; padding: 40px 24px 80px; }
+
+        /* ─── HEADER ─── */
+        .checkout-header {
+            display: flex; align-items: center; justify-content: space-between; margin-bottom: 40px;
+            padding-bottom: 24px; border-bottom: 1px solid var(--border);
+        }
+        .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+        .brand-icon {
+            width: 36px; height: 36px; background: linear-gradient(135deg, var(--accent) 0%, var(--accent-soft) 100%);
+            border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 16px; color: #fff;
+        }
+        .brand-name { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; color: var(--white); letter-spacing: 1.5px; }
+        .secure-badge {
+            display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--green);
+            background: rgba(48, 209, 88, 0.08); padding: 6px 14px; border-radius: 40px; border: 1px solid rgba(48, 209, 88, 0.2);
+        }
+
+        /* ─── LAYOUT GRID ─── */
+        .checkout-grid {
+            display: grid; grid-template-columns: 1fr 1.3fr; gap: 32px; align-items: start;
+        }
+
+        /* ─── LEFT: SUMMARY ─── */
+        .summary-card {
+            background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg);
+            padding: 28px; position: sticky; top: 24px;
+        }
+        .summary-title {
+            font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 700; color: var(--white);
+            margin-bottom: 24px; display: flex; align-items: center; gap: 8px;
+        }
+        .summary-title i { color: var(--accent-soft); }
+
+        .plan-highlight {
+            background: rgba(139, 92, 246, 0.08); border: 1px solid rgba(139, 92, 246, 0.2);
+            border-radius: var(--radius); padding: 16px; margin-bottom: 24px;
+        }
+        .plan-name { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; color: var(--white); }
+        .plan-price { font-size: 28px; font-weight: 800; color: var(--accent-soft); margin: 8px 0; }
+        .plan-price span { font-size: 14px; font-weight: 400; color: var(--text-dim); }
+        .plan-billing { font-size: 12px; color: var(--text-muted); }
+
+        /* COMPANY ID BOX */
+        .company-id-box {
+            background: var(--bg-soft); border: 1px dashed var(--border-strong); border-radius: var(--radius);
+            padding: 14px; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between;
+        }
+        .company-id-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); font-weight: 600; margin-bottom: 4px; }
+        .company-id-value {
+            font-family: 'JetBrains Mono', monospace; font-size: 16px; font-weight: 600; color: var(--white);
+            letter-spacing: 1px;
+        }
+        .copy-id-btn {
+            background: var(--surface-2); border: 1px solid var(--border); color: var(--text-dim);
+            width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: all 0.2s;
+        }
+        .copy-id-btn:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+        .summary-features { list-style: none; margin-bottom: 24px; }
+        .summary-features li {
+            font-size: 13px; color: var(--text-dim); padding: 8px 0; border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; gap: 10px;
+        }
+        .summary-features li:last-child { border-bottom: none; }
+        .summary-features li i { color: var(--green); font-size: 12px; }
+
+        .summary-total {
+            display: flex; justify-content: space-between; align-items: center;
+            padding-top: 20px; border-top: 1px solid var(--border-strong); margin-top: 8px;
+        }
+        .summary-total .label { font-size: 14px; color: var(--text); font-weight: 500; }
+        .summary-total .amount { font-family: 'Syne', sans-serif; font-size: 24px; font-weight: 700; color: var(--white); }
+
+        /* ─── RIGHT: PAYMENT FORM ─── */
+        .payment-card {
+            background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 32px;
+        }
+        .payment-tabs {
+            display: flex; gap: 0; background: var(--bg-soft); border-radius: 10px; padding: 4px; margin-bottom: 28px;
+        }
+        .payment-tab {
+            flex: 1; padding: 10px; text-align: center; font-size: 13px; font-weight: 600; color: var(--text-dim);
+            border-radius: 8px; cursor: pointer; transition: all 0.2s; border: none; background: transparent; font-family: inherit;
+        }
+        .payment-tab.active { background: var(--surface-2); color: var(--white); box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
+        .payment-tab i { margin-right: 6px; }
+
+        .form-section { display: none; animation: fadeSlide 0.3s ease; }
+        .form-section.active { display: block; }
+        @keyframes fadeSlide { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+        .form-group { margin-bottom: 20px; }
+        .form-label {
+            display: block; font-size: 11px; font-weight: 600; color: var(--text-dim);
+            text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;
+        }
+        .form-input {
+            width: 100%; background: var(--bg-soft); border: 1.5px solid var(--border); border-radius: var(--radius);
+            padding: 14px 16px; font-size: 14px; color: var(--white); font-family: inherit; outline: none; transition: all 0.2s;
+        }
+        .form-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1); }
+        .form-input::placeholder { color: var(--text-muted); }
+        
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+
+        .input-icon-wrap { position: relative; }
+        .input-icon-wrap i {
+            position: absolute; right: 16px; top: 50%; transform: translateY(-50%);
+            color: var(--text-muted); font-size: 16px; pointer-events: none;
+        }
+
+        .btn-pay {
+            width: 100%; padding: 16px; border-radius: 40px; border: none; cursor: pointer;
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-soft) 100%);
+            color: #fff; font-size: 15px; font-weight: 700; font-family: inherit; letter-spacing: 0.5px;
+            transition: all 0.25s ease; display: flex; align-items: center; justify-content: center; gap: 8px;
+            margin-top: 8px;
+        }
+        .btn-pay:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(139, 92, 246, 0.35); }
+        .btn-pay:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+        .secure-footer {
+            display: flex; align-items: center; justify-content: center; gap: 16px; margin-top: 24px;
+            padding-top: 20px; border-top: 1px solid var(--border);
+        }
+        .secure-footer span { font-size: 11px; color: var(--text-muted); display: flex; align-items: center; gap: 6px; }
+        .secure-footer i { color: var(--text-dim); }
+
+        /* Bank Transfer Specific */
+        .bank-info-box {
+            background: var(--bg-soft); border: 1px solid var(--border); border-radius: var(--radius);
+            padding: 20px; margin-bottom: 20px;
+        }
+        .bank-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+        .bank-row:last-child { border-bottom: none; }
+        .bank-row .label { color: var(--text-muted); }
+        .bank-row .value { color: var(--white); font-family: 'JetBrains Mono', monospace; font-weight: 500; }
+
+        @media (max-width: 900px) {
+            .checkout-grid { grid-template-columns: 1fr; }
+            .summary-card { position: static; order: 2; }
+            .payment-card { order: 1; }
+        }
+        @media (max-width: 600px) {
+            .form-row, .form-row-3 { grid-template-columns: 1fr; }
+            .checkout-header { flex-direction: column; gap: 16px; align-items: flex-start; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- HEADER -->
+        <header class="checkout-header">
+            <a href="registro.html" class="brand">
+                <div class="brand-icon"><i class="fas fa-robot"></i></div>
+                <div class="brand-name">PORTAL PILOT</div>
+            </a>
+            <div class="secure-badge">
+                <i class="fas fa-lock"></i> Conexión Segura SSL 256-bit
+            </div>
+        </header>
+
+        <!-- MAIN GRID -->
+        <div class="checkout-grid">
+            
+            <!-- LEFT: ORDER SUMMARY -->
+            <aside class="summary-card">
+                <div class="summary-title"><i class="fas fa-receipt"></i> Resumen de Compra</div>
+                
+                <div class="plan-highlight">
+                    <div class="plan-name" id="summaryPlanName">Plan Business</div>
+                    <div class="plan-price" id="summaryPlanPrice">$49 <span>/mes</span></div>
+                    <div class="plan-billing">Facturación mensual. Cancela cuando quieras.</div>
+                </div>
+
+                <!-- COMPANY ID (CRUCIAL) -->
+                <div class="company-id-box">
+                    <div>
+                        <div class="company-id-label">ID de la Empresa (Tenant)</div>
+                        <div class="company-id-value" id="companyIdDisplay">PP-8X92-B4M1</div>
+                    </div>
+                    <button class="copy-id-btn" onclick="copyCompanyId()" title="Copiar ID">
+                        <i class="fas fa-copy"></i>
+                    </button>
+                </div>
+
+                <ul class="summary-features" id="summaryFeatures">
+                    <li><i class="fas fa-check"></i> Hasta 25 usuarios activos</li>
+                    <li><i class="fas fa-check"></i> Bots RPA ilimitados</li>
+                    <li><i class="fas fa-check"></i> Soporte prioritario 24/7</li>
+                    <li><i class="fas fa-check"></i> Auditoría blockchain básica</li>
+                </ul>
+
+                <div class="summary-total">
+                    <span class="label">Total a pagar hoy</span>
+                    <span class="amount" id="summaryTotal">$49.00 USD</span>
+                </div>
+            </aside>
+
+            <!-- RIGHT: PAYMENT FORM -->
+            <main class="payment-card">
+                <div class="payment-tabs">
+                    <button class="payment-tab active" onclick="switchPaymentMethod('card', this)">
+                        <i class="fas fa-credit-card"></i> Tarjeta
+                    </button>
+                    <button class="payment-tab" onclick="switchPaymentMethod('bank', this)" id="tabBank">
+                        <i class="fas fa-building-columns"></i> Transferencia
+                    </button>
+                </div>
+
+                <!-- METHOD 1: CREDIT CARD -->
+                <div id="method-card" class="form-section active">
+                    <div class="form-group">
+                        <label class="form-label">Nombre en la tarjeta</label>
+                        <input type="text" class="form-input" placeholder="Como aparece en la tarjeta">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Número de tarjeta</label>
+                        <div class="input-icon-wrap">
+                            <input type="text" class="form-input" placeholder="0000 0000 0000 0000" maxlength="19">
+                            <i class="fab fa-cc-visa" style="font-size: 20px;"></i>
+                        </div>
+                    </div>
+
+                    <div class="form-row-3">
+                        <div class="form-group">
+                            <label class="form-label">Mes</label>
+                            <select class="form-input">
+                                <option>01</option><option>02</option><option>03</option><option>04</option>
+                                <option>05</option><option>06</option><option>07</option><option>08</option>
+                                <option>09</option><option>10</option><option>11</option><option>12</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Año</label>
+                            <select class="form-input">
+                                <option>2026</option><option>2027</option><option>2028</option><option>2029</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">CVC</label>
+                            <div class="input-icon-wrap">
+                                <input type="text" class="form-input" placeholder="123" maxlength="4">
+                                <i class="fas fa-circle-question" title="3 dígitos detrás de la tarjeta"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Correo electrónico para la factura</label>
+                        <input type="email" class="form-input" placeholder="facturacion@tuempresa.com" id="billingEmail">
+                    </div>
+
+                    <button class="btn-pay" onclick="processPayment()">
+                        <i class="fas fa-lock"></i> Pagar y Activar Plan
+                    </button>
+                </div>
+
+                <!-- METHOD 2: BANK TRANSFER (Ideal for Enterprise) -->
+                <div id="method-bank" class="form-section">
+                    <div style="background: rgba(139, 92, 246, 0.08); border: 1px solid rgba(139, 92, 246, 0.2); border-radius: 12px; padding: 16px; margin-bottom: 24px; display: flex; gap: 12px;">
+                        <i class="fas fa-info-circle" style="color: var(--accent-soft); margin-top: 2px;"></i>
+                        <p style="font-size: 13px; color: var(--text-dim); line-height: 1.5;">
+                            <strong style="color: var(--white);">Nota importante:</strong> Tu cuenta se activará tan pronto como confirmemos la recepción del pago. Por favor, incluye el <strong>ID de la Empresa</strong> en el concepto de la transferencia.
+                        </p>
+                    </div>
+
+                    <div class="bank-info-box">
+                        <div class="bank-row">
+                            <span class="label">Banco</span>
+                            <span class="value">Banco de América Central (BAC)</span>
+                        </div>
+                        <div class="bank-row">
+                            <span class="label">Titular</span>
+                            <span class="value">Cyberyx Vantage S.A.</span>
+                        </div>
+                        <div class="bank-row">
+                            <span class="label">Cuenta Corriente</span>
+                            <span class="value">002-458-991023-4</span>
+                        </div>
+                        <div class="bank-row">
+                            <span class="label">CLABE / IBAN</span>
+                            <span class="value">HN42 0020 0045 8991 0234 00</span>
+                        </div>
+                        <div class="bank-row">
+                            <span class="label">Concepto obligatorio</span>
+                            <span class="value" style="color: var(--accent-soft);" id="bankConcept">PP-8X92-B4M1</span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Subir comprobante de pago (Opcional pero recomendado)</label>
+                        <input type="file" class="form-input" style="padding: 10px;" accept="image/*,.pdf">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Correo electrónico de contacto</label>
+                        <input type="email" class="form-input" placeholder="tu@correo.com" id="billingEmailBank">
+                    </div>
+
+                    <button class="btn-pay" onclick="processBankPayment()">
+                        <i class="fas fa-paper-plane"></i> Enviar Comprobante y Solicitar Activación
+                    </button>
+                </div>
+
+                <div class="secure-footer">
+                    <span><i class="fas fa-shield-halved"></i> Pagos encriptados</span>
+                    <span><i class="fab fa-cc-visa"></i></span>
+                    <span><i class="fab fa-cc-mastercard"></i></span>
+                    <span><i class="fab fa-cc-amex"></i></span>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        // 1. DETECTAR PLAN DESDE LA URL (?plan=business o ?plan=enterprise)
+        const urlParams = new URLSearchParams(window.location.search);
+        const selectedPlan = (urlParams.get('plan') || 'business').toLowerCase();
+        const registrationStorageKey = 'portalPilotRegistrationData';
+
+        function getStoredRegistrationData() {
+            try {
+                const fromSession = sessionStorage.getItem(registrationStorageKey);
+                if (fromSession) return JSON.parse(fromSession);
+                const fromLocal = localStorage.getItem(registrationStorageKey);
+                if (fromLocal) return JSON.parse(fromLocal);
+            } catch (error) {
+                console.warn('No se pudo leer la sesión de registro.', error);
+            }
+            return null;
+        }
+
+        const registrationData = getStoredRegistrationData();
+        const companyID = urlParams.get('companyId') || registrationData?.companyId || 'PP-XXXX-XXXX';
+        const domain = urlParams.get('domain') || registrationData?.domain || 'tenant.pp.ia';
+
+        // Inyectar ID en el DOM
+        document.getElementById('companyIdDisplay').textContent = companyID;
+        document.getElementById('bankConcept').textContent = companyID;
+
+        // 3. ADAPTAR CONTENIDO SEGÚN EL PLAN
+        if (selectedPlan === 'enterprise') {
+            document.getElementById('summaryPlanName').textContent = 'Plan Enterprise';
+            document.getElementById('summaryPlanPrice').innerHTML = 'Custom <span>/mes</span>';
+            document.getElementById('summaryTotal').textContent = 'A cotizar';
+            document.getElementById('summaryFeatures').innerHTML = `
+                <li><i class="fas fa-check"></i> Usuarios ilimitados</li>
+                <li><i class="fas fa-check"></i> Infraestructura dedicada</li>
+                <li><i class="fas fa-check"></i> SLA garantizado 99.9%</li>
+                <li><i class="fas fa-check"></i> Gerente de cuenta asignado</li>
+                <li><i class="fas fa-check"></i> Auditoría blockchain avanzada</li>
+            `;
+            switchPaymentMethod('bank', document.getElementById('tabBank'));
+        } else if (selectedPlan === 'startup') {
+            document.getElementById('summaryPlanName').textContent = 'Plan Startup';
+            document.getElementById('summaryPlanPrice').innerHTML = '$0 <span>/mes</span>';
+            document.getElementById('summaryTotal').textContent = '$0.00 USD';
+            document.getElementById('summaryFeatures').innerHTML = `
+                <li><i class="fas fa-check"></i> Hasta 5 usuarios activos</li>
+                <li><i class="fas fa-check"></i> 3 bots básicos</li>
+                <li><i class="fas fa-check"></i> Soporte por comunidad</li>
+                <li><i class="fas fa-check"></i> Prueba gratuita de 15 días</li>
+            `;
+        } else {
+            document.getElementById('summaryPlanName').textContent = 'Plan Business';
+            document.getElementById('summaryPlanPrice').innerHTML = '$49 <span>/mes</span>';
+            document.getElementById('summaryTotal').textContent = '$49.00 USD';
+        }
+
+        if (domain && domain !== 'tenant.pp.ia') {
+            document.getElementById('summaryPlanName').textContent += ` · ${domain}`;
+        }
+
+        // 4. CAMBIAR MÉTODO DE PAGO
+        function switchPaymentMethod(method, btn) {
+            document.querySelectorAll('.payment-tab').forEach(t => t.classList.remove('active'));
+            btn.classList.add('active');
+            
+            document.querySelectorAll('.form-section').forEach(s => s.classList.remove('active'));
+            document.getElementById('method-' + method).classList.add('active');
+        }
+
+        // 5. COPIAR ID DE EMPRESA
+        function copyCompanyId() {
+            navigator.clipboard.writeText(companyID).then(() => {
+                const btn = document.querySelector('.copy-id-btn');
+                const originalHTML = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-check" style="color: var(--green);"></i>';
+                setTimeout(() => { btn.innerHTML = originalHTML; }, 2000);
+            });
+        }
+
+        // 6. SIMULAR PROCESAMIENTO DE PAGO
+        function processPayment() {
+            const btn = document.querySelector('#method-card .btn-pay');
+            const originalText = btn.innerHTML;
+            
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Procesando pago seguro...';
+            
+            setTimeout(() => {
+                btn.innerHTML = '<i class="fas fa-check"></i> ¡Pago Exitoso! Redirigiendo...';
+                btn.style.background = 'var(--green)';
+                
+                setTimeout(() => {
+                    window.location.href = `login.html?tenant=${encodeURIComponent(domain)}&welcome=1`;
+                }, 1500);
+            }, 2500);
+        }
+
+        function processBankPayment() {
+            const btn = document.querySelector('#method-bank .btn-pay');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Enviando solicitud...';
+            
+            setTimeout(() => {
+                btn.innerHTML = '<i class="fas fa-check"></i> ¡Solicitud Enviada!';
+                btn.style.background = 'var(--green)';
+                window.location.href = `login.html?tenant=${encodeURIComponent(domain)}&welcome=1`;
+            }, 2000);
+        }
+
+        // Formato básico de tarjeta (solo visual)
+        document.querySelector('input[placeholder="0000 0000 0000 0000"]')?.addEventListener('input', function (e) {
+            e.target.value = e.target.value.replace(/\D/g, '').replace(/(.{4})/g, '$1 ').trim();
+        });
+    </script>
+</body>
+</html>

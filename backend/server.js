@@ -57,7 +57,7 @@ app.use(helmet({
       "style-src-attr": ["'self'", "'unsafe-inline'"],
       "style-src-elem": ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://cdnjs.cloudflare.com"],
       "font-src": ["'self'", "https://fonts.gstatic.com", "https://cdnjs.cloudflare.com"],
-      "img-src": ["'self'", "data:", "https://images.unsplash.com"],
+      "img-src": ["'self'", "data:", "blob:", "https://images.unsplash.com"],
       "connect-src": [
         "'self'",
         "https://fonts.googleapis.com",
@@ -957,7 +957,9 @@ app.post('/api/registro', async (req, res) => {
     const {
       empresaNombre, empresaCodigo, dominioWorkspace, landPage,
       empresaSize, sise, empresaSector, empresaCountry, zonaHoraria,
-      usuarioNombre, usuarioApellido, email, cargo, area,
+      logoUrl, bannerUrl,
+      usuarioNombre, usuarioApellido, email, cargo, area, areaRol,
+      perfilFotoUrl, perfilBannerUrl,
       password, dosFaActivo, dosFaSecret, dosFaBackupCodes, terminosAceptados,
       plan
     } = req.body;
@@ -987,6 +989,8 @@ app.post('/api/registro', async (req, res) => {
       pais: empresaCountry || null,
       zona_horaria: zonaHoraria || null,
       plan: plan || 'startup',
+      logo_url: logoUrl || null,
+      banner_url: bannerUrl || null,
       status: 'active',
       Status: 'active',
       estado: 'active',
@@ -1022,8 +1026,11 @@ app.post('/api/registro', async (req, res) => {
       apellido: usuarioApellido,
       email: emailNorm,
       cargo: cargo || null,
-      area: area || 'Administración',
-      rol: 'administrador',
+      area: area || 'Sin asignar',
+      area_rol: areaRol || 'administrador',
+      rol: 'owner',
+      foto_perfil_url: perfilFotoUrl || null,
+      banner_perfil_url: perfilBannerUrl || null,
       password: passwordHash,
       dosfa_activo: dosFaActivo || false,
       dosfa_secret: dosFaSecret || null,
@@ -2061,6 +2068,47 @@ app.delete('/api/users/:id', authenticate, async (req, res) => {
     res.json({ message: 'Usuario eliminado exitosamente' });
   } catch (error) {
     return handleServerError(res, error);
+  }
+});
+
+// ═══ SUBIDA DE IMÁGENES ═══
+const UPLOADS_DIR = path.join(__dirname, '..', 'uploads');
+if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+app.use('/uploads', express.static(UPLOADS_DIR));
+
+app.post('/api/upload', (req, res) => {
+  try {
+    const { file, folder, filename } = req.body;
+    if (!file) return res.status(400).json({ error: 'No se envió ningún archivo' });
+
+    const match = file.match(/^data:image\/(\w+);base64,(.+)$/);
+    if (!match) return res.status(400).json({ error: 'Formato de imagen inválido' });
+
+    const ext = match[1] === 'jpeg' ? 'jpg' : match[1];
+    const base64Data = match[2];
+    const buffer = Buffer.from(base64Data, 'base64');
+
+    if (buffer.length > 5 * 1024 * 1024) {
+      return res.status(400).json({ error: 'La imagen no debe superar 5MB' });
+    }
+
+    const subDir = folder || 'general';
+    const dirPath = path.join(UPLOADS_DIR, subDir);
+    if (!fs.existsSync(dirPath)) fs.mkdirSync(dirPath, { recursive: true });
+
+    const safeName = (filename || `img_${Date.now()}`).replace(/[^a-zA-Z0-9_-]/g, '_');
+    const fileName = `${safeName}_${Date.now()}.${ext}`;
+    const filePath = path.join(dirPath, fileName);
+
+    fs.writeFileSync(filePath, buffer);
+
+    const baseUrl = req.protocol + '://' + req.get('host');
+    const fileUrl = `${baseUrl}/uploads/${subDir}/${fileName}`;
+
+    res.json({ url: fileUrl, path: `/uploads/${subDir}/${fileName}`, size: buffer.length });
+  } catch (error) {
+    console.error('[UPLOAD] Error:', error.message);
+    res.status(500).json({ error: 'Error al subir archivo' });
   }
 });
 

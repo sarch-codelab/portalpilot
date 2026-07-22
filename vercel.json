@@ -3,12 +3,7 @@
   "builds": [
     {
       "src": "backend/server.js",
-      "use": "@vercel/node",
-      "config": {
-        "includeFiles": [
-          "backend/supabaseClient.js"
-        ]
-      }
+      "use": "@vercel/node"
     }
   ],
   "routes": [

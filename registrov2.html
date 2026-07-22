@@ -1285,6 +1285,14 @@
         };
 
         // ─── FINALIZAR ───
+        window.goToDashboard = function () {
+            const dominio = document.getElementById('regDominio')?.value?.trim().toLowerCase() || '';
+            const savedData = localStorage.getItem(REGISTRATION_STORAGE_KEY);
+            const data = savedData ? JSON.parse(savedData) : null;
+            const domain = data?.domain || `${dominio}.pp.ia`;
+            window.location.href = `login.html?tenant=${encodeURIComponent(domain)}&welcome=1`;
+        };
+
         window.finalizeRegistration = async function () { 
             if (!document.getElementById('acceptTerms').checked) { showMessage('Debes aceptar los términos', 'error'); return; }
             if (getOTPValue('emailOtpGroup').length !== 6) { showMessage('Ingresa el código de verificación completo', 'error'); return; }
@@ -1366,7 +1374,16 @@
 
                 regStep = 8; updateProgress();
                 showMessage('¡Tenant creado exitosamente!', 'success');
-                window.location.href = `pay_plan.html?plan=${encodeURIComponent(plan)}&companyId=${encodeURIComponent(empresaCodigo)}&domain=${encodeURIComponent(`${dominio}.pp.ia`)}`;
+
+                if (plan === 'startup') {
+                    setTimeout(function() {
+                        window.location.href = `login.html?tenant=${encodeURIComponent(`${dominio}.pp.ia`)}&welcome=1`;
+                    }, 4000);
+                } else {
+                    setTimeout(function() {
+                        window.location.href = `pay_plan.html?plan=${encodeURIComponent(plan)}&companyId=${encodeURIComponent(empresaCodigo)}&domain=${encodeURIComponent(`${dominio}.pp.ia`)}`;
+                    }, 4000);
+                }
             } catch (err) {
                 console.error(err);
                 showMessage(err.message || 'No se pudo completar el registro', 'error');

@@ -250,6 +250,7 @@
     body.light-mode .modal { background: #fff; }
     body.light-mode .toggle-btn { background: #fff; border-color: var(--border); color: var(--gray2); }
   </style>
+<link rel="stylesheet" href="../css/notifications.css">
 </head>
 <body>
 
@@ -792,14 +793,6 @@
         btn.disabled = false;
       }
     }
-    function showMessage(text, type) {
-      // Simple toast notification
-      const toast = document.createElement('div');
-      toast.style.cssText = `position:fixed;top:80px;right:24px;padding:12px 20px;border-radius:8px;background:${type==='error'?'rgba(248,113,113,0.15)':'rgba(52,211,153,0.15)'};border:1px solid ${type==='error'?'rgba(248,113,113,0.3)':'rgba(52,211,153,0.3)'};color:${type==='error'?'var(--red)':'var(--green)'};font-size:13px;z-index:9999;animation:slideDown .3s ease;`;
-      toast.innerHTML = `<i class="fas fa-${type==='error'?'exclamation-circle':'check-circle'}"></i> ${text}`;
-      document.body.appendChild(toast);
-      setTimeout(() => { toast.style.opacity='0'; toast.style.transform='translateY(-10px)'; setTimeout(()=>toast.remove(),300); }, 3000);
-    }
 
     // ── Modal Functions ──────────────
     function openModal(id) { document.getElementById(id).classList.add('active'); }
@@ -952,6 +945,7 @@
       document.querySelectorAll('.field input, .field select, .field textarea').forEach(el => el.disabled = true);
     });
   </script>
+<script src="../js/notifications.js"></script>
 <script src="../js/sidebar-loader.js"></script>
 <script>
 (function() {

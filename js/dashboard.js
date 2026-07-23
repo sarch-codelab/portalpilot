@@ -136,26 +136,6 @@ modalConfirm.addEventListener('click', () => {
 });
 logoutModal.addEventListener('click', e => { if (e.target === logoutModal) logoutModal.classList.remove('active'); });
 
-// ── Toast System ────
-function showToast(title, message, type = 'info') {
-  const existing = document.querySelector('.toast');
-  if (existing) existing.remove();
-  const toast = document.createElement('div');
-  toast.className = 'toast';
-  toast.innerHTML = `
-    <div class="toast-icon ${type}"><i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-info-circle'}"></i></div>
-    <div class="toast-content">
-      <div class="toast-title">${title}</div>
-      <div class="toast-message">${message}</div>
-    </div>`;
-  document.body.appendChild(toast);
-  setTimeout(() => toast.classList.add('active'), 10);
-  setTimeout(() => {
-    toast.classList.remove('active');
-    setTimeout(() => toast.remove(), 300);
-  }, 3000);
-}
-
 // ── Modals Helpers ────
 function setupModal(btnId, modalId, closeId) {
   const btn = document.getElementById(btnId);

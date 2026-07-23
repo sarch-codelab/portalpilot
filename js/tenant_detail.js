@@ -54,32 +54,6 @@ if (!isTouchDevice) {
     }, { passive: true });
 }
 
-// ── Toast Notification System ──────────────────────
-function showToast(message, type = 'success') {
-    const container = document.getElementById('toastContainer');
-    if (!container) return;
-
-    const toast = document.createElement('div');
-    toast.className = `toast ${type}`;
-
-    const icons = {
-        success: 'fa-check-circle',
-        error: 'fa-times-circle',
-        info: 'fa-info-circle'
-    };
-
-    toast.innerHTML = `
-        <i class="fas ${icons[type] || icons.info}"></i>
-        <div class="toast-message">${message}</div>
-    `;
-
-    container.appendChild(toast);
-
-    setTimeout(() => {
-        toast.remove();
-    }, 3000);
-}
-
 // ── Scroll Progress (OPTIMIZADO con throttle) ──────
 let lastScrollTime = 0;
 window.addEventListener('scroll', () => {

@@ -160,19 +160,6 @@ logoutModal.addEventListener('click', (e) => {
   }
 });
 
-// ── Utilities ────────────────────
-function showMessage(text, type = 'success') {
-  const toast = document.createElement('div');
-  toast.style.cssText = `position:fixed;top:80px;right:24px;padding:12px 18px;border-radius:10px;background:${type === 'error' ? 'rgba(248,113,113,0.18)' : type === 'warning' ? 'rgba(251,191,36,0.18)' : 'rgba(52,211,153,0.18)'};border:1px solid ${type === 'error' ? 'rgba(248,113,113,0.35)' : type === 'warning' ? 'rgba(251,191,36,0.35)' : 'rgba(52,211,153,0.35)'};color:${type === 'error' ? '#f87171' : type === 'warning' ? '#fbbf24' : '#34d399'};font-size:13px;backdrop-filter: blur(8px);box-shadow:0 18px 60px rgba(0,0,0,0.18);z-index:9999;transition:opacity .3s ease,transform .3s ease;`;
-  toast.innerHTML = `<i class="fas fa-${type === 'error' ? 'exclamation-circle' : type === 'warning' ? 'exclamation-triangle' : 'check-circle'}"></i> ${text}`;
-  document.body.appendChild(toast);
-  setTimeout(() => {
-    toast.style.opacity = '0';
-    toast.style.transform = 'translateY(-12px)';
-    setTimeout(() => toast.remove(), 300);
-  }, 3500);
-}
-
 // Debug: Mostrar información del usuario ROOT
 function debugUserInfo() {
   const token = localStorage.getItem('token');

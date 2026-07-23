@@ -1410,6 +1410,7 @@
       }
     }
   </style>
+  <link rel="stylesheet" href="../css/notifications.css">
 </head>
 
 <body>
@@ -2004,11 +2005,7 @@
     function deletePromo(code) { if (confirm(`¿Eliminar "${code}"?`)) { const i = promoCodes.findIndex(p => p.code === code); if (i !== -1) { promoCodes.splice(i, 1); showToast(`✓ "${code}" eliminado`, 'success'); updatePromoStats(); } } }
 
     // ── Utilities ────────────────────────────────────────
-    function showToast(msg, type = 'info') {
-      const t = document.createElement('div'); t.className = `toast ${type}`;
-      t.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>${msg}`;
-      document.body.appendChild(t); setTimeout(() => { t.style.animation = 'slideOut .3s ease'; setTimeout(() => t.remove(), 300); }, 3000);
-    }
+
     function exportBilling() { showToast('✓ Generando reporte...', 'info'); setTimeout(() => showToast('✓ Reporte descargado', 'success'), 1500); }
 
     // ── Init ─────────────────────────────────────────────
@@ -2024,6 +2021,7 @@
       if (e.key === 's' && e.ctrlKey) { e.preventDefault(); if (editedPlans.size > 0) saveAllChanges(); }
     });
   </script>
+  <script src="../js/notifications.js"></script>
   <script src="../js/sidebar-loader.js"></script>
 </body>
 

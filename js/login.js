@@ -222,11 +222,6 @@ function actualizarContador() {
   }
 }
 
-function showMessage(text, type) {
-  const tipoValido = ['error', 'success', 'info', 'warning'].includes(type) ? type : 'info';
-  crearNotificacion(text, tipoValido);
-}
-
 /* ═══════════════════════════════════════════════════════════════
    LÓGICA DEL LOGIN
    ═══════════════════════════════════════════════════════════════ */

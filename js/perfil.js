@@ -44,20 +44,6 @@ if (!isTouchDevice) {
     }, { passive: true });
 }
 
-// ── Toast Notification System ──────────────────────
-function showToast(message, type = 'success') {
-    const toast = document.createElement('div');
-    toast.className = `toast ${type}`;
-    const icons = { success: 'fa-check-circle', error: 'fa-times-circle', info: 'fa-info-circle' };
-    toast.innerHTML = `<i class="fas ${icons[type]}"></i><span>${message}</span>`;
-    document.body.appendChild(toast);
-    setTimeout(() => {
-        toast.style.opacity = '0';
-        toast.style.transform = 'translateY(-10px)';
-        setTimeout(() => toast.remove(), 300);
-    }, 3000);
-}
-
 // ── Scroll Progress ────────────────────────────────
 let lastScrollTime = 0;
 window.addEventListener('scroll', () => {

@@ -44,25 +44,6 @@ if (!isTouchDevice) {
     }, { passive: true });
 }
 
-// ── Toast Notification System ──────────────────────
-function showToast(message, type = 'success') {
-    const container = document.getElementById('toastContainer');
-    if (!container) {
-        const toast = document.createElement('div');
-        toast.style.cssText = `position:fixed;top:80px;right:24px;padding:12px 18px;border-radius:10px;background:${type === 'error' ? 'rgba(248,113,113,0.18)' : type === 'warning' ? 'rgba(251,191,36,0.18)' : 'rgba(52,211,153,0.18)'};border:1px solid ${type === 'error' ? 'rgba(248,113,113,0.35)' : type === 'warning' ? 'rgba(251,191,36,0.35)' : 'rgba(52,211,153,0.35)'};color:${type === 'error' ? 'var(--red)' : type === 'warning' ? 'var(--yellow)' : 'var(--green)'};font-size:13px;backdrop-filter: blur(8px);box-shadow:0 18px 60px rgba(0,0,0,0.18);z-index:9999;transition:opacity .3s ease,transform .3s ease;`;
-        toast.innerHTML = `<i class="fas fa-${type === 'error' ? 'exclamation-circle' : type === 'warning' ? 'exclamation-triangle' : 'check-circle'}"></i> ${message}`;
-        document.body.appendChild(toast);
-        setTimeout(() => { toast.style.opacity = '0'; toast.style.transform = 'translateY(-12px)'; setTimeout(() => toast.remove(), 300); }, 3500);
-    } else {
-        const toast = document.createElement('div');
-        toast.className = `toast ${type}`;
-        const icons = { success: 'fa-check-circle', error: 'fa-times-circle', info: 'fa-info-circle' };
-        toast.innerHTML = `<i class="fas ${icons[type]}"></i><div class="toast-message">${message}</div>`;
-        container.appendChild(toast);
-        setTimeout(() => toast.remove(), 3000);
-    }
-}
-
 // ── Scroll Progress ────────────────────────────────
 let lastScrollTime = 0;
 window.addEventListener('scroll', () => {

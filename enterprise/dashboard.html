@@ -102,6 +102,7 @@ a{text-decoration:none;color:inherit}ul{list-style:none}img{max-width:100%;displ
 @media(max-width:1200px){.dash-grid{grid-template-columns:repeat(2,1fr)}.chart-card{grid-column:span 2}}
 @media(max-width:900px){.dashboard{grid-template-columns:1fr}.sidebar{display:none}.dash-grid{grid-template-columns:1fr}.chart-card{grid-column:span 1}}
 </style>
+<link rel="stylesheet" href="../css/notifications.css">
 </head>
 <body>
 <div id="cursor-dot"></div><div id="cursor-ring"></div><div id="cursor-glow"></div>
@@ -283,16 +284,11 @@ function setPeriod(p,btn){
   showToast('📊 Datos actualizados: '+p);
 }
 
-function showToast(msg){
-  const t=document.createElement('div');
-  t.style.cssText='position:fixed;bottom:24px;right:24px;background:#0e0e1c;border:1px solid rgba(139,92,246,0.2);border-radius:10px;padding:14px 20px;font-size:13px;color:#fff;z-index:9999;animation:slideIn .3s';
-  t.textContent=msg;document.body.appendChild(t);
-  setTimeout(()=>{t.style.animation='slideOut .3s';setTimeout(()=>t.remove(),300)},3000);
-}
 
 window.addEventListener('load',initCharts);
 
 </script>
+<script src="../js/notifications.js"></script>
 <script src="../js/sidebar-loader.js"></script>
 </body>
 </html>

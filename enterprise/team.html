@@ -209,6 +209,7 @@ a{text-decoration:none;color:inherit}ul{list-style:none}img{max-width:100%;displ
 /* ─── SIDEBAR TOGGLE ────────────────────────────────── */
 .sidebar-toggle{display:none;position:fixed;top:16px;left:16px;z-index:60;width:40px;height:40px;border-radius:50%;background:var(--card);border:1px solid var(--border);align-items:center;justify-content:center;color:var(--white);font-size:16px}
 </style>
+<link rel="stylesheet" href="../css/notifications.css">
 </head>
 <body>
 
@@ -687,14 +688,6 @@ function updateStats(){
 function openModal(id){document.getElementById(id).classList.add('active')}
 function closeModal(id){document.getElementById(id).classList.remove('active')}
 
-// ── Toast ────────────────────────────────────────────
-function showToast(msg,type='success'){
-  const t=document.createElement('div');t.className='toast '+type;
-  t.innerHTML='<i class="fas fa-'+(type==='success'?'check-circle':type==='warning'?'exclamation-triangle':'exclamation-circle')+'"></i>'+msg;
-  document.body.appendChild(t);
-  setTimeout(()=>{t.style.animation='slideOut .3s ease';setTimeout(()=>t.remove(),300)},3000);
-}
-
 // ── Export ───────────────────────────────────────────
 function exportTeam(){
   let csv='Nombre,Email,Rol,Departamento,Estado,Última Conexión\n';
@@ -717,6 +710,7 @@ document.addEventListener('keydown',e=>{
   if(e.key==='n'&&e.ctrlKey){e.preventDefault();openModal('addMemberModal')}
 });
 </script>
+<script src="../js/notifications.js"></script>
 <script src="../js/sidebar-loader.js"></script>
 <script src="../auth-check.js"></script>
 </body>

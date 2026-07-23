@@ -12,8 +12,10 @@
   async function fetchPlan() {
     const token = localStorage.getItem('token');
     const empresaCodigo = localStorage.getItem('empresaCodigo');
-    if (!token || !empresaCodigo || empresaCodigo === 'ROOT') {
-      return 'enterprise'; // ROOT gets everything
+    const userRole = (localStorage.getItem('userRole') || '').toLowerCase();
+    // Owner/Root always gets everything
+    if (!token || !empresaCodigo || empresaCodigo === 'ROOT' || userRole.includes('root') || userRole === 'owner') {
+      return 'enterprise';
     }
     try {
       const res = await fetch('../api/tenants', {

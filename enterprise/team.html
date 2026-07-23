@@ -209,6 +209,29 @@ a{text-decoration:none;color:inherit}ul{list-style:none}img{max-width:100%;displ
 
 /* ─── SIDEBAR TOGGLE ────────────────────────────────── */
 .sidebar-toggle{display:none;position:fixed;top:16px;left:16px;z-index:60;width:40px;height:40px;border-radius:50%;background:var(--card);border:1px solid var(--border);align-items:center;justify-content:center;color:var(--white);font-size:16px}
+
+/* ─── SKELETON LOADING ──────────────────────────────── */
+@keyframes shimmer{0%{background-position:-400px 0}100%{background-position:400px 0}}
+.skeleton{background:linear-gradient(90deg,var(--card2) 25%,rgba(139,92,246,0.06) 50%,var(--card2) 75%);background-size:800px 100%;animation:shimmer 1.5s infinite;border-radius:8px}
+.skeleton-text{height:14px;margin-bottom:8px}
+.skeleton-text.sm{width:60%}
+.skeleton-text.xs{width:40%}
+.skeleton-avatar{width:36px;height:36px;border-radius:10px;flex-shrink:0}
+.skeleton-badge{width:70px;height:24px;border-radius:20px}
+.skeleton-row{display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--border)}
+.skeleton-row .skeleton-col{flex:1;display:flex;flex-direction:column;gap:6px}
+.skeleton-stat{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px 20px;display:flex;align-items:center;gap:14px}
+.skeleton-stat-icon{width:44px;height:44px;border-radius:12px;flex-shrink:0}
+.skeleton-stat-info{flex:1;display:flex;flex-direction:column;gap:8px}
+.skeleton-stat-value{height:22px;width:80px}
+.skeleton-stat-label{height:12px;width:60px}
+.locked-overlay{position:relative}
+.locked-overlay::after{content:'';position:absolute;inset:0;background:rgba(4,4,10,0.6);backdrop-filter:blur(3px);border-radius:inherit;z-index:2}
+.lock-badge{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:3;background:var(--card);border:1px solid var(--border2);border-radius:var(--radius);padding:12px 20px;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,0.5)}
+.lock-badge i{font-size:24px;color:var(--accent);display:block;margin-bottom:8px}
+.lock-badge .lock-title{font-size:13px;font-weight:700;color:var(--white);margin-bottom:4px}
+.lock-badge .lock-desc{font-size:11px;color:var(--gray);margin-bottom:10px}
+.lock-badge .btn{font-size:11px;padding:6px 14px}
 </style>
 <link rel="stylesheet" href="../css/notifications.css">
 </head>
@@ -357,10 +380,10 @@ a{text-decoration:none;color:inherit}ul{list-style:none}img{max-width:100%;displ
     <div class="sidebar-logo"><div class="logo-icon"><i class="fas fa-robot"></i></div>PORTAL PILOT</div>
     <nav class="sidebar-nav">
       <a href="dashboard.html" class="sidebar-link"><i class="fas fa-home"></i> <span>Dashboard</span></a>
-      <a href="team.html" class="sidebar-link active"><i class="fas fa-users"></i> <span>Equipo</span></a>
-      <a href="fleet.html" class="sidebar-link"><i class="fas fa-truck"></i> <span>Flota</span></a>
-      <a href="automation.html" class="sidebar-link"><i class="fas fa-robot"></i> <span>Bots RPA</span></a>
-      <a href="security.html" class="sidebar-link"><i class="fas fa-shield-alt"></i> <span>Auditoría</span></a>
+      <a href="team.html" class="sidebar-link active" data-min-plan="business"><i class="fas fa-users"></i> <span>Equipo</span></a>
+      <a href="fleet.html" class="sidebar-link" data-min-plan="enterprise"><i class="fas fa-truck"></i> <span>Flota</span></a>
+      <a href="automation.html" class="sidebar-link" data-min-plan="enterprise"><i class="fas fa-robot"></i> <span>Bots RPA</span></a>
+      <a href="security.html" class="sidebar-link" data-min-plan="business"><i class="fas fa-shield-alt"></i> <span>Auditoría</span></a>
     </nav>
     <div class="sidebar-footer">
       <a href="#" class="sidebar-link"><i class="fas fa-question-circle"></i> Ayuda</a>
@@ -460,9 +483,7 @@ a{text-decoration:none;color:inherit}ul{list-style:none}img{max-width:100%;displ
         <thead>
           <tr><th>Miembro</th><th>Rol</th><th>Departamento</th><th>Estado</th><th>Última Conexión</th><th>Acciones</th></tr>
         </thead>
-        <tbody id="teamTableBody">
-          <!-- Populated by JS -->
-        </tbody>
+        <tbody id="teamTableBody"><tr><td colspan="6" style="padding:0"><div id="tableSkeleton"></div></td></tr></tbody>
       </table>
     </div>
 
@@ -515,6 +536,7 @@ const roleNames = {owner:'Owner',admin:'Admin',hr:'RRHH',employee:'Empleado',use
 // ── Load from API ──────────────────────────────────
 async function loadTeam() {
   try {
+    document.getElementById('tableSkeleton').innerHTML='<div class="skeleton-row"><div class="skeleton skeleton-avatar"></div><div class="skeleton-col"><div class="skeleton skeleton-text" style="width:50%"></div><div class="skeleton skeleton-text xs"></div></div></div><div class="skeleton-row"><div class="skeleton skeleton-avatar"></div><div class="skeleton-col"><div class="skeleton skeleton-text" style="width:65%"></div><div class="skeleton skeleton-text xs"></div></div></div><div class="skeleton-row"><div class="skeleton skeleton-avatar"></div><div class="skeleton-col"><div class="skeleton skeleton-text" style="width:45%"></div><div class="skeleton skeleton-text xs"></div></div></div><div class="skeleton-row"><div class="skeleton skeleton-avatar"></div><div class="skeleton-col"><div class="skeleton skeleton-text" style="width:55%"></div><div class="skeleton skeleton-text xs"></div></div></div><div class="skeleton-row"><div class="skeleton skeleton-avatar"></div><div class="skeleton-col"><div class="skeleton skeleton-text" style="width:40%"></div><div class="skeleton skeleton-text xs"></div></div></div>';
     const url = empresaCodigo && empresaCodigo !== 'ROOT'
       ? `${API_BASE}/users?empresa=${encodeURIComponent(empresaCodigo)}`
       : `${API_BASE}/users`;
@@ -815,6 +837,7 @@ document.addEventListener('keydown', e => {
 });
 </script>
 <script src="../js/notifications.js"></script>
+<script src="../js/plan-gate.js"></script>
 <script src="../js/sidebar-loader.js"></script>
 <script src="../auth-check.js"></script>
 </body>

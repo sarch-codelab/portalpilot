@@ -212,6 +212,22 @@ a{text-decoration:none;color:inherit}ul{list-style:none}img{max-width:100%;displ
 
 /* ─── SIDEBAR TOGGLE ────────────────────────────────── */
 .sidebar-toggle{display:none;position:fixed;top:16px;left:16px;z-index:60;width:40px;height:40px;border-radius:50%;background:var(--card);border:1px solid var(--border);align-items:center;justify-content:center;color:var(--white);font-size:16px}
+@keyframes shimmer{0%{background-position:-400px 0}100%{background-position:400px 0}}
+.skeleton{background:linear-gradient(90deg,var(--card2) 25%,rgba(139,92,246,0.06) 50%,var(--card2) 75%);background-size:800px 100%;animation:shimmer 1.5s infinite;border-radius:8px}
+.skeleton-text{height:14px;margin-bottom:8px}
+.skeleton-text.sm{width:60%}
+.skeleton-text.xs{width:40%}
+.skeleton-avatar{width:36px;height:36px;border-radius:10px;flex-shrink:0}
+.skeleton-badge{width:70px;height:24px;border-radius:20px}
+.skeleton-row{display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--border)}
+.skeleton-row .skeleton-col{flex:1;display:flex;flex-direction:column;gap:6px}
+.skeleton-stat{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px 20px;display:flex;align-items:center;gap:14px}
+.skeleton-stat-icon{width:44px;height:44px;border-radius:12px;flex-shrink:0}
+.skeleton-stat-info{flex:1;display:flex;flex-direction:column;gap:8px}
+.skeleton-stat-value{height:22px;width:80px}
+.skeleton-stat-label{height:12px;width:60px}
+.plan-locked{opacity:.45;pointer-events:none;position:relative}
+.plan-locked::after{content:'\f023';font-family:'Font Awesome 6 Free';font-weight:900;position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:11px;color:#fbbf24}
 </style>
 <link rel="stylesheet" href="../css/notifications.css">
 </head>
@@ -284,10 +300,10 @@ a{text-decoration:none;color:inherit}ul{list-style:none}img{max-width:100%;displ
     <div class="sidebar-logo"><div class="logo-icon"><i class="fas fa-robot"></i></div>PORTAL PILOT</div>
     <nav class="sidebar-nav">
       <a href="dashboard.html" class="sidebar-link"><i class="fas fa-home"></i> <span>Dashboard</span></a>
-      <a href="team.html" class="sidebar-link"><i class="fas fa-users"></i> <span>Equipo</span></a>
-      <a href="fleet.html" class="sidebar-link"><i class="fas fa-truck"></i> <span>Flota</span></a>
-      <a href="automation.html" class="sidebar-link active"><i class="fas fa-robot"></i> <span>Bots RPA</span></a>
-      <a href="security.html" class="sidebar-link"><i class="fas fa-shield-alt"></i> <span>Auditoría</span></a>
+                <a href="team.html" class="sidebar-link" data-min-plan="business"><i class="fas fa-users"></i> <span>Equipo</span></a>
+                <a href="fleet.html" class="sidebar-link" data-min-plan="enterprise"><i class="fas fa-truck"></i> <span>Flota</span></a>
+                <a href="automation.html" class="sidebar-link active" data-min-plan="enterprise"><i class="fas fa-robot"></i> <span>Bots RPA</span></a>
+                <a href="security.html" class="sidebar-link" data-min-plan="business"><i class="fas fa-shield-alt"></i> <span>Auditoría</span></a>
     </nav>
     <div class="sidebar-footer">
       <a href="#" class="sidebar-link"><i class="fas fa-question-circle"></i> Ayuda</a>
@@ -320,6 +336,12 @@ a{text-decoration:none;color:inherit}ul{list-style:none}img{max-width:100%;displ
     </div>
 
     <!-- METRICS BAR -->
+    <div id="metricsSkeleton" data-skeleton style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px">
+      <div class="skeleton" style="height:72px;border-radius:12px"></div>
+      <div class="skeleton" style="height:72px;border-radius:12px"></div>
+      <div class="skeleton" style="height:72px;border-radius:12px"></div>
+      <div class="skeleton" style="height:72px;border-radius:12px"></div>
+    </div>
     <div class="metrics-bar">
       <div class="metric-card reveal">
         <div class="metric-icon purple"><i class="fas fa-robot"></i></div>
@@ -616,6 +638,7 @@ document.addEventListener('keydown',e=>{
 });
 </script>
 <script src="../js/notifications.js"></script>
+<script src="../js/plan-gate.js"></script>
 <script src="../js/sidebar-loader.js"></script>
 <script src="../auth-check.js"></script>
 </body>

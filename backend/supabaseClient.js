@@ -138,7 +138,24 @@ if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
     }
   };
 
-  supabase = { from, auth: authClient };
+  const storageClient = {
+    async upload(bucket, filePath, fileBuffer, contentType) {
+      const url = `${SUPABASE_URL}/storage/v1/object/${bucket}/${filePath}`;
+      const headers = {
+        apikey: SUPABASE_SERVICE_KEY,
+        Authorization: `Bearer ${SUPABASE_SERVICE_KEY}`,
+        'Content-Type': contentType,
+        'x-upsert': 'true'
+      };
+      const resp = await axios.put(url, fileBuffer, { headers, maxBodyLength: Infinity, maxContentLength: Infinity });
+      return { data: { path: resp.data.Key || filePath }, error: null };
+    },
+    getPublicUrl(bucket, filePath) {
+      return `${SUPABASE_URL}/storage/v1/object/public/${bucket}/${filePath}`;
+    }
+  };
+
+  supabase = { from, auth: authClient, storage: storageClient };
   console.log(`[SUPABASE] Cliente HTTP inicializado (${SUPABASE_URL.substring(0, 30)}...)`);
 }
 

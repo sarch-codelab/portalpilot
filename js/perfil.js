@@ -1,4 +1,8 @@
-﻿// ── Custom Cursor (OPTIMIZADO) ─────────────────────
+﻿// ── API Config ─────────────────────────────────────
+const _isLocalhost = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+const _API_ROOT = _isLocalhost ? 'https://portal-pilot.vercel.app' : '';
+
+// ── Custom Cursor (OPTIMIZADO) ─────────────────────
 const dot = document.getElementById('cursor-dot');
 const ring = document.getElementById('cursor-ring');
 let mouseX = 0, mouseY = 0;
@@ -210,10 +214,32 @@ async function saveProfile() {
     btn.disabled = true;
 
     try {
-        // Simular API call
-        await new Promise(r => setTimeout(r, 1000));
+        const token = localStorage.getItem('token');
+        const userId = localStorage.getItem('currentAccountId');
+        if (!token || !userId) {
+            showToast('Sesión no válida. Inicia sesión nuevamente.', 'error');
+            return;
+        }
 
-        // Deshabilitar campos
+        const fieldData = {};
+        document.querySelectorAll('.field input, .field select, .field textarea').forEach(el => {
+            if (el.name) fieldData[el.name] = el.value;
+        });
+
+        const res = await fetch(`${_API_ROOT}/api/users/${encodeURIComponent(userId)}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify(fieldData)
+        });
+
+        if (!res.ok) {
+            const data = await res.json().catch(() => ({}));
+            throw new Error(data.error || 'Error del servidor');
+        }
+
+        if (fieldData.nombre) localStorage.setItem('userName', fieldData.nombre);
+        if (fieldData.apellido) localStorage.setItem('userApellido', fieldData.apellido);
+
         document.querySelectorAll('.field input, .field select, .field textarea').forEach(el => {
             el.disabled = true;
             el.classList.remove('editing');
@@ -223,7 +249,7 @@ async function saveProfile() {
         btn.style.display = 'none';
         showToast('✓ Perfil actualizado exitosamente', 'success');
     } catch (err) {
-        showToast('Error al guardar. Intenta de nuevo.', 'error');
+        showToast(err.message || 'Error al guardar. Intenta de nuevo.', 'error');
     } finally {
         btn.innerHTML = orig;
         btn.disabled = false;
@@ -295,27 +321,50 @@ function uploadAvatar() {
         return;
     }
 
-    // Simular upload
-    setTimeout(() => {
-        closeModal('uploadAvatarModal');
-        showToast('✓ Foto de perfil actualizada', 'success');
+    const reader = new FileReader();
+    reader.onload = async function (e) {
+        const base64Data = e.target.result;
+        try {
+            const token = localStorage.getItem('token');
+            const res = await fetch(`${_API_ROOT}/api/upload`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', ...(token ? { 'Authorization': `Bearer ${token}` } : {}) },
+                body: JSON.stringify({ file: base64Data, folder: 'avatars', filename: 'avatar' })
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Error al subir');
 
-        // Update avatar preview
-        const reader = new FileReader();
-        reader.onload = function (e) {
+            const avatarUrl = data.url;
+            localStorage.setItem('userFoto', avatarUrl);
+
             const avatarLarge = document.querySelector('.profile-avatar-large');
             if (avatarLarge) {
-                avatarLarge.innerHTML = `<img src="${e.target.result}" onerror="this.style.display='none';this.parentElement.innerHTML='AS'">`;
+                avatarLarge.innerHTML = `<img src="${avatarUrl}" onerror="this.style.display='none';this.parentElement.innerHTML='AS'">`;
             }
 
             const sidebarAvatar = document.querySelector('.sidebar .avatar');
-            if (sidebarAvatar) sidebarAvatar.src = e.target.result;
-        };
-        reader.readAsDataURL(file);
+            if (sidebarAvatar) {
+                if (sidebarAvatar.tagName === 'IMG') {
+                    sidebarAvatar.src = avatarUrl;
+                } else {
+                    sidebarAvatar.style.backgroundImage = `url(${avatarUrl})`;
+                    sidebarAvatar.style.backgroundSize = 'cover';
+                    sidebarAvatar.style.backgroundPosition = 'center';
+                    sidebarAvatar.style.color = 'transparent';
+                    sidebarAvatar.textContent = '';
+                }
+            }
 
-        document.getElementById('avatarPreview').style.display = 'none';
-        document.getElementById('avatarFile').value = '';
-    }, 800);
+            closeModal('uploadAvatarModal');
+            showToast('✓ Foto de perfil actualizada', 'success');
+        } catch (err) {
+            showToast(err.message || 'Error al subir imagen', 'error');
+        } finally {
+            document.getElementById('avatarPreview').style.display = 'none';
+            document.getElementById('avatarFile').value = '';
+        }
+    };
+    reader.readAsDataURL(file);
 }
 
 // ── Banner Upload ──────────────────────────────────
@@ -341,22 +390,37 @@ function uploadBanner() {
         return;
     }
 
-    setTimeout(() => {
-        closeModal('uploadBannerModal');
-        showToast('✓ Banner actualizado', 'success');
+    const reader = new FileReader();
+    reader.onload = async function (e) {
+        const base64Data = e.target.result;
+        try {
+            const token = localStorage.getItem('token');
+            const res = await fetch(`${_API_ROOT}/api/upload`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', ...(token ? { 'Authorization': `Bearer ${token}` } : {}) },
+                body: JSON.stringify({ file: base64Data, folder: 'banners', filename: 'banner' })
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Error al subir');
 
-        const reader = new FileReader();
-        reader.onload = function (e) {
+            const bannerUrl = data.url;
+            localStorage.setItem('userBanner', bannerUrl);
+
             const banner = document.getElementById('profileBanner');
             if (banner) {
-                banner.style.backgroundImage = `url('${e.target.result}')`;
+                banner.style.backgroundImage = `url('${bannerUrl}')`;
             }
-        };
-        reader.readAsDataURL(file);
 
-        document.getElementById('bannerPreview').style.display = 'none';
-        document.getElementById('bannerFile').value = '';
-    }, 800);
+            closeModal('uploadBannerModal');
+            showToast('✓ Banner actualizado', 'success');
+        } catch (err) {
+            showToast(err.message || 'Error al subir banner', 'error');
+        } finally {
+            document.getElementById('bannerPreview').style.display = 'none';
+            document.getElementById('bannerFile').value = '';
+        }
+    };
+    reader.readAsDataURL(file);
 }
 
 // ── Password Strength & Match ──────────────────────

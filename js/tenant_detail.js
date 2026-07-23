@@ -85,6 +85,12 @@ const overlay = document.getElementById('overlay');
 const dashboard = document.getElementById('dashboard');
 let isMobile = window.innerWidth <= 900;
 
+const savedSidebarState = localStorage.getItem('sidebarCollapsed');
+if (savedSidebarState === 'true' && !isMobile) {
+    sidebar.classList.add('collapsed');
+    dashboard.classList.add('sidebar-collapsed');
+}
+
 function updateLayout() {
     isMobile = window.innerWidth <= 900;
     if (isMobile) {
@@ -118,6 +124,7 @@ toggleBtn.addEventListener('click', () => {
     } else {
         sidebar.classList.toggle('collapsed');
         dashboard.classList.toggle('sidebar-collapsed');
+        localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
     }
 });
 

@@ -90,9 +90,9 @@
 
   function getSwitchTarget(account) {
     if (account.empresa_codigo && account.empresa_codigo.toString().trim().toUpperCase() !== 'ROOT') {
-      return isSubDir ? 'dashboard-amy.html' : 'enterprise/dashboard-amy.html';
+      return isSubDir ? '../enterprise/dashboard.html' : 'enterprise/dashboard.html';
     }
-    return isSubDir ? '../inicio.html' : 'inicio.html';
+    return isSubDir ? '../pp/welcome.html' : 'pp/welcome.html';
   }
 
   function openAccountSwitcher() {
@@ -167,18 +167,28 @@
   }
 
   if (!isEnterprisePage && isEnterpriseUser && !isRootUser) {
-    alert('Acceso restringido: este panel es solo para administradores raíz.');
-    localStorage.clear();
-    window.location.href = loginPath;
+    const overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(4,4,10,0.85);backdrop-filter:blur(10px);z-index:9999999;display:flex;align-items:center;justify-content:center;color:#fff;font-family:sans-serif;';
+    overlay.innerHTML = '<div style="text-align:center;padding:30px;background:#0e0e1c;border:1px solid rgba(139, 92, 246, 0.2);border-radius:18px;max-width:400px;box-shadow:0 10px 40px rgba(0,0,0,0.5);">' +
+      '<div style="font-size:40px;color:#f87171;margin-bottom:15px;"><i class="fas fa-shield-alt"></i></div>' +
+      '<h3 style="margin:0 0 10px 0;font-size:18px;font-weight:700;">Acceso restringido</h3>' +
+      '<p style="margin:0 0 20px 0;font-size:13px;color:#9ca3af;line-height:1.5;">Este panel es solo para administradores raíz.</p>' +
+      '<button onclick="localStorage.clear();window.location.href=\'' + loginPath + '\'" style="padding:10px 24px;border-radius:10px;background:#8b5cf6;color:#fff;font-size:13px;font-weight:600;cursor:pointer;border:none;">Ir al Login</button>' +
+      '</div>';
+    document.body.appendChild(overlay);
     return;
   }
 
-  // Permitir que ROOT acceda a cualquier lado (root pages y enterprise pages)
-  // Solo bloquear usuarios enterprise que intenten acceder a enterprise pages sin ser enterprise user
   if (isEnterprisePage && !isEnterpriseUser && !isRootUser) {
-    alert('Acceso restringido: esta área es solo para administradores de tenant.');
-    localStorage.clear();
-    window.location.href = '/inicio.html';
+    const overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(4,4,10,0.85);backdrop-filter:blur(10px);z-index:9999999;display:flex;align-items:center;justify-content:center;color:#fff;font-family:sans-serif;';
+    overlay.innerHTML = '<div style="text-align:center;padding:30px;background:#0e0e1c;border:1px solid rgba(139, 92, 246, 0.2);border-radius:18px;max-width:400px;box-shadow:0 10px 40px rgba(0,0,0,0.5);">' +
+      '<div style="font-size:40px;color:#f87171;margin-bottom:15px;"><i class="fas fa-building"></i></div>' +
+      '<h3 style="margin:0 0 10px 0;font-size:18px;font-weight:700;">Acceso restringido</h3>' +
+      '<p style="margin:0 0 20px 0;font-size:13px;color:#9ca3af;line-height:1.5;">Esta área es solo para administradores de tenant.</p>' +
+      '<button onclick="window.location.href=\'/pp/welcome.html\'" style="padding:10px 24px;border-radius:10px;background:#8b5cf6;color:#fff;font-size:13px;font-weight:600;cursor:pointer;border:none;">Ir al Panel</button>' +
+      '</div>';
+    document.body.appendChild(overlay);
     return;
   }
   

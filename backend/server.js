@@ -107,6 +107,13 @@ app.use((err, req, res, next) => {
   if (err?.message === 'Origen no permitido por CORS') {
     return res.status(403).json({ error: 'Origen no permitido por CORS.' });
   }
+  if (err?.code === 'LIMIT_FILE_SIZE') {
+    return res.status(413).json({ error: 'El archivo excede el tamaño máximo permitido.' });
+  }
+  if (err?.type === 'entity.too.large') {
+    return res.status(413).json({ error: 'El cuerpo de la solicitud es demasiado grande.' });
+  }
+  console.error('[UNHANDLED ERROR]', err?.message || err);
   next(err);
 });
 
@@ -125,6 +132,24 @@ const recoveryLimiter = rateLimit({
   legacyHeaders: false,
   message: { error: 'Demasiados intentos de recuperación. Intenta de nuevo en 15 minutos.' }
 });
+
+const alertaLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Demasiadas alertas. Intenta de nuevo más tarde.' }
+});
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
 
 function authenticate(req, res, next) {
   const authHeader = req.headers['authorization'];
@@ -225,10 +250,13 @@ function generateVerificationCode(length = 6) {
 const PORT = process.env.PORT || 5173;
 const NOCODB_URL = process.env.NOCODB_URL || 'https://app.nocodb.com';
 const API_TOKEN = process.env.NOCODB_API_TOKEN || process.env.NOCODB_API_KEY || '';
-const JWT_SECRET = process.env.JWT_SECRET || 'dev-local-secret-change-me';
+const JWT_SECRET = process.env.JWT_SECRET;
 
 if (!process.env.JWT_SECRET || !API_TOKEN) {
   console.warn('[STARTUP] WARNING: JWT_SECRET o NOCODB_API_TOKEN no están definidas localmente. Algunas rutas locales de API fallarán, pero el servidor estático funcionará.');
+}
+if (!process.env.JWT_SECRET && !IS_SERVERLESS) {
+  console.error('[STARTUP] CRÍTICO: JWT_SECRET no está definido. Los tokens JWT no funcionarán correctamente.');
 }
 
 console.log(`[NocoDB] URL=${NOCODB_URL} TOKEN_CONFIGURED=${!!API_TOKEN}`);
@@ -554,7 +582,7 @@ const transporter = nodemailer.createTransport({
   port: 465,
   secure: true,
   auth: {
-    user: process.env.EMAIL_USER || 'portalpilot.hn@gmail.com',
+    user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS
   },
   pool: false, // 🔧 FIX VERCEL: Desactivar pool de sockets para evitar conexiones muertas en serverless
@@ -563,7 +591,7 @@ const transporter = nodemailer.createTransport({
   socketTimeout: 10000
 });
 
-const EMAIL_FROM = process.env.EMAIL_FROM || process.env.EMAIL_USER || 'portalpilot.hn@gmail.com';
+const EMAIL_FROM = process.env.EMAIL_FROM || process.env.EMAIL_USER;
 const EMAIL_REPLY_TO = process.env.EMAIL_USER || EMAIL_FROM;
 
 // 🔧 FIX VERCEL: Eliminar dispatchEmailAsync (no funciona en serverless)
@@ -947,7 +975,7 @@ app.get('/api/diagnostico', async (req, res) => {
 });
 
 app.get('/api/test-email', async (req, res) => {
-  const targetEmail = req.query.to || process.env.EMAIL_USER || 'portalpilot.hn@gmail.com';
+  const targetEmail = req.query.to || process.env.EMAIL_USER;
   try {
     await transporter.verify();
     const info = await transporter.sendMail({
@@ -1140,7 +1168,6 @@ app.post('/api/login', loginLimiter, async (req, res) => {
             if (!usuario.password) return null;
             const isMatch = await bcrypt.compare(password, usuario.password);
             if (isMatch) return usuario;
-            if (usuario.password === password) return usuario;
             return null;
           }))).filter(Boolean);
 
@@ -1426,7 +1453,7 @@ app.post('/api/tenants', authenticate, async (req, res) => {
 
     // 🔧 FIX VERCEL: await en lugar de setImmediate
     await enviarCorreoPortalPilot(
-      process.env.EMAIL_USER || 'portalpilot.hn@gmail.com',
+      process.env.EMAIL_USER,
       '🏢 Nuevo Tenant Registrado',
       'Nueva Empresa Registrada',
       'Se ha registrado una nueva empresa en Portal Pilot.',
@@ -1511,7 +1538,7 @@ app.put('/api/tenants/:id', authenticate, async (req, res) => {
 
     // 🔧 FIX VERCEL: await en lugar de setImmediate
     await enviarCorreoPortalPilot(
-      process.env.EMAIL_USER || 'portalpilot.hn@gmail.com',
+      process.env.EMAIL_USER,
       '💼 Tenant Actualizado',
       'Configuración Modificada',
       `Tenant ${id} actualizado.`,
@@ -1636,7 +1663,7 @@ app.get('/api/debug/tenants/:id', authenticate, async (req, res) => {
   }
 });
 
-app.post('/api/alerta-no-autorizado', async (req, res) => {
+app.post('/api/alerta-no-autorizado', alertaLimiter, async (req, res) => {
   try {
     const { url, referrer } = req.body;
     const ipRaw = req.headers['x-forwarded-for']?.split(',')[0].trim() || req.socket.remoteAddress || '127.0.0.1';
@@ -1655,19 +1682,19 @@ app.post('/api/alerta-no-autorizado', async (req, res) => {
         <h1 style="color: #ef4444;">🚨 ALERTA DE SEGURIDAD</h1>
         <p>Intento de acceso no autorizado bloqueado:</p>
         <ul>
-          <li><strong>Página:</strong> ${url}</li>
-          <li><strong>Referrer:</strong> ${referrer || 'Directo'}</li>
-          <li><strong>IP:</strong> ${ip}</li>
-          <li><strong>Ubicación:</strong> ${ubicacion}</li>
-          <li><strong>Dispositivo:</strong> ${dispositivo}</li>
-          <li><strong>Fecha:</strong> ${fechaActual}</li>
+          <li><strong>Página:</strong> ${escapeHtml(url)}</li>
+          <li><strong>Referrer:</strong> ${escapeHtml(referrer) || 'Directo'}</li>
+          <li><strong>IP:</strong> ${escapeHtml(ip)}</li>
+          <li><strong>Ubicación:</strong> ${escapeHtml(ubicacion)}</li>
+          <li><strong>Dispositivo:</strong> ${escapeHtml(dispositivo)}</li>
+          <li><strong>Fecha:</strong> ${escapeHtml(fechaActual)}</li>
         </ul>
       </div>
     `;
 
     await transporter.sendMail({
-      from: `"Seguridad Portal Pilot" <${process.env.EMAIL_USER || 'portalpilot.hn@gmail.com'}>`,
-      to: process.env.EMAIL_USER || 'portalpilot.hn@gmail.com',
+      from: `"Seguridad Portal Pilot" <${process.env.EMAIL_USER}>`,
+      to: process.env.EMAIL_USER,
       subject: '🚨 ALERTA: Intento de bypass detectado',
       html: htmlContent
     });
@@ -1733,7 +1760,7 @@ app.post('/api/recuperacion', recoveryLimiter, async (req, res) => {
     htmlContent = htmlContent.replace('842 915', formattedCode);
 
     await transporter.sendMail({
-      from: `"Seguridad Portal Pilot" <${process.env.EMAIL_USER || 'portalpilot.hn@gmail.com'}>`,
+      from: `"Seguridad Portal Pilot" <${process.env.EMAIL_USER}>`,
       to: email,
       subject: '🔑 Código de Verificación',
       html: htmlContent
@@ -2095,7 +2122,7 @@ app.post('/api/users', authenticate, async (req, res) => {
 
     // 7. Notificar al admin
     await enviarCorreoPortalPilot(
-      process.env.EMAIL_USER || 'portalpilot.hn@gmail.com',
+      process.env.EMAIL_USER,
       '👤 Nuevo Trabajador Registrado',
       'Nuevo Trabajador Creado',
       'Se ha creado un nuevo trabajador en Supabase.',
@@ -2207,7 +2234,7 @@ app.put('/api/users/:id', authenticate, async (req, res) => {
 
     const esAccion = status === 'suspended' ? 'Suspensión' : status === 'active' ? 'Activación' : 'Actualización';
     await enviarCorreoPortalPilot(
-      process.env.EMAIL_USER || 'portalpilot.hn@gmail.com',
+      process.env.EMAIL_USER,
       `✏️ ${esAccion} de Trabajador`,
       `Trabajador ${esAccion}`,
       `Operación de ${esAccion} realizada.`,
@@ -2293,7 +2320,7 @@ app.delete('/api/users/:id', authenticate, async (req, res) => {
 
     // 5. Notify admin
     await enviarCorreoPortalPilot(
-      process.env.EMAIL_USER || 'portalpilot.hn@gmail.com',
+      process.env.EMAIL_USER,
       '🗑️ Trabajador Eliminado',
       'Eliminación de Trabajador',
       'Se ha eliminado un trabajador.',
@@ -2310,19 +2337,17 @@ app.delete('/api/users/:id', authenticate, async (req, res) => {
   }
 });
 
-// ═══ SUBIDA DE IMÁGENES ═══
-const UPLOADS_DIR = path.join(__dirname, '..', 'uploads');
-try {
-  if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR, { recursive: true });
-  app.use('/uploads', express.static(UPLOADS_DIR));
-} catch (e) {
-  console.warn('[UPLOADS] No se pudo crear directorio uploads (serverless):', e.message);
-}
+// ═══ SUBIDA DE IMÁGENES (Supabase Storage) ═══
+const UPLOADS_BUCKET = 'uploads';
 
-app.post('/api/upload', (req, res) => {
+app.post('/api/upload', authenticate, async (req, res) => {
   try {
     const { file, folder, filename } = req.body;
     if (!file) return res.status(400).json({ error: 'No se envió ningún archivo' });
+
+    if (!supabase || !supabase.storage) {
+      return res.status(503).json({ error: 'Supabase Storage no está configurado' });
+    }
 
     const match = file.match(/^data:image\/(\w+);base64,(.+)$/);
     if (!match) return res.status(400).json({ error: 'Formato de imagen inválido' });
@@ -2336,19 +2361,21 @@ app.post('/api/upload', (req, res) => {
     }
 
     const subDir = folder || 'general';
-    const dirPath = path.join(UPLOADS_DIR, subDir);
-    if (!fs.existsSync(dirPath)) fs.mkdirSync(dirPath, { recursive: true });
-
     const safeName = (filename || `img_${Date.now()}`).replace(/[^a-zA-Z0-9_-]/g, '_');
     const fileName = `${safeName}_${Date.now()}.${ext}`;
-    const filePath = path.join(dirPath, fileName);
+    const filePath = `${subDir}/${fileName}`;
 
-    fs.writeFileSync(filePath, buffer);
+    const contentType = `image/${ext === 'jpg' ? 'jpeg' : ext}`;
+    const { data, error } = await supabase.storage.upload(UPLOADS_BUCKET, filePath, buffer, contentType);
 
-    const baseUrl = req.protocol + '://' + req.get('host');
-    const fileUrl = `${baseUrl}/uploads/${subDir}/${fileName}`;
+    if (error) {
+      console.error('[UPLOAD] Supabase Storage error:', error.message);
+      return res.status(500).json({ error: 'Error al subir archivo a Storage' });
+    }
 
-    res.json({ url: fileUrl, path: `/uploads/${subDir}/${fileName}`, size: buffer.length });
+    const fileUrl = supabase.storage.getPublicUrl(UPLOADS_BUCKET, filePath);
+
+    res.json({ url: fileUrl, path: `/${filePath}`, size: buffer.length });
   } catch (error) {
     console.error('[UPLOAD] Error:', error.message);
     res.status(500).json({ error: 'Error al subir archivo' });

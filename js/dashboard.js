@@ -72,6 +72,12 @@ const overlay = document.getElementById('overlay');
 const dashboard = document.getElementById('dashboard');
 let isMobile = window.innerWidth <= 900;
 
+const savedSidebarState = localStorage.getItem('sidebarCollapsed');
+if (savedSidebarState === 'true' && !isMobile) {
+  sidebar.classList.add('collapsed');
+  dashboard.classList.add('sidebar-collapsed');
+}
+
 function updateLayout() {
   isMobile = window.innerWidth <= 900;
   if (isMobile) {
@@ -96,6 +102,7 @@ toggleBtn.addEventListener('click', () => {
   } else {
     sidebar.classList.toggle('collapsed');
     dashboard.classList.toggle('sidebar-collapsed');
+    localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
   }
   updateLayout();
 });
@@ -132,7 +139,7 @@ modalConfirm.addEventListener('click', () => {
   logoutModal.classList.remove('active');
   localStorage.clear();
   showToast('Sesión cerrada', 'Redirigiendo...', 'info');
-  setTimeout(() => window.location.href = 'login.html', 1500);
+  setTimeout(() => window.location.href = '/login.html', 1500);
 });
 logoutModal.addEventListener('click', e => { if (e.target === logoutModal) logoutModal.classList.remove('active'); });
 
@@ -176,27 +183,47 @@ document.querySelectorAll('.model-item').forEach(item => {
   });
 });
 
-// ── Online/Offline Toggle (cada 12s) ────
+// ── Online/Offline Toggle (cada 30s) ────
 let isOnline = true;
+let realUserCount = 0;
+
+async function fetchUserCount() {
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    const isLocalhost = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+    const API_ROOT = isLocalhost ? 'https://portal-pilot.vercel.app' : '';
+    const res = await fetch(`${API_ROOT}/api/users`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (res.ok) {
+      const users = await res.json();
+      realUserCount = Array.isArray(users) ? users.length : 0;
+      const kpiUsers = document.getElementById('kpiUsers');
+      if (kpiUsers) kpiUsers.textContent = realUserCount.toLocaleString();
+    }
+  } catch (e) { /* ignore */ }
+}
+fetchUserCount();
+
 function toggleUserStatus() {
   isOnline = !isOnline;
   const icon = document.getElementById('usersStatusIcon');
   const text = document.getElementById('onlineUsers');
-  const users = parseInt(document.getElementById('kpiUsers').textContent.replace(/,/g, ''));
 
   if (isOnline) {
-    const online = Math.floor(Math.random() * 50) + 120;
+    const online = Math.max(1, Math.floor(realUserCount * (0.3 + Math.random() * 0.4)));
     icon.innerHTML = '<i class="fas fa-circle" style="color:var(--green);font-size:6px;"></i>';
     text.textContent = `${online} online ahora`;
     text.style.color = '';
   } else {
-    const sleeping = Math.floor(users * (0.6 + Math.random() * 0.2));
+    const sleeping = Math.max(1, Math.floor(realUserCount * (0.6 + Math.random() * 0.2)));
     icon.innerHTML = '<i class="fas fa-moon" style="color:var(--accent);font-size:10px;"></i>';
     text.textContent = `${sleeping.toLocaleString()} durmiendo ahora`;
     text.style.color = 'var(--accent)';
   }
 }
-setInterval(toggleUserStatus, 12000);
+setInterval(toggleUserStatus, 30000);
 
 // ── Quick Actions ────
 document.getElementById('createTenantBtn')?.addEventListener('click', () => window.location.href = 'tenants.html');
@@ -225,13 +252,33 @@ document.getElementById('viewAllAlerts')?.addEventListener('click', () => {
 // ── Global Search ────
 const globalSearch = document.getElementById('globalSearch');
 const searchResults = document.getElementById('searchResults');
-const searchData = [
-  { name: 'TechCorp', type: 'Tenant', icon: 'fa-building' },
-  { name: 'HealthSys', type: 'Tenant', icon: 'fa-building' },
-  { name: 'RetailPlus', type: 'Tenant', icon: 'fa-building' },
-  { name: 'admin@techcorp.io', type: 'Usuario', icon: 'fa-user' },
-  { name: 'Bot RPA - Análisis Q4', type: 'Bot', icon: 'fa-robot' },
-];
+let searchData = [];
+
+async function loadSearchData() {
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    const headers = { 'Authorization': `Bearer ${token}` };
+    const isLocalhost = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+    const API_ROOT = isLocalhost ? 'https://portal-pilot.vercel.app' : '';
+
+    const [tenantsRes, usersRes] = await Promise.all([
+      fetch(`${API_ROOT}/api/tenants`, { headers }).then(r => r.ok ? r.json() : []),
+      fetch(`${API_ROOT}/api/users`, { headers }).then(r => r.ok ? r.json() : [])
+    ]);
+
+    searchData = [];
+    (Array.isArray(tenantsRes) ? tenantsRes : []).forEach(t => {
+      searchData.push({ name: t.name || t.id, type: 'Tenant', icon: 'fa-building' });
+    });
+    (Array.isArray(usersRes) ? usersRes : []).forEach(u => {
+      if (u.email) searchData.push({ name: u.email, type: 'Usuario', icon: 'fa-user' });
+    });
+  } catch (e) {
+    console.warn('[SEARCH] No se pudieron cargar datos:', e.message);
+  }
+}
+loadSearchData();
 
 globalSearch.addEventListener('input', e => {
   const q = e.target.value.toLowerCase().trim();

@@ -2066,7 +2066,10 @@
                   return;
                 }
                 
-                if (!response.ok) throw new Error(`Error: ${response.status}`);
+                if (!response.ok) {
+                  const errBody = await response.json().catch(() => ({}));
+                  throw new Error(errBody.error || `Error: ${response.status}`);
+                }
                 users = (await response.json()).map(u => ({
                     ...u,
                     id: u.id != null ? String(u.id) : '',
@@ -2076,9 +2079,14 @@
                 usersLoadError = false;
             } catch (error) {
                 console.error('Error al cargar usuarios:', error);
+                if (String(error).includes('Failed to fetch') || String(error).includes('NetworkError')) {
+                  showMessage('No se pudo conectar al servidor. Reintentando...', 'warning');
+                  setTimeout(() => fetchUsers(), 3000);
+                  return;
+                }
                 users = [];
                 usersLoadError = true;
-                showMessage('No se pudo cargar la base de datos. Verifica la conexión al servidor.', 'warning');
+                showMessage('No se pudieron cargar los usuarios. Haz clic en Reintentar.', 'warning');
             } finally {
                 isLoadingUsers = false;
             }
@@ -2363,11 +2371,8 @@
                 if (!response.ok) {
                     throw new Error(data.error || 'No se pudo eliminar el usuario');
                 }
-                users = users.filter(u => u.id !== id);
-                selectedUsers.delete(id);
                 showMessage('✓ Usuario eliminado', 'success');
-                filterUsers();
-                updateBulkActions();
+                setTimeout(() => location.reload(), 500);
             } catch (err) {
                 console.error('Error al eliminar usuario:', err);
                 showMessage('Error al eliminar usuario: ' + err.message, 'error');

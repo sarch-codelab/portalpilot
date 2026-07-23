@@ -757,13 +757,34 @@ function resetSettings() {
     }
 }
 
-function confirmDelete() {
+async function confirmDelete() {
     if (prompt('Escribe ELIMINAR para confirmar:') !== 'ELIMINAR') {
         showToast('Operación cancelada', 'info');
         return;
     }
-    showToast('Tenant eliminado', 'error');
-    setTimeout(() => window.location.href = 'tenants.html', 1000);
+
+    const params = new URLSearchParams(window.location.search);
+    const tenantId = params.get('id') || params.get('tenant');
+    if (!tenantId) { showToast('No se encontró el ID del tenant', 'error'); return; }
+
+    const token = localStorage.getItem('token');
+    if (!token) { window.location.href = '/login.html'; return; }
+
+    try {
+        showToast('Eliminando tenant y todos sus usuarios...', 'info');
+        const res = await fetch(`/api/tenants/${encodeURIComponent(tenantId)}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!res.ok) {
+            const data = await res.json().catch(() => ({}));
+            throw new Error(data.error || `Error ${res.status}`);
+        }
+        showToast('Tenant y usuarios eliminados', 'success');
+        setTimeout(() => window.location.href = 'tenants.html', 1000);
+    } catch (err) {
+        showToast('Error al eliminar: ' + err.message, 'error');
+    }
 }
 
 function executeSuspend() {

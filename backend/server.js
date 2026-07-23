@@ -1541,26 +1541,67 @@ app.delete('/api/tenants/:id', authenticate, async (req, res) => {
       return res.status(403).json({ error: 'No autorizado para eliminar este tenant.' });
     }
 
-    if (targetTenantId) {
-      const usersResponse = await nocodbApi.get(USUARIOS_TABLE, {
-        params: { where: `(empresa_codigo,eq,${formatNocoFilter(finalTenantCode)})`, limit: 500 }
-      });
-      const usersToDelete = usersResponse.data.list || [];
+    let deletedCount = 0;
 
-      await runBatched(usersToDelete, async user => {
-        const userRecordId = extractNocoRecordId(user);
-        try {
-          if (userRecordId) {
-            await deleteNocoRecord(USUARIOS_TABLE, userRecordId);
-          } else {
-            const userWhereByEmail = buildNocoWhereFilter('email', user.email);
-            if (userWhereByEmail) await deleteNocoRecordByFilter(USUARIOS_TABLE, userWhereByEmail);
+    // ── SUPABASE: Eliminar empresa + usuarios + auth ──
+    if (supabase) {
+      try {
+        const { data: empRecord } = await supabase
+          .from('empresas').select('id').eq('codigo', finalTenantCode).single();
+
+        if (empRecord) {
+          // 1. Obtener todos los usuarios de esta empresa
+          const { data: supaUsers } = await supabase
+            .from('usuarios').select('id').eq('empresa_id', empRecord.id);
+
+          // 2. Eliminar módulos de cada usuario
+          for (const u of (supaUsers || [])) {
+            await supabase.from('usuario_modulos').delete().eq('usuario_id', u.id);
           }
-        } catch (err) {
-          console.warn(`[DELETE USER] Falló para ${userRecordId}:`, err.message);
-          await patchNocoRecordByFilter(USUARIOS_TABLE, buildNocoWhereFilter('email', user.email), { estado: 'Inactivo' });
+
+          // 3. Eliminar usuarios de la tabla
+          await supabase.from('usuarios').delete().eq('empresa_id', empRecord.id);
+          deletedCount += (supaUsers || []).length;
+
+          // 4. Eliminar empresa
+          await supabase.from('empresas').delete().eq('id', empRecord.id);
+
+          // 5. Intentar eliminar auth users (puede fallar si no tiene permisos)
+          for (const u of (supaUsers || [])) {
+            try { await supabase.auth.admin.deleteUser(u.id); } catch (_) {}
+          }
+
+          console.log(`[DELETE TENANT SUPABASE] Empresa ${finalTenantCode}: ${(supaUsers || []).length} usuarios + empresa eliminados`);
         }
-      });
+      } catch (err) {
+        console.warn(`[DELETE TENANT SUPABASE] Error:`, err.message);
+      }
+    }
+
+    // ── NOCODB: Eliminar usuarios y empresa ──
+    if (targetTenantId) {
+      try {
+        const usersResponse = await nocodbApi.get(USUARIOS_TABLE, {
+          params: { where: `(empresa_codigo,eq,${formatNocoFilter(finalTenantCode)})`, limit: 500 }
+        });
+        const usersToDelete = usersResponse.data.list || [];
+
+        await runBatched(usersToDelete, async user => {
+          const userRecordId = extractNocoRecordId(user);
+          try {
+            if (userRecordId) {
+              await deleteNocoRecord(USUARIOS_TABLE, userRecordId);
+            } else {
+              const userWhereByEmail = buildNocoWhereFilter('email', user.email);
+              if (userWhereByEmail) await deleteNocoRecordByFilter(USUARIOS_TABLE, userWhereByEmail);
+            }
+          } catch (err) {
+            console.warn(`[DELETE USER NOCODB] Falló para ${userRecordId}:`, err.message);
+          }
+        });
+      } catch (err) {
+        console.warn(`[DELETE TENANT NOCODB] Error listando usuarios:`, err.message);
+      }
 
       try {
         if (recordId) {
@@ -1571,13 +1612,11 @@ app.delete('/api/tenants/:id', authenticate, async (req, res) => {
           else await deleteNocoRecord(EMPRESAS_TABLE, targetTenantId);
         }
       } catch (err) {
-        console.warn(`[DELETE TENANT] Falló:`, err.message);
-        const filterToPatch = buildNocoWhereFilter('codigo', finalTenantCode);
-        if (filterToPatch) await patchNocoRecordByFilter(EMPRESAS_TABLE, filterToPatch, { estado: 'Inactivo' });
+        console.warn(`[DELETE TENANT NOCODB] Error eliminando empresa:`, err.message);
       }
     }
 
-    res.json({ message: 'Tenant y usuarios asociados eliminados exitosamente' });
+    res.json({ message: 'Tenant y todos sus usuarios eliminados exitosamente', deletedUsers: deletedCount });
   } catch (error) {
     return handleServerError(res, error);
   }

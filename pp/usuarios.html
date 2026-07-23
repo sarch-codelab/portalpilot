@@ -2108,23 +2108,29 @@
             const start = (currentPage - 1) * itemsPerPage, end = start + itemsPerPage;
             const pageData = data.slice(start, end);
             pageData.forEach(u => {
-                const initials = `${u.nombre[0]}${u.apellido[0]}`.toUpperCase();
+                const nombre = u.nombre || '?';
+                const apellido = u.apellido || '?';
+                const initials = `${nombre[0]}${apellido[0]}`.toUpperCase();
                 const isOnline = u.lastActivity && new Date(u.lastActivity) > new Date(Date.now() - 15 * 60 * 1000);
+                const avatarSrc = u.avatar || '';
+                const avatarHtml = avatarSrc
+                  ? `<img src="${avatarSrc}" alt="${nombre}" onerror="this.parentElement.innerHTML='${initials}'">`
+                  : initials;
                 const row = document.createElement('tr');
                 if (selectedUsers.has(u.id)) row.classList.add('selected');
                 row.onclick = (e) => { if (!e.target.closest('input') && !e.target.closest('.user-actions')) openDetailPanel(u); };
                 row.innerHTML = `
           <td><input type="checkbox" class="user-checkbox" data-id="${u.id}" ${selectedUsers.has(u.id) ? 'checked' : ''} onclick="event.stopPropagation();toggleUserSelection('${u.id}')"></td>
-          <td><div class="user-info"><div class="user-avatar">${u.avatar ? `<img src="${u.avatar}" alt="${u.nombre}">` : `${initials}`}<span class="online-dot ${isOnline ? 'online' : 'offline'}"></span></div><div><div class="user-name">${u.nombre} ${u.apellido}</div><div class="user-email">${u.email}</div></div></div></td>
+          <td><div class="user-info"><div class="user-avatar">${avatarHtml}<span class="online-dot ${isOnline ? 'online' : 'offline'}"></span></div><div><div class="user-name">${nombre} ${apellido}</div><div class="user-email">${u.email}</div></div></div></td>
           <td><span class="role-badge ${u.rol}">${u.rol.charAt(0).toUpperCase() + u.rol.slice(1)}</span></td>
-          <td><span class="user-tenant">${u.tenant}</span></td>
+          <td><span class="user-tenant">${u.tenant || u.tenant_code || 'N/A'}</span></td>
           <td><span class="status-badge ${u.status}"><span class="status-dot"></span>${u.status.charAt(0).toUpperCase() + u.status.slice(1)}</span></td>
           <td>${u.lastActivity ? formatRelativeTime(u.lastActivity) : '<span style="color:var(--gray)">Nunca</span>'}</td>
           <td><div class="user-actions">
-            <button class="action-icon-btn" title="Ver detalle" onclick="event.stopPropagation();window.location.href='usuario_detail.html?id='+encodeURIComponent('${u.id}')"><i class="fas fa-eye"></i></button>
-            <button class="action-icon-btn" title="Editar" onclick="event.stopPropagation();editUser('${u.id}')"><i class="fas fa-edit"></i></button>
-            <button class="action-icon-btn ${u.status === 'active' ? 'danger' : ''}" title="${u.status === 'active' ? 'Suspender' : 'Activar'}" onclick="event.stopPropagation();confirmAction('${u.status === 'active' ? 'Suspender' : 'Activar'} usuario','¿${u.status === 'active' ? 'Suspender' : 'Activar'} a ${u.nombre} ${u.apellido}?',()=>toggleUserStatus('${u.id}','${u.status}'))"><i class="fas fa-${u.status === 'active' ? 'pause' : 'play'}-circle"></i></button>
-            <button class="action-icon-btn danger" title="Eliminar" onclick="event.stopPropagation();confirmAction('Eliminar usuario','¿Eliminar permanentemente a ${u.nombre} ${u.apellido}? Esta acción no se puede deshacer.',()=>deleteUser('${u.id}'))"><i class="fas fa-trash"></i></button>
+            <button class="action-icon-btn" title="Ver detalle" onclick="event.stopPropagation();window.location.href='usuario_detail.html?id='+encodeURIComponent('${u.id}')+(( '${u.source}' === 'nocodb' ) ? '&source=nocodb' : '')"><i class="fas fa-eye"></i></button>
+            <button class="action-icon-btn" title="Editar" onclick="event.stopPropagation();editUser('${u.id}','${u.source || ''}')"><i class="fas fa-edit"></i></button>
+            <button class="action-icon-btn ${u.status === 'active' ? 'danger' : ''}" title="${u.status === 'active' ? 'Suspender' : 'Activar'}" onclick="event.stopPropagation();confirmAction('${u.status === 'active' ? 'Suspender' : 'Activar'} usuario','¿${u.status === 'active' ? 'Suspender' : 'Activar'} a ${nombre} ${apellido}?',()=>toggleUserStatus('${u.id}','${u.status}','${u.source || ''}'))"><i class="fas fa-${u.status === 'active' ? 'pause' : 'play'}-circle"></i></button>
+            <button class="action-icon-btn danger" title="Eliminar" onclick="event.stopPropagation();confirmAction('Eliminar usuario','¿Eliminar permanentemente a ${nombre} ${apellido}? Esta acción no se puede deshacer.',()=>deleteUser('${u.id}','${u.source || ''}'))"><i class="fas fa-trash"></i></button>
           </div></td>`;
                 tbody.appendChild(row);
             });
@@ -2256,7 +2262,7 @@
         function closeModal(id) { document.getElementById(id).classList.remove('active'); }
 
         // ── Create/Edit User ────────────────────
-        function editUser(id) {
+        function editUser(id, source) {
             const u = users.find(x => x.id === id); if (!u) return;
             openModal('createUserModal');
             document.getElementById('u-id').value = u.id;
@@ -2264,11 +2270,31 @@
             document.getElementById('u-apellido').value = u.apellido;
             document.getElementById('u-email').value = u.email;
             document.getElementById('u-rol').value = u.rol;
-            document.getElementById('u-tenant').value = u.tenant;
+            document.getElementById('u-tenant').value = u.tenant || u.tenant_code || '';
             document.getElementById('u-notas').value = u.notas || '';
             document.getElementById('modalUserTitle').innerHTML = '<i class="fas fa-user-edit" style="margin-right:8px;color:var(--accent);"></i>Editar Usuario';
             document.getElementById('passwordGroup').style.display = 'none';
             document.getElementById('u-password').required = false;
+            // Store source for save
+            document.getElementById('createUserForm').dataset.source = source || '';
+            // Show role transfer option if this is an Owner
+            const roleSelect = document.getElementById('u-rol');
+            if (u.rol === 'Owner' || u.rol === 'owner') {
+              const existingTransfer = document.getElementById('transferOwnerGroup');
+              if (!existingTransfer) {
+                const passGroup = document.getElementById('passwordGroup');
+                const transferDiv = document.createElement('div');
+                transferDiv.id = 'transferOwnerGroup';
+                transferDiv.className = 'form-group';
+                transferDiv.innerHTML = '<label class="form-label"><i class="fas fa-exchange-alt" style="color:var(--yellow);"></i> Transferir Owner</label>' +
+                  '<p style="font-size:12px;color:var(--text-dim);margin-bottom:8px;">Transfiere el rol de Owner a otro usuario. El usuario actual bajará a Administrador.</p>' +
+                  '<button type="button" class="btn btn-warning btn-sm" onclick="transferOwnership(\'' + u.id + '\')"><i class="fas fa-crown"></i> Transferir Owner</button>';
+                passGroup.parentElement.insertBefore(transferDiv, passGroup);
+              }
+            } else {
+              const existingTransfer = document.getElementById('transferOwnerGroup');
+              if (existingTransfer) existingTransfer.remove();
+            }
         }
         async function saveUser() {
             const form = document.getElementById('createUserForm');
@@ -2301,6 +2327,49 @@
                 else { const err = await res.json().catch(() => ({})); showMessage('Error: ' + (err.error || 'No se pudo guardar'), 'error'); }
             } catch (err) { console.error('Error:', err); users.push({ ...payload, id: `usr_${Date.now()}`, status: 'pending', registered: new Date().toISOString().slice(0, 10), lastActivity: null, avatar: null }); filterUsers(); closeModal('createUserModal'); showMessage('✓ Usuario guardado (modo desarrollo)', 'success'); }
             finally { btn.innerHTML = orig; btn.disabled = false; }
+        }
+
+        // ── Transfer Ownership ──────────────────
+        async function transferOwnership(currentOwnerId) {
+            const currentOwner = users.find(u => u.id === currentOwnerId);
+            if (!currentOwner) return;
+            const otherUsers = users.filter(u => u.id !== currentOwnerId && u.status === 'active');
+            if (otherUsers.length === 0) {
+                showMessage('No hay otros usuarios activos a quien transferir el Owner.', 'warning');
+                return;
+            }
+            const userList = otherUsers.map((u, i) => `${i + 1}. ${u.nombre} ${u.apellido} (${u.email})`).join('\n');
+            const choice = prompt('¿A quién deseas transferir el Owner?\n\n' + userList + '\n\nEscribe el número:');
+            if (!choice) return;
+            const idx = parseInt(choice) - 1;
+            if (idx < 0 || idx >= otherUsers.length) { showMessage('Selección inválida', 'error'); return; }
+            const newOwner = otherUsers[idx];
+            const confirmText = prompt(`Escribe "CONFIRMAR" para transferir el Owner de ${currentOwner.nombre} a ${newOwner.nombre}`);
+            if (confirmText !== 'CONFIRMAR') { showMessage('Transferencia cancelada', 'info'); return; }
+            const token = localStorage.getItem('token');
+            if (!token) { window.location.href = '/login.html'; return; }
+            try {
+                // Downgrade current owner to Admin
+                const res1 = await fetch(`/api/users/${currentOwnerId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ rol: 'Administrador' })
+                });
+                // Upgrade new user to Owner
+                const res2 = await fetch(`/api/users/${newOwner.id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ rol: 'Owner' })
+                });
+                if (res1.ok && res2.ok) {
+                    showMessage(`✓ Owner transferido de ${currentOwner.nombre} a ${newOwner.nombre}`, 'success');
+                    setTimeout(() => location.reload(), 800);
+                } else {
+                    showMessage('Error al transferir ownership', 'error');
+                }
+            } catch (err) {
+                showMessage('Error: ' + err.message, 'error');
+            }
         }
 
         // ── Confirm Modal ───────────────────────
@@ -2340,7 +2409,7 @@
                 showMessage(err.message || 'Error al cambiar el estado de usuario.', 'error');
             }
         }
-        async function deleteUser(id) {
+        async function deleteUser(id, source) {
             const token = localStorage.getItem('token');
             if (!token) {
                 showMessage('No se encontró token de sesión. Por favor inicia sesión de nuevo.', 'error');
@@ -2348,13 +2417,14 @@
                 return;
             }
             try {
-                const response = await fetch(`/api/users/${encodeURIComponent(id)}`, {
+                let url = `/api/users/${encodeURIComponent(id)}`;
+                if (source === 'nocodb') url += '?source=nocodb';
+                const response = await fetch(url, {
                     method: 'DELETE',
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 
                 if (response.status === 401 || response.status === 403) {
-                  console.error('[DELETE] Error de autenticación:', response.status);
                   showMessage('Tu sesión ha expirado. Por favor inicia sesión de nuevo.', 'error');
                   localStorage.clear();
                   sessionStorage.clear();

@@ -252,36 +252,40 @@ function toggleSectionEdit(section) {
 
 // ── User Profile Data ──────────────────────────────
 const profileUserId = new URLSearchParams(window.location.search).get('id');
+const profileSource = new URLSearchParams(window.location.search).get('source') || 'supabase';
 
 function getMockProfile(id) {
     return {
-        id: id || 'alangley',
-        nombre: 'Asuka',
-        apellido: 'Langley Soryu',
-        email: 'asuka.langley@nerv.jp',
-        rol: 'admin',
-        tenant: 'NERV Organization',
-        registered: '2024-03-15',
-        lastActivity: '2026-05-30T10:32:00',
+        id: id || 'unknown',
+        nombre: 'Usuario',
+        apellido: 'Desconocido',
+        email: 'N/A',
+        rol: 'user',
+        tenant: 'N/A',
+        registered: new Date().toISOString(),
+        lastActivity: null,
         status: 'active',
-        plan: 'Enterprise',
-        verified: true,
-        twoFactor: true,
-        securityScore: 99.8,
-        department: 'División de Desarrollo Tecnológico (NERV)',
-        position: 'Jefe de Sincronización y Automatización',
-        location: 'Base 2, Geofront, Tokio-3',
-        timezone: 'America/Mexico_City (GMT-6)',
-        phone: '+52 81 2345 6789',
-        extension: 'x4521',
-        responsibilities: 'Liderazgo en la automatización de protocolos de defensa, gestión de tasas de sincronización neuronal vía API, supervisión de auditorías en la red MAGI y coordinación con equipos de seguridad informática para la prevención de Impactos.'
+        plan: null,
+        verified: false,
+        twoFactor: false,
+        securityScore: 0,
+        department: '',
+        position: '',
+        location: '',
+        timezone: '',
+        phone: '',
+        extension: '',
+        responsibilities: '',
+        source: profileSource
     };
 }
 
 async function fetchUserProfile(id) {
     try {
         const token = localStorage.getItem('token');
-        const response = await fetch(`/api/users/${encodeURIComponent(id)}`, {
+        let url = `/api/users/${encodeURIComponent(id)}`;
+        if (profileSource === 'nocodb') url += '?source=nocodb';
+        const response = await fetch(url, {
             method: 'GET',
             headers: {
                 'Authorization': `Bearer ${token}`,
@@ -298,29 +302,39 @@ async function fetchUserProfile(id) {
 
 function renderProfile(user) {
     currentUserData = user;
-    const initials = `${user.nombre?.[0] || 'U'}${user.apellido?.[0] || 'N'}`.toUpperCase();
+    const nombre = user.nombre || '?';
+    const apellido = user.apellido || '?';
+    const initials = `${nombre[0]}${apellido[0]}`.toUpperCase();
     const avatar = document.getElementById('profileAvatar');
 
     if (avatar) {
-        const img = avatar.querySelector('img');
-        if (!img || img.style.display === 'none') {
-            avatar.innerHTML = `${initials}<span class="status-badge ${user.status === 'active' ? 'online' : user.status === 'pending' ? 'warning' : 'offline'}" id="profileStatusBadge">● ${user.status === 'active' ? 'Online' : user.status === 'pending' ? 'Pendiente' : 'Suspendido'}</span>`;
+        if (user.avatar) {
+            avatar.innerHTML = `<img src="${user.avatar}" alt="${nombre}" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;" onerror="this.parentElement.innerHTML='${initials}'">`;
+        } else {
+            avatar.innerHTML = initials;
         }
+        // Add status badge
+        const statusBadge = document.createElement('span');
+        statusBadge.className = `status-badge ${user.status === 'active' ? 'online' : user.status === 'pending' ? 'warning' : 'offline'}`;
+        statusBadge.id = 'profileStatusBadge';
+        statusBadge.textContent = `● ${user.status === 'active' ? 'Online' : user.status === 'pending' ? 'Pendiente' : 'Suspendido'}`;
+        avatar.appendChild(statusBadge);
     }
 
     const nameEl = document.getElementById('profileName');
     if (nameEl) {
-        nameEl.innerHTML = `${user.nombre} ${user.apellido} ${user.verified ? '<i class="fas fa-check-circle verified" title="Verificado"></i>' : ''}`;
+        const verifiedIcon = user.verified ? ' <i class="fas fa-check-circle verified" title="Verificado"></i>' : '';
+        nameEl.innerHTML = `${nombre} ${apellido}${verifiedIcon}`;
     }
 
     const emailEl = document.getElementById('profileEmail');
-    if (emailEl) emailEl.textContent = user.email;
+    if (emailEl) emailEl.textContent = user.email || 'N/A';
 
     const idEl = document.getElementById('profileId');
-    if (idEl) idEl.textContent = user.displayId || user.id;
+    if (idEl) idEl.textContent = user.displayId || user.id || 'N/A';
 
     const tenantEl = document.getElementById('profileTenant');
-    if (tenantEl) tenantEl.textContent = user.tenant;
+    if (tenantEl) tenantEl.textContent = user.tenant || user.tenant_code || 'N/A';
 
     const memberSinceEl = document.getElementById('profileMemberSince');
     if (memberSinceEl && user.registered) {
@@ -330,24 +344,26 @@ function renderProfile(user) {
     const lastAccessEl = document.getElementById('profileLastAccess');
     if (lastAccessEl && user.lastActivity) {
         lastAccessEl.textContent = `Último acceso: ${new Date(user.lastActivity).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' })} ${new Date(user.lastActivity).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}`;
+    } else if (lastAccessEl) {
+        lastAccessEl.textContent = 'Último acceso: Sin actividad registrada';
     }
 
     // Badges
     const badgesEl = document.getElementById('profileBadges');
     if (badgesEl) {
         const badges = [];
-        badges.push(`<span class="user-badge role"><i class="fas fa-id-badge"></i> ${user.rol === 'admin' ? 'Admin de Tenant' : user.rol === 'operator' ? 'Operador' : 'Viewer'}</span>`);
-        if (user.verified || user.twoFactor) badges.push('<span class="user-badge verified"><i class="fas fa-shield-alt"></i> 2FA Activo</span>');
-        if (user.plan) badges.push(`<span class="user-badge premium"><i class="fas fa-crown"></i> ${user.plan} Plan</span>`);
+        const roleLabel = user.rol === 'Owner' ? 'Owner' : user.rol === 'Administrador' ? 'Admin de Tenant' : user.rol === 'Operador' ? 'Operador' : 'Usuario';
+        badges.push(`<span class="user-badge role"><i class="fas fa-id-badge"></i> ${roleLabel}</span>`);
+        if (user.source) badges.push(`<span class="user-badge verified"><i class="fas fa-database"></i> ${user.source === 'nocodb' ? 'NocoDB' : 'Supabase'}</span>`);
         badgesEl.innerHTML = badges.join('');
     }
 
     // Modals
     const resetUserNameEl = document.getElementById('resetUserName');
-    if (resetUserNameEl) resetUserNameEl.textContent = `${user.nombre} ${user.apellido}`;
+    if (resetUserNameEl) resetUserNameEl.textContent = `${nombre} ${apellido}`;
 
     const suspendUserNameEl = document.getElementById('suspendUserName');
-    if (suspendUserNameEl) suspendUserNameEl.textContent = `${user.nombre} ${user.apellido}`;
+    if (suspendUserNameEl) suspendUserNameEl.textContent = `${nombre} ${apellido}`;
 }
 
 async function initProfilePage() {

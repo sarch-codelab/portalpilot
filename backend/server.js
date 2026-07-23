@@ -1815,7 +1815,7 @@ app.get('/api/users', authenticate, async (req, res) => {
       try {
         let query = supabase
           .from('usuarios')
-          .select('id, empresa_id, nombre, apellido, email, rol_global, activo, created_at, updated_at');
+          .select('id, empresa_id, nombre, apellido, email, rol_global, activo, created_at, updated_at, foto_perfil_url');
 
         if (!isRootUser(req)) {
           const currentTenant = getTenantCode(req);
@@ -1857,6 +1857,7 @@ app.get('/api/users', authenticate, async (req, res) => {
               status: u.activo ? 'active' : 'inactive',
               registered: u.created_at || new Date().toISOString(),
               lastActivity: u.updated_at || null,
+              avatar: u.foto_perfil_url || null,
               notas: '',
               source: 'supabase'
             });
@@ -1893,6 +1894,7 @@ app.get('/api/users', authenticate, async (req, res) => {
               status: 'active',
               registered: u.created_at || u.Created_at || u.fecha_registro || new Date().toISOString(),
               lastActivity: u.updated_at || null,
+              avatar: u.foto_perfil_url || u.banner_perfil_url || null,
               notas: '',
               source: 'nocodb'
             });
@@ -1913,13 +1915,54 @@ app.get('/api/users', authenticate, async (req, res) => {
 });
 
 app.get('/api/users/:id', authenticate, async (req, res) => {
-  if (!requireSupabase(res)) return;
   try {
     const { id } = req.params;
+    const source = req.query.source || 'supabase';
+
+    // ═══ NOCODB: Look up owner/admin ═══
+    if (source === 'nocodb') {
+      try {
+        let nocoUser = null;
+        try {
+          const resp = await nocodbApi.get(`${USUARIOS_TABLE}/${id}`);
+          nocoUser = resp.data;
+        } catch (_) {}
+        if (!nocoUser && id.includes('@')) {
+          const resp = await nocodbApi.get(USUARIOS_TABLE, {
+            params: { where: `(email,eq,${id})`, limit: 1 }
+          });
+          nocoUser = resp.data?.list?.[0] || null;
+        }
+        if (!nocoUser) return res.status(404).json({ error: 'Usuario no encontrado en NocoDB.' });
+
+        const empresaCodigo = nocoUser.empresa_codigo || nocoUser.Empresa_Codigo || 'ROOT';
+        return res.json({
+          id: nocoUser.Id || nocoUser.id || id,
+          displayId: nocoUser.Id || nocoUser.id || id,
+          nombre: nocoUser.nombre || nocoUser.Nombre || '',
+          apellido: nocoUser.apellido || nocoUser.Apellido || '',
+          email: nocoUser.email || nocoUser.Email || '',
+          rol: nocoUser.rol || nocoUser.Rol || 'Owner',
+          tenant_code: empresaCodigo,
+          tenant: empresaCodigo,
+          status: 'active',
+          registered: nocoUser.created_at || nocoUser.Created_at || new Date().toISOString(),
+          lastActivity: nocoUser.updated_at || null,
+          avatar: nocoUser.foto_perfil_url || null,
+          notas: '',
+          source: 'nocodb'
+        });
+      } catch (err) {
+        return handleServerError(res, err);
+      }
+    }
+
+    // ═══ SUPABASE ═══
+    if (!requireSupabase(res)) return;
 
     const { data: usuario, error } = await supabase
       .from('usuarios')
-      .select('id, empresa_id, nombre, apellido, email, rol_global, activo, created_at, updated_at')
+      .select('id, empresa_id, nombre, apellido, email, rol_global, activo, created_at, updated_at, foto_perfil_url')
       .eq('id', id)
       .single();
 
@@ -1947,7 +1990,9 @@ app.get('/api/users/:id', authenticate, async (req, res) => {
       status: usuario.activo ? 'active' : 'inactive',
       registered: usuario.created_at || new Date().toISOString(),
       lastActivity: usuario.updated_at || null,
-      notas: ''
+      avatar: usuario.foto_perfil_url || null,
+      notas: '',
+      source: 'supabase'
     });
   } catch (error) {
     return handleServerError(res, error);
@@ -2182,11 +2227,51 @@ app.put('/api/users/:id', authenticate, async (req, res) => {
 });
 
 app.delete('/api/users/:id', authenticate, async (req, res) => {
-  if (!requireSupabase(res)) return;
   try {
     const { id } = req.params;
+    const source = req.query.source || 'supabase';
 
-    // 1. Fetch user data before deleting (no FK join)
+    if (source === 'nocodb') {
+      // ═══ NOCODB: Delete owner/admin by email or ID ═══
+      try {
+        let nocoUser = null;
+        // Try by record ID first
+        try {
+          const resp = await nocodbApi.get(`${USUARIOS_TABLE}/${id}`);
+          nocoUser = resp.data;
+        } catch (_) {}
+        // Try by email (id might be email)
+        if (!nocoUser && id.includes('@')) {
+          const resp = await nocodbApi.get(USUARIOS_TABLE, {
+            params: { where: `(email,eq,${id})`, limit: 1 }
+          });
+          nocoUser = resp.data?.list?.[0] || null;
+        }
+
+        if (!nocoUser) return res.status(404).json({ error: 'Usuario no encontrado en NocoDB.' });
+
+        const recordId = extractNocoRecordId(nocoUser);
+        const nombreUsuario = nocoUser.nombre || nocoUser.Nombre || '';
+        const emailUsuario = nocoUser.email || nocoUser.Email || 'N/A';
+
+        if (recordId) {
+          await deleteNocoRecord(USUARIOS_TABLE, recordId);
+        } else {
+          const whereEmail = buildNocoWhereFilter('email', emailUsuario);
+          if (whereEmail) await deleteNocoRecordByFilter(USUARIOS_TABLE, whereEmail);
+        }
+
+        return res.json({ message: 'Usuario eliminado de NocoDB exitosamente' });
+      } catch (err) {
+        console.warn('[DELETE USER NOCODB] Error:', err.message);
+        return handleServerError(res, err);
+      }
+    }
+
+    // ═══ SUPABASE: Delete trabajador ═══
+    if (!requireSupabase(res)) return;
+
+    // 1. Fetch user data before deleting
     const { data: userRecord } = await supabase
       .from('usuarios')
       .select('id, nombre, apellido, email')

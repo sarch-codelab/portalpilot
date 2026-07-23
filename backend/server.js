@@ -86,7 +86,7 @@ app.use((req, res, next) => {
   console.log('[REQUEST]', req.method, req.path);
   next();
 });
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
 
 function handleServerError(res, error) {
   console.error('[ERROR]', error?.message || error);

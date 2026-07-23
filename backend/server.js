@@ -1162,17 +1162,19 @@ app.post('/api/login', loginLimiter, async (req, res) => {
         });
 
         if (!authError && authData?.user) {
-          // Buscar perfil en tabla usuarios
+          // Buscar perfil en tabla usuarios (sin FK join)
           const { data: perfil } = await supabase
             .from('usuarios')
-            .select('id, empresa_id, nombre, apellido, email, rol_global, activo, foto_perfil_url, banner_perfil_url, empresas(id, codigo, nombre)')
+            .select('id, empresa_id, nombre, apellido, email, rol_global, activo, foto_perfil_url, banner_perfil_url')
             .eq('id', authData.user.id)
             .single();
 
           if (perfil) {
-            const emp = perfil.empresas || {};
-            const empresaCodigo = emp.codigo || '';
-            const empresaNombre = emp.nombre || empresaCodigo || 'Portal Pilot';
+            let empresaCodigo = '', empresaNombre = 'Portal Pilot';
+            if (perfil.empresa_id) {
+              const { data: emp } = await supabase.from('empresas').select('nombre, codigo').eq('id', perfil.empresa_id).single();
+              if (emp) { empresaCodigo = emp.codigo || ''; empresaNombre = emp.nombre || empresaCodigo || 'Portal Pilot'; }
+            }
 
             const accountToken = jwt.sign(
               {
@@ -1804,44 +1806,107 @@ app.post('/api/recuperacion/verificar', recoveryLimiter, async (req, res) => {
 });
 
 app.get('/api/users', authenticate, async (req, res) => {
-  if (!requireSupabase(res)) return;
   try {
-    let query = supabase
-      .from('usuarios')
-      .select('id, empresa_id, nombre, apellido, email, rol_global, activo, created_at, updated_at, empresas(nombre, codigo)');
+    const allUsers = [];
+    const seenEmails = new Set();
 
-    if (!isRootUser(req)) {
-      const currentTenant = getTenantCode(req);
-      if (!currentTenant) return res.status(403).json({ error: 'Acceso restringido.' });
-      const { data: emp } = await supabase.from('empresas').select('id').eq('codigo', currentTenant).single();
-      if (emp) query = query.eq('empresa_id', emp.id);
-    } else if (req.query.empresa) {
-      const { data: emp } = await supabase.from('empresas').select('id').eq('codigo', req.query.empresa).single();
-      if (emp) query = query.eq('empresa_id', emp.id);
+    // ═══ SUPABASE: Usuarios trabajadores ═══
+    if (supabase) {
+      try {
+        let query = supabase
+          .from('usuarios')
+          .select('id, empresa_id, nombre, apellido, email, rol_global, activo, created_at, updated_at');
+
+        if (!isRootUser(req)) {
+          const currentTenant = getTenantCode(req);
+          if (!currentTenant) return res.status(403).json({ error: 'Acceso restringido.' });
+          const { data: emp } = await supabase.from('empresas').select('id').eq('codigo', currentTenant).single();
+          if (emp) query = query.eq('empresa_id', emp.id);
+        } else if (req.query.empresa) {
+          const { data: emp } = await supabase.from('empresas').select('id').eq('codigo', req.query.empresa).single();
+          if (emp) query = query.eq('empresa_id', emp.id);
+        }
+
+        const { data: supaUsers, error: supaErr } = await query.order('created_at', { ascending: false });
+        if (supaErr) console.warn('[GET USERS] Supabase error:', supaErr.message);
+
+        // Load empresas for name resolution
+        let empresasMap = {};
+        if (supaUsers && supaUsers.length > 0) {
+          const empIds = [...new Set(supaUsers.map(u => u.empresa_id).filter(Boolean))];
+          if (empIds.length > 0) {
+            const { data: emps } = await supabase.from('empresas').select('id, nombre, codigo');
+            if (emps) emps.forEach(e => { empresasMap[e.id] = e; });
+          }
+        }
+
+        (supaUsers || []).filter(u => u.activo !== false).forEach(u => {
+          const emp = empresasMap[u.empresa_id] || {};
+          const email = (u.email || '').toLowerCase();
+          if (email && !seenEmails.has(email)) {
+            seenEmails.add(email);
+            allUsers.push({
+              id: u.id,
+              displayId: u.id,
+              nombre: u.nombre || '',
+              apellido: u.apellido || '',
+              email: email,
+              rol: u.rol_global || 'user',
+              tenant_code: emp.codigo || '',
+              tenant: emp.nombre || emp.codigo || 'N/A',
+              status: u.activo ? 'active' : 'inactive',
+              registered: u.created_at || new Date().toISOString(),
+              lastActivity: u.updated_at || null,
+              notas: '',
+              source: 'supabase'
+            });
+          }
+        });
+      } catch (err) {
+        console.warn('[GET USERS] Supabase falló:', err.message);
+      }
     }
 
-    const { data: users, error } = await query.order('created_at', { ascending: false });
-    if (error) throw error;
+    // ═══ NOCODB: Owners/Admins registrados ═══
+    if (isRootUser(req) || !req.query.empresa) {
+      try {
+        const nocoParams = { limit: 500 };
+        const nocoResp = await nocodbApi.get(USUARIOS_TABLE, { params: nocoParams });
+        const nocoUsers = nocoResp.data?.list || [];
 
-    const usersMapped = (users || []).filter(u => u.activo !== false).map(u => {
-      const emp = u.empresas || {};
-      return {
-        id: u.id,
-        displayId: u.id,
-        nombre: u.nombre || '',
-        apellido: u.apellido || '',
-        email: u.email || '',
-        rol: u.rol_global || 'user',
-        tenant_code: emp.codigo || '',
-        tenant: emp.nombre || emp.codigo || 'N/A',
-        status: u.activo ? 'active' : 'inactive',
-        registered: u.created_at || new Date().toISOString(),
-        lastActivity: u.updated_at || null,
-        notas: ''
-      };
-    });
+        nocoUsers.forEach(u => {
+          const email = (u.email || u.Email || '').toLowerCase();
+          const rawEstado = (u.estado || u.Estado || 'Activo').toString().trim().toLowerCase();
+          const isActive = !['inactivo', 'inactive', 'suspendido', 'suspended'].includes(rawEstado);
+          if (email && !seenEmails.has(email) && isActive) {
+            seenEmails.add(email);
+            const empresaCodigo = u.empresa_codigo || u.Empresa_Codigo || u.EmpresaCodigo || 'ROOT';
+            allUsers.push({
+              id: u.Id || u.id || u.ID || email,
+              displayId: u.Id || u.id || email,
+              nombre: u.nombre || u.Nombre || '',
+              apellido: u.apellido || u.Apellido || '',
+              email: email,
+              rol: u.rol || u.Rol || u.rol_global || 'Owner',
+              tenant_code: empresaCodigo,
+              tenant: empresaCodigo,
+              status: 'active',
+              registered: u.created_at || u.Created_at || u.fecha_registro || new Date().toISOString(),
+              lastActivity: u.updated_at || null,
+              notas: '',
+              source: 'nocodb'
+            });
+          }
+        });
+      } catch (err) {
+        console.warn('[GET USERS] NocoDB falló:', err.message);
+      }
+    }
 
-    res.json(usersMapped);
+    // Sort by date
+    allUsers.sort((a, b) => new Date(b.registered) - new Date(a.registered));
+
+    res.json(allUsers);
   } catch (error) {
     return handleServerError(res, error);
   }
@@ -1854,14 +1919,18 @@ app.get('/api/users/:id', authenticate, async (req, res) => {
 
     const { data: usuario, error } = await supabase
       .from('usuarios')
-      .select('id, empresa_id, nombre, apellido, email, rol_global, activo, created_at, updated_at, empresas(nombre, codigo)')
+      .select('id, empresa_id, nombre, apellido, email, rol_global, activo, created_at, updated_at')
       .eq('id', id)
       .single();
 
     if (error || !usuario) return res.status(404).json({ error: 'Usuario no encontrado.' });
 
-    const emp = usuario.empresas || {};
-    const codigo = emp.codigo || '';
+    let codigo = '', empNombre = '';
+    if (usuario.empresa_id) {
+      const { data: emp } = await supabase.from('empresas').select('nombre, codigo').eq('id', usuario.empresa_id).single();
+      if (emp) { codigo = emp.codigo || ''; empNombre = emp.nombre || ''; }
+    }
+
     if (!isRootUser(req) && !assertTenantAccess(req, codigo)) {
       return res.status(403).json({ error: 'No tienes permiso para ver este usuario.' });
     }
@@ -1874,7 +1943,7 @@ app.get('/api/users/:id', authenticate, async (req, res) => {
       email: usuario.email || '',
       rol: usuario.rol_global || 'user',
       tenant_code: codigo,
-      tenant: emp.nombre || codigo || 'N/A',
+      tenant: empNombre || codigo || 'N/A',
       status: usuario.activo ? 'active' : 'inactive',
       registered: usuario.created_at || new Date().toISOString(),
       lastActivity: usuario.updated_at || null,
@@ -2117,10 +2186,10 @@ app.delete('/api/users/:id', authenticate, async (req, res) => {
   try {
     const { id } = req.params;
 
-    // 1. Fetch user data before deleting
+    // 1. Fetch user data before deleting (no FK join)
     const { data: userRecord } = await supabase
       .from('usuarios')
-      .select('id, nombre, apellido, email, empresas(nombre)')
+      .select('id, nombre, apellido, email')
       .eq('id', id)
       .single();
 

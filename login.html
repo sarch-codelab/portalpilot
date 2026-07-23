@@ -3,6 +3,16 @@
 
 <head>
     <meta charset="UTF-8">
+    <link rel="icon" type="image/png" href="img/iconos/Portal Pilot.png">
+    <meta property="og:title" content="Portal Pilot — Gestión Empresarial Inteligente">
+    <meta property="og:description" content="El ERP inteligente para PyMES hondureñas. Facturación, inventario, contabilidad y más con IA integrada.">
+    <meta property="og:image" content="https://portal-pilot.vercel.app/img/iconos/Portal Pilot.png">
+    <meta property="og:url" content="https://portal-pilot.vercel.app">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Portal Pilot — Gestión Empresarial Inteligente">
+    <meta name="twitter:description" content="El ERP inteligente para PyMES hondureñas. Facturación, inventario, contabilidad y más con IA integrada.">
+    <meta name="twitter:image" content="https://portal-pilot.vercel.app/img/iconos/Portal Pilot.png">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Portal Pilot — Acceso</title>
     <link
@@ -94,6 +104,26 @@
             align-items: center;
             gap: 10px;
             margin-bottom: 48px;
+        }
+
+        .back-to-portal {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-dim);
+            text-decoration: none;
+            font-size: 14px;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+        }
+        .back-to-portal:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: var(--accent-glow);
         }
 
         .brand-icon {
@@ -753,6 +783,7 @@
 
     <div class="page-wrap">
         <div class="brand">
+            <a href="index.html" class="back-to-portal" title="Volver al Portal"><i class="fas fa-arrow-left"></i></a>
             <div class="brand-icon"><i class="fas fa-robot"></i></div>
             <div class="brand-name">PORTAL PILOT</div>
         </div>

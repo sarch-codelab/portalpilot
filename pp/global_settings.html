@@ -286,15 +286,17 @@
     }
 
     .sidebar-logo .logo-icon {
-      width: 28px;
-      height: 28px;
-      background: var(--accent);
+      width: 34px;
+      height: 34px;
       border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 14px;
-      color: #fff;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    .sidebar-logo .logo-icon img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
     }
 
     .sidebar-nav {
@@ -1416,7 +1418,7 @@
   <div class="dashboard">
     <aside class="sidebar" id="sidebar">
       <div class="sidebar-logo">
-        <div class="logo-icon"><i class="fas fa-robot"></i></div>PORTAL PILOT
+        <div class="logo-icon"><img src="../img/iconos/Portal%20Pilot.png" alt="Portal Pilot"></div>PORTAL PILOT
       </div>
       <nav class="sidebar-nav">
         <a href="dashboard.html" class="sidebar-link"><i class="fas fa-home"></i> Dashboard</a>

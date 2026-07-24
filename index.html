@@ -322,15 +322,16 @@
     }
 
     .nav-logo .logo-icon {
-      width: 28px;
-      height: 28px;
-      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-soft) 100%);
+      width: 34px;
+      height: 34px;
       border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 13px;
-      color: #fff;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    .nav-logo .logo-icon img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
     }
 
     .nav-links {
@@ -359,6 +360,87 @@
       align-items: center;
       gap: 8px;
     }
+
+    /* ── MEGA-MENU ── */
+    .mega-wrap {
+      position: relative;
+    }
+    .mega-trigger {
+      font-size: 13px;
+      font-weight: 400;
+      color: var(--text-dim);
+      padding: 6px 12px;
+      border-radius: 6px;
+      transition: color .2s;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .mega-trigger:hover { color: var(--white); }
+    .mega-trigger i { font-size: 9px; transition: transform .2s; }
+    .mega-wrap:hover .mega-trigger i { transform: rotate(180deg); }
+    .mega-panel {
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%) translateY(8px);
+      background: var(--surface);
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-lg);
+      padding: 24px 28px;
+      min-width: 520px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 32px;
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transition: opacity .2s, visibility .2s, transform .2s;
+      box-shadow: 0 16px 48px rgba(0,0,0,0.4);
+      z-index: 200;
+    }
+    .mega-wrap:hover .mega-panel {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+      transform: translateX(-50%) translateY(0);
+    }
+    .mega-col-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+    }
+    .mega-link {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      transition: background .2s;
+      text-decoration: none;
+    }
+    .mega-link:hover { background: rgba(255,255,255,0.04); }
+    .mega-link-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      flex-shrink: 0;
+    }
+    .mega-link-icon.purple { background: rgba(139,92,246,0.12); color: var(--accent-soft); }
+    .mega-link-icon.blue   { background: rgba(10,132,255,0.12); color: var(--blue); }
+    .mega-link-icon.green  { background: rgba(48,209,88,0.12); color: var(--green); }
+    .mega-link-text { display: flex; flex-direction: column; }
+    .mega-link-text strong { font-size: 13px; font-weight: 600; color: var(--white); }
+    .mega-link-text span { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
 
     .hamburger {
       display: none;
@@ -1850,7 +1932,7 @@
   <header id="mainHeader">
     <nav>
       <div class="nav-logo">
-        <div class="logo-icon"><i class="fas fa-robot"></i></div>
+        <div class="logo-icon"><img src="img/iconos/Portal%20Pilot.png" alt="Portal Pilot"></div>
         PORTAL PILOT
       </div>
       <div class="nav-links">
@@ -1859,6 +1941,41 @@
         <a href="#features">Características</a>
         <a href="#how">Proceso</a>
         <a href="#database">Database</a>
+        <div class="mega-wrap">
+          <span class="mega-trigger">Producto <i class="fas fa-chevron-down"></i></span>
+          <div class="mega-panel">
+            <div>
+              <div class="mega-col-title">Aplicaciones</div>
+              <a href="download.html" class="mega-link">
+                <div class="mega-link-icon purple"><i class="fas fa-desktop"></i></div>
+                <div class="mega-link-text"><strong>Workspace</strong><span>App principal de escritorio</span></div>
+              </a>
+              <a href="download.html" class="mega-link">
+                <div class="mega-link-icon blue"><i class="fas fa-sliders-h"></i></div>
+                <div class="mega-link-text"><strong>Manager</strong><span>Gestión multi-tenant</span></div>
+              </a>
+              <a href="download.html" class="mega-link">
+                <div class="mega-link-icon green"><i class="fas fa-code"></i></div>
+                <div class="mega-link-text"><strong>Serverless</strong><span>Functions en la nube</span></div>
+              </a>
+            </div>
+            <div>
+              <div class="mega-col-title">Recursos</div>
+              <a href="documentacion.html" class="mega-link">
+                <div class="mega-link-icon blue"><i class="fas fa-book-open"></i></div>
+                <div class="mega-link-text"><strong>Documentación</strong><span>Guías y referencias API</span></div>
+              </a>
+              <a href="support.html" class="mega-link">
+                <div class="mega-link-icon purple"><i class="fas fa-headset"></i></div>
+                <div class="mega-link-text"><strong>Soporte</strong><span>Centro de ayuda y contacto</span></div>
+              </a>
+              <a href="download.html" class="mega-link">
+                <div class="mega-link-icon green"><i class="fas fa-download"></i></div>
+                <div class="mega-link-text"><strong>Descargar</strong><span>Windows, macOS, Linux</span></div>
+              </a>
+            </div>
+          </div>
+        </div>
         <a href="#pricing">Planes</a>
         <a href="#faq">FAQ</a>
       </div>
@@ -1879,6 +1996,10 @@
     <a href="#how" onclick="toggleMenu()">Proceso</a>
     <a href="#pricing" onclick="toggleMenu()">Planes</a>
     <a href="#faq" onclick="toggleMenu()">FAQ</a>
+    <div style="height:1px;background:var(--border);margin:8px 0;"></div>
+    <a href="documentacion.html" onclick="toggleMenu()"><i class="fas fa-book-open" style="width:18px;margin-right:4px;"></i> Documentación</a>
+    <a href="support.html" onclick="toggleMenu()"><i class="fas fa-headset" style="width:18px;margin-right:4px;"></i> Soporte</a>
+    <a href="download.html" onclick="toggleMenu()"><i class="fas fa-download" style="width:18px;margin-right:4px;"></i> Descargar App</a>
     <div style="height:1px;background:var(--border);margin:8px 0;"></div>
     <a href="registrov2.html" class="btn btn-acc" style="margin-top:4px;" onclick="toggleMenu()"><i
         class="fas fa-rocket"></i> Registrar Empresa</a>
@@ -2923,27 +3044,26 @@
             <li><a href="#features">Características</a></li>
             <li><a href="#pricing">Planes y Precios</a></li>
             <li><a href="#how">Cómo Funciona</a></li>
-            <li><a href="#">Documentación API</a></li>
-            <li><a href="#">Changelog</a></li>
+            <li><a href="documentacion.html">Documentación</a></li>
+            <li><a href="download.html">Descargar App</a></li>
           </ul>
         </div>
         <div class="footer-col">
           <h5>Empresa</h5>
           <ul>
-            <li><a href="#">Sobre Nosotros</a></li>
-            <li><a href="#">Clientes</a></li>
-            <li><a href="#">Blog Técnico</a></li>
-            <li><a href="#">Seguridad</a></li>
+            <li><a href="#team">Sobre Nosotros</a></li>
+            <li><a href="support.html">Soporte</a></li>
+            <li><a href="#faq">Preguntas Frecuentes</a></li>
             <li><a href="#cta-final">Contacto</a></li>
           </ul>
         </div>
         <div class="footer-col">
           <h5>Legal</h5>
           <ul>
-            <li><a href="#">Política de Privacidad</a></li>
-            <li><a href="#">Términos de Servicio</a></li>
-            <li><a href="#">Política de Cookies</a></li>
-            <li><a href="#">SLA</a></li>
+            <li><a href="privacidad.html">Política de Privacidad</a></li>
+            <li><a href="terminos.html">Términos de Servicio</a></li>
+            <li><a href="cookies.html">Política de Cookies</a></li>
+            <li><a href="sla.html">SLA</a></li>
           </ul>
         </div>
       </div>
@@ -2951,9 +3071,9 @@
         <p>© 2026 Portal Pilot. Todos los derechos reservados.</p>
         <p>Made in Honduras 🇭🇳 con ❤️ por el equipo de Portal Pilot.</p>
         <div class="footer-links">
-          <a href="#">Privacidad</a>
-          <a href="#">Términos</a>
-          <a href="#">Sitemap</a>
+          <a href="privacidad.html">Privacidad</a>
+          <a href="terminos.html">Términos</a>
+          <a href="support.html">Soporte</a>
         </div>
       </div>
     </div>

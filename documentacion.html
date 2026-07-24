@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <link rel="icon" type="image/png" href="img/iconos/Portal%20Pilot.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Documentación — Portal Pilot</title>
+  <meta name="description" content="Documentación completa de Portal Pilot. Guías paso a paso, referencias API, tutoriales de Workspace, Manager y Serverless.">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+    :root{
+      --bg:#000000;--bg-soft:#0a0a0c;--surface:#111114;--surface-2:#16161a;
+      --border:rgba(255,255,255,0.08);--border-strong:rgba(255,255,255,0.14);
+      --accent:#8b5cf6;--accent-soft:#a78bfa;--accent-glow:rgba(139,92,246,0.25);
+      --white:#f5f5f7;--text:#d2d2d7;--text-dim:#86868b;--text-muted:#6e6e73;
+      --green:#30d158;--blue:#0a84ff;--yellow:#fbbf24;
+      --radius:12px;--radius-lg:20px;
+      --sidebar-w:280px;--topbar-h:56px;
+    }
+    html{scroll-behavior:smooth;font-size:16px}
+    body{font-family:'DM Sans',-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden;line-height:1.7;-webkit-font-smoothing:antialiased}
+    a{text-decoration:none;color:inherit}ul{list-style:none}img{max-width:100%;display:block}button{font-family:inherit;cursor:pointer}
+    ::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:3px}
+
+    /* NAV */
+    header{position:fixed;top:0;left:0;right:0;z-index:100;padding:0 clamp(16px,4vw,40px);background:rgba(0,0,0,0.75);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid var(--border)}
+    nav{max-width:100%;margin:0 auto;display:flex;align-items:center;height:var(--topbar-h);gap:0}
+    .nav-logo{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:var(--white);letter-spacing:1.5px;display:flex;align-items:center;gap:10px}
+    .nav-logo .logo-icon{width:34px;height:34px;border-radius:8px;overflow:hidden;flex-shrink:0}
+    .nav-logo .logo-icon img{width:100%;height:100%;object-fit:contain}
+    .nav-links{display:flex;align-items:center;gap:4px;margin:0 32px}
+    .nav-links a{font-size:13px;font-weight:400;color:var(--text-dim);padding:6px 12px;border-radius:6px;transition:color .2s}
+    .nav-links a:hover,.nav-links a.active{color:var(--white)}
+    .nav-right{margin-left:auto;display:flex;align-items:center;gap:8px}
+    .btn{display:inline-flex;align-items:center;gap:8px;padding:12px 24px;border-radius:40px;font-size:13px;font-weight:500;border:none;transition:all .25s ease;white-space:nowrap;font-family:inherit}
+    .btn-acc{background:var(--white);color:#000}.btn-acc:hover{background:#e8e8ed;transform:scale(1.02)}
+    .btn-ghost{background:var(--surface);color:var(--white);border:1px solid var(--border-strong)}.btn-ghost:hover{background:var(--surface-2)}
+    .btn-sm{padding:9px 18px;font-size:12px}
+    .hamburger{display:none;flex-direction:column;gap:5px;background:none;border:none;padding:4px}.hamburger span{width:20px;height:1.5px;background:var(--white);transition:all .3s}
+    .mobile-menu{display:none;position:fixed;top:var(--topbar-h);left:0;right:0;background:rgba(0,0,0,0.95);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:20px clamp(16px,4vw,40px) 28px;flex-direction:column;gap:4px;z-index:99}
+    .mobile-menu.open{display:flex}.mobile-menu a{font-size:15px;color:var(--text-dim);padding:10px 14px;border-radius:8px;transition:all .2s}.mobile-menu a:hover{color:var(--white);background:rgba(255,255,255,0.05)}
+
+    /* LAYOUT */
+    .docs-layout{display:flex;padding-top:var(--topbar-h);min-height:100vh}
+
+    /* SIDEBAR */
+    .docs-sidebar{width:var(--sidebar-w);position:fixed;top:var(--topbar-h);left:0;bottom:0;background:var(--bg-soft);border-right:1px solid var(--border);padding:24px 0;overflow-y:auto;z-index:50;transition:transform .3s}
+    .sidebar-search{padding:0 16px 20px;border-bottom:1px solid var(--border);margin-bottom:16px;position:relative}
+    .sidebar-search input{width:100%;padding:10px 14px 10px 36px;border-radius:10px;background:var(--surface);border:1px solid var(--border);color:var(--white);font-size:13px;outline:none;font-family:inherit}
+    .sidebar-search input:focus{border-color:var(--accent)}
+    .sidebar-search{position:relative}
+    .sidebar-search i{position:absolute;left:28px;top:50%;transform:translateY(-50%);color:var(--text-muted);font-size:12px}
+    .sidebar-cat{padding:4px 16px;margin-bottom:4px}
+    .sidebar-cat-title{font-family:'Syne',sans-serif;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-muted);padding:8px 0;display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none}
+    .sidebar-cat-title i{font-size:10px;transition:transform .2s}
+    .sidebar-cat.collapsed .sidebar-cat-title i{transform:rotate(-90deg)}
+    .sidebar-cat.collapsed .sidebar-cat-items{display:none}
+    .sidebar-cat-items{display:flex;flex-direction:column;gap:1px}
+    .sidebar-link{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:8px;font-size:13px;color:var(--text-dim);transition:all .2s;cursor:pointer}
+    .sidebar-link:hover{color:var(--white);background:rgba(255,255,255,0.04)}
+    .sidebar-link.active{color:var(--white);background:rgba(139,92,246,0.12)}
+    .sidebar-link i{width:16px;text-align:center;font-size:12px;color:var(--text-muted)}
+    .sidebar-link.active i{color:var(--accent-soft)}
+
+    /* MAIN */
+    .docs-main{margin-left:var(--sidebar-w);flex:1;padding:40px clamp(32px,5vw,64px) 80px;max-width:900px}
+    .docs-main h1{font-family:'Syne',sans-serif;font-size:clamp(28px,4vw,40px);font-weight:700;color:var(--white);letter-spacing:-1.5px;margin-bottom:8px;line-height:1.1}
+    .docs-main h2{font-family:'Syne',sans-serif;font-size:clamp(22px,3vw,28px);font-weight:700;color:var(--white);letter-spacing:-1px;margin:48px 0 16px;padding-top:24px;border-top:1px solid var(--border)}
+    .docs-main h3{font-family:'Syne',sans-serif;font-size:18px;font-weight:600;color:var(--white);margin:32px 0 12px}
+    .docs-main p{font-size:14px;color:var(--text-dim);line-height:1.8;margin-bottom:16px}
+    .docs-main .eyebrow{font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--accent-soft);margin-bottom:12px}
+    .docs-main code{font-family:'JetBrains Mono',monospace;font-size:12px;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:2px 7px;color:var(--accent-soft)}
+    .docs-main pre{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px 24px;margin:16px 0 24px;overflow-x:auto;line-height:1.6}
+    .docs-main pre code{background:none;border:none;padding:0;font-size:12px;color:var(--text)}
+    .docs-main ul,.docs-main ol{padding-left:20px;margin-bottom:16px}
+    .docs-main li{font-size:14px;color:var(--text-dim);margin-bottom:8px;padding-left:4px}
+    .docs-main li::marker{color:var(--accent-soft)}
+    .callout{padding:16px 20px;border-radius:var(--radius);margin:20px 0;font-size:13px;display:flex;gap:12px;align-items:flex-start}
+    .callout.info{background:rgba(10,132,255,0.08);border:1px solid rgba(10,132,255,0.2)}
+    .callout.info i{color:var(--blue);font-size:16px;margin-top:2px}
+    .callout.warn{background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.2)}
+    .callout.warn i{color:var(--yellow);font-size:16px;margin-top:2px}
+    .callout.success{background:rgba(48,209,88,0.08);border:1px solid rgba(48,209,88,0.2)}
+    .callout.success i{color:var(--green);font-size:16px;margin-top:2px}
+    .callout p{margin:0;color:var(--text)}
+    .step{display:flex;gap:16px;margin-bottom:24px}
+    .step-num{width:32px;height:32px;border-radius:50%;background:var(--accent);color:#fff;font-family:'Syne',sans-serif;font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .step-content{flex:1}
+    .step-content h4{font-size:15px;font-weight:600;color:var(--white);margin-bottom:6px}
+    .step-content p{font-size:13px;color:var(--text-dim);margin:0}
+    .badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;letter-spacing:.5px}
+    .badge-new{background:rgba(48,209,88,0.12);color:var(--green)}
+    .badge-beta{background:rgba(251,191,36,0.12);color:var(--yellow)}
+    .api-endpoint{display:flex;align-items:center;gap:10px;padding:14px 18px;background:var(--surface);border:1px solid var(--border);border-radius:10px;margin-bottom:12px;font-family:'JetBrains Mono',monospace;font-size:13px}
+    .api-method{padding:3px 8px;border-radius:4px;font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase}
+    .api-method.get{background:rgba(48,209,88,0.15);color:var(--green)}
+    .api-method.post{background:rgba(10,132,255,0.15);color:var(--blue)}
+    .api-method.put{background:rgba(251,191,36,0.15);color:var(--yellow)}
+    .api-method.delete{background:rgba(255,69,58,0.15);color:#ff453a}
+    .api-path{color:var(--text)}
+    table{width:100%;border-collapse:collapse;margin:16px 0 24px;font-size:13px}
+    th{text-align:left;padding:10px 14px;background:var(--surface);color:var(--text-dim);font-weight:600;font-size:11px;letter-spacing:.5px;text-transform:uppercase;border-bottom:1px solid var(--border)}
+    td{padding:10px 14px;border-bottom:1px solid var(--border);color:var(--text-dim)}
+    tr:hover td{background:rgba(255,255,255,0.02)}
+
+    /* FOOTER */
+    .docs-footer{margin-left:var(--sidebar-w);padding:32px clamp(32px,5vw,64px);border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+    .docs-footer a{font-size:13px;color:var(--text-dim);display:flex;align-items:center;gap:6px;transition:color .2s}
+    .docs-footer a:hover{color:var(--white)}
+    footer{margin-left:var(--sidebar-w);padding:24px clamp(32px,5vw,64px);border-top:1px solid var(--border);text-align:center}
+    footer p{font-size:12px;color:var(--text-muted)}
+
+    @media(max-width:900px){
+      .docs-sidebar{transform:translateX(-100%)}
+      .docs-sidebar.open{transform:translateX(0)}
+      .docs-main,.docs-footer,footer{margin-left:0}
+      .nav-links{display:none}
+      .hamburger{display:flex}
+      .sidebar-toggle-mobile{display:flex !important}
+    }
+    .sidebar-toggle-mobile{display:none;position:fixed;bottom:24px;left:24px;z-index:60;width:48px;height:48px;border-radius:50%;background:var(--accent);color:#fff;border:none;font-size:18px;align-items:center;justify-content:center;box-shadow:0 4px 20px var(--accent-glow)}
+
+    /* Search results */
+    #searchResults{position:absolute;top:calc(100% - 4px);left:0;right:0;background:var(--surface);border:1px solid var(--border);border-radius:10px;max-height:360px;overflow-y:auto;display:none;z-index:70;margin-top:4px}
+    .sr-item{padding:12px 16px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .2s}
+    .sr-item:last-child{border-bottom:none}
+    .sr-item:hover{background:rgba(139,92,246,0.08)}
+    .sr-meta{font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--accent-soft);margin-bottom:3px}
+    .sr-title{font-size:13px;font-weight:600;color:var(--white);margin-bottom:3px}
+    .sr-snippet{font-size:11px;color:var(--text-muted);line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <header>
+    <nav>
+      <a href="index.html" class="nav-logo">
+        <div class="logo-icon"><img src="img/iconos/Portal%20Pilot.png" alt="Portal Pilot"></div>
+        PORTAL PILOT
+      </a>
+      <div class="nav-links">
+        <a href="index.html">Inicio</a>
+        <a href="index.html#features">Características</a>
+        <a href="index.html#pricing">Planes</a>
+        <a href="documentacion.html" class="active">Documentación</a>
+        <a href="support.html">Soporte</a>
+      </div>
+      <div class="nav-right">
+        <a href="login.html" class="btn btn-ghost btn-sm">Iniciar Sesión</a>
+        <a href="download.html" class="btn btn-acc btn-sm"><i class="fas fa-rocket"></i> Descargar</a>
+      </div>
+      <button class="hamburger" id="ham" onclick="toggleMenu()"><span></span><span></span><span></span></button>
+    </nav>
+  </header>
+  <div class="mobile-menu" id="mobileMenu">
+    <a href="index.html">Inicio</a><a href="index.html#features">Características</a><a href="index.html#pricing">Planes</a><a href="documentacion.html">Documentación</a><a href="support.html">Soporte</a>
+    <div style="height:1px;background:var(--border);margin:8px 0"></div>
+    <a href="download.html" class="btn btn-acc" style="margin-top:4px"><i class="fas fa-rocket"></i> Descargar APP</a>
+  </div>
+
+  <!-- SIDEBAR + MAIN -->
+  <div class="docs-layout">
+
+    <!-- SIDEBAR -->
+    <aside class="docs-sidebar" id="docsSidebar">
+      <div class="sidebar-search">
+        <i class="fas fa-search"></i>
+        <input type="text" id="sidebarSearch" placeholder="Buscar en docs...">
+      </div>
+
+      <div class="sidebar-cat" data-cat="getting-started">
+        <div class="sidebar-cat-title" onclick="toggleSidebarCat(this.parentElement)">Primeros Pasos <i class="fas fa-chevron-down"></i></div>
+        <div class="sidebar-cat-items">
+          <div class="sidebar-link active" data-section="intro" onclick="showSection(this,'intro')"><i class="fas fa-book-open"></i> Introducción</div>
+          <div class="sidebar-link" data-section="instalacion" onclick="showSection(this,'instalacion')"><i class="fas fa-download"></i> Instalación</div>
+          <div class="sidebar-link" data-section="primeros-pasos" onclick="showSection(this,'primeros-pasos')"><i class="fas fa-play"></i> Primeros pasos</div>
+        </div>
+      </div>
+
+      <div class="sidebar-cat" data-cat="workspace">
+        <div class="sidebar-cat-title" onclick="toggleSidebarCat(this.parentElement)">Workspace <span class="badge badge-new">App</span> <i class="fas fa-chevron-down"></i></div>
+        <div class="sidebar-cat-items">
+          <div class="sidebar-link" data-section="ws-facturacion" onclick="showSection(this,'ws-facturacion')"><i class="fas fa-file-invoice"></i> Facturación SAR</div>
+          <div class="sidebar-link" data-section="ws-inventario" onclick="showSection(this,'ws-inventario')"><i class="fas fa-boxes"></i> Inventario</div>
+          <div class="sidebar-link" data-section="ws-contabilidad" onclick="showSection(this,'ws-contabilidad')"><i class="fas fa-calculator"></i> Contabilidad</div>
+          <div class="sidebar-link" data-section="ws-nomina" onclick="showSection(this,'ws-nomina')"><i class="fas fa-users"></i> Nómina</div>
+          <div class="sidebar-link" data-section="ws-ia" onclick="showSection(this,'ws-ia')"><i class="fas fa-brain"></i> Asistente IA</div>
+          <div class="sidebar-link" data-section="ws-offline" onclick="showSection(this,'ws-offline')"><i class="fas fa-wifi"></i> Modo Offline</div>
+        </div>
+      </div>
+
+      <div class="sidebar-cat" data-cat="enterprise">
+        <div class="sidebar-cat-title" onclick="toggleSidebarCat(this.parentElement)">Enterprise <span class="badge badge-beta">Bots</span> <i class="fas fa-chevron-down"></i></div>
+        <div class="sidebar-cat-items">
+          <div class="sidebar-link" data-section="bots-intro" onclick="showSection(this,'bots-intro')"><i class="fas fa-robot"></i> Bots RPA</div>
+          <div class="sidebar-link" data-section="bots-flow" onclick="showSection(this,'bots-flow')"><i class="fas fa-project-diagram"></i> Editor de Flujos</div>
+          <div class="sidebar-link" data-section="bots-ia" onclick="showSection(this,'bots-ia')"><i class="fas fa-microchip"></i> Configuración IA</div>
+          <div class="sidebar-link" data-section="bots-triggers" onclick="showSection(this,'bots-triggers')"><i class="fas fa-bolt"></i> Triggers y Webhooks</div>
+        </div>
+      </div>
+
+      <div class="sidebar-cat" data-cat="serverless">
+        <div class="sidebar-cat-title" onclick="toggleSidebarCat(this.parentElement)">Serverless <i class="fas fa-chevron-down"></i></div>
+        <div class="sidebar-cat-items">
+          <div class="sidebar-link" data-section="sl-creates" onclick="showSection(this,'sl-creates')"><i class="fas fa-plus-circle"></i> Crear Serverless</div>
+          <div class="sidebar-link" data-section="sl-deploy" onclick="showSection(this,'sl-deploy')"><i class="fas fa-cloud-upload-alt"></i> Desplegar</div>
+        </div>
+      </div>
+
+      <div class="sidebar-cat" data-cat="api">
+        <div class="sidebar-cat-title" onclick="toggleSidebarCat(this.parentElement)">API <i class="fas fa-chevron-down"></i></div>
+        <div class="sidebar-cat-items">
+          <div class="sidebar-link" data-section="api-auth" onclick="showSection(this,'api-auth')"><i class="fas fa-key"></i> Autenticación</div>
+          <div class="sidebar-link" data-section="api-endpoints" onclick="showSection(this,'api-endpoints')"><i class="fas fa-plug"></i> Endpoints</div>
+        </div>
+      </div>
+
+      <div class="sidebar-cat" data-cat="plan">
+        <div class="sidebar-cat-title" onclick="toggleSidebarCat(this.parentElement)">Planes y Facturación <i class="fas fa-chevron-down"></i></div>
+        <div class="sidebar-cat-items">
+          <div class="sidebar-link" data-section="planes" onclick="showSection(this,'planes')"><i class="fas fa-tag"></i> Comparar Planes</div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="docs-main" id="docsMain">
+
+      <!-- INTRO -->
+      <div class="doc-section active" id="sec-intro">
+        <div class="eyebrow">PRIMEROS PASOS</div>
+        <h1>Introducción a Portal Pilot</h1>
+        <p>Portal Pilot es una plataforma SaaS ERP con inteligencia artificial integrada, diseñada para empresas hondureñas. Incluye facturación electrónica SAR, inventario, contabilidad, nómina y bots RPA automatizados.</p>
+        <div class="callout info"><i class="fas fa-info-circle"></i><p>Portal Pilot cuenta con 3 aplicaciones de escritorio: <strong>Workspace</strong> (app principal), <strong>Manager</strong> (gestión multi-tenant) y <strong>Serverless</strong> (functions).</p></div>
+        <h3>¿Qué incluye?</h3>
+        <ul>
+          <li><strong>Facturación Electrónica SAR/DEI</strong> — Cumplimiento normativo hondureño</li>
+          <li><strong>Inventario Multi-Almacén</strong> — Control en tiempo real con stock mínimo</li>
+          <li><strong>Contabilidad</strong> — Estados financieros, balances, impuestos</li>
+          <li><strong>Nómina Hondureña</strong> — IHSS, RAP, decimoctavo</li>
+          <li><strong>Asistente IA</strong> — Gemma 3N / Llama 3 / Mistral</li>
+          <li><strong>Bots RPA</strong> — Automatización de tareas con editor visual</li>
+          <li><strong>Modo Offline</strong> — Funciona sin conexión a internet</li>
+        </ul>
+      </div>
+
+      <!-- INSTALACION -->
+      <div class="doc-section" id="sec-instalacion" style="display:none">
+        <div class="eyebrow">PRIMEROS PASOS</div>
+        <h1>Instalación de Portal Pilot</h1>
+        <p>Descarga e instala Portal Pilot Workspace en tu escritorio. Disponible para Windows, macOS y Linux.</p>
+        <div class="step"><div class="step-num">1</div><div class="step-content"><h4>Descarga la app</h4><p>Ve a <a href="download.html" style="color:var(--accent-soft);text-decoration:underline;">portalpilot.hn/download</a> y selecciona tu sistema operativo.</p></div></div>
+        <div class="step"><div class="step-num">2</div><div class="step-content"><h4>Ejecuta el instalador</h4><p>Windows: haz doble clic en el .exe. macOS: arrastra a Applications. Linux: <code>chmod +x PortalPilot && ./PortalPilot</code></p></div></div>
+        <div class="step"><div class="step-num">3</div><div class="step-content"><h4>Crea tu cuenta</h4><p>Al abrir la app por primera vez, ingresa tu email o crea una cuenta nueva. El plan gratuito incluye hasta 5 facturas/mes.</p></div></div>
+        <div class="step"><div class="step-num">4</div><div class="step-content"><h4>Configura tu empresa</h4><p>Ingresa los datos de tu empresa: nombre, RTN, CAI del SAR y dirección. Esto se usa para generar facturas válidas.</p></div></div>
+        <div class="callout success"><i class="fas fa-check-circle"></i><p>¡Listo! Ya puedes empezar a facturar, gestionar inventario y usar la IA de Portal Pilot.</p></div>
+      </div>
+
+      <!-- PRIMEROS PASOS -->
+      <div class="doc-section" id="sec-primeros-pasos" style="display:none">
+        <div class="eyebrow">PRIMEROS PASOS</div>
+        <h1>Tu primera factura</h1>
+        <p>Veamos cómo crear tu primera factura electrónica en menos de 2 minutos.</p>
+        <div class="step"><div class="step-num">1</div><div class="step-content"><h4>Ve a Facturación</h4><p>En el menú lateral, haz clic en <strong>Facturación → Nueva Factura</strong>.</p></div></div>
+        <div class="step"><div class="step-num">2</div><div class="step-content"><h4>Selecciona el cliente</h4><p>Elige un cliente existente o crea uno nuevo con su nombre y RTN. El sistema autocompleta datos si ya está registrado.</p></div></div>
+        <div class="step"><div class="step-num">3</div><div class="step-content"><h4>Agrega productos</h4><p>Busca productos por nombre o código de barras. La IA sugiere productos frecuentes para ese cliente.</p></div></div>
+        <div class="step"><div class="step-num">4</div><div class="step-content"><h4>Envía al SAR</h4><p>Haz clic en <strong>Enviar</strong>. El sistema genera automáticamente la factura electrónica con código QR y la almacena en el SAR.</p></div></div>
+        <div class="callout info"><i class="fas fa-lightbulb"></i><p><strong>Tip IA:</strong> El asistente detecta si falta información del CAI o rangos por agotarse y te alerta antes de enviar.</p></div>
+      </div>
+
+      <!-- WS-FACTURACION -->
+      <div class="doc-section" id="sec-ws-facturacion" style="display:none">
+        <div class="eyebrow">WORKSPACE</div>
+        <h1>Facturación Electrónica SAR</h1>
+        <p>Portal Pilot genera facturas electrónicas conformes a la normativa del SAR (Servicio de Administración de Rentas) de Honduras, incluyendo códigos QR, CAI válido y formato DEI.</p>
+        <h2>Configurar CAI</h2>
+        <div class="step"><div class="step-num">1</div><div class="step-content"><h4>Ir a Configuración → Facturación SAR</h4><p>Selecciona "Configurar CAI" en el menú de empresa.</p></div></div>
+        <div class="step"><div class="step-num">2</div><div class="step-content"><h4>Ingresa tu CAI</h4><p>Escribe el CAI vigente tal como aparece en tu resolución. El sistema valida el formato automáticamente.</p></div></div>
+        <div class="step"><div class="step-num">3</div><div class="step-content"><h4>Define los rangos autorizados</h4><p>Establece el rango inicial y final de facturación. El sistema calcula automáticamente cuántas facturas puedes emitir.</p></div></div>
+        <div class="callout warn"><i class="fas fa-exclamation-triangle"></i><p>El sistema te notificará cuando te queden menos del 10% de facturas disponibles en tu rango actual.</p></div>
+        <h2>Generar Factura</h2>
+        <ul>
+          <li>Selecciona o crea un cliente (requiere nombre y RTN)</li>
+          <li>Agrega productos/servicios con cantidades y precios</li>
+          <li>Aplica impuestos (ISV 15% se calcula automáticamente)</li>
+          <li>Haz clic en "Enviar al SAR" — se genera factura electrónica con QR</li>
+          <li>Descarga PDF o comparte enlace directo al cliente</li>
+        </ul>
+      </div>
+
+      <!-- WS-INVENTARIO -->
+      <div class="doc-section" id="sec-ws-inventario" style="display:none">
+        <div class="eyebrow">WORKSPACE</div>
+        <h1>Gestión de Inventario</h1>
+        <p>Control total de productos, almacenes y stock en tiempo real con alertas automáticas de stock mínimo.</p>
+        <h2>Crear Producto</h2>
+        <ul>
+          <li><strong>Nombre:</strong> Nombre descriptivo del producto</li>
+          <li><strong>Código SKU:</strong> Código único de identificación</li>
+          <li><strong>Precio de compra:</strong> Costo de adquisición</li>
+          <li><strong>Precio de venta:</strong> Precio al público</li>
+          <li><strong>Stock mínimo:</strong> Nivel mínimo de alerta</li>
+          <li><strong>Almacén:</strong> Ubicación física del producto</li>
+        </ul>
+        <h2>Multi-Almacén</h2>
+        <p>Administra múltiples ubicaciones físicas. Cada almacén tiene stock independiente y se pueden transferir productos entre ellos. Las transferencias quedan registradas en el historial con auditoría completa.</p>
+        <div class="callout info"><i class="fas fa-info-circle"></i><p>La IA detecta patrones de venta y sugiere reordenar productos antes de quedarse sin stock.</p></div>
+      </div>
+
+      <!-- WS-CONTABILIDAD -->
+      <div class="doc-section" id="sec-ws-contabilidad" style="display:none">
+        <div class="eyebrow">WORKSPACE</div>
+        <h1>Contabilidad</h1>
+        <p>Módulo contable completo con estados financieros, balances y reportes fiscales automáticos.</p>
+        <h2>Funciones Principales</h2>
+        <ul>
+          <li>Estado de Resultados por período</li>
+          <li>Balance General</li>
+          <li>Libro de Compras y Ventas</li>
+          <li>Reporte de Retenciones</li>
+          <li>Cálculo automático de ISV</li>
+          <li>Conciliación Bancaria</li>
+        </ul>
+        <h2>Reportes</h2>
+        <p>Genera reportes en PDF o Excel para declaraciones fiscales. El sistema integra directamente los datos de facturación SAR, eliminando el doble registro.</p>
+      </div>
+
+      <!-- WS-NOMINA -->
+      <div class="doc-section" id="sec-ws-nomina" style="display:none">
+        <div class="eyebrow">WORKSPACE</div>
+        <h1>Nómina Hondureña</h1>
+        <p>Cálculo automático de nómina con deducciones de ley hondureñas: IHSS, RAP, decimoctavo, decimocuarto.</p>
+        <h2>Deducciones Automáticas</h2>
+        <ul>
+          <li><strong>IHSS:</strong> Instituto Hondureño de Seguridad Social — 2.5% salario, 1.5% patrono</li>
+          <li><strong>RAP:</strong> Retiro Alimentario para Pensionados — 1.5% empleado, 2% patrono</li>
+          <li><strong>Decimoctavo:</strong> Bono de 1 mes / 12 × días trabajados</li>
+          <li><strong>Decimocuarto:</strong> Bono de 1 mes / 12 × días trabajados</li>
+          <li><strong>ISR:</strong> Impuesto Sobre la Renta según tabla vigente</li>
+        </ul>
+        <div class="callout success"><i class="fas fa-check-circle"></i><p>El sistema genera automáticamente los reportes para INSS y RAP listos para presentar al patrono.</p></div>
+      </div>
+
+      <!-- WS-IA -->
+      <div class="doc-section" id="sec-ws-ia" style="display:none">
+        <div class="eyebrow">WORKSPACE</div>
+        <h1>Asistente de Inteligencia Artificial</h1>
+        <p>Portal Pilot integra modelos de IA local (sin enviar datos a la nube) para asistencia contable, generación de reportes y automatización inteligente.</p>
+        <h2>Modelos Disponibles</h2>
+        <table>
+          <tr><th>Modelo</th><th>Uso Principal</th><th>Requisitos</th></tr>
+          <tr><td><strong>Gemma 3N</strong></td><td>Contabilidad, facturación, análisis financiero</td><td>4GB RAM, CPU moderna</td></tr>
+          <tr><td><strong>Llama 3</strong></td><td>Procesamiento de texto, generación de reportes</td><td>8GB RAM, CPU moderna</td></tr>
+          <tr><td><strong>Mistral</strong></td><td>Chat conversacional, asistencia general</td><td>4GB RAM, CPU moderna</td></tr>
+        </table>
+        <h2>Configurar</h2>
+        <p>Ve a Configuración → IA y selecciona tu modelo. La primera ejecución descarga el modelo (~2-4GB). Después funciona 100% offline.</p>
+        <div class="callout warn"><i class="fas fa-exclamation-triangle"></i><p>Gemma 3N está optimizado para tareas contables hondureñas. Es el modelo recomendado para uso general en Portal Pilot.</p></div>
+      </div>
+
+      <!-- WS-OFFLINE -->
+      <div class="doc-section" id="sec-ws-offline" style="display:none">
+        <div class="eyebrow">WORKSPACE</div>
+        <h1>Modo Offline</h1>
+        <p>Portal Pilot Workspace funciona completamente sin conexión a internet para operaciones esenciales.</p>
+        <h2>Disponible Offline</h2>
+        <ul>
+          <li>✅ Crear y enviar facturas (se sincronizan al reconectar)</li>
+          <li>✅ Gestionar inventario</li>
+          <li>✅ Consultas contables</li>
+          <li>✅ Generar reportes</li>
+          <li>✅ Usar IA local (Gemma 3N)</li>
+        </ul>
+        <h2>Requiere Conexión</h2>
+        <ul>
+          <li>❌ Envío de facturas al SAR (se encola y envía al reconectar)</li>
+          <li>❌ Bots RPA y automatizaciones</li>
+          <li>❌ Sincronización multi-usuario</li>
+          <li>❌ Actualizaciones del sistema</li>
+        </ul>
+        <div class="callout info"><i class="fas fa-info-circle"></i><p>Cuando recuperas conexión, todas las operaciones offline se sincronizan automáticamente con el servidor.</p></div>
+      </div>
+
+      <!-- BOTS-RPA -->
+      <div class="doc-section" id="sec-bots-intro" style="display:none">
+        <div class="eyebrow">ENTERPRISE</div>
+        <h1>Bots RPA <span class="badge badge-beta">Enterprise</span></h1>
+        <p>Automatiza tareas repetitivas con bots de Robotic Process Automation. Crea agentes que ejecutan flujos de trabajo cuando ocurren eventos (emails, CRON, webhooks, manuales).</p>
+        <h2>Crear tu primer Bot</h2>
+        <div class="step"><div class="step-num">1</div><div class="step-content"><h4>Ir a Enterprise → Bots RPA</h4><p>Haz clic en "Nuevo Agente" para iniciar la configuración.</p></div></div>
+        <div class="step"><div class="step-num">2</div><div class="step-content"><h4>Selecciona el trigger</h4><p>Elige cuándo se activa el bot: al recibir un email, en una fecha/hora programada (CRON), al recibir un webhook HTTP, o manualmente.</p></div></div>
+        <div class="step"><div class="step-num">3</div><div class="step-content"><h4>Configura la acción IA</h4><p>Define qué modelo usar (Gemma 3N recomendado) y el prompt del sistema. Ejemplo: "Extrae el monto del email y genera una factura en el ERP".</p></div></div>
+        <div class="step"><div class="step-num">4</div><div class="step-content"><h4>Conecta pasos en el Flow Editor</h4><p>Usa el editor visual para encadenar acciones: condición → delay → webhook → acción DB. Arrastra nodos y conéctalos.</p></div></div>
+        <div class="step"><div class="step-num">5</div><div class="step-content"><h4>Activa el bot</h4><p>Guarda y activa. El bot aparecerá en la grilla de agentes con estado "Activo" y métricas en tiempo real.</p></div></div>
+        <div class="callout success"><i class="fas fa-check-circle"></i><p>Los bots se ejecutan en background. Monitorea su actividad en la consola de logs en tiempo real.</p></div>
+      </div>
+
+      <!-- BOTS-FLOW -->
+      <div class="doc-section" id="sec-bots-flow" style="display:none">
+        <div class="eyebrow">ENTERPRISE</div>
+        <h1>Editor de Flujos (Flow Editor)</h1>
+        <p>Editor visual drag & drop para construir pipelines de automatización con nodos conectados.</p>
+        <h2>Tipos de Nodos</h2>
+        <table>
+          <tr><th>Nodo</th><th>Descripción</th><th>Ejemplo</th></tr>
+          <tr><td><strong>Trigger</strong></td><td>Punto de inicio del flujo</td><td>Email recibido, CRON, Webhook</td></tr>
+          <tr><td><strong>Condición</strong></td><td>Evalúa una expresión</td><td>Si monto > 1000 → ruta A</td></tr>
+          <tr><td><strong>Delay</strong></td><td>Espera un tiempo determinado</td><td>Esperar 5 minutos</td></tr>
+          <tr><td><strong>Webhook</strong></td><td>Envía HTTP request</td><td>Notificar a Slack, Telegram</td></tr>
+          <tr><td><strong>DB</strong></td><td>Operación en base de datos</td><td>Crear registro, actualizar stock</td></tr>
+          <tr><td><strong>IA</strong></td><td>Procesamiento con modelo</td><td>Clasificar email, extraer datos</td></tr>
+        </table>
+        <h2>Ejemplo: Auto-facturar desde email</h2>
+        <pre><code>Trigger (Email) → IA (Extraer datos) → Condición (¿Cliente existe?) 
+  ├─ Sí → DB (Crear factura) → Webhook (Notificar)
+  └─ No → DB (Crear cliente) → DB (Crear factura) → Webhook (Notificar)</code></pre>
+      </div>
+
+      <!-- BOTS-IA -->
+      <div class="doc-section" id="sec-bots-ia" style="display:none">
+        <div class="eyebrow">ENTERPRISE</div>
+        <h1>Configuración de IA en Bots</h1>
+        <p>Cada bot puede usar un modelo de IA diferente. Configura el modelo, temperatura y prompt del sistema.</p>
+        <h2>Opciones de Configuración</h2>
+        <ul>
+          <li><strong>Modelo:</strong> Gemma 3N (recomendado), Llama 3, Mistral</li>
+          <li><strong>Temperatura:</strong> 0.0 (determinista) a 1.0 (creativo). Para contabilidad usa 0.0-0.2</li>
+          <li><strong>Prompt del sistema:</strong> Instrucciones específicas para el bot. Ej: "Eres un asistente contable. Extrae montos y conceptos de emails."</li>
+          <li><strong>Max tokens:</strong> Límite de respuesta del modelo (512-2048)</li>
+        </ul>
+        <div class="callout info"><i class="fas fa-lightbulb"></i><p>Gemma 3N es el modelo recomendado para bots contables. Está optimizado para tareas de facturación y análisis financiero hondureño.</p></div>
+      </div>
+
+      <!-- BOTS-TRIGGERS -->
+      <div class="doc-section" id="sec-bots-triggers" style="display:none">
+        <div class="eyebrow">ENTERPRISE</div>
+        <h1>Triggers y Webhooks</h1>
+        <p>Los triggers determinan cuándo se activa un bot. Webhooks permiten activar bots externamente.</p>
+        <h2>Tipos de Trigger</h2>
+        <table>
+          <tr><th>Trigger</th><th>Descripción</th><th>Uso típico</th></tr>
+          <tr><td><strong>Email</strong></td><td>Se activa al recibir un email</td><td>Auto-facturar desde solicitudes</td></tr>
+          <tr><td><strong>CRON</strong></td><td>Ejecuta en horario programado</td><td>Reportes diarios, recordatorios</td></tr>
+          <tr><td><strong>Webhook</strong></td><td>HTTP POST a una URL</td><td>Integraciones externas</td></tr>
+          <tr><td><strong>Manual</strong></td><td>Activación manual desde UI</td><td>Tareas bajo demanda</td></tr>
+        </table>
+        <h2>Endpoint de Webhook</h2>
+        <p>Cada bot genera una URL única tipo:</p>
+        <pre><code>POST https://api.portalpilot.hn/webhook/bot/{bot_id}</code></pre>
+        <p>Envía un POST con JSON y el bot procesará los datos según su flujo configurado.</p>
+      </div>
+
+      <!-- SERVERLESS -->
+      <div class="doc-section" id="sec-sl-creates" style="display:none">
+        <div class="eyebrow">SERVERLESS</div>
+        <h1>Crear Serverless Function</h1>
+        <p>Portal Pilot Serverless permite crear funciones backend personalizadas ejecutadas en la nube.</p>
+        <div class="step"><div class="step-num">1</div><div class="step-content"><h4>Ir a Serverless → Nueva Function</h4><p>Selecciona "Crear Function" en el dashboard.</p></div></div>
+        <div class="step"><div class="step-num">2</div><div class="step-content"><h4>Escribe tu código</h4><p>Usa el editor integrado. Soporta JavaScript/Node.js. Ejemplo: procesar pagos, transformar datos, integraciones API.</p></div></div>
+        <div class="step"><div class="step-num">3</div><div class="step-content"><h4>Configura el endpoint</h4><p>Define la ruta (ej: <code>/api/mi-funcion</code>), método HTTP y variables de entorno.</p></div></div>
+      </div>
+
+      <div class="doc-section" id="sec-sl-deploy" style="display:none">
+        <div class="eyebrow">SERVERLESS</div>
+        <h1>Desplegar Function</h1>
+        <p>Haz clic en "Deploy" para publicar tu function. Se ejecuta en entorno aislado con escalado automático.</p>
+        <div class="callout info"><i class="fas fa-info-circle"></i><p>Las functions se despliegan en subdominios únicos tipo: <code>mi-funcion.portalpilot.hn</code></p></div>
+        <h2>Monitoreo</h2>
+        <ul>
+          <li>Logs en tiempo real desde la consola</li>
+          <li>Métricas de invocaciones, latencia y errores</li>
+          <li>Alertas por email si hay fallos</li>
+        </ul>
+      </div>
+
+      <!-- API -->
+      <div class="doc-section" id="sec-api-auth" style="display:none">
+        <div class="eyebrow">API</div>
+        <h1>Autenticación API</h1>
+        <p>Portal Pilot usa JWT (JSON Web Token) para autenticar peticiones API. El token se obtiene al iniciar sesión y se envía en cada petición.</p>
+        <h2>Headers Requeridos</h2>
+        <pre><code>Authorization: Bearer &lt;tu_token_jwt&gt;
+Content-Type: application/json</code></pre>
+        <h2>Login — Obtener Token</h2>
+        <div class="api-endpoint"><span class="api-method post">POST</span><span class="api-path">/api/login</span></div>
+        <pre><code>// Request
+{
+  "email": "usuario@empresa.com",
+  "password": "tu_password"
+}
+
+// Response 200
+{
+  "token": "eyJhbGciOiJIUzI1NiIs...",
+  "user": {
+    "id": "abc123",
+    "email": "usuario@empresa.com",
+    "nombre": "Juan Pérez",
+    "role": "admin"
+  }
+}
+
+// Response 401
+{ "error": "Credenciales inválidas" }</code></pre>
+        <div class="callout warn"><i class="fas fa-exclamation-triangle"></i><p><strong>Rate limit:</strong> 10 intentos de login cada 15 minutos por IP. Los tokens expiran en 24 horas. Usa <code>POST /api/refresh</code> para renovar.</p></div>
+
+        <h2>Refresh Token</h2>
+        <div class="api-endpoint"><span class="api-method post">POST</span><span class="api-path">/api/refresh</span></div>
+        <p>Renueva el token JWT antes de que expire. Requiere autenticación.</p>
+        <pre><code>// Response 200
+{ "token": "eyJhbGciOiJIUzI1NiIs...(nuevo)" }</code></pre>
+
+        <h2>Registro</h2>
+        <div class="api-endpoint"><span class="api-method post">POST</span><span class="api-path">/api/registro</span></div>
+        <pre><code>// Request
+{
+  "email": "nuevo@empresa.com",
+  "password": "password123",
+  "nombre": "María López",
+  "empresa": "Mi Empresa S.A."
+}
+
+// Response 201
+{ "message": "Cuenta creada. Verifica tu correo.", "userId": "abc123" }</code></pre>
+
+        <h2>Verificación de Email</h2>
+        <div class="api-endpoint"><span class="api-method post">POST</span><span class="api-path">/api/enviar-codigo-verificacion</span></div>
+        <p>Envía un código de verificación al correo registrado.</p>
+
+        <h2>Recuperación de Contraseña</h2>
+        <div class="api-endpoint"><span class="api-method post">POST</span><span class="api-path">/api/recuperacion</span></div>
+        <p>Envía un enlace de recuperación al correo. Rate limit: 3 req / 15 min.</p>
+        <div class="api-endpoint"><span class="api-method post">POST</span><span class="api-path">/api/recuperacion/verificar</span></div>
+        <p>Verifica el código de recuperación y restablece la contraseña.</p>
+
+        <h2>Verificar Email Existente</h2>
+        <div class="api-endpoint"><span class="api-method get">GET</span><span class="api-path">/api/check-email?email=correo@ejemplo.com</span></div>
+        <pre><code>// Response 200
+{ "exists": true }</code></pre>
+
+        <h2>Health Check</h2>
+        <div class="api-endpoint"><span class="api-method get">GET</span><span class="api-path">/api/health</span></div>
+        <p>Verifica el estado del servidor. No requiere autenticación.</p>
+        <pre><code>// Response 200
+{ "status": "ok", "uptime": 12345 }</code></pre>
+      </div>
+
+      <div class="doc-section" id="sec-api-endpoints" style="display:none">
+        <div class="eyebrow">API</div>
+        <h1>Referencia de Endpoints</h1>
+        <p>Todos los endpoints marcados con 🔒 requieren autenticación JWT en el header <code>Authorization</code>.</p>
+
+        <h2>Tenants (Empresas)</h2>
+        <div class="api-endpoint"><span class="api-method get">GET</span><span class="api-path">/api/tenants 🔒</span></div>
+        <p>Lista todas las empresas. Soporta paginación y búsqueda.</p>
+        <pre><code>// Query params: ?page=1&limit=20&search=nombre
+// Response 200
+{
+  "tenants": [{ "id": "abc123", "nombre": "TechCorp", "plan": "business", ... }],
+  "total": 45,
+  "page": 1,
+  "pages": 3
+}</code></pre>
+
+        <div class="api-endpoint"><span class="api-method post">POST</span><span class="api-path">/api/tenants 🔒</span></div>
+        <p>Crea una nueva empresa.</p>
+        <pre><code>// Request
+{
+  "nombre": "Nueva Empresa",
+  "rtn": "0801-1234-567890",
+  "direccion": "Tegucigalpa",
+  "giro": "Comercio",
+  "plan": "starter"
+}
+
+// Response 201
+{ "id": "xyz789", "nombre": "Nueva Empresa", ... }</code></pre>
+
+        <div class="api-endpoint"><span class="api-method get">GET</span><span class="api-path">/api/tenant/:id 🔒</span></div>
+        <p>Obtiene los detalles de una empresa específica.</p>
+
+        <div class="api-endpoint"><span class="api-method put">PUT</span><span class="api-path">/api/tenants/:id 🔒</span></div>
+        <p>Actualiza los datos de una empresa. Puede enviar solo los campos a modificar.</p>
+        <pre><code>// Request (parcial)
+{ "plan": "business", "nombre": "TechCorp Actualizado" }</code></pre>
+
+        <div class="api-endpoint"><span class="api-method delete">DELETE</span><span class="api-path">/api/tenants/:id 🔒</span></div>
+        <p>Elimina una empresa y todos sus datos. Operación irreversible.</p>
+
+        <div class="api-endpoint"><span class="api-method get">GET</span><span class="api-path">/api/debug/tenants/:id 🔒</span></div>
+        <p>Información de debug de una empresa (solo para diagnosticar problemas).</p>
+
+        <h2>Usuarios</h2>
+        <div class="api-endpoint"><span class="api-method get">GET</span><span class="api-path">/api/users 🔒</span></div>
+        <p>Lista todos los usuarios. Soporta paginación y búsqueda por nombre o email.</p>
+        <pre><code>// Query params: ?page=1&limit=50&search=juan
+// Response 200
+{
+  "users": [{ "id": "u123", "email": "juan@...", "nombre": "Juan", "role": "user", ... }],
+  "total": 12,
+  "page": 1
+}</code></pre>
+
+        <div class="api-endpoint"><span class="api-method get">GET</span><span class="api-path">/api/users/:id 🔒</span></div>
+        <p>Obtiene los detalles de un usuario específico.</p>
+
+        <div class="api-endpoint"><span class="api-method post">POST</span><span class="api-path">/api/users 🔒</span></div>
+        <p>Crea un nuevo usuario. Requiere rol admin.</p>
+        <pre><code>// Request
+{
+  "email": "nuevo@empresa.com",
+  "password": "temporal123",
+  "nombre": "Carlos López",
+  "role": "user"
+}</code></pre>
+
+        <div class="api-endpoint"><span class="api-method put">PUT</span><span class="api-path">/api/users/:id 🔒</span></div>
+        <p>Actualiza un usuario (nombre, email, rol, avatar, banner). El usuario solo puede actualizar su propio perfil.</p>
+        <pre><code>// Request
+{ "nombre": "Carlos Actualizado", "role": "admin" }</code></pre>
+
+        <div class="api-endpoint"><span class="api-method delete">DELETE</span><span class="api-path">/api/users/:id 🔒</span></div>
+        <p>Elimina un usuario. No se puede eliminar a uno mismo.</p>
+
+        <h2>Archivos (Upload)</h2>
+        <div class="api-endpoint"><span class="api-method post">POST</span><span class="api-path">/api/upload 🔒</span></div>
+        <p>Sube archivos (avatars, banners) a Supabase Storage.</p>
+        <pre><code>// Request: multipart/form-data
+// Campo: file (imagen JPG/PNG, máx 5MB)
+// Campo: type (opcional: "avatar" | "banner")
+
+// Response 200
+{ "url": "https://storage.supabase.co/..." }</code></pre>
+
+        <h2>Seguridad</h2>
+        <div class="api-endpoint"><span class="api-method post">POST</span><span class="api-path">/api/alerta-no-autorizado</span></div>
+        <p>Reporta un intento de acceso no autorizado. Rate limit: 10 req / 15 min.</p>
+        <pre><code>// Request
+{
+  "email": "usuario@empresa.com",
+  "ip": "190.100.50.xx",
+  "reason": "Contraseña incorrecta"
+}</code></pre>
+
+        <h2>Notificaciones (Bots)</h2>
+        <div class="api-endpoint"><span class="api-method post">POST</span><span class="api-path">/api/notify/onboarding 🔒</span></div>
+        <p>Envía notificación de bienvenida al completar onboarding.</p>
+
+        <div class="api-endpoint"><span class="api-method post">POST</span><span class="api-path">/api/notify/activation 🔒</span></div>
+        <p>Envía notificación de activación de cuenta.</p>
+
+        <h2>Diagnóstico</h2>
+        <div class="api-endpoint"><span class="api-method get">GET</span><span class="api-path">/api/diagnostico</span></div>
+        <p>Estado detallado del sistema: Supabase, NocoDB, email, uptime. No requiere auth.</p>
+        <pre><code>// Response 200
+{
+  "supabase": { "connected": true },
+  "nocodb": { "configured": true },
+  "email": { "configured": true },
+  "uptime": 86400
+}</code></pre>
+
+        <h2>Test Email</h2>
+        <div class="api-endpoint"><span class="api-method get">GET</span><span class="api-path">/api/test-email</span></div>
+        <p>Envía un correo de prueba para verificar la configuración SMTP.</p>
+
+        <h2>Configuración Pública</h2>
+        <div class="api-endpoint"><span class="api-method get">GET</span><span class="api-path">/api/config</span></div>
+        <p>Información pública del servidor (versión, funcionalidades habilitadas). No requiere auth.</p>
+
+        <div class="callout info"><i class="fas fa-info-circle"></i><p><strong>Base URL:</strong> Todos los endpoints están bajo <code>https://portal-pilot.vercel.app/api/...</code></p></div>
+      </div>
+
+      <!-- PLANES -->
+      <div class="doc-section" id="sec-planes" style="display:none">
+        <div class="eyebrow">PLANES</div>
+        <h1>Comparar Planes</h1>
+        <p>Elige el plan que mejor se adapte a tu negocio. Todos incluyen soporte por email y WhatsApp.</p>
+        <table>
+          <tr><th>Característica</th><th>Starter (L.499/mes)</th><th>Business (L.1,499/mes)</th><th>Enterprise (L.4,999/mes)</th></tr>
+          <tr><td>Usuarios</td><td>3</td><td>10</td><td>Ilimitados</td></tr>
+          <tr><td>Facturas/mes</td><td>100</td><td>500</td><td>Ilimitadas</td></tr>
+          <tr><td>Inventario</td><td>1 almacén</td><td>5 almacenes</td><td>Ilimitados</td></tr>
+          <tr><td>Contabilidad</td><td>Básica</td><td>Completa</td><td>Completa + API</td></tr>
+          <tr><td>Nómina</td><td>—</td><td>✅</td><td>✅</td></tr>
+          <tr><td>IA Local</td><td>—</td><td>Gemma 3N</td><td>Gemma 3N + Llama 3</td></tr>
+          <tr><td>Bots RPA</td><td>—</td><td>—</td><td>Ilimitados</td></tr>
+          <tr><td>Serverless</td><td>—</td><td>3 functions</td><td>Ilimitadas</td></tr>
+          <tr><td>Soporte</td><td>Email</td><td>Email + WhatsApp</td><td>Prioritario 24/7</td></tr>
+          <tr><td>Modo Offline</td><td>✅</td><td>✅</td><td>✅</td></tr>
+        </table>
+        <div class="callout info"><i class="fas fa-info-circle"></i><p>El plan gratuito incluye 5 facturas/mes, 1 usuario y 1 almacén. Ideal para probar Portal Pilot sin compromiso.</p></div>
+      </div>
+
+    </main>
+  </div>
+
+  <div class="docs-footer">
+    <a href="support.html"><i class="fas fa-headset"></i> ¿Necesitas ayuda?</a>
+    <a href="download.html">Descargar Portal Pilot <i class="fas fa-arrow-right"></i></a>
+  </div>
+  <footer>
+    <p>© 2026 Portal Pilot. Todos los derechos reservados.</p>
+  </footer>
+
+  <button class="sidebar-toggle-mobile" id="sidebarToggle" onclick="document.getElementById('docsSidebar').classList.toggle('open')"><i class="fas fa-bars"></i></button>
+
+  <script src="js/documentacion.js"></script>
+</body>
+</html>

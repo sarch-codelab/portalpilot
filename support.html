@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <link rel="icon" type="image/png" href="img/iconos/Portal%20Pilot.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Soporte — Portal Pilot</title>
+  <meta name="description" content="Centro de soporte de Portal Pilot. Contacta nuestro equipo, revisa preguntas frecuentes y obtén ayuda con tu ERP inteligente.">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+    :root{
+      --bg:#000000;--bg-soft:#0a0a0c;--surface:#111114;--surface-2:#16161a;
+      --border:rgba(255,255,255,0.08);--border-strong:rgba(255,255,255,0.14);
+      --accent:#8b5cf6;--accent-soft:#a78bfa;--accent-glow:rgba(139,92,246,0.25);
+      --white:#f5f5f7;--text:#d2d2d7;--text-dim:#86868b;--text-muted:#6e6e73;
+      --green:#30d158;--red:#ff453a;--blue:#0a84ff;--yellow:#fbbf24;
+      --radius:12px;--radius-lg:20px;
+    }
+    html{scroll-behavior:smooth;font-size:16px}
+    body{font-family:'DM Sans',-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden;line-height:1.6;-webkit-font-smoothing:antialiased}
+    a{text-decoration:none;color:inherit}ul{list-style:none}img{max-width:100%;display:block}button{font-family:inherit;cursor:pointer}
+    .container{max-width:1200px;margin:0 auto;padding:0 clamp(16px,4vw,40px)}
+    .page-bg{position:fixed;inset:0;pointer-events:none;z-index:0;background:radial-gradient(ellipse 80% 60% at 50% 0%,rgba(139,92,246,0.06) 0%,transparent 50%),radial-gradient(ellipse 60% 50% at 50% 100%,rgba(167,139,250,0.03) 0%,transparent 60%)}
+    ::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:3px}
+
+    /* NAV */
+    header{position:fixed;top:0;left:0;right:0;z-index:100;padding:0 clamp(16px,4vw,40px);background:rgba(0,0,0,0.7);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid var(--border)}
+    nav{max-width:1200px;margin:0 auto;display:flex;align-items:center;height:56px;gap:0}
+    .nav-logo{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:var(--white);letter-spacing:1.5px;display:flex;align-items:center;gap:10px}
+    .nav-logo .logo-icon{width:34px;height:34px;border-radius:8px;overflow:hidden;flex-shrink:0}
+    .nav-logo .logo-icon img{width:100%;height:100%;object-fit:contain}
+    .nav-links{display:flex;align-items:center;gap:4px;margin:0 32px}
+    .nav-links a{font-size:13px;font-weight:400;color:var(--text-dim);padding:6px 12px;border-radius:6px;transition:color .2s}
+    .nav-links a:hover,.nav-links a.active{color:var(--white)}
+    .nav-right{margin-left:auto;display:flex;align-items:center;gap:8px}
+    .btn{display:inline-flex;align-items:center;gap:8px;padding:12px 24px;border-radius:40px;font-size:13px;font-weight:500;border:none;transition:all .25s ease;white-space:nowrap;font-family:inherit}
+    .btn-acc{background:var(--white);color:#000}.btn-acc:hover{background:#e8e8ed;transform:scale(1.02)}
+    .btn-ghost{background:var(--surface);color:var(--white);border:1px solid var(--border-strong)}.btn-ghost:hover{background:var(--surface-2);border-color:rgba(255,255,255,0.2)}
+    .btn-outline{background:transparent;color:var(--white);border:1px solid var(--border-strong)}.btn-outline:hover{background:rgba(255,255,255,0.05)}
+    .btn-accent{background:var(--accent);color:#fff}.btn-accent:hover{background:var(--accent-soft);transform:translateY(-1px);box-shadow:0 8px 28px var(--accent-glow)}
+    .btn-sm{padding:9px 18px;font-size:12px}
+    .hamburger{display:none;flex-direction:column;gap:5px;background:none;border:none;padding:4px}.hamburger span{width:20px;height:1.5px;background:var(--white);transition:all .3s}
+    .mobile-menu{display:none;position:fixed;top:56px;left:0;right:0;background:rgba(0,0,0,0.95);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:20px clamp(16px,4vw,40px) 28px;flex-direction:column;gap:4px;z-index:99}
+    .mobile-menu.open{display:flex}.mobile-menu a{font-size:15px;font-weight:400;color:var(--text-dim);padding:10px 14px;border-radius:8px;transition:all .2s}.mobile-menu a:hover{color:var(--white);background:rgba(255,255,255,0.05)}
+
+    /* HERO */
+    .support-hero{padding:140px 0 80px;text-align:center;position:relative;z-index:1}
+    .support-hero .eyebrow{display:inline-flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border);border-radius:40px;padding:7px 18px;font-size:11px;color:var(--text-dim);margin-bottom:24px;font-weight:500;letter-spacing:.5px}
+    .support-hero .eyebrow i{color:var(--accent-soft)}
+    .support-hero h1{font-family:'Syne',sans-serif;font-size:clamp(36px,5vw,60px);font-weight:700;color:var(--white);letter-spacing:-2px;line-height:1.05;margin-bottom:16px}
+    .support-hero h1 span{background:linear-gradient(135deg,var(--white) 30%,var(--accent-soft));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+    .support-hero p{font-size:16px;color:var(--text-dim);max-width:520px;margin:0 auto 40px;line-height:1.7}
+
+    /* SEARCH */
+    .support-search{max-width:560px;margin:0 auto 60px;position:relative}
+    .support-search input{width:100%;padding:16px 20px 16px 48px;border-radius:16px;background:var(--surface);border:1px solid var(--border);color:var(--white);font-size:15px;outline:none;transition:border-color .2s;font-family:inherit}
+    .support-search input::placeholder{color:var(--text-muted)}
+    .support-search input:focus{border-color:var(--accent)}
+    .support-search i{position:absolute;left:18px;top:50%;transform:translateY(-50%);color:var(--text-muted);font-size:16px}
+    .search-results{position:absolute;top:100%;left:0;right:0;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-top:8px;max-height:320px;overflow-y:auto;display:none;z-index:10}
+    .search-results.active{display:block}
+    .search-result-item{padding:14px 18px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .2s}
+    .search-result-item:last-child{border-bottom:none}
+    .search-result-item:hover{background:rgba(139,92,246,0.08)}
+    .search-result-item .sr-title{font-size:14px;font-weight:600;color:var(--white);margin-bottom:2px}
+    .search-result-item .sr-desc{font-size:12px;color:var(--text-dim)}
+
+    /* STATUS BAR */
+    .status-bar{max-width:560px;margin:0 auto 60px;padding:16px 24px;background:var(--surface);border:1px solid rgba(48,209,88,0.2);border-radius:var(--radius);display:flex;align-items:center;justify-content:center;gap:10px}
+    .status-dot{width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+    .status-bar span{font-size:13px;color:var(--green);font-weight:500}
+
+    /* CHANNELS */
+    .channels-section{padding:80px 0;position:relative;z-index:1}
+    .section-header{text-align:center;margin-bottom:48px}
+    .sec-eyebrow{font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--accent-soft);margin-bottom:12px}
+    .sec-title{font-family:'Syne',sans-serif;font-size:clamp(24px,3.5vw,36px);font-weight:700;color:var(--white);letter-spacing:-1px;margin-bottom:12px}
+    .sec-sub{font-size:14px;color:var(--text-dim);max-width:480px;margin:0 auto;line-height:1.7}
+    .channels-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+    .channel-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:32px 28px;text-align:center;transition:all .3s ease;position:relative;overflow:hidden}
+    .channel-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--accent),var(--accent-soft));opacity:0;transition:opacity .3s}
+    .channel-card:hover{border-color:var(--border-strong);transform:translateY(-4px)}.channel-card:hover::before{opacity:1}
+    .channel-icon{width:56px;height:56px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:24px;margin:0 auto 20px}
+    .channel-icon.email{background:rgba(10,132,255,0.12);color:var(--blue)}
+    .channel-icon.whatsapp{background:rgba(48,209,88,0.12);color:var(--green)}
+    .channel-icon.form{background:rgba(139,92,246,0.12);color:var(--accent-soft)}
+    .channel-card h3{font-family:'Syne',sans-serif;font-size:18px;font-weight:700;color:var(--white);margin-bottom:8px}
+    .channel-card p{font-size:13px;color:var(--text-dim);line-height:1.6;margin-bottom:20px}
+    .channel-link{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:var(--accent-soft);transition:color .2s}
+    .channel-link:hover{color:var(--white)}
+
+    /* FORM */
+    .form-section{padding:80px 0;background:var(--bg-soft);position:relative;z-index:1}
+    .form-wrapper{max-width:680px;margin:0 auto}
+    .form-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:40px}
+    .form-group{margin-bottom:20px}
+    .form-label{display:block;font-size:12px;font-weight:600;color:var(--text-dim);margin-bottom:8px;letter-spacing:.5px;text-transform:uppercase}
+    .form-input,.form-select,.form-textarea{width:100%;padding:12px 16px;border-radius:10px;background:var(--surface-2);border:1px solid var(--border);color:var(--white);font-size:14px;outline:none;transition:border-color .2s;font-family:inherit}
+    .form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--accent)}
+    .form-input::placeholder,.form-textarea::placeholder{color:var(--text-muted)}
+    .form-textarea{min-height:120px;resize:vertical;line-height:1.6}
+    .form-select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2386868b' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:36px}
+    .form-select option{background:var(--surface);color:var(--white)}
+    .form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+    .form-hint{font-size:11px;color:var(--text-muted);margin-top:6px;display:flex;align-items:center;gap:4px}
+    .form-hint i{color:var(--accent-soft)}
+    .form-success{display:none;padding:20px;background:rgba(48,209,88,0.08);border:1px solid rgba(48,209,88,0.2);border-radius:var(--radius);text-align:center}
+    .form-success.show{display:block}
+    .form-success i{font-size:32px;color:var(--green);margin-bottom:12px;display:block}
+    .form-success h3{font-family:'Syne',sans-serif;font-size:18px;font-weight:700;color:var(--white);margin-bottom:8px}
+    .form-success p{font-size:13px;color:var(--text-dim)}
+
+    /* FAQ */
+    .faq-section{padding:80px 0;position:relative;z-index:1}
+    .faq-list{max-width:720px;margin:0 auto;display:flex;flex-direction:column;gap:0;border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden}
+    .faq-item{border-bottom:1px solid var(--border)}.faq-item:last-child{border-bottom:none}
+    .faq-q{padding:20px 24px;display:flex;justify-content:space-between;align-items:center;gap:16px;cursor:pointer;transition:background .2s}
+    .faq-q:hover{background:rgba(255,255,255,0.02)}
+    .faq-q-text{font-size:15px;font-weight:500;color:var(--white)}
+    .faq-toggle{width:28px;height:28px;border-radius:50%;flex-shrink:0;background:var(--surface-2);border:1px solid var(--border-strong);display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--text-dim);transition:all .3s}
+    .faq-item.open .faq-toggle{background:var(--white);color:#000;border-color:var(--white);transform:rotate(45deg)}
+    .faq-a{font-size:14px;color:var(--text-dim);line-height:1.8;max-height:0;overflow:hidden;transition:max-height .4s ease,padding .4s ease;padding:0 24px}
+    .faq-item.open .faq-a{max-height:300px;padding-bottom:20px}
+
+    /* FOOTER */
+    footer{padding:40px 0;border-top:1px solid var(--border);text-align:center;position:relative;z-index:1}
+    footer p{font-size:12px;color:var(--text-muted)}
+    footer a{color:var(--text-dim);margin:0 8px;transition:color .2s}footer a:hover{color:var(--white)}
+
+    @media(max-width:900px){
+      .channels-grid{grid-template-columns:1fr}
+      .form-row{grid-template-columns:1fr}
+      .nav-links{display:none}
+      .hamburger{display:flex}
+    }
+  </style>
+</head>
+<body>
+  <div class="page-bg"></div>
+
+  <!-- NAV -->
+  <header>
+    <nav>
+      <a href="index.html" class="nav-logo">
+        <div class="logo-icon"><img src="img/iconos/Portal%20Pilot.png" alt="Portal Pilot"></div>
+        PORTAL PILOT
+      </a>
+      <div class="nav-links">
+        <a href="index.html">Inicio</a>
+        <a href="index.html#features">Características</a>
+        <a href="index.html#pricing">Planes</a>
+        <a href="documentacion.html">Documentación</a>
+        <a href="support.html" class="active">Soporte</a>
+      </div>
+      <div class="nav-right">
+        <a href="login.html" class="btn btn-ghost btn-sm">Iniciar Sesión</a>
+        <a href="download.html" class="btn btn-acc btn-sm"><i class="fas fa-rocket"></i> Descargar</a>
+      </div>
+      <button class="hamburger" id="ham" onclick="toggleMenu()"><span></span><span></span><span></span></button>
+    </nav>
+  </header>
+
+  <div class="mobile-menu" id="mobileMenu">
+    <a href="index.html">Inicio</a>
+    <a href="index.html#features">Características</a>
+    <a href="index.html#pricing">Planes</a>
+    <a href="documentacion.html">Documentación</a>
+    <a href="support.html">Soporte</a>
+    <div style="height:1px;background:var(--border);margin:8px 0;"></div>
+    <a href="download.html" class="btn btn-acc" style="margin-top:4px;"><i class="fas fa-rocket"></i> Descargar APP</a>
+  </div>
+
+  <!-- HERO -->
+  <section class="support-hero">
+    <div class="container">
+      <div class="eyebrow"><i class="fas fa-headset"></i> CENTRO DE SOPORTE</div>
+      <h1>¿Cómo podemos <span>ayudarte?</span></h1>
+      <p>Busca en nuestra documentación o contacta directamente a nuestro equipo. Estamos aquí para que aproveches al máximo Portal Pilot.</p>
+
+      <div class="support-search">
+        <i class="fas fa-search"></i>
+        <input type="text" id="supportSearch" placeholder="Buscar ayuda... ej: facturación SAR, crear bot, configurar IA" autocomplete="off">
+        <div class="search-results" id="searchResults"></div>
+      </div>
+
+      <div class="status-bar">
+        <div class="status-dot"></div>
+        <span>Todos los sistemas operativos correctamente</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- CHANNELS -->
+  <section class="channels-section">
+    <div class="container">
+      <div class="section-header">
+        <div class="sec-eyebrow">Canales de Soporte</div>
+        <div class="sec-title">Elige cómo contactarnos</div>
+        <div class="sec-sub">Múltiples canales para que elijas el más cómodo. Respondemos el mismo día.</div>
+      </div>
+
+      <div class="channels-grid">
+        <div class="channel-card">
+          <div class="channel-icon email"><i class="fas fa-envelope"></i></div>
+          <h3>Email</h3>
+          <p>Envíanos un correo con los detalles de tu consulta. Respuesta garantizada en menos de 24 horas.</p>
+          <a href="mailto:portalpilot.hn@gmail.com" class="channel-link">portalpilot.hn@gmail.com <i class="fas fa-arrow-right" style="font-size:11px;"></i></a>
+        </div>
+
+        <div class="channel-card">
+          <div class="channel-icon whatsapp"><i class="fab fa-whatsapp"></i></div>
+          <h3>WhatsApp</h3>
+          <p>Chatea directamente con nuestro equipo técnico. Ideal para dudas rápidas y soporte inmediato.</p>
+          <a href="https://wa.me/50400000000" target="_blank" class="channel-link">+504 XXXX-XXXX <i class="fas fa-arrow-right" style="font-size:11px;"></i></a>
+        </div>
+
+        <div class="channel-card">
+          <div class="channel-icon form"><i class="fas fa-ticket-alt"></i></div>
+          <h3>Ticket de Soporte</h3>
+          <p>Abre un ticket con categoría priorizada. Seguimiento completo hasta la resolución de tu caso.</p>
+          <a href="#form" class="channel-link">Abrir Ticket <i class="fas fa-arrow-right" style="font-size:11px;"></i></a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FORM -->
+  <section class="form-section" id="form">
+    <div class="container">
+      <div class="form-wrapper">
+        <div class="section-header">
+          <div class="sec-eyebrow">Abrir Ticket</div>
+          <div class="sec-title">Describe tu problema</div>
+          <div class="sec-sub">Completa el formulario y nuestro equipo te responderá a la brevedad.</div>
+        </div>
+
+        <div class="form-card">
+          <form id="supportForm">
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Nombre completo *</label>
+                <input type="text" class="form-input" id="sfName" placeholder="Tu nombre" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Correo electrónico *</label>
+                <input type="email" class="form-input" id="sfEmail" placeholder="tu@empresa.com" required>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Empresa</label>
+                <input type="text" class="form-input" id="sfCompany" placeholder="Nombre de tu empresa">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Plan actual</label>
+                <select class="form-select" id="sfPlan">
+                  <option value="">Seleccionar...</option>
+                  <option value="starter">Starter (L.499/mes)</option>
+                  <option value="business">Business (L.1,499/mes)</option>
+                  <option value="enterprise">Enterprise (L.4,999/mes)</option>
+                  <option value="free">Plan Gratuito</option>
+                  <option value="none">Sin plan aún</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Categoría *</label>
+              <select class="form-select" id="sfCategory" required>
+                <option value="">Seleccionar categoría...</option>
+                <option value="facturacion">Facturación Electrónica SAR</option>
+                <option value="inventario">Inventario</option>
+                <option value="contabilidad">Contabilidad</option>
+                <option value="ia">Inteligencia Artificial (IA)</option>
+                <option value="bots">Bots RPA / Automatización</option>
+                <option value="cuenta">Cuenta y Acceso</option>
+                <option value="pagos">Pagos y Facturación</option>
+                <option value="api">API / Integraciones</option>
+                <option value="otro">Otro</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Prioridad</label>
+              <select class="form-select" id="sfPriority">
+                <option value="low">Baja — Consulta general</option>
+                <option value="normal" selected>Normal — Necesito ayuda</option>
+                <option value="high">Alta — No puedo trabajar</option>
+                <option value="urgent">Urgente — Sistema caído</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Describe tu problema o consulta *</label>
+              <textarea class="form-textarea" id="sfMessage" placeholder="Incluye todos los detalles posibles: pasos que diste, errores que ves, capturas de pantalla..." required></textarea>
+              <div class="form-hint"><i class="fas fa-info-circle"></i> Mientras más detalles proporciones, más rápido podremos ayudarte.</div>
+            </div>
+
+            <button type="submit" class="btn btn-accent" style="width:100%;justify-content:center;" id="sfSubmit">
+              <i class="fas fa-paper-plane"></i> Enviar Ticket
+            </button>
+          </form>
+
+          <div class="form-success" id="formSuccess">
+            <i class="fas fa-check-circle"></i>
+            <h3>¡Ticket enviado!</h3>
+            <p>Recibirás un correo de confirmación. Nuestro equipo te responderá en menos de 24 horas hábiles.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="faq-section">
+    <div class="container">
+      <div class="section-header">
+        <div class="sec-eyebrow">Preguntas Frecuentes</div>
+        <div class="sec-title">Respuestas rápidas</div>
+      </div>
+
+      <div class="faq-list">
+        <div class="faq-item">
+          <div class="faq-q" onclick="toggleFaq(this)">
+            <div class="faq-q-text">¿Cómo configuro mi CAI del SAR para facturar?</div>
+            <div class="faq-toggle"><i class="fas fa-plus"></i></div>
+          </div>
+          <div class="faq-a">Ve a Configuración → Facturación SAR. Ingresa tu CAI vigente, los rangos autorizados y la fecha límite de emisión. El sistema validará automáticamente el formato y te alertará cuando tu rango esté por agotarse.</div>
+        </div>
+        <div class="faq-item">
+          <div class="faq-q" onclick="toggleFaq(this)">
+            <div class="faq-q-text">¿Cómo creo un Bot RPA en Workspace?</div>
+            <div class="faq-toggle"><i class="fas fa-plus"></i></div>
+          </div>
+          <div class="faq-a">Entra a tu panel Enterprise → Bots RPA. Haz clic en "Nuevo Agente", selecciona el trigger (Email, Webhook, CRON o Manual), configura la acción IA y el modelo (Gemma 3N recomendado). Usa el Editor de Flujo para conectar pasos. Consulta nuestra <a href="documentacion.html" style="color:var(--accent-soft);text-decoration:underline;">documentación completa</a> para una guía paso a paso.</div>
+        </div>
+        <div class="faq-item">
+          <div class="faq-q" onclick="toggleFaq(this)">
+            <div class="faq-q-text">¿Puedo cambiar de plan en cualquier momento?</div>
+            <div class="faq-toggle"><i class="fas fa-plus"></i></div>
+          </div>
+          <div class="faq-a">Sí. Puedes actualizar o downgrade tu plan en Configuración → Facturación. Los cambios se aplican inmediatamente y se ajusta el cobro de forma proporcional. No hay permanencia mínima ni penalizaciones.</div>
+        </div>
+        <div class="faq-item">
+          <div class="faq-q" onclick="toggleFaq(this)">
+            <div class="faq-q-text">¿La IA funciona sin conexión a internet?</div>
+            <div class="faq-toggle"><i class="fas fa-plus"></i></div>
+          </div>
+          <div class="faq-a">Portal Pilot Workspace soporta modo offline para operaciones básicas (facturación, inventario, consultas). La IA y los Bots RPA requieren conexión. Próximamente lanzaremos IA local con Gemma 3N para funcionamiento 100% offline.</div>
+        </div>
+        <div class="faq-item">
+          <div class="faq-q" onclick="toggleFaq(this)">
+            <div class="faq-q-text">¿Mis datos están seguros?</div>
+            <div class="faq-toggle"><i class="fas fa-plus"></i></div>
+          </div>
+          <div class="faq-a">Sí. Usamos Supabase con encriptación AES-256 en reposo y TLS 1.3 en tránsito. Los backups son automáticos diarios. Cumplimos con las mejores prácticas de seguridad. Puedes revisar nuestro <a href="privacidad.html" style="color:var(--accent-soft);text-decoration:underline;">política de privacidad</a> para más detalles.</div>
+        </div>
+        <div class="faq-item">
+          <div class="faq-q" onclick="toggleFaq(this)">
+            <div class="faq-q-text">¿Cuánto tiempo toma una implementación Enterprise?</div>
+            <div class="faq-toggle"><i class="fas fa-plus"></i></div>
+          </div>
+          <div class="faq-a">La implementación básica toma menos de 24 horas. Para configuraciones avanzadas con integración de Bots RPA, flujos personalizados y migración de datos, el onboarding típico es de 3-5 días hábiles con nuestro equipo de soporte.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="container">
+      <p>© 2026 Portal Pilot. Todos los derechos reservados.</p>
+      <p style="margin-top:8px;">
+        <a href="index.html">Inicio</a>
+        <a href="documentacion.html">Documentación</a>
+        <a href="support.html">Soporte</a>
+        <a href="download.html">Descargar</a>
+      </p>
+    </div>
+  </footer>
+
+  <script src="js/support.js"></script>
+</body>
+</html>

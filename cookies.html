@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <link rel="icon" type="image/png" href="img/iconos/Portal%20Pilot.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Política de Cookies — Portal Pilot</title>
+  <meta name="description" content="Cómo Portal Pilot utiliza cookies y tecnologías similares.">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+    :root{--bg:#000;--surface:#111114;--border:rgba(255,255,255,0.08);--accent:#8b5cf6;--accent-soft:#a78bfa;--white:#f5f5f7;--text:#d2d2d7;--text-dim:#86868b;--text-muted:#6e6e73}
+    html{scroll-behavior:smooth;font-size:16px}
+    body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:var(--text);line-height:1.8;-webkit-font-smoothing:antialiased}
+    a{text-decoration:none;color:inherit}
+    .container{max-width:780px;margin:0 auto;padding:0 clamp(16px,4vw,40px)}
+    header{position:fixed;top:0;left:0;right:0;z-index:100;padding:0 clamp(16px,4vw,40px);background:rgba(0,0,0,0.7);backdrop-filter:blur(20px);border-bottom:1px solid var(--border)}
+    nav{max-width:1200px;margin:0 auto;display:flex;align-items:center;height:56px}
+    .nav-logo{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:var(--white);letter-spacing:1.5px;display:flex;align-items:center;gap:10px}
+    .nav-logo .logo-icon{width:34px;height:34px;border-radius:8px;overflow:hidden;flex-shrink:0}
+    .nav-logo .logo-icon img{width:100%;height:100%;object-fit:contain}
+    .nav-right{margin-left:auto;display:flex;align-items:center;gap:8px}
+    .btn{display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border-radius:40px;font-size:13px;font-weight:500;border:none;transition:all .25s;font-family:inherit}
+    .btn-ghost{background:var(--surface);color:var(--white);border:1px solid rgba(255,255,255,0.14)}.btn-ghost:hover{background:#16161a}
+    .btn-acc{background:var(--white);color:#000}.btn-acc:hover{background:#e8e8ed}
+    .legal-hero{padding:120px 0 40px;text-align:center}
+    .legal-hero h1{font-family:'Syne',sans-serif;font-size:clamp(28px,4vw,42px);font-weight:700;color:var(--white);letter-spacing:-1.5px;margin-bottom:8px}
+    .legal-hero .date{font-size:13px;color:var(--text-muted)}
+    .legal-content{padding:0 0 80px}
+    .legal-content h2{font-family:'Syne',sans-serif;font-size:20px;font-weight:700;color:var(--white);margin:36px 0 12px}
+    .legal-content p,.legal-content li{font-size:14px;color:var(--text-dim);line-height:1.8;margin-bottom:12px}
+    .legal-content ul{padding-left:20px;margin-bottom:16px}
+    .legal-content li::marker{color:var(--accent-soft)}
+    .legal-content a{color:var(--accent-soft);text-decoration:underline}
+    .legal-content table{width:100%;border-collapse:collapse;margin:16px 0 24px;font-size:13px}
+    .legal-content th{text-align:left;padding:10px 14px;background:var(--surface);color:var(--text-dim);font-weight:600;font-size:11px;letter-spacing:.5px;text-transform:uppercase;border-bottom:1px solid var(--border)}
+    .legal-content td{padding:10px 14px;border-bottom:1px solid var(--border);color:var(--text-dim)}
+    footer{padding:32px 0;border-top:1px solid var(--border);text-align:center}
+    footer p{font-size:12px;color:var(--text-muted)}
+    footer a{color:var(--text-dim);margin:0 8px}footer a:hover{color:var(--white)}
+  </style>
+</head>
+<body>
+  <header><nav>
+    <a href="index.html" class="nav-logo"><div class="logo-icon"><img src="img/iconos/Portal%20Pilot.png" alt="Portal Pilot"></div>PORTAL PILOT</a>
+    <div class="nav-right">
+      <a href="login.html" class="btn btn-ghost">Iniciar Sesión</a>
+      <a href="download.html" class="btn btn-acc"><i class="fas fa-rocket"></i> Descargar</a>
+    </div>
+  </nav></header>
+
+  <section class="legal-hero"><div class="container">
+    <h1>Política de Cookies</h1>
+    <p class="date">Última actualización: 23 de julio de 2026</p>
+  </div></section>
+
+  <section class="legal-content"><div class="container">
+    <h2>Qué son las Cookies</h2>
+    <p>Las cookies son pequeños archivos de texto que se almacenan en su dispositivo cuando visita un sitio web. Sirven para mejorar la experiencia del usuario, recordar preferencias y analizar el uso del sitio.</p>
+
+    <h2>Cookies que Utilizamos</h2>
+    <table>
+      <tr><th>Cookie</th><th>Tipo</th><th>Duración</th><th>Propósito</th></tr>
+      <tr><td><code>pp_session</code></td><td>Esencial</td><td>Sesión</td><td>Mantiene su sesión de autenticación activa</td></tr>
+      <tr><td><code>pp_token</code></td><td>Esencial</td><td>24 horas</td><td>Almacena el token JWT de autenticación</td></tr>
+      <tr><td><code>pp_sidebar</code></td><td>Funcional</td><td>365 días</td><td>Recuerda el estado del sidebar (expandido/colapsado)</td></tr>
+      <tr><td><code>pp_theme</code></td><td>Funcional</td><td>365 días</td><td>Guarda preferencias de tema (oscuro/claro)</td></tr>
+      <tr><td><code>_vercel_analytics</code></td><td>Analítica</td><td>Sesión</td><td>Métricas anónimas de rendimiento (Vercel Analytics)</td></tr>
+    </table>
+
+    <h2>Cookies que NO Utilizamos</h2>
+    <ul>
+      <li>No utilizamos cookies de rastreo publicitario.</li>
+      <li>No compartimos cookies con terceros con fines de marketing.</li>
+      <li>No utilizamos cookies de redes sociales.</li>
+    </ul>
+
+    <h2>Gestionar Cookies</h2>
+    <p>Puede controlar las cookies desde la configuración de su navegador. Tenga en cuenta que deshabilitar las cookies esenciales puede afectar el funcionamiento del sitio, incluyendo:</p>
+    <ul>
+      <li>No podrá iniciar sesión o su sesión expirará inmediatamente.</li>
+      <li>Las preferencias de interfaz no se recordarán.</li>
+    </ul>
+
+    <h2>Cambios en esta Política</h2>
+    <p>Actualizaremos esta política cuando hagamos cambios significativos en el uso de cookies. Los cambios serán publicados en esta página.</p>
+
+    <h2>Contacto</h2>
+    <p>Para preguntas sobre nuestras cookies, contacte a <a href="mailto:portalpilot.hn@gmail.com">portalpilot.hn@gmail.com</a>.</p>
+  </div></section>
+
+  <footer><div class="container">
+    <p>© 2026 Portal Pilot. Todos los derechos reservados.</p>
+    <p style="margin-top:8px"><a href="index.html">Inicio</a><a href="privacidad.html">Privacidad</a><a href="terminos.html">Términos</a><a href="support.html">Soporte</a></p>
+  </div></footer>
+</body>
+</html>

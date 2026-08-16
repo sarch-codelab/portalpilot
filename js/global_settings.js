@@ -1,1 +1,1 @@
-﻿// JS para global_settings
+// JS para global_settings

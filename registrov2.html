@@ -4,16 +4,16 @@
 <head>
     <meta charset="UTF-8">
     <link rel="icon" type="image/png" href="img/iconos/Portal%20Pilot.png">
-    <meta name="description" content="El ERP inteligente para PyMES hondureñas. Facturación electrónica, inventario, contabilidad y más con IA integrada.">
+    <meta name="description" content="Portal Pilot: ERP comercial integral para pulperías, supermercados, distribuidoras y cadenas retail. Facturación electrónica SAR, inventario multi-bodega, POS y más con IA integrada.">
     <meta property="og:title" content="Portal Pilot — Gestión Empresarial Inteligente">
-    <meta property="og:description" content="El ERP inteligente para PyMES hondureñas. Facturación electrónica, inventario, contabilidad y más con IA integrada.">
+    <meta property="og:description" content="Portal Pilot: ERP comercial integral para pulperías, supermercados, distribuidoras y cadenas retail. Facturación electrónica SAR, inventario multi-bodega, POS y más con IA integrada.">
     <meta property="og:image" content="https://portal-pilot.vercel.app/img/iconos/Portal%20Pilot.png">
     <meta property="og:url" content="https://portal-pilot.vercel.app/registrov2.html">
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="Portal Pilot">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Portal Pilot — Gestión Empresarial Inteligente">
-    <meta name="twitter:description" content="El ERP inteligente para PyMES hondureñas. Facturación electrónica, inventario, contabilidad y más con IA integrada.">
+    <meta name="twitter:description" content="Portal Pilot: ERP comercial integral para pulperías, supermercados, distribuidoras y cadenas retail. Facturación electrónica SAR, inventario multi-bodega, POS y más con IA integrada.">
     <meta name="twitter:image" content="https://portal-pilot.vercel.app/img/iconos/Portal%20Pilot.png">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Portal Pilot — Registro Empresarial</title>
@@ -436,6 +436,50 @@
             .step-circle { width: 28px; height: 28px; font-size: 10px; }
             .upload-profile-row { flex-direction: column; align-items: center; text-align: center; }
         }
+
+        @media (max-width: 480px) {
+            .page-wrap { padding: 24px 16px 40px; }
+            .page-title h1 { font-size: 24px; }
+            .field { margin-bottom: 12px; }
+            .field label { font-size: 11px; }
+            .form-input { font-size: 13px; padding: 8px 10px; }
+            .select-field select { font-size: 13px; }
+            .otp-input { width: 36px; height: 44px; font-size: 16px; }
+            .plan-card { padding: 14px; }
+            .plan-title { font-size: 14px; }
+            .plan-price { font-size: 18px; }
+            .twofa-option { gap: 8px; padding: 10px; }
+            .requirements-text { font-size: 11px; }
+            .password-req { font-size: 11px; padding-left: 8px; }
+            .btn-primary { font-size: 12px; height: 42px; }
+            .page-footer a { font-size: 11px; }
+        }
+
+        @media (max-width: 360px) {
+            .page-wrap { padding: 20px 12px 32px; }
+            .page-title h1 { font-size: 20px; margin-bottom: 20px; }
+            .steps-container { gap: 4px; }
+            .step-circle { width: 24px; height: 24px; font-size: 9px; }
+            .step-label { font-size: 8px; }
+            .field { margin-bottom: 10px; gap: 4px; }
+            .field label { font-size: 10px; margin-bottom: 4px; }
+            .form-input { font-size: 12px; padding: 7px 9px; }
+            .select-field select { font-size: 12px; }
+            .otp-input { width: 32px; height: 40px; font-size: 14px; }
+            .plan-grid { gap: 8px; }
+            .plan-card { padding: 12px; }
+            .plan-title { font-size: 13px; }
+            .plan-price { font-size: 16px; }
+            .twofa-container { gap: 10px; }
+            .twofa-option { gap: 6px; padding: 8px; }
+            .twofa-label { font-size: 11px; }
+            .requirements-text { font-size: 10px; }
+            .password-req { font-size: 10px; }
+            .checkbox-label { font-size: 11px; }
+            .btn-primary { font-size: 11px; height: 40px; }
+            .btn-row { gap: 8px; }
+            .page-footer { font-size: 10px; }
+        }
     </style>
 </head>
 
@@ -603,7 +647,6 @@
                         <select id="regArea">
                             <option value="">Seleccionar área...</option>
                             <option value="Tecnología">Tecnología</option>
-                            <option value="Educación">Educación</option>
                             <option value="Salud">Salud</option>
                             <option value="Finanzas">Finanzas</option>
                             <option value="Manufactura">Manufactura</option>

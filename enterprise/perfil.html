@@ -657,27 +657,8 @@
         <button class="modal-close" onclick="closeModal('apiKeysModal')"><i class="fas fa-times"></i></button>
       </div>
       <div class="modal-body">
-        <div class="api-key-item">
-          <div class="api-key-info">
-            <div class="api-key-name">Producción - Dashboard</div>
-            <div class="api-key-value">pk_live_8a3f...2e1b9c4d</div>
-            <div class="api-key-meta">Creada: 12 Ene 2026 • Última usada: Hoy</div>
-          </div>
-          <div class="api-key-actions">
-            <button class="btn btn-ghost btn-xs" onclick="copyApiKey('pk_live_8a3f2e1b9c4d')"><i class="fas fa-copy"></i></button>
-            <button class="btn btn-danger btn-xs" onclick="revokeApiKey(this)"><i class="fas fa-trash"></i></button>
-          </div>
-        </div>
-        <div class="api-key-item">
-          <div class="api-key-info">
-            <div class="api-key-name">Desarrollo - Testing</div>
-            <div class="api-key-value">pk_test_4f1a...9b2c8e3d</div>
-            <div class="api-key-meta">Creada: 3 Mar 2026 • Última usada: Hace 3 días</div>
-          </div>
-          <div class="api-key-actions">
-            <button class="btn btn-ghost btn-xs" onclick="copyApiKey('pk_test_4f1a9b2c8e3d')"><i class="fas fa-copy"></i></button>
-            <button class="btn btn-danger btn-xs" onclick="revokeApiKey(this)"><i class="fas fa-trash"></i></button>
-          </div>
+        <div id="apiKeyList">
+          <div style="text-align:center;padding:20px;color:var(--gray);"><i class="fas fa-spinner fa-spin"></i> Cargando claves...</div>
         </div>
         <button class="btn btn-acc btn-sm" style="width:100%;margin-top:12px;" onclick="createApiKey()"><i class="fas fa-plus"></i> Generar Nueva Clave</button>
       </div>
@@ -826,7 +807,7 @@
     }
 
     // ── Modal Functions ──────────────
-    function openModal(id) { document.getElementById(id).classList.add('active'); }
+    function openModal(id) { document.getElementById(id).classList.add('active'); if (id === 'apiKeysModal') loadApiKeys(); }
     function closeModal(id) { document.getElementById(id).classList.remove('active'); }
     document.querySelectorAll('.modal-overlay').forEach(overlay => {
       overlay.addEventListener('click', e => { if(e.target === overlay) overlay.classList.remove('active'); });
@@ -934,21 +915,71 @@
     }
 
     // ── API Keys ──────────────
+    function apiFetch(url, options) {
+      const token = localStorage.getItem('token');
+      const headers = Object.assign({}, options?.headers || {}, token ? { 'Authorization': 'Bearer ' + token } : {});
+      return fetch(url, Object.assign({}, options, { headers }));
+    }
+    async function loadApiKeys() {
+      const list = document.getElementById('apiKeyList');
+      if (!list) return;
+      list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--gray);"><i class="fas fa-spinner fa-spin"></i> Cargando claves...</div>';
+      try {
+        const res = await apiFetch('/api/tenant/apikeys');
+        if (!res.ok) throw new Error((await res.json()).error || 'Error');
+        const { keys } = await res.json();
+        if (!keys || keys.length === 0) {
+          list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--gray);">Aún no tienes claves API.<br>Genera la primera con el botón inferior.</div>';
+          return;
+        }
+        list.innerHTML = keys.map(k => `
+          <div class="api-key-item">
+            <div class="api-key-info">
+              <div class="api-key-name">${k.nombre}</div>
+              <div class="api-key-value">${k.clave.slice(0, 14)}...${k.clave.slice(-6)}</div>
+              <div class="api-key-meta">Creada: ${new Date(k.created_at).toLocaleDateString('es')}${k.ultimo_uso ? ' • Última usada: ' + new Date(k.ultimo_uso).toLocaleDateString('es') : ''}</div>
+            </div>
+            <div class="api-key-actions">
+              <button class="btn btn-ghost btn-xs" onclick="copyApiKey('${k.clave}')"><i class="fas fa-copy"></i></button>
+              <button class="btn btn-danger btn-xs" onclick="revokeApiKey('${k.id}')"><i class="fas fa-trash"></i></button>
+            </div>
+          </div>
+        `).join('');
+      } catch (err) {
+        list.innerHTML = `<div style="text-align:center;padding:20px;color:var(--red);">No se pudieron cargar las claves: ${err.message}</div>`;
+      }
+    }
     function copyApiKey(key) {
       navigator.clipboard.writeText(key).then(() => {
         showMessage('✓ Clave copiada al portapapeles', 'success');
       });
     }
-    function revokeApiKey(btn) {
-      if(confirm('¿Revocar esta clave API? Las aplicaciones que la usen dejarán de funcionar.')) {
-        btn.closest('.api-key-item').remove();
+    async function revokeApiKey(id) {
+      if (!confirm('¿Revocar esta clave API? Las aplicaciones que la usen dejarán de funcionar.')) return;
+      try {
+        const res = await apiFetch('/api/tenant/apikeys/' + encodeURIComponent(id), { method: 'DELETE' });
+        if (!res.ok) throw new Error((await res.json()).error || 'Error');
         showMessage('Clave revocada', 'success');
+        loadApiKeys();
+      } catch (err) {
+        showMessage('Error al revocar: ' + err.message, 'error');
       }
     }
-    function createApiKey() {
+    async function createApiKey() {
       const name = prompt('Nombre para la nueva clave API:', 'Nueva Integración');
-      if(name) {
-        showMessage('✓ Nueva clave generada: pk_live_' + Math.random().toString(36).substr(2,12) + '...', 'success');
+      if (!name) return;
+      try {
+        const res = await apiFetch('/api/tenant/apikeys', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ nombre: name })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Error');
+        loadApiKeys();
+        showMessage('✓ Clave generada correctamente', 'success');
+      } catch (err) {
+        showMessage('Error al generar: ' + err.message, 'error');
       }
     }
 

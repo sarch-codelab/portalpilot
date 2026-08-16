@@ -37,6 +37,40 @@
     footer{padding:24px;text-align:center;border-top:1px solid var(--border)}
     footer p{font-size:12px;color:var(--text-muted)}
     footer a{color:var(--text-dim);margin:0 8px}footer a:hover{color:var(--white)}
+
+    @media(max-width:768px){
+      .legal{padding:60px clamp(12px,3vw,32px) 80px}
+      .legal h1{font-size:clamp(24px,5vw,32px)}
+      .legal h2{font-size:18px;margin:28px 0 10px}
+      .legal h3{font-size:14px;margin:18px 0 6px}
+      .legal p,.legal li{font-size:13px}
+      .btn{padding:8px 16px;font-size:12px}
+    }
+
+    @media(max-width:480px){
+      .legal{padding:48px 16px 60px}
+      .legal h1{font-size:clamp(20px,6vw,28px);margin-bottom:6px}
+      .legal .updated{margin-bottom:28px}
+      .legal h2{font-size:16px;margin:20px 0 8px;padding-top:16px}
+      .legal h3{font-size:13px;margin:16px 0 6px}
+      .legal p,.legal li{font-size:12px;margin-bottom:10px}
+      .legal ul,.legal ol{padding-left:16px;margin-bottom:12px}
+      footer{padding:20px 16px}
+      footer p{font-size:11px}
+      .nav-logo{font-size:12px;gap:6px}
+      .nav-logo .logo-icon{width:28px;height:28px}
+      .btn{padding:7px 14px;font-size:11px}
+    }
+
+    @media(max-width:360px){
+      .legal{padding:40px 12px 48px}
+      .legal h1{font-size:clamp(18px,7vw,24px)}
+      .legal h2{font-size:14px;margin:16px 0 6px}
+      .legal h3{font-size:12px}
+      .legal p,.legal li{font-size:11px;line-height:1.6}
+      footer{padding:16px 12px}
+      footer p{font-size:10px}
+    }
   </style>
 </head>
 <body>

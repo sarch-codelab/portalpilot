@@ -179,41 +179,41 @@ a{text-decoration:none;color:inherit}ul{list-style:none}img{max-width:100%;displ
       <div class="kpi-card">
         <div class="kpi-header">
           <div class="kpi-icon"><i class="fas fa-users"></i></div>
-          <span class="kpi-trend">+12%</span>
+          <span class="kpi-trend" id="trendUsuarios">—</span>
         </div>
-        <div class="kpi-value">248</div>
+        <div class="kpi-value" id="kpiUsuarios">—</div>
         <div class="kpi-label">Usuarios Activos</div>
-        <div class="kpi-footer"><span class="status-dot"></span>142 online ahora</div>
+        <div class="kpi-footer"><span class="status-dot"></span>Cuentas habilitadas del tenant</div>
       </div>
 
       <div class="kpi-card">
         <div class="kpi-header">
           <div class="kpi-icon"><i class="fas fa-wallet"></i></div>
-          <span class="kpi-trend" style="background:rgba(248,113,113,0.15);color:var(--red)">-3%</span>
+          <span class="kpi-trend" id="trendBalance" style="background:rgba(248,113,113,0.15);color:var(--red)">—</span>
         </div>
-        <div class="kpi-value">$45K</div>
-        <div class="kpi-label">Costo Operativo Mes</div>
-        <div class="kpi-footer"><i class="fas fa-check-circle" style="color:var(--green);font-size:6px"></i> Dentro del presupuesto</div>
+        <div class="kpi-value" id="kpiCosto">—</div>
+        <div class="kpi-label">Balance del Mes</div>
+        <div class="kpi-footer"><i class="fas fa-check-circle" style="color:var(--green);font-size:6px"></i> Ingresos − Gastos</div>
       </div>
 
       <div class="kpi-card">
         <div class="kpi-header">
           <div class="kpi-icon"><i class="fas fa-check-circle"></i></div>
-          <span class="kpi-trend">+28%</span>
+          <span class="kpi-trend" id="trendFacturas">—</span>
         </div>
-        <div class="kpi-value">1,230</div>
-        <div class="kpi-label">Tareas Completadas</div>
-        <div class="kpi-footer"><i class="fas fa-check-circle" style="color:var(--green);font-size:6px"></i> 98% éxito</div>
+        <div class="kpi-value" id="kpiTareas">—</div>
+        <div class="kpi-label">Facturas Registradas</div>
+        <div class="kpi-footer"><i class="fas fa-check-circle" style="color:var(--green);font-size:6px"></i> <span id="kpiPendientes">0</span> pendientes</div>
       </div>
 
       <div class="kpi-card">
         <div class="kpi-header">
           <div class="kpi-icon"><i class="fas fa-crown"></i></div>
-          <span class="kpi-trend" style="background:rgba(167,139,250,0.15);color:var(--cyan)">Activa</span>
+          <span class="kpi-trend" id="trendProductos" style="background:rgba(167,139,250,0.15);color:var(--cyan)">—</span>
         </div>
-        <div class="kpi-value">Enterprise</div>
-        <div class="kpi-label">Estado de Suscripción</div>
-        <div class="kpi-footer"><span class="status-dot"></span>Renovación: 15 Dic 2026</div>
+        <div class="kpi-value" id="kpiPlan">—</div>
+        <div class="kpi-label">Productos en Inventario</div>
+        <div class="kpi-footer"><span class="status-dot"></span> <span id="kpiLowStock">0</span> con stock bajo</div>
       </div>
 
       <div class="chart-card">
@@ -241,11 +241,8 @@ a{text-decoration:none;color:inherit}ul{list-style:none}img{max-width:100%;displ
         <div class="panel-header">
           <div class="panel-title"><i class="fas fa-history"></i>Actividad Reciente</div>
         </div>
-        <div class="activity-list">
-          <div class="activity-item security"><div class="activity-icon"><i class="fas fa-fingerprint"></i></div><div class="activity-content"><div class="activity-text">2FA validado para Admin Principal</div><div class="activity-time">Hace 2 min</div></div></div>
-          <div class="activity-item success"><div class="activity-icon"><i class="fas fa-user-plus"></i></div><div class="activity-content"><div class="activity-text">Nuevo usuario agregado: María G.</div><div class="activity-time">Hace 18 min</div></div></div>
-          <div class="activity-item success"><div class="activity-icon"><i class="fas fa-robot"></i></div><div class="activity-content"><div class="activity-text">Automatización ejecutada: "Cotización proveedores"</div><div class="activity-time">Hace 1h</div></div></div>
-          <div class="activity-item security"><div class="activity-icon"><i class="fas fa-key"></i></div><div class="activity-content"><div class="activity-text">Cambio de contraseña realizado</div><div class="activity-time">Hace 3h</div></div></div>
+        <div class="activity-list" id="activityList">
+          <div style="padding:16px;color:var(--gray);font-size:13px">Cargando actividad...</div>
         </div>
       </div>
 
@@ -253,19 +250,8 @@ a{text-decoration:none;color:inherit}ul{list-style:none}img{max-width:100%;displ
         <div class="panel-header">
           <div class="panel-title"><i class="fas fa-exclamation-triangle" style="color:var(--yellow)"></i>Alertas</div>
         </div>
-        <div class="alert-item">
-          <div class="alert-icon"><i class="fas fa-credit-card"></i></div>
-          <div class="alert-content">
-            <div class="alert-title">Pago pendiente en módulo Billing</div>
-            <div class="alert-desc">Factura #INV-2026-1147 de $899 vence en 3 días</div>
-          </div>
-        </div>
-        <div class="alert-item">
-          <div class="alert-icon"><i class="fas fa-tachometer-alt"></i></div>
-          <div class="alert-content">
-            <div class="alert-title">80% del límite de IA alcanzado</div>
-            <div class="alert-desc">Has usado 4,000 de 5,000 tokens mensuales</div>
-          </div>
+        <div id="alertList">
+          <div style="padding:16px;color:var(--gray);font-size:13px">Cargando alertas...</div>
         </div>
       </div>
     </div>
@@ -282,35 +268,116 @@ document.addEventListener('mouseleave',e=>{if(e.target.tagName==='A'||e.target.t
 document.addEventListener('mousemove',e=>{ring.style.left=e.clientX+'px';ring.style.top=e.clientY+'px'});
 
 // Charts
-function initCharts(){
-  try{
-    new Chart(document.getElementById('usageChart'),{
-      type:'line',
-      data:{labels:['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'],datasets:[{label:'Requests',data:[120,190,150,220,180,95,140],borderColor:'#8b5cf6',backgroundColor:'rgba(139,92,246,0.1)',tension:0.4,fill:true}]},
-      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:'rgba(139,92,246,0.1)'},ticks:{color:'#5d5d7a'}},y:{grid:{color:'rgba(139,92,246,0.1)'},ticks:{color:'#5d5d7a'},beginAtZero:true}}}
+const fmt = new Intl.NumberFormat('en-US');
+function fmtMoney(v){ return '$' + fmt.format(Math.round(v || 0)); }
+
+async function loadDashboard() {
+  const token = localStorage.getItem('token');
+  try {
+    const res = await fetch('/api/dashboard/summary', {
+      headers: { 'Authorization': 'Bearer ' + token }
     });
-    new Chart(document.getElementById('rolesChart'),{
-      type:'doughnut',
-      data:{labels:['Admins','Empleados','Invitados'],datasets:[{data:[15,210,23],backgroundColor:['#8b5cf6','#a78bfa','rgba(167,139,250,0.3)'],borderWidth:0}]},
-      options:{responsive:true,maintainAspectRatio:false,cutout:'70%',plugins:{legend:{position:'bottom',labels:{color:'#5d5d7a',padding:20}}}}
+    if (!res.ok) throw new Error((await res.json()).error || 'Error');
+    const data = await res.json();
+    renderKPIs(data);
+    renderCharts(data);
+    renderActivity(data);
+    renderAlerts(data);
+  } catch (err) {
+    document.querySelector('.dash-grid .kpi-value') && document.getElementById('activityList') &&
+      (document.getElementById('activityList').innerHTML = '<div style="padding:16px;color:var(--red);font-size:13px">No se pudieron cargar los datos: ' + err.message + '</div>');
+  } finally {
+    const s = document.getElementById('statsSkeleton');
+    if (s) s.style.display = 'none';
+  }
+}
+
+function renderKPIs(data) {
+  const k = data.kpis || {};
+  const el = id => document.getElementById(id);
+  el('kpiUsuarios').textContent = fmt.format(k.usuariosActivos || 0);
+  el('kpiCosto').textContent = fmtMoney(k.balanceMes || 0);
+  el('kpiTareas').textContent = fmt.format(k.facturasCount || 0);
+  el('kpiPlan').textContent = fmt.format(k.productosCount || 0);
+  el('trendUsuarios').textContent = data.empresa ? (data.empresa.nombre || '') : 'ROOT';
+  el('trendBalance').textContent = (k.balanceMes || 0) < 0 ? 'Negativo' : 'Positivo';
+  el('trendBalance').style.color = (k.balanceMes || 0) < 0 ? 'var(--red)' : 'var(--green)';
+  el('trendFacturas').textContent = fmtMoney(k.facturasTotal || 0);
+  el('trendProductos').textContent = (k.lowStock || 0) + ' bajo';
+  el('kpiPendientes').textContent = k.facturasPendientes || 0;
+  el('kpiLowStock').textContent = k.lowStock || 0;
+  const name = localStorage.getItem('userName') || 'Admin';
+  const qs = document.querySelector('.page-title span');
+  if (qs) qs.textContent = name;
+}
+
+function renderCharts(data) {
+  try {
+    const usage = data.usage7d || [];
+    new Chart(document.getElementById('usageChart'), {
+      type: 'line',
+      data: {
+        labels: usage.map(d => d.label),
+        datasets: [
+          { label: 'Facturas', data: usage.map(d => d.facturas), borderColor: '#8b5cf6', backgroundColor: 'rgba(139,92,246,0.1)', tension: 0.4, fill: true },
+          { label: 'Transacciones', data: usage.map(d => d.transacciones), borderColor: '#22d3ee', backgroundColor: 'rgba(34,211,238,0.1)', tension: 0.4, fill: true }
+        ]
+      },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#5d5d7a' } } }, scales: { x: { grid: { color: 'rgba(139,92,246,0.1)' }, ticks: { color: '#5d5d7a' } }, y: { grid: { color: 'rgba(139,92,246,0.1)' }, ticks: { color: '#5d5d7a' }, beginAtZero: true } } }
     });
-    new Chart(document.getElementById('spendingChart'),{
-      type:'bar',
-      data:{labels:['IT','Operaciones','Ventas','RH','Finanzas'],datasets:[{label:'Gastos',data:[18500,12300,8900,3200,2100],backgroundColor:'rgba(139,92,246,0.6)',borderRadius:6}]},
-      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:'#5d5d7a'}},y:{grid:{color:'rgba(139,92,246,0.1)'},ticks:{color:'#5d5d7a'},beginAtZero:true}}}
+    const roles = (data.roles || []).length ? data.roles : [{ rol: 'Sin datos', count: 1 }];
+    new Chart(document.getElementById('rolesChart'), {
+      type: 'doughnut',
+      data: { labels: roles.map(r => r.rol), datasets: [{ data: roles.map(r => r.count), backgroundColor: ['#8b5cf6', '#a78bfa', 'rgba(167,139,250,0.3)', '#22d3ee', '#fbbf24', '#34d399'], borderWidth: 0 }] },
+      options: { responsive: true, maintainAspectRatio: false, cutout: '70%', plugins: { legend: { position: 'bottom', labels: { color: '#5d5d7a', padding: 20 } } } }
     });
-  }catch(e){console.error('Chart error:',e)}
+    const g = data.gastosCategoria || [];
+    const labels = g.length ? g.map(x => x.categoria) : ['Sin datos'];
+    const vals = g.length ? g.map(x => x.monto) : [0];
+    new Chart(document.getElementById('spendingChart'), {
+      type: 'bar',
+      data: { labels, datasets: [{ label: 'Gastos', data: vals, backgroundColor: 'rgba(139,92,246,0.6)', borderRadius: 6 }] },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false }, ticks: { color: '#5d5d7a' } }, y: { grid: { color: 'rgba(139,92,246,0.1)' }, ticks: { color: '#5d5d7a' }, beginAtZero: true } } }
+    });
+  } catch (e) { console.error('Chart error:', e); }
+}
+
+function renderActivity(data) {
+  const list = document.getElementById('activityList');
+  const items = data.actividadReciente || [];
+  if (!items.length) {
+    list.innerHTML = '<div style="padding:16px;color:var(--gray);font-size:13px">Sin actividad registrada todavía.</div>';
+    return;
+  }
+  list.innerHTML = items.map(a => {
+    const cls = a.tipo === 'usuario' ? 'security' : (a.tipo === 'ingreso' ? 'success' : 'success');
+    const icon = a.tipo === 'usuario' ? 'fa-user-plus' : (a.tipo === 'gasto' ? 'fa-arrow-down' : (a.tipo === 'factura' ? 'fa-file-invoice' : 'fa-robot'));
+    return `<div class="activity-item ${cls}"><div class="activity-icon"><i class="fas ${icon}"></i></div><div class="activity-content"><div class="activity-text">${a.titulo}</div><div class="activity-time">${a.detalle}</div></div></div>`;
+  }).join('');
+}
+
+function renderAlerts(data) {
+  const list = document.getElementById('alertList');
+  const alerts = data.alertas || [];
+  if (!alerts.length) {
+    list.innerHTML = '<div style="padding:16px;color:var(--gray);font-size:13px">Sin alertas pendientes.</div>';
+    return;
+  }
+  const icons = { alta: 'fa-credit-card', media: 'fa-tachometer-alt', baja: 'fa-info-circle' };
+  list.innerHTML = alerts.map(a =>
+    `<div class="alert-item"><div class="alert-icon"><i class="fas ${icons[a.severidad] || 'fa-info-circle'}"></i></div><div class="alert-content"><div class="alert-title">${a.titulo}</div><div class="alert-desc">${a.detalle}</div></div></div>`
+  ).join('');
 }
 
 function setPeriod(p,btn){
   document.querySelectorAll('.period-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
+  loadDashboard();
   showToast('📊 Datos actualizados: '+p);
 }
 
 
-window.addEventListener('load',initCharts);
-setTimeout(()=>{const s=document.getElementById('statsSkeleton');if(s)s.style.display='none'},1500);
+window.addEventListener('load',loadDashboard);
 
 </script>
 <script src="../js/notifications.js"></script>

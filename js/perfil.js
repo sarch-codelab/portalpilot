@@ -1,4 +1,4 @@
-﻿// ── API Config ─────────────────────────────────────
+// ── API Config ─────────────────────────────────────
 const _isLocalhost = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
 const _API_ROOT = _isLocalhost ? 'https://portal-pilot.vercel.app' : '';
 

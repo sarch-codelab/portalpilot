@@ -3,16 +3,16 @@
 <head>
   <meta charset="UTF-8">
     <link rel="icon" type="image/png" href="img/iconos/Portal%20Pilot.png">
-    <meta name="description" content="El ERP inteligente para PyMES hondureñas. Facturación electrónica, inventario, contabilidad y más con IA integrada.">
+    <meta name="description" content="Portal Pilot: ERP comercial integral para pulperías, supermercados, distribuidoras y cadenas retail. Facturación electrónica SAR, inventario multi-bodega, POS y más con IA integrada.">
     <meta property="og:title" content="Portal Pilot — Gestión Empresarial Inteligente">
-    <meta property="og:description" content="El ERP inteligente para PyMES hondureñas. Facturación electrónica, inventario, contabilidad y más con IA integrada.">
+    <meta property="og:description" content="Portal Pilot: ERP comercial integral para pulperías, supermercados, distribuidoras y cadenas retail. Facturación electrónica SAR, inventario multi-bodega, POS y más con IA integrada.">
     <meta property="og:image" content="https://portal-pilot.vercel.app/img/iconos/Portal%20Pilot.png">
     <meta property="og:url" content="https://portal-pilot.vercel.app/primer_acceso.html">
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="Portal Pilot">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Portal Pilot — Gestión Empresarial Inteligente">
-    <meta name="twitter:description" content="El ERP inteligente para PyMES hondureñas. Facturación electrónica, inventario, contabilidad y más con IA integrada.">
+    <meta name="twitter:description" content="Portal Pilot: ERP comercial integral para pulperías, supermercados, distribuidoras y cadenas retail. Facturación electrónica SAR, inventario multi-bodega, POS y más con IA integrada.">
     <meta name="twitter:image" content="https://portal-pilot.vercel.app/img/iconos/Portal%20Pilot.png">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Primer Acceso — Portal Pilot</title>
@@ -173,6 +173,45 @@
       .panel-left { display: none; }
       .panel-right { min-height: 100vh; padding: 24px; }
       .auth-box { max-width: 100%; }
+    }
+
+    @media(max-width:768px) {
+      .panel-right { padding: 20px; min-height: auto; }
+      .auth-box { padding: 28px 20px; }
+      .auth-box h1 { font-size: clamp(24px, 5vw, 32px); }
+      .step-info h2 { font-size: 18px; }
+      .step-info p { font-size: 13px; }
+      .input-field input, .input-field textarea { font-size: 13px; padding: 10px; }
+      .btn-primary { font-size: 13px; height: 44px; }
+    }
+
+    @media(max-width:480px) {
+      .panel-right { padding: 16px; }
+      .auth-box { padding: 20px 16px; }
+      .auth-box h1 { font-size: clamp(20px, 6vw, 28px); margin-bottom: 24px; }
+      .steps-container { gap: 16px; }
+      .step-card { padding: 16px; }
+      .step-num { width: 28px; height: 28px; font-size: 12px; }
+      .step-info h2 { font-size: 15px; margin-bottom: 6px; }
+      .step-info p { font-size: 12px; }
+      .input-field label { font-size: 12px; }
+      .input-field input, .input-field textarea { font-size: 12px; padding: 8px; }
+      .btn-primary { font-size: 12px; height: 40px; width: 100%; }
+      .footer-text { font-size: 11px; }
+      .success-state h3 { font-size: 18px; }
+      .success-state p { font-size: 12px; }
+      .redirect-timer { font-size: 10px; }
+    }
+
+    @media(max-width:360px) {
+      .auth-box { padding: 16px 12px; }
+      .auth-box h1 { font-size: clamp(18px, 7vw, 24px); }
+      .step-card { padding: 12px; }
+      .step-num { width: 24px; height: 24px; }
+      .step-info p { font-size: 11px; }
+      .input-field input, .input-field textarea { font-size: 11px; }
+      .btn-primary { font-size: 11px; height: 38px; }
+      .footer-text { font-size: 10px; }
     }
   </style>
 </head>

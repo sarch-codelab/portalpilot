@@ -1,0 +1,82 @@
+/* ─── HAMBURGER MENU (Mobile Navigation) ─────────────────────── */
+
+.hamburger-toggle {
+  display: none;
+  flex-direction: column;
+  gap: 5px;
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  margin-right: auto;
+  color: var(--white);
+  transition: all 0.3s;
+}
+
+.hamburger-toggle span {
+  width: 20px;
+  height: 1.5px;
+  background: currentColor;
+  transition: all 0.3s;
+}
+
+.hamburger-toggle:hover {
+  opacity: 0.8;
+}
+
+.hamburger-toggle.active span:nth-child(1) {
+  transform: rotate(45deg) translate(7px, 7px);
+}
+
+.hamburger-toggle.active span:nth-child(2) {
+  opacity: 0;
+}
+
+.hamburger-toggle.active span:nth-child(3) {
+  transform: rotate(-45deg) translate(7px, -7px);
+}
+
+/* Show hamburger on tablets and phones */
+@media (max-width: 900px) {
+  .hamburger-toggle {
+    display: flex;
+  }
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    position: fixed;
+    left: -280px;
+    top: 0;
+    height: 100vh;
+    z-index: 1000;
+    transition: left 0.3s;
+    width: 280px;
+  }
+
+  .sidebar.open {
+    left: 0;
+  }
+
+  .topbar-search {
+    display: none !important;
+  }
+}
+
+@media (max-width: 600px) {
+  .sidebar {
+    left: -240px;
+    width: 240px;
+  }
+
+  .topbar-search {
+    display: none !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .sidebar {
+    left: -200px;
+    width: 200px;
+  }
+}

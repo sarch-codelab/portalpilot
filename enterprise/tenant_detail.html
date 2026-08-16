@@ -1537,10 +1537,10 @@
                 <a href="dashboard.html" class="sidebar-link">
                     <i class="fas fa-home"></i> Dashboard
                 </a>
-                <a href="tenants.html" class="sidebar-link">
+                <a href="../pp/tenants.html" class="sidebar-link">
                     <i class="fas fa-building"></i> Tenants
                 </a>
-                <a href="usuarios.html" class="sidebar-link">
+                <a href="../pp/usuarios.html" class="sidebar-link">
                     <i class="fas fa-users"></i> Usuarios
                 </a>
                 <a href="#" class="sidebar-link">
@@ -1552,7 +1552,7 @@
                 <a href="#" class="sidebar-link">
                     <i class="fas fa-chart-line"></i> Analytics
                 </a>
-                <a href="global_settings.html" class="sidebar-link">
+                <a href="../pp/global_settings.html" class="sidebar-link">
                     <i class="fas fa-cog"></i> Configuración Global
                 </a>
             </nav>
@@ -1581,7 +1581,7 @@
             <header class="topbar">
                 <div class="topbar-left">
                     <button class="topbar-btn" style="display:none;" id="backBtn"
-                        onclick="window.location.href='tenants.html'">
+                        onclick="window.location.href='../pp/tenants.html'">
                         <i class="fas fa-arrow-left"></i>
                     </button>
                     <div class="topbar-title">Tenant: <span id="tenantNameDisplay">TechCorp Solutions</span></div>
@@ -2051,7 +2051,7 @@
                                     class="fas fa-check-circle"></i> Conectado</div>
                         </div>
                         <div style="padding:16px;background:rgba(251,191,36,0.1);border:1px dashed rgba(251,191,36,0.4);border-radius:var(--radius);text-align:center;cursor:pointer;"
-                            onclick="alert('Redirigiendo a marketplace de integraciones...')">
+                            onclick="showToast('Marketplace de integraciones disponible próximamente.', 'info')">
                             <i class="fas fa-plus" style="font-size:24px;color:var(--yellow);margin-bottom:8px;"></i>
                             <div style="font-weight:500;color:var(--gray2);">+ Conectar</div>
                         </div>
@@ -2146,7 +2146,7 @@
                                     <div style="color:rgba(255,255,255,0.9);font-size:13px;">Desde $799/mes</div>
                                 </div>
                                 <button class="btn btn-acc btn-sm" style="width:100%;justify-content:center;"
-                                    onclick="alert('Redirigiendo a comparación de planes...')">
+                                    onclick="showToast('Comparación de planes disponible próximamente.', 'info')">
                                     <i class="fas fa-arrow-right"></i> Ver Planes
                                 </button>
                             </div>
@@ -2353,7 +2353,7 @@
                         <div style="display:flex;gap:12px;flex-wrap:wrap;">
                             <button class="btn btn-outline btn-sm"
                                 style="border-color:var(--yellow);color:var(--yellow);"
-                                onclick="alert('Redirigiendo a exportación de datos...')">
+                                onclick="showToast('Exportación de datos disponible próximamente.', 'info')">
                                 <i class="fas fa-download"></i> Exportar Todos los Datos
                             </button>
                             <button class="btn btn-danger btn-sm" onclick="confirmSuspend()">
@@ -2526,20 +2526,20 @@
                 alert('Por favor ingresa un nombre para la API Key');
                 return;
             }
-            alert(`✓ API Key generada:\n\npk_live_${Math.random().toString(36).substring(2, 10)}••••••${Math.random().toString(36).substring(2, 6)}\n\n⚠️ Guarda esta key en un lugar seguro. No podrá ser vista nuevamente.`);
+            showToast('La generación de API Keys estará disponible próximamente.', 'info');
             closeModal('apiKeyModal');
             document.getElementById('keyName').value = '';
         }
 
         // ── Settings Save ────────────────────────────────────
         function saveSettings() {
-            alert('✓ Configuración guardada exitosamente');
+            showToast('Configuración guardada.', 'success');
         }
 
         // ── Confirm Actions ──────────────────────────────────
         function confirmSuspend() {
             if (confirm('¿Estás seguro de suspender este tenant?\n\nEl acceso al portal será bloqueado inmediatamente, pero los datos se conservarán.')) {
-                alert('✓ Tenant suspendido exitosamente');
+                showToast('La suspensión de tenants estará disponible próximamente.', 'info');
             }
         }
 
@@ -2548,8 +2548,8 @@
                 alert('Operación cancelada');
                 return;
             }
-            alert('⚠️ Tenant eliminado permanentemente. Esta acción no se puede deshacer.');
-            window.location.href = 'tenants.html';
+            showToast('La eliminación de tenants estará disponible próximamente.', 'info');
+            window.location.href = '../pp/tenants.html';
         }
 
         // ── Initialize ───────────────────────────────────────
@@ -2562,7 +2562,7 @@
             }, 100);
 
             // Show back button if coming from tenants list
-            if (document.referrer.includes('tenants.html')) {
+            if (document.referrer.includes('pp/tenants.html')) {
                 document.getElementById('backBtn').style.display = 'flex';
             }
         });

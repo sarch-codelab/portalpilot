@@ -1,6 +1,6 @@
 # Portal Pilot
 
-> **Plataforma SaaS Multi-Empresa con IA en la Nube** — Gestión empresarial integral para PyMES y centros educativos. Facturación electrónica SAR (Honduras), inventario, contabilidad, RRHH, CRM, POS y educación en una sola plataforma con asistentes virtuales potenciados por Groq API.
+> **Plataforma SaaS Multi-Empresa con IA en la Nube** — ERP comercial integral para pulperías, abarroterías, supermercados, distribuidoras y cadenas multi-sucursal. Facturación electrónica SAR (Honduras), inventario multi-bodega, POS con códigos de barras, CRM, membresías y gestión comercial completa con asistentes virtuales potenciados por Groq API.
 
 [![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://portal-pilot.vercel.app)
 [![Node.js](https://img.shields.io/badge/Node.js-18+-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)](https://nodejs.org)
@@ -19,7 +19,7 @@
 
 | Superficie | Tecnología | Usuario Objetivo |
 |------------|------------|------------------|
-| **App de Escritorio** | Flutter Desktop (Windows) | Negocios y centros educativos (offline-first) |
+| **App Multi-Plataforma** | Flutter (Android, iOS, Web, Windows) | Negocios comerciales (offline-first) |
 | **Portal Admin (`pp/`)** | HTML/CSS/JS + Express API | Superadministradores (rol `ROOT`) |
 | **Portal Enterprise (`enterprise/`)** | HTML/CSS/JS + Express API | Clientes por tenant (multi-empresa) |
 | **Landing & Auth** | HTML/CSS/JS estático (Vercel) | Público general |
@@ -42,7 +42,10 @@ Asistentes virtuales integrados en **cada módulo** con latencia ultra-baja. An�
 | **RRHH / Nómina** | `#EC4899` | Empleados, planilla, recibos, beneficios, asistencia |
 | **CRM** | `#06B6D4` | Clientes, ventas, seguimiento comercial, ciclo unificado |
 | **POS** | `#F97316` | Terminal cobro rápida, código barras, historial, cierre caja |
-| **Educación** | `#8B5CF6` | Notas con rúbricas, matrícula, asistencia, IA educativa (extracción PDF) |
+| **Canal Tradicional** | `#F59E0B` | Pulperías y mercaditos: fiado, cobros, rutas de reparto |
+| **Canal Moderno** | `#10B981` | Supermercados y cadenas: multi-sucursal, transferencias, consolidado |
+| **Sector Retail** | `#06B6D4` | Precios por canal, promociones, inventario por tienda |
+| **Membresías** | `#8B5CF6` | Modelos club (tipo PriceSmart): socios, puntos, renovaciones |
 
 ### 🔐 Control de Acceso Enterprise
 - **3 Roles**: `Owner` (propietario completo), `Administrador` (gestión parcial), `Miembro` (acceso limitado)

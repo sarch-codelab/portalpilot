@@ -1,1 +1,1 @@
-﻿// JS para 404
+// JS para 404

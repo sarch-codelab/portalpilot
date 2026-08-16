@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+    <link rel="icon" type="image/png" href="../img/iconos/Portal%20Pilot.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>System Health — Portal Pilot</title>
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="css/dashboard.css">
+  <link rel="stylesheet" href="../css/notifications.css">
+</head>
+
+<body>
+
+  <div id="progress">
+    <div id="progress-fill"></div>
+  </div>
+
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <h2 class="logo">PORTAL PILOT</h2>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="dashboard.html" class="sidebar-link"><i class="fas fa-home"></i> <span>Dashboard</span></a>
+      <a href="tenants.html" class="sidebar-link"><i class="fas fa-building"></i> <span>Tenants</span></a>
+      <a href="usuarios.html" class="sidebar-link"><i class="fas fa-users"></i> <span>Usuarios</span></a>
+      <a href="#" class="sidebar-link"><i class="fas fa-robot"></i> <span>Bots RPA</span></a>
+      <a href="#" class="sidebar-link"><i class="fas fa-link"></i> <span>Auditoría</span></a>
+      <a href="billing_plans.html" class="sidebar-link"><i class="fas fa-credit-card"></i> <span>Billing &amp; Planes</span></a>
+      <a href="system_health.html" class="sidebar-link active"><i class="fas fa-heartbeat"></i> <span>System Health</span></a>
+      <a href="global_settings.html" class="sidebar-link"><i class="fas fa-cog"></i> <span>Configuración</span></a>
+    </nav>
+    <div class="sidebar-footer">
+      <button class="footer-btn logout" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> <span>Cerrar Sesión</span></button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main-content">
+    <header class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-title">System <span>Health</span></div>
+      </div>
+      <div class="topbar-right">
+        <button class="topbar-btn" id="refreshHealthBtn" title="Actualizar"><i class="fas fa-sync-alt"></i></button>
+      </div>
+    </header>
+
+    <div class="health-grid" id="healthGrid">
+      <div class="health-card">
+        <i class="fas fa-server"></i>
+        <div class="health-label">API Backend</div>
+        <div class="health-value" id="status-api">Comprobando...</div>
+      </div>
+      <div class="health-card">
+        <i class="fas fa-database"></i>
+        <div class="health-label">NocoDB</div>
+        <div class="health-value" id="status-nocodb">Comprobando...</div>
+      </div>
+      <div class="health-card">
+        <i class="fas fa-cloud"></i>
+        <div class="health-label">Supabase</div>
+        <div class="health-value" id="status-supabase">Comprobando...</div>
+      </div>
+      <div class="health-card">
+        <i class="fas fa-key"></i>
+        <div class="health-label">JWT / Sesión</div>
+        <div class="health-value" id="status-jwt">Comprobando...</div>
+      </div>
+      <div class="health-card">
+        <i class="fas fa-globe"></i>
+        <div class="health-label">Entorno</div>
+        <div class="health-value" id="status-env">Comprobando...</div>
+      </div>
+      <div class="health-card">
+        <i class="fas fa-clock"></i>
+        <div class="health-label">Última comprobación</div>
+        <div class="health-value" id="status-time">—</div>
+      </div>
+    </div>
+  </main>
+
+  <script src="../auth-check.js"></script>
+  <script src="js/portal-admin-guard.js"></script>
+  <script src="../js/notifications.js"></script>
+  <script src="../js/sidebar-loader.js"></script>
+  <script>
+    (function () {
+      const healthBtn = document.getElementById('refreshHealthBtn');
+      if (healthBtn) healthBtn.addEventListener('click', loadHealth);
+
+      function setValue(id, text, ok) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.textContent = text;
+        el.style.color = ok ? '#22c55e' : (ok === false ? '#ef4444' : '#f59e0b');
+      }
+
+      function loadHealth() {
+        fetch('/api/health')
+          .then(r => r.json())
+          .then(data => {
+            setValue('status-api', data.status === 'ok' ? 'Operativo' : 'Degradado', data.status === 'ok');
+            setValue('status-nocodb', data.nocodb_configured ? 'Configurado' : 'No configurado', !!data.nocodb_configured);
+            setValue('status-supabase', data.supabase_configured ? 'Configurado' : 'No configurado', !!data.supabase_configured);
+            setValue('status-jwt', data.jwt_configured ? 'Configurado' : 'No configurado', !!data.jwt_configured);
+            setValue('status-env', data.environment === 'serverless' ? 'Vercel (serverless)' : 'Local', true);
+          })
+          .catch(() => {
+            setValue('status-api', 'Sin respuesta', false);
+            setValue('status-nocodb', '—', null);
+            setValue('status-supabase', '—', null);
+            setValue('status-jwt', '—', null);
+            setValue('status-env', '—', null);
+          })
+          .finally(() => {
+            setValue('status-time', new Date().toLocaleTimeString('es-HN'), true);
+          });
+      }
+
+      loadHealth();
+    })();
+  </script>
+
+  <style>
+    .health-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 18px;
+      padding: 24px;
+    }
+    .health-card {
+      background: #141425;
+      border: 1px solid rgba(139, 92, 246, 0.2);
+      border-radius: 14px;
+      padding: 22px;
+      color: #fff;
+      font-family: 'DM Sans', sans-serif;
+    }
+    .health-card i {
+      font-size: 22px;
+      color: #8b5cf6;
+      margin-bottom: 12px;
+    }
+    .health-label {
+      font-size: 12px;
+      color: #94a3b8;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+    .health-value {
+      font-size: 16px;
+      font-weight: 600;
+      margin-top: 6px;
+    }
+  </style>
+</body>
+
+</html>

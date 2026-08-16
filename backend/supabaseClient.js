@@ -1,7 +1,7 @@
 const axios = require('axios');
 
 const SUPABASE_URL = (process.env.SUPABASE_URL || '').replace(/\/+$/, '');
-const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || '';
+const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY || '';
 const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || '';
 
 let supabase = null;

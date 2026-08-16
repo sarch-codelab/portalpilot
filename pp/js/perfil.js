@@ -1,4 +1,4 @@
-﻿// ── API Config ─────────────────────────────────────
+// ── API Config ─────────────────────────────────────
 const _isLocalhost = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
 const _API_ROOT = _isLocalhost ? 'https://portal-pilot.vercel.app' : '';
 
@@ -162,6 +162,7 @@ if (logoutBtn && logoutModal) {
 function openModal(id) {
     const modal = document.getElementById(id);
     if (modal) modal.classList.add('active');
+    if (id === 'apiKeysModal') loadApiKeys();
 }
 
 function closeModal(id) {
@@ -525,23 +526,81 @@ function endAllSessions() {
 }
 
 // ── API Keys ───────────────────────────────────────
+async function loadApiKeys() {
+    const list = document.getElementById('apiKeyList');
+    if (!list) return;
+    list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--gray);"><i class="fas fa-spinner fa-spin"></i> Cargando claves...</div>';
+    const token = localStorage.getItem('token');
+    try {
+        const res = await fetch(`${_API_ROOT}/api/tenant/apikeys`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!res.ok) throw new Error((await res.json()).error || 'Error');
+        const { keys } = await res.json();
+        if (!keys || keys.length === 0) {
+            list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--gray);">Aún no tienes claves API.<br>Genera la primera con el botón inferior.</div>';
+            return;
+        }
+        list.innerHTML = keys.map(k => `
+            <div class="api-key-item">
+                <div class="api-key-info">
+                    <div class="api-key-name">${k.nombre}</div>
+                    <div class="api-key-value">${k.clave.slice(0, 14)}...${k.clave.slice(-6)}</div>
+                    <div class="api-key-meta">Creada: ${new Date(k.created_at).toLocaleDateString('es')}${k.ultimo_uso ? ' • Última usada: ' + new Date(k.ultimo_uso).toLocaleDateString('es') : ''}</div>
+                </div>
+                <div class="api-key-actions">
+                    <button class="btn btn-ghost btn-xs" onclick="copyApiKey('${k.clave}')">
+                        <i class="fas fa-copy"></i>
+                    </button>
+                    <button class="btn btn-danger btn-xs" onclick="revokeApiKey('${k.id}')">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+        `).join('');
+    } catch (err) {
+        list.innerHTML = `<div style="text-align:center;padding:20px;color:var(--red);">No se pudieron cargar las claves: ${err.message}</div>`;
+    }
+}
+
 function copyApiKey(key) {
     navigator.clipboard.writeText(key).then(() => {
         showToast('✓ Clave copiada al portapapeles', 'success');
     });
 }
 
-function revokeApiKey(btn) {
-    if (confirm('¿Revocar esta clave API? Las aplicaciones que la usen dejarán de funcionar.')) {
-        btn.closest('.api-key-item').remove();
+async function revokeApiKey(id) {
+    if (!confirm('¿Revocar esta clave API? Las aplicaciones que la usen dejarán de funcionar.')) return;
+    const token = localStorage.getItem('token');
+    try {
+        const res = await fetch(`${_API_ROOT}/api/tenant/apikeys/${encodeURIComponent(id)}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!res.ok) throw new Error((await res.json()).error || 'Error');
         showToast('Clave revocada', 'success');
+        loadApiKeys();
+    } catch (err) {
+        showToast('Error al revocar: ' + err.message, 'error');
     }
 }
 
-function createApiKey() {
+async function createApiKey() {
     const name = prompt('Nombre para la nueva clave API:', 'Nueva Integración');
-    if (name) {
-        showToast('✓ Nueva clave generada: pk_live_' + Math.random().toString(36).substr(2, 12) + '...', 'success');
+    if (!name) return;
+    const token = localStorage.getItem('token');
+    try {
+        const res = await fetch(`${_API_ROOT}/api/tenant/apikeys`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({ nombre: name })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Error');
+        loadApiKeys();
+        showToast('✓ Clave generada correctamente', 'success');
+    } catch (err) {
+        showToast('Error al generar: ' + err.message, 'error');
     }
 }
 

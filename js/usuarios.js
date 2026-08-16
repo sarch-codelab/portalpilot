@@ -1,1 +1,1 @@
-﻿// JS para usuarios
+// JS para usuarios

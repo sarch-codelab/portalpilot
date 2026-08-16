@@ -1,1 +1,1 @@
-﻿// JS para index
+// JS para index

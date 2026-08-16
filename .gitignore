@@ -6,3 +6,5 @@ Portal-Pilot-BACKUP POR SI ACASO/
 backend/.env
 .gemini/
 *.log
+.vercel
+.env*

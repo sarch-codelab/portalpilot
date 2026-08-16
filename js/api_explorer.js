@@ -1,1 +1,1 @@
-﻿// JS para api_explorer
+// JS para api_explorer

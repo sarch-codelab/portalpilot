@@ -1,1 +1,1 @@
-﻿// JS para pp5
+// JS para pp5

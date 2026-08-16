@@ -565,35 +565,8 @@
                 <button class="modal-close" onclick="closeModal('apiKeysModal')"><i class="fas fa-times"></i></button>
             </div>
             <div class="modal-body">
-                <div class="api-key-item">
-                    <div class="api-key-info">
-                        <div class="api-key-name">Producción - Dashboard</div>
-                        <div class="api-key-value">pk_live_8a3f...2e1b9c4d</div>
-                        <div class="api-key-meta">Creada: 12 Ene 2026 • Última usada: Hoy</div>
-                    </div>
-                    <div class="api-key-actions">
-                        <button class="btn btn-ghost btn-xs" onclick="copyApiKey('pk_live_8a3f2e1b9c4d')">
-                            <i class="fas fa-copy"></i>
-                        </button>
-                        <button class="btn btn-danger btn-xs" onclick="revokeApiKey(this)">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </div>
-                </div>
-                <div class="api-key-item">
-                    <div class="api-key-info">
-                        <div class="api-key-name">Desarrollo - Testing</div>
-                        <div class="api-key-value">pk_test_4f1a...9b2c8e3d</div>
-                        <div class="api-key-meta">Creada: 3 Mar 2026 • Última usada: Hace 3 días</div>
-                    </div>
-                    <div class="api-key-actions">
-                        <button class="btn btn-ghost btn-xs" onclick="copyApiKey('pk_test_4f1a9b2c8e3d')">
-                            <i class="fas fa-copy"></i>
-                        </button>
-                        <button class="btn btn-danger btn-xs" onclick="revokeApiKey(this)">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </div>
+                <div id="apiKeyList">
+                    <div style="text-align:center;padding:20px;color:var(--gray);"><i class="fas fa-spinner fa-spin"></i> Cargando claves...</div>
                 </div>
                 <button class="btn btn-acc btn-sm" style="width:100%;margin-top:12px;" onclick="createApiKey()">
                     <i class="fas fa-plus"></i> Generar Nueva Clave

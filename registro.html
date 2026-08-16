@@ -333,6 +333,7 @@
 
             .notificacion {
                 width: 100%;
+                max-width: 100%;
             }
 
             .texto-notificacion {
@@ -340,13 +341,63 @@
             }
         }
 
-        @media(max-width: 480px) {
+        @media (max-width: 480px) {
+            #contenedor-pila {
+                width: calc(100% - 16px);
+                top: 10px;
+                right: 8px;
+                left: 8px;
+                transform: none;
+            }
+
+            .notificacion {
+                width: 100%;
+                max-width: 100%;
+                height: 50px;
+                padding: 0 10px;
+                font-size: 12px;
+            }
+
+            .texto-notificacion {
+                font-size: 12px;
+            }
+
             .register-heading h1 {
                 font-size: 28px;
             }
 
             .page-wrap {
                 padding: 24px 18px 40px;
+            }
+        }
+
+        @media (max-width: 360px) {
+            #contenedor-pila {
+                width: calc(100% - 12px);
+                top: 8px;
+                right: 6px;
+                left: 6px;
+            }
+
+            .notificacion {
+                width: 100%;
+                max-width: 100%;
+                height: 48px;
+                padding: 0 8px;
+                border-radius: 28px;
+                font-size: 11px;
+            }
+
+            .texto-notificacion {
+                font-size: 11px;
+            }
+
+            .register-heading h1 {
+                font-size: 24px;
+            }
+
+            .page-wrap {
+                padding: 20px 16px 32px;
             }
         }
 
@@ -1446,7 +1497,6 @@
                             <select id="regSector">
                                 <option value="">Seleccionar...</option>
                                 <option value="tecnologia">Tecnología</option>
-                                <option value="educacion">Educación</option>
                                 <option value="salud">Salud & Farmacéutica</option>
                                 <option value="finanzas">Finanzas & Banca</option>
                                 <option value="manufactura">Manufactura</option>
@@ -2465,7 +2515,6 @@
             /* ═══ FINALIZAR ═══ */
             const SECTOR_OPTIONS = {
                 tecnologia: 'Tecnología',
-                educacion: 'Educación',
                 salud: 'Salud & Farmacéutica',
                 finanzas: 'Finanzas & Banca',
                 manufactura: 'Manufactura',

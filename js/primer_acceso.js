@@ -1,1 +1,1 @@
-﻿// JS para primer_acceso
+// JS para primer_acceso

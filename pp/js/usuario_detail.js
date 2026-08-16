@@ -1,4 +1,4 @@
-﻿// ── Custom Cursor (OPTIMIZADO) ─────────────────────
+// ── Custom Cursor (OPTIMIZADO) ─────────────────────
 const dot = document.getElementById('cursor-dot');
 const ring = document.getElementById('cursor-ring');
 let mouseX = 0, mouseY = 0;

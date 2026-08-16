@@ -233,6 +233,76 @@
             font-size: 11px;
         }
 
+        /* ─── MODALS ─────────────────────── */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-box {
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 28px 32px;
+            max-width: 440px;
+            width: 92%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            text-align: center;
+            transform: translateY(12px);
+            transition: transform 0.3s;
+        }
+
+        .modal-overlay.active .modal-box {
+            transform: translateY(0);
+        }
+
+        .modal-icon {
+            font-size: 34px;
+            color: var(--primary);
+            margin-bottom: 10px;
+        }
+
+        .modal-box h3 {
+            margin: 0 0 6px;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 18px;
+        }
+
+        .modal-input {
+            width: 100%;
+            padding: 10px 14px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background: var(--bg1);
+            color: var(--text);
+            font-family: inherit;
+            font-size: 13px;
+        }
+
+        .modal-input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
         /* ─── LAYOUT ──────────────────────── */
         .dashboard {
             display: grid;
@@ -1165,19 +1235,19 @@
             </div>
             <div class="kpi-banner">
                 <div class="kpi-card reveal">
-                    <div class="kpi-value">15</div>
+                    <div class="kpi-value" id="kpiTotal">—</div>
                     <div class="kpi-label">Total Vehículos</div>
                 </div>
                 <div class="kpi-card reveal">
-                    <div class="kpi-value">10 / 5</div>
+                    <div class="kpi-value" id="kpiTipos">—</div>
                     <div class="kpi-label">Camiones / Vans</div>
                 </div>
                 <div class="kpi-card reveal">
-                    <div class="kpi-value">13</div>
+                    <div class="kpi-value" id="kpiOperativos">—</div>
                     <div class="kpi-label">En Ruta / Operativos</div>
                 </div>
                 <div class="kpi-card alert reveal">
-                    <div class="kpi-value">2</div>
+                    <div class="kpi-value" id="kpiMantenimiento">—</div>
                     <div class="kpi-label">Requieren Mantenimiento</div>
                 </div>
             </div>
@@ -1191,98 +1261,7 @@
                         <h2 class="card-title"><i class="fas fa-th-large"></i> Matriz de Activos</h2>
 
                         <div class="fleet-grid" id="fleetGrid">
-                            <!-- Asset 1 -->
-                            <div class="asset-card" data-plate="NVA-2026-A" data-status="en-ruta"
-                                data-driver="Chofer 1">
-                                <div class="asset-plate">NVA-2026-A</div>
-                                <div class="asset-meta">
-                                    <b>Tipo:</b> Camión Pesado (Carga)<br>
-                                    <b>Asignado:</b> Chofer 1<br>
-                                    <b>Estado:</b> En Ruta (Monterrey → Saltillo)
-                                </div>
-                                <div class="fuel-label"><span>Combustible</span><span>82%</span></div>
-                                <div class="fuel-bar">
-                                    <div class="fuel-fill" style="width:82%"></div>
-                                </div>
-                            </div>
-
-                            <!-- Asset 2 - Critical -->
-                            <div class="asset-card maintenance" data-plate="NVA-2026-F" data-status="alerta"
-                                data-driver="Chofer 5">
-                                <span class="maintenance-badge critical">CRÍTICO</span>
-                                <div class="asset-plate">NVA-2026-F</div>
-                                <div class="asset-meta">
-                                    <b>Tipo:</b> Van Ligera (Mensajería)<br>
-                                    <b>Asignado:</b> Chofer 5<br>
-                                    <b>Estado:</b> ⚠️ Alerta: Sobrecalentamiento
-                                </div>
-                                <div class="fuel-label"><span>Combustible</span><span
-                                        style="color:var(--red)">15%</span></div>
-                                <div class="fuel-bar">
-                                    <div class="fuel-fill low" style="width:15%"></div>
-                                </div>
-                            </div>
-
-                            <!-- Asset 3 -->
-                            <div class="asset-card" data-plate="NVA-2026-K" data-status="disponible"
-                                data-driver="Chofer 12">
-                                <div class="asset-plate">NVA-2026-K</div>
-                                <div class="asset-meta">
-                                    <b>Tipo:</b> Camión Pesado (Carga)<br>
-                                    <b>Asignado:</b> Chofer 12<br>
-                                    <b>Estado:</b> Disponible en Base Centro
-                                </div>
-                                <div class="fuel-label"><span>Combustible</span><span>95%</span></div>
-                                <div class="fuel-bar">
-                                    <div class="fuel-fill" style="width:95%"></div>
-                                </div>
-                            </div>
-
-                            <!-- Asset 4 - Workshop -->
-                            <div class="asset-card maintenance" data-plate="NVA-2026-L" data-status="taller"
-                                data-driver="Sin asignar">
-                                <span class="maintenance-badge workshop">TALLER</span>
-                                <div class="asset-plate">NVA-2026-L</div>
-                                <div class="asset-meta">
-                                    <b>Tipo:</b> Van Ligera (Distribución)<br>
-                                    <b>Asignado:</b> Sin asignar<br>
-                                    <b>Estado:</b> 🔧 Mantenimiento Preventivo
-                                </div>
-                                <div class="fuel-label"><span>Combustible</span><span>45%</span></div>
-                                <div class="fuel-bar">
-                                    <div class="fuel-fill medium" style="width:45%;background:var(--yellow)"></div>
-                                </div>
-                            </div>
-
-                            <!-- Asset 5 -->
-                            <div class="asset-card" data-plate="NVA-2026-M" data-status="en-ruta"
-                                data-driver="Chofer 8">
-                                <div class="asset-plate">NVA-2026-M</div>
-                                <div class="asset-meta">
-                                    <b>Tipo:</b> Camión Pesado (Carga)<br>
-                                    <b>Asignado:</b> Chofer 8<br>
-                                    <b>Estado:</b> En Ruta (Guadalajara → CDMX)
-                                </div>
-                                <div class="fuel-label"><span>Combustible</span><span>67%</span></div>
-                                <div class="fuel-bar">
-                                    <div class="fuel-fill" style="width:67%"></div>
-                                </div>
-                            </div>
-
-                            <!-- Asset 6 -->
-                            <div class="asset-card" data-plate="NVA-2026-P" data-status="disponible"
-                                data-driver="Chofer 3">
-                                <div class="asset-plate">NVA-2026-P</div>
-                                <div class="asset-meta">
-                                    <b>Tipo:</b> Van Ligera (Mensajería)<br>
-                                    <b>Asignado:</b> Chofer 3<br>
-                                    <b>Estado:</b> Disponible en Base Norte
-                                </div>
-                                <div class="fuel-label"><span>Combustible</span><span>88%</span></div>
-                                <div class="fuel-bar">
-                                    <div class="fuel-fill" style="width:88%"></div>
-                                </div>
-                            </div>
+                            <div style="grid-column:1/-1;text-align:center;padding:30px;color:var(--gray);">Cargando flota...</div>
                         </div>
                     </div>
                 </div>
@@ -1293,55 +1272,25 @@
                     <!-- IoT Timeline -->
                     <div class="card reveal">
                         <h2 class="card-title"><i class="fas fa-satellite"></i> Eventos IoT en Tiempo Real</h2>
-                        <div class="timeline">
+                        <div class="timeline" id="iotTimeline">
                             <div class="timeline-item">
-                                <span class="timeline-time">10:12 PM</span>
-                                <div class="timeline-text"><b>NVA-2026-A:</b> Cruzó geocerca en caseta Saltillo. Ruta:
-                                    Estable ✅</div>
-                            </div>
-                            <div class="timeline-item alert">
-                                <span class="timeline-time">08:45 PM</span>
-                                <div class="timeline-text"><b>NVA-2026-F:</b> ⚠️ Alerta telemetría — Código motor:
-                                    Sobrecalentamiento detectado</div>
-                            </div>
-                            <div class="timeline-item">
-                                <span class="timeline-time">06:21 PM</span>
-                                <div class="timeline-text"><b>NVA-2026-K:</b> Descarga completada en CEDIS Monterrey.
-                                    Estado: Disponible</div>
-                            </div>
-                            <div class="timeline-item">
-                                <span class="timeline-time">04:30 PM</span>
-                                <div class="timeline-text"><b>NVA-2026-M:</b> Actualización de ruta óptima por tráfico
-                                    en autopista</div>
-                            </div>
-                            <div class="timeline-item">
-                                <span class="timeline-time">02:15 PM</span>
-                                <div class="timeline-text"><b>NVA-2026-L:</b> Ingreso a taller programado. Mantenimiento
-                                    preventivo iniciado</div>
+                                <span class="timeline-time">—</span>
+                                <div class="timeline-text">Cargando eventos de flota...</div>
                             </div>
                         </div>
                     </div>
 
                     <!-- AI Assistant Panel -->
-                    <div class="ai-panel reveal">
+                    <div class="ai-panel reveal" id="aiPanel" style="display:none">
                         <div class="ai-header">
                             <div class="ai-avatar">🤖</div>
                             <div class="ai-name">Astraea Agent <span class="ai-status">● Activo</span></div>
                         </div>
-                        <p class="ai-message">
-                            He detectado que la unidad <b>NVA-2026-F</b> requiere mantenimiento inmediato por
-                            sobrecalentamiento.
-                            He generado de forma preventiva:
-                            <br><br>
-                            • 📋 Orden de taller en borrador<br>
-                            • 📄 Reporte técnico preliminar<br>
-                            • 🔔 Notificación a Carlos Mendoza (Owner)
-                            <br><br>
-                            <i style="color:var(--cyan)">¿Deseas aprobar y enviar la orden de servicio?</i>
+                        <p class="ai-message" id="aiMessage">
                         </p>
                         <div style="display:flex;gap:8px;margin-top:16px;">
                             <button class="btn btn-acc btn-sm" style="flex:1;justify-content:center;"
-                                onclick="approveMaintenance()"><i class="fas fa-check"></i> Aprobar</button>
+                                onclick="aprobarSugerenciaIA()"><i class="fas fa-check"></i> Aprobar</button>
                             <button class="btn btn-ghost btn-sm" style="flex:1;justify-content:center;"
                                 onclick="dismissAI()"><i class="fas fa-times"></i> Descartar</button>
                         </div>
@@ -1351,6 +1300,34 @@
             </div>
 
         </main>
+
+        <!-- Vehicle Modal -->
+        <div class="modal-overlay" id="vehicleModal" onclick="if(event.target===this)closeVehicleModal()">
+            <div class="modal-box">
+                <div class="modal-icon"><i class="fas fa-truck"></i></div>
+                <h3>Nuevo Vehículo</h3>
+                <div style="display:grid;gap:10px;margin:14px 0;text-align:left">
+                    <input id="vPlaca" class="modal-input" placeholder="Placa (ej. NVA-2027-A)" />
+                    <select id="vTipo" class="modal-input">
+                        <option value="Camión Pesado (Carga)">Camión Pesado (Carga)</option>
+                        <option value="Camión Mediano">Camión Mediano</option>
+                        <option value="Van Ligera (Mensajería)">Van Ligera (Mensajería)</option>
+                        <option value="Van Ligera (Distribución)">Van Ligera (Distribución)</option>
+                        <option value="Motocicleta">Motocicleta</option>
+                    </select>
+                    <input id="vChofer" class="modal-input" placeholder="Conductor asignado" />
+                    <input id="vUbicacion" class="modal-input" placeholder="Ubicación (ej. Base Norte)" />
+                    <div>
+                        <label style="font-size:12px;color:var(--gray)">Combustible (%)</label>
+                        <input id="vCombustible" class="modal-input" type="number" min="0" max="100" value="100" />
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button class="btn btn-ghost" onclick="closeVehicleModal()">Cancelar</button>
+                    <button class="btn btn-acc" onclick="submitVehicle()"><i class="fas fa-check"></i> Registrar</button>
+                </div>
+            </div>
+        </div>
 
         <!-- Logout Modal -->
         <div class="modal-overlay" id="logoutModal" onclick="if(event.target===this)this.classList.remove('active')">
@@ -1410,44 +1387,234 @@
         logoutModal.addEventListener('click', (e) => { if (e.target === logoutModal) { logoutModal.classList.remove('active'); } });
 
         // ── Fleet Functions ──────────────
+        let vehicles = [];
+
+        function apiFetch(url, options) {
+            const token = localStorage.getItem('token');
+            const headers = Object.assign({}, options?.headers || {}, token ? { 'Authorization': 'Bearer ' + token } : {});
+            return fetch(url, Object.assign({}, options, { headers }));
+        }
+
+        const estadosFleet = {
+            'en-ruta': { label: 'En Ruta', clase: '' },
+            'disponible': { label: 'Disponible', clase: '' },
+            'alerta': { label: 'Alerta', clase: 'maintenance' },
+            'taller': { label: 'Taller', clase: 'maintenance' }
+        };
+
+        async function loadFleet() {
+            const grid = document.getElementById('fleetGrid');
+            try {
+                const res = await apiFetch('/api/fleet');
+                if (!res.ok) throw new Error((await res.json()).error || 'Error');
+                const data = await res.json();
+                vehicles = data.vehicles || [];
+                renderFleet();
+            } catch (err) {
+                grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:30px;color:var(--red);">No se pudo cargar la flota: ${err.message}</div>`;
+            }
+        }
+
+        function renderFleet() {
+            const grid = document.getElementById('fleetGrid');
+            if (!vehicles.length) {
+                grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:30px;color:var(--gray);">Sin vehículos registrados. Agrega el primero con "Nuevo Vehículo".</div>';
+            } else {
+                grid.innerHTML = vehicles.map(v => {
+                    const st = estadosFleet[v.estado] || estadosFleet['disponible'];
+                    const badge = v.estado === 'alerta' ? '<span class="maintenance-badge critical">CRÍTICO</span>'
+                        : v.estado === 'taller' ? '<span class="maintenance-badge workshop">TALLER</span>' : '';
+                    const fuelClass = v.combustible <= 25 ? 'low' : (v.combustible <= 60 ? 'medium' : '');
+                    const fuelStyle = v.combustible <= 25 ? 'color:var(--red)' : (v.combustible <= 60 ? 'color:var(--yellow)' : '');
+                    return `<div class="asset-card ${st.clase}" data-plate="${v.placa}" data-status="${v.estado}" data-driver="${v.chofer || ''}">
+                        ${badge}
+                        <div class="asset-plate">${v.placa}</div>
+                        <div class="asset-meta">
+                            <b>Tipo:</b> ${v.tipo || 'Vehículo'}<br>
+                            <b>Asignado:</b> ${v.chofer || 'Sin asignar'}<br>
+                            <b>Estado:</b> ${st.label}${v.ubicacion ? ' (' + v.ubicacion + ')' : ''}
+                        </div>
+                        <div class="fuel-label"><span>Combustible</span><span style="${fuelStyle}">${v.combustible}%</span></div>
+                        <div class="fuel-bar">
+                            <div class="fuel-fill ${fuelClass}" style="width:${v.combustible}%${fuelClass === 'medium' ? ';background:var(--yellow)' : ''}"></div>
+                        </div>
+                        <div style="display:flex;gap:6px;margin-top:10px">
+                            <button class="btn btn-ghost btn-xs" onclick="approveMaintenance('${v.id}')" ${v.estado !== 'alerta' ? 'disabled style="opacity:.4"' : ''}><i class="fas fa-wrench"></i> A taller</button>
+                            <button class="btn btn-ghost btn-xs" onclick="marcarDisponible('${v.id}')" ${v.estado === 'disponible' ? 'disabled style="opacity:.4"' : ''}><i class="fas fa-flag-checkered"></i> Disponible</button>
+                        </div>
+                    </div>`;
+                }).join('');
+            }
+            updateKpis();
+        }
+
+        function updateKpis() {
+            const total = vehicles.length;
+            const camiones = vehicles.filter(v => /camión|camion/i.test(v.tipo || '')).length;
+            const vans = vehicles.filter(v => /van/i.test(v.tipo || '')).length;
+            const operativos = vehicles.filter(v => v.estado === 'en-ruta' || v.estado === 'disponible').length;
+            const mantenimiento = vehicles.filter(v => v.estado === 'alerta' || v.estado === 'taller').length;
+            document.getElementById('kpiTotal').textContent = total;
+            document.getElementById('kpiTipos').textContent = camiones + ' / ' + vans;
+            document.getElementById('kpiOperativos').textContent = operativos + ' / ' + (total - mantenimiento);
+            document.getElementById('kpiMantenimiento').textContent = mantenimiento;
+            renderTimeline();
+            renderAISuggestion();
+        }
+
+        function renderTimeline() {
+            const t = document.getElementById('iotTimeline');
+            if (!t) return;
+            const eventos = [];
+            const hora = new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
+            vehicles.forEach(v => {
+                const loc = v.ubicacion ? ' (' + v.ubicacion + ')' : '';
+                if (v.estado === 'alerta') {
+                    eventos.push({ cls: 'alert', html: `<b>${v.placa}:</b> ⚠️ Alerta telemetría — requiere atención inmediata${loc}` });
+                } else if (v.estado === 'taller') {
+                    eventos.push({ cls: '', html: `<b>${v.placa}:</b> Ingreso a taller programado. Mantenimiento preventivo iniciado` });
+                } else if (v.estado === 'en-ruta') {
+                    eventos.push({ cls: '', html: `<b>${v.placa}:</b> En ruta${v.ubicacion ? ' hacia ' + v.ubicacion : ''}. Estable ✅` });
+                }
+            });
+            if (!eventos.length) {
+                t.innerHTML = '<div class="timeline-item"><span class="timeline-time">—</span><div class="timeline-text">Sin eventos recientes. Agrega vehículos para monitorearlos.</div></div>';
+                return;
+            }
+            t.innerHTML = eventos.slice(0, 5).map(e =>
+                `<div class="timeline-item ${e.cls}"><span class="timeline-time">${hora}</span><div class="timeline-text">${e.html}</div></div>`
+            ).join('');
+        }
+
+        let aiSugerenciaId = null;
+
+        function renderAISuggestion() {
+            const panel = document.getElementById('aiPanel');
+            if (!panel) return;
+            const alerta = vehicles.find(v => v.estado === 'alerta');
+            if (alerta) {
+                aiSugerenciaId = alerta.id;
+                document.getElementById('aiMessage').innerHTML =
+                    `He detectado que la unidad <b>${alerta.placa}</b> requiere mantenimiento inmediato.<br><br>` +
+                    `• 📋 Orden de taller en borrador<br>• 📄 Reporte técnico preliminar<br>• 🔔 Notificación al propietario<br><br>` +
+                    `<i style="color:var(--cyan)">¿Deseas aprobar y enviar la orden de servicio?</i>`;
+                panel.style.display = 'block';
+            } else {
+                panel.style.display = 'none';
+            }
+        }
+
+        function aprobarSugerenciaIA() {
+            if (aiSugerenciaId) {
+                approveMaintenance(aiSugerenciaId);
+            } else {
+                showToast('No hay sugerencias activas.', 'info');
+            }
+        }
+
         function filterFleet() {
             const query = document.getElementById('fleetSearch').value.toLowerCase();
             const cards = document.querySelectorAll('.asset-card');
             cards.forEach(card => {
-                const plate = card.dataset.plate.toLowerCase();
-                const driver = card.dataset.driver.toLowerCase();
-                const status = card.dataset.status.toLowerCase();
+                const plate = (card.dataset.plate || '').toLowerCase();
+                const driver = (card.dataset.driver || '').toLowerCase();
+                const status = (card.dataset.status || '').toLowerCase();
                 const match = plate.includes(query) || driver.includes(query) || status.includes(query);
                 card.style.display = match ? 'block' : 'none';
             });
         }
 
         function addNewVehicle() {
-            alert('🚛 Nuevo Vehículo\n\nFormulario de registro:\n• Placa / VIN\n• Tipo de unidad\n• Asignación de chofer\n• Configuración de telemetría IoT\n\n✓ Integración automática con módulo de Auditoría Blockchain');
+            const modal = document.getElementById('vehicleModal');
+            if (modal) modal.classList.add('active');
+        }
+
+        async function submitVehicle() {
+            const placa = document.getElementById('vPlaca').value.trim();
+            if (!placa) { showToast('La placa es requerida', 'error'); return; }
+            const body = {
+                placa,
+                tipo: document.getElementById('vTipo').value,
+                chofer: document.getElementById('vChofer').value.trim(),
+                combustible: parseInt(document.getElementById('vCombustible').value, 10) || 100,
+                ubicacion: document.getElementById('vUbicacion').value.trim()
+            };
+            try {
+                const res = await apiFetch('/api/fleet', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+                if (!res.ok) throw new Error((await res.json()).error || 'Error');
+                showToast('✓ Vehículo registrado', 'success');
+                document.getElementById('vehicleModal').classList.remove('active');
+                document.getElementById('vPlaca').value = '';
+                document.getElementById('vChofer').value = '';
+                document.getElementById('vUbicacion').value = '';
+                loadFleet();
+            } catch (err) {
+                showToast('Error: ' + err.message, 'error');
+            }
+        }
+
+        function closeVehicleModal() {
+            document.getElementById('vehicleModal').classList.remove('active');
+        }
+
+        async function approveMaintenance(id) {
+            try {
+                const res = await apiFetch('/api/fleet/' + encodeURIComponent(id), {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ estado: 'taller', fecha_mantenimiento: new Date().toISOString() })
+                });
+                if (!res.ok) throw new Error((await res.json()).error || 'Error');
+                showToast('Orden de mantenimiento aprobada y notificada.', 'success');
+                loadFleet();
+            } catch (err) { showToast('Error: ' + err.message, 'error'); }
+        }
+
+        async function marcarDisponible(id) {
+            try {
+                const res = await apiFetch('/api/fleet/' + encodeURIComponent(id), {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ estado: 'disponible' })
+                });
+                if (!res.ok) throw new Error((await res.json()).error || 'Error');
+                showToast('Vehículo marcado como disponible.', 'success');
+                loadFleet();
+            } catch (err) { showToast('Error: ' + err.message, 'error'); }
         }
 
         function exportFleetReport() {
-            alert('📊 Reporte de Flota Generado\n\nIncluye:\n• Estado actual de 15 vehículos\n• Historial de mantenimiento (últimos 90 días)\n• Consumo de combustible por unidad\n• Alertas predictivas de IA\n\n🔐 Firmado criptográficamente para auditoría');
+            if (!vehicles.length) { showToast('No hay vehículos para exportar', 'warning'); return; }
+            const header = ['Placa', 'Tipo', 'Chofer', 'Estado', 'Combustible%', 'Ubicacion', 'Km'];
+            const rows = vehicles.map(v => [v.placa, v.tipo, v.chofer, v.estado, v.combustible, v.ubicacion, v.km]);
+            const csv = [header, ...rows].map(r => r.map(c => `"${String(c ?? '').replace(/"/g, '""')}"`).join(',')).join('\n');
+            const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'flota_' + (localStorage.getItem('empresaCodigo') || 'tenant') + '.csv';
+            a.click();
+            showToast('Reporte de flota descargado.', 'success');
         }
 
         async function refreshFleet() {
             const btn = document.querySelector('.page-actions .btn-ghost'), icon = btn?.querySelector('i');
             if (icon) icon.classList.add('fa-spin');
-            await new Promise(r => setTimeout(r, 800));
+            await loadFleet();
             if (icon) icon.classList.remove('fa-spin');
-            alert('✓ Flota actualizada con datos en tiempo real');
-        }
-
-        function approveMaintenance() {
-            alert('✅ Orden de Mantenimiento Aprobada\n\n• NVA-2026-F agendada para servicio inmediato\n• Notificación enviada a taller autorizado\n• Reporte técnico adjunto en blockchain\n• Chofer 5 reasignado temporalmente');
+            showToast('Flota actualizada con los últimos datos.', 'success');
         }
 
         function dismissAI() {
-            alert('🤖 Sugerencia de Astraea descartada\n\nPuedes volver a activar las recomendaciones de IA en Configuración > Automatización');
+            showToast('Sugerencia de IA descartada.', 'info');
         }
 
         // ── Initialize ──────────────────
         window.addEventListener('load', () => {
+            loadFleet();
             setTimeout(() => document.querySelectorAll('.reveal').forEach((el, i) => setTimeout(() => el.classList.add('in'), i * 50)), 100);
         });
 

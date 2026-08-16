@@ -273,6 +273,7 @@
     <main class="main-content">
       <header class="topbar">
         <div class="topbar-left">
+          <button class="hamburger-toggle" id="hamburgerBtn" onclick="toggleSidebarMobile()"><span></span><span></span><span></span></button>
           <div class="topbar-title">Centro de <span>Mando</span></div>
           <div class="topbar-search">
             <i class="fas fa-search"></i>
@@ -532,6 +533,39 @@
   <script src="js/dashboard.js"></script>
   <script src="../js/notifications.js"></script>
   <script src="../js/sidebar-loader.js"></script>
+
+  <script>
+    function toggleSidebarMobile() {
+      const sidebar = document.getElementById('sidebar');
+      const hamburger = document.getElementById('hamburgerBtn');
+      sidebar.classList.toggle('open');
+      hamburger.classList.toggle('active');
+    }
+    
+    // Close sidebar when clicking outside
+    document.addEventListener('click', (e) => {
+      const sidebar = document.getElementById('sidebar');
+      const hamburger = document.getElementById('hamburgerBtn');
+      if (window.innerWidth <= 768 && sidebar.classList.contains('open')) {
+        if (!sidebar.contains(e.target) && !hamburger.contains(e.target)) {
+          sidebar.classList.remove('open');
+          hamburger.classList.remove('active');
+        }
+      }
+    });
+
+    // Close sidebar on link click
+    document.querySelectorAll('.sidebar-link').forEach(link => {
+      link.addEventListener('click', () => {
+        if (window.innerWidth <= 768) {
+          const sidebar = document.getElementById('sidebar');
+          const hamburger = document.getElementById('hamburgerBtn');
+          sidebar.classList.remove('open');
+          hamburger.classList.remove('active');
+        }
+      });
+    });
+  </script>
 </body>
 
 </html>

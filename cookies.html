@@ -39,6 +39,43 @@
     footer{padding:32px 0;border-top:1px solid var(--border);text-align:center}
     footer p{font-size:12px;color:var(--text-muted)}
     footer a{color:var(--text-dim);margin:0 8px}footer a:hover{color:var(--white)}
+
+    @media(max-width:768px){
+      .container{padding:0 clamp(12px,3vw,32px)}
+      .legal-hero{padding:80px 0 30px}
+      .legal-hero h1{font-size:clamp(24px,5vw,32px)}
+      .legal-content{padding:0 0 60px}
+      .legal-content h2{font-size:18px;margin:24px 0 10px}
+      .legal-content p,.legal-content li{font-size:13px}
+      .legal-content th,.legal-content td{padding:8px 10px;font-size:12px}
+      .btn{padding:8px 16px;font-size:12px}
+    }
+
+    @media(max-width:480px){
+      .legal-hero{padding:60px 0 24px}
+      .legal-hero h1{font-size:clamp(20px,6vw,28px)}
+      .legal-hero .date{font-size:12px}
+      .legal-content{padding:0 0 48px}
+      .legal-content h2{font-size:16px;margin:18px 0 8px}
+      .legal-content p,.legal-content li{font-size:12px;margin-bottom:10px}
+      .legal-content ul{padding-left:16px;margin-bottom:12px}
+      .legal-content th,.legal-content td{padding:6px 8px;font-size:11px}
+      footer{padding:20px 16px}
+      footer p{font-size:11px}
+      .nav-logo{font-size:12px;gap:6px}
+      .nav-logo .logo-icon{width:28px;height:28px}
+      .btn{padding:7px 14px;font-size:11px}
+    }
+
+    @media(max-width:360px){
+      .legal-hero{padding:48px 0 20px}
+      .legal-hero h1{font-size:clamp(18px,7vw,24px)}
+      .legal-content h2{font-size:14px;margin:14px 0 6px}
+      .legal-content p,.legal-content li{font-size:11px;line-height:1.5}
+      .legal-content th,.legal-content td{padding:5px 6px;font-size:10px}
+      footer{padding:16px 12px}
+      footer p{font-size:10px}
+    }
   </style>
 </head>
 <body>

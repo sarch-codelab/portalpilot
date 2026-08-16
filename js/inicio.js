@@ -1,1 +1,1 @@
-﻿// JS para inicio
+// JS para inicio

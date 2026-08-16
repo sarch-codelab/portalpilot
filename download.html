@@ -4,17 +4,19 @@
 <head>
   <meta charset="UTF-8">
     <link rel="icon" type="image/png" href="img/iconos/Portal%20Pilot.png">
-    <meta name="description" content="El ERP inteligente para PyMES hondureñas. Facturación electrónica, inventario, contabilidad y más con IA integrada.">
+    <meta name="description" content="Portal Pilot: ERP comercial integral para pulperías, supermercados, distribuidoras y cadenas retail. Apps para Android, iOS, Web y Windows. Facturación electrónica SAR, POS, inventario multi-bodega y más.">
     <meta property="og:title" content="Portal Pilot — Gestión Empresarial Inteligente">
-    <meta property="og:description" content="El ERP inteligente para PyMES hondureñas. Facturación electrónica, inventario, contabilidad y más con IA integrada.">
+    <meta property="og:description" content="Portal Pilot: ERP comercial integral para pulperías, supermercados, distribuidoras y cadenas retail. Apps para Android, iOS, Web y Windows. Facturación electrónica SAR, POS, inventario multi-bodega y más.">
     <meta property="og:image" content="https://portal-pilot.vercel.app/img/iconos/Portal%20Pilot.png">
     <meta property="og:url" content="https://portal-pilot.vercel.app/download.html">
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="Portal Pilot">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Portal Pilot — Gestión Empresarial Inteligente">
-    <meta name="twitter:description" content="El ERP inteligente para PyMES hondureñas. Facturación electrónica, inventario, contabilidad y más con IA integrada.">
+    <meta name="twitter:description" content="Portal Pilot: ERP comercial integral para pulperías, supermercados, distribuidoras y cadenas retail. Apps para Android, iOS, Web y Windows. Facturación electrónica SAR, POS, inventario multi-bodega y más.">
     <meta name="twitter:image" content="https://portal-pilot.vercel.app/img/iconos/Portal%20Pilot.png">
+    <link rel="canonical" href="https://portal-pilot.vercel.app/download.html">
+    <meta name="robots" content="index, follow">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Descarga Portal Pilot Desktop — Windows, macOS y Linux</title>
   <link
@@ -2260,14 +2262,6 @@
         grid-template-columns: 1fr;
       }
 
-      .nav-links {
-        display: none;
-      }
-
-      .nav-download {
-        display: none;
-      }
-
       .comparison-head,
       .comparison-row {
         grid-template-columns: 1.5fr 1fr 1fr;
@@ -2289,7 +2283,71 @@
       }
     }
 
+    @media (max-width: 768px) {
+      header {
+        padding: 0 12px;
+      }
+
+      nav {
+        height: 48px;
+        gap: 12px;
+      }
+
+      .nav-logo {
+        font-size: 12px;
+        gap: 6px;
+        flex-shrink: 0;
+      }
+
+      .nav-logo .logo-icon {
+        width: 28px;
+        height: 28px;
+      }
+
+      .nav-links {
+        display: none !important;
+      }
+
+      .nav-back {
+        display: none !important;
+      }
+
+      .nav-download {
+        margin-left: auto;
+        padding: 7px 12px;
+        font-size: 10px;
+        height: 32px;
+      }
+    }
+
     @media (max-width: 600px) {
+      header {
+        padding: 0 10px;
+      }
+
+      nav {
+        height: 44px;
+      }
+
+      .nav-logo {
+        font-size: 11px;
+      }
+
+      .nav-logo .logo-icon {
+        width: 26px;
+        height: 26px;
+      }
+
+      .nav-download {
+        padding: 6px 10px;
+        font-size: 9px;
+        height: 30px;
+      }
+
+      .nav-download i {
+        font-size: 12px;
+      }
+
       .download-btns {
         flex-direction: column;
         align-items: center;
@@ -2314,6 +2372,112 @@
       .platform-tab {
         padding: 8px 16px;
         font-size: 12px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .download-btns {
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .store-btn {
+        width: 100%;
+        max-width: 100%;
+        height: 56px;
+        padding: 12px 16px;
+        font-size: 13px;
+      }
+
+      .store-btn i {
+        font-size: 20px;
+      }
+
+      .store-text small,
+      .store-text strong {
+        display: block;
+        white-space: normal;
+      }
+
+      .nav-logo {
+        font-size: 12px;
+        gap: 6px;
+      }
+
+      .nav-logo .logo-icon {
+        width: 28px;
+        height: 28px;
+      }
+
+      .comparison-head-cell,
+      .comparison-cell {
+        padding: 8px 10px;
+        font-size: 10px;
+      }
+
+      .platform-tab {
+        padding: 10px 12px;
+        font-size: 11px;
+        height: 44px;
+      }
+
+      .platform-tab i {
+        font-size: 16px;
+      }
+
+      h1 {
+        font-size: clamp(24px, 6vw, 32px) !important;
+      }
+
+      p {
+        font-size: 14px;
+      }
+
+      .sec-title {
+        font-size: clamp(20px, 5vw, 28px) !important;
+      }
+    }
+
+    @media (max-width: 360px) {
+      .download-btns {
+        gap: 8px;
+      }
+
+      .store-btn {
+        height: 52px;
+        font-size: 12px;
+      }
+
+      .store-btn i {
+        font-size: 18px;
+      }
+
+      .nav-logo {
+        font-size: 11px;
+      }
+
+      .nav-logo .logo-icon {
+        width: 24px;
+        height: 24px;
+      }
+
+      .comparison-head-cell,
+      .comparison-cell {
+        padding: 6px 8px;
+        font-size: 9px;
+      }
+
+      .platform-tab {
+        padding: 8px 10px;
+        font-size: 10px;
+      }
+
+      h1 {
+        font-size: 22px !important;
+      }
+
+      .section-padding {
+        padding: 32px 0 !important;
       }
     }
   </style>

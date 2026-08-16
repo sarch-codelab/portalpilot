@@ -1,1 +1,1 @@
-﻿// JS para billing_plans
+// JS para billing_plans

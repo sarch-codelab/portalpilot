@@ -1261,7 +1261,7 @@
                                 <div class="stat-label">Uptime Auditoría</div>
                             </div>
                             <div class="stat-item">
-                                <div class="stat-value">1,247</div>
+                                <div class="stat-value" id="statHashes">1,247</div>
                                 <div class="stat-label">Hashes Verificados</div>
                             </div>
                         </div>
@@ -1373,16 +1373,33 @@
         darkModeBtn.addEventListener('click', () => { document.body.classList.toggle('light-mode'); const isLight = document.body.classList.contains('light-mode'); darkModeBtn.innerHTML = isLight ? '<i class="fas fa-sun"></i> <span>Light Mode</span>' : '<i class="fas fa-moon"></i> <span>Dark Mode</span>'; });
 
         // ── Hash Chain Data ──────────────
-        const hashChain = [
-            { block: 1042, event: 'Actualización de Odómetro (Placa NVA-2026-A)', prevHash: '8a3f...2e1', currHash: '9b4c...7f3', valid: true, type: 'fleet' },
-            { block: 1041, event: 'Asignación de Ruta (Van 03 → Chofer 5)', prevHash: '4f1a...9b2', currHash: '8a3f...2e1', valid: true, type: 'fleet' },
-            { block: 1040, event: 'Modificación Datos Fiscales (RFC Update)', prevHash: '12c3...59a', currHash: '4f1a...9b2', valid: true, type: 'config' },
-            { block: 1039, event: 'Intento de acceso denegado (IP No Autorizada)', prevHash: 'fe78...11b', currHash: '12c3...59a', valid: true, type: 'security' },
-            { block: 1038, event: 'Login exitoso - Ana López (Auditor)', prevHash: 'ab12...44f', currHash: 'fe78...11b', valid: true, type: 'login' },
-            { block: 1037, event: 'Transacción de pago procesada - $2,450 MXN', prevHash: 'cd89...22a', currHash: 'ab12...44f', valid: true, type: 'billing' },
-            { block: 1036, event: 'Cambio de contraseña - Carlos Mendoza', prevHash: 'ef34...88c', currHash: 'cd89...22a', valid: true, type: 'config' },
-            { block: 1035, event: 'Exportación de reporte de auditoría', prevHash: '11aa...55d', currHash: 'ef34...88c', valid: true, type: 'security' }
-        ];
+        let hashChain = [];
+        let chainStats = { total: 0, valid: true };
+
+        function apiFetch(url, options) {
+            const token = localStorage.getItem('token');
+            const headers = Object.assign({}, options?.headers || {}, token ? { 'Authorization': 'Bearer ' + token } : {});
+            return fetch(url, Object.assign({}, options, { headers }));
+        }
+
+        async function loadAudit() {
+            const skeleton = document.getElementById('auditSkeleton');
+            try {
+                const res = await apiFetch('/api/security/audit?limit=200');
+                if (!res.ok) throw new Error((await res.json()).error || 'Error');
+                const data = await res.json();
+                hashChain = data.blocks || [];
+                chainStats = data.stats || { total: 0, valid: true };
+                const verified = document.getElementById('statHashes');
+                if (verified) verified.textContent = (chainStats.total || hashChain.length).toLocaleString();
+                if (skeleton) skeleton.closest('tr').style.display = 'none';
+                renderHashes();
+            } catch (err) {
+                if (skeleton) skeleton.closest('tr').style.display = 'none';
+                const tbody = document.getElementById('hashBody');
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:40px;color:var(--red);"><i class="fas fa-exclamation-triangle" style="font-size:24px;margin-bottom:12px;display:block;"></i>No se pudo cargar la auditoría: ${err.message}</td></tr>`;
+            }
+        }
 
         function renderHashes(data = hashChain) {
             const tbody = document.getElementById('hashBody');
@@ -1395,7 +1412,7 @@
                 const row = document.createElement('tr');
                 row.innerHTML = `
           <td class="hash-block">#${h.block}</td>
-          <td class="hash-event">${h.event}</td>
+          <td class="hash-event">${h.event}${h.usuario ? ` <span style="color:var(--gray);font-weight:400;">· ${h.usuario}</span>` : ''}</td>
           <td><code class="hash-code">${h.prevHash}</code></td>
           <td><code class="hash-code">${h.currHash}</code></td>
           <td style="text-align:center;" class="${h.valid ? 'hash-valid' : 'hash-invalid'}">${h.valid ? '<i class="fas fa-check-circle"></i>' : '<i class="fas fa-times-circle"></i>'}</td>
@@ -1405,7 +1422,9 @@
         }
 
         function filterHashes() {
-            const query = document.getElementById('hashInput').value.toLowerCase();
+            const input = document.getElementById('hashInput');
+            const search = document.getElementById('hashSearch');
+            const query = `${input?.value || ''} ${search?.value || ''}`.toLowerCase();
             const type = document.getElementById('eventFilter').value;
             const filtered = hashChain.filter(h => {
                 const matchSearch = `${h.event} ${h.prevHash} ${h.currHash} #${h.block}`.toLowerCase().includes(query);
@@ -1416,23 +1435,43 @@
 
         // ── Utilities ────────────────────
         function exportAuditReport() {
-            alert('✓ Reporte de auditoría generado y firmado criptográficamente.\n\nEl archivo CSV incluye:\n• Todos los hashes de la cadena\n• Firmas digitales verificables\n• Metadatos de timestamp y operador\n\n🔐 Integridad garantizada por blockchain.');
+            if (!hashChain.length) { showToast('No hay registros para exportar', 'warning'); return; }
+            const header = ['Bloque', 'Evento', 'Tipo', 'Usuario', 'IP', 'Hash Anterior', 'Hash Actual'];
+            const rows = hashChain.map(h => [h.block, h.event, h.type, h.usuario, h.ip, h.prevHash, h.currHash]);
+            const csv = [header, ...rows].map(r => r.map(c => `"${String(c ?? '').replace(/"/g, '""')}"`).join(',')).join('\n');
+            const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'auditoria_' + (localStorage.getItem('empresaCodigo') || 'tenant') + '.csv';
+            a.click();
+            showToast('Reporte de auditoría descargado.', 'success');
         }
-        function verifyChain() {
-            alert('🔍 Verificando integridad de la cadena de hashes...\n\n✓ Todos los 1,247 bloques validados\n✓ Firmas digitales correctas\n✓ No se detectaron manipulaciones\n\n✅ Cadena de auditoría 100% íntegra');
+        async function verifyChain() {
+            try {
+                const res = await apiFetch('/api/security/audit?limit=200');
+                if (!res.ok) throw new Error((await res.json()).error || 'Error');
+                const data = await res.json();
+                const stats = data.stats || {};
+                if (stats.verificados === 0 && stats.total === 0) {
+                    showToast('Aún no hay eventos de auditoría que verificar.', 'warning');
+                } else {
+                    showToast(`Cadena de auditoría verificada: ${stats.verificados ?? 0} de ${stats.total ?? 0} bloques íntegros.`, 'success');
+                }
+            } catch (err) {
+                showToast('Error al verificar: ' + err.message, 'error');
+            }
         }
         async function refreshAudit() {
             const btn = document.querySelector('.page-actions .btn-ghost'), icon = btn?.querySelector('i');
             if (icon) icon.classList.add('fa-spin');
-            await new Promise(r => setTimeout(r, 800));
+            await loadAudit();
             if (icon) icon.classList.remove('fa-spin');
-            renderHashes();
-            alert('✓ Auditoría actualizada con los últimos eventos');
+            showToast('Auditoría actualizada con los últimos eventos.', 'success');
         }
 
         // ── Initialize ──────────────────
         window.addEventListener('load', () => {
-            renderHashes();
+            loadAudit();
             setTimeout(() => document.querySelectorAll('.reveal').forEach((el, i) => setTimeout(() => el.classList.add('in'), i * 50)), 100);
         });
 

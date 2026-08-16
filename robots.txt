@@ -1,0 +1,24 @@
+# Robots.txt for Portal Pilot (https://portal-pilot.vercel.app)
+User-agent: *
+Allow: /
+Allow: /index.html
+Allow: /download.html
+Allow: /login.html
+Allow: /registro.html
+Allow: /documentacion.html
+Allow: /support.html
+Allow: /pay_plan.html
+Allow: /terminos.html
+Allow: /privacidad.html
+Allow: /cookies.html
+Allow: /sla.html
+
+# Block internal admin, enterprise portals & APIs from indexing
+Disallow: /pp/
+Disallow: /enterprise/
+Disallow: /api/
+Disallow: /backend/
+Disallow: /uploads/
+
+# Sitemap reference for Google Search Console
+Sitemap: https://portal-pilot.vercel.app/sitemap.xml

@@ -164,6 +164,16 @@ a{text-decoration:none;color:inherit}ul{list-style:none}img{max-width:100%;displ
 .log-level.warn{background:rgba(251,191,36,0.2);color:var(--yellow)}
 .log-msg{color:var(--text);flex:1;word-break:break-word}
 .log-agent{color:var(--gray);font-size:11px}
+.ai-chat{background:#0a0a14;border:1px solid var(--border);border-radius:var(--radius);height:260px;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;scroll-behavior:smooth}
+.ai-chat-msg{display:flex;flex-direction:column;max-width:85%}
+.ai-chat-msg.bot{align-self:flex-start}
+.ai-chat-msg.user{align-self:flex-end;align-items:flex-end}
+.ai-chat-bubble{padding:9px 13px;border-radius:12px;font-size:13px;line-height:1.5;white-space:pre-wrap;word-break:break-word}
+.ai-chat-msg.bot .ai-chat-bubble{background:rgba(139,92,246,0.15);border:1px solid rgba(139,92,246,0.25);color:var(--text)}
+.ai-chat-msg.user .ai-chat-bubble{background:linear-gradient(135deg,var(--accent),var(--cyan));color:#fff}
+.ai-chat-input{display:flex;gap:10px;margin-top:12px}
+.ai-chat-input input{flex:1;background:#0a0a14;border:1px solid var(--border);border-radius:var(--radius);padding:10px 14px;color:var(--text);font-size:13px;outline:none}
+.ai-chat-input input:focus{border-color:var(--accent)}
 .log-controls{display:flex;gap:8px;justify-content:space-between;align-items:center;margin-top:8px}
 .log-status{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--green)}
 .log-status .live{width:6px;height:6px;border-radius:50%;background:var(--green);animation:blink 1s infinite}
@@ -438,6 +448,23 @@ a{text-decoration:none;color:inherit}ul{list-style:none}img{max-width:100%;displ
       </div>
     </div>
 
+    <!-- AI ASSISTANT -->
+    <div class="card full reveal">
+      <div class="card-header">
+        <div class="card-title"><i class="fas fa-comment-dots"></i>Asistente IA (Monica)</div>
+        <span class="card-badge" id="aiStatus"><span class="live"></span> conectado</span>
+      </div>
+      <div class="ai-chat" id="aiChat">
+        <div class="ai-chat-msg bot">
+          <div class="ai-chat-bubble">Hola, soy Monica. ¿Qué necesitas automatizar o resolver hoy?</div>
+        </div>
+      </div>
+      <div class="ai-chat-input">
+        <input type="text" id="aiInput" placeholder="Escribe tu consulta para Monica..." onkeydown="if(event.key==='Enter')sendAiChat()">
+        <button class="btn btn-acc btn-sm" onclick="sendAiChat()"><i class="fas fa-paper-plane"></i> Enviar</button>
+      </div>
+    </div>
+
     <!-- LOG CONSOLE -->
     <div class="card full reveal" style="margin-top:0">
       <div class="card-header">
@@ -481,63 +508,173 @@ document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
 function toggleSidebar(){document.getElementById('sidebar').classList.toggle('open')}
 document.addEventListener('click',e=>{const sb=document.getElementById('sidebar'),tg=document.getElementById('sidebarToggle');if(window.innerWidth<=900&&sb.classList.contains('open')&&!sb.contains(e.target)&&!tg.contains(e.target))sb.classList.remove('open')});
 
+// ── API Helpers ─────────────────────────────────────
+function apiFetch(url, options) {
+  const token = localStorage.getItem('token');
+  const headers = Object.assign({}, options?.headers || {}, token ? { 'Authorization': 'Bearer ' + token } : {});
+  return fetch(url, Object.assign({}, options, { headers }));
+}
+let agents = [];
+let logsLoaded = [];
+
 // ── Agents Data & Render ─────────────────────────────
-const agents=[
-  {id:1,name:'Soporte N1',icon:'fa-headset',desc:'Clasifica y responde tickets de soporte automáticamente',status:'active',tasks:234,success:98},
-  {id:2,name:'Clasificador Facturas',icon:'fa-file-invoice',desc:'Extrae datos de facturas y las registra en NocoDB',status:'active',tasks:156,success:99},
-  {id:3,name:'Monitor Inventario',icon:'fa-boxes-stacked',desc:'Alerta cuando stock baja del umbral mínimo',status:'inactive',tasks:0,success:0},
-  {id:4,name:'Reporte Semanal',icon:'fa-chart-bar',desc:'Genera y envía reporte de métricas cada lunes',status:'active',tasks:12,success:100},
-  {id:5,name:'Validador KYC',icon:'fa-user-shield',desc:'Verifica documentos de identidad con Cyberyx',status:'active',tasks:89,success:97},
-  {id:6,name:'Sincronizador CRM',icon:'fa-rotate',desc:'Sincroniza contactos entre Portal Pilot y Salesforce',status:'active',tasks:445,success:96}
-];
+async function loadAgents() {
+  try {
+    const res = await apiFetch('/api/automation');
+    if (!res.ok) throw new Error((await res.json()).error || 'Error');
+    const data = await res.json();
+    agents = data.agents || [];
+    const metric = data.metrics || { total: agents.length, activos: 0, tareasHoy: 0 };
+    document.getElementById('totalAgents').textContent = agents.length;
+    document.getElementById('tasksToday').textContent = metric.tareasHoy;
+    const successAvg = agents.length ? Math.round(agents.reduce((s, a) => s + (Number(a.exito) || 0), 0) / agents.length) : 0;
+    document.querySelector('.metrics-bar .metric-card:nth-child(3) .metric-value').textContent = successAvg + '%';
+    renderAgents();
+    renderLogs();
+    return data;
+  } catch (err) {
+    showToast('No se pudieron cargar los agentes: ' + err.message, 'error');
+  }
+}
 
 function renderAgents(){
-  const grid=document.getElementById('agentsGrid');grid.innerHTML='';
+  const grid=document.getElementById('agentsGrid');
+  if (!grid) return;
+  grid.innerHTML='';
+  if (!agents.length) {
+    grid.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:30px;color:var(--gray);">Sin agentes configurados. Crea el primero con "+ Nuevo Agente".</div>';
+    document.getElementById('activeCount').textContent='0 Activos';
+    return;
+  }
   let activeCount=0;
   agents.forEach(a=>{
-    if(a.status==='active')activeCount++;
+    if(a.estado==='activo')activeCount++;
     const card=document.createElement('div');
-    card.className=`agent-card ${a.status}`;
+    card.className=`agent-card ${a.estado}`;
     card.innerHTML=`
       <div class="agent-header">
-        <div class="agent-icon"><i class="fas ${a.icon}"></i></div>
-        <div class="agent-status ${a.status}"><span class="dot"></span>${a.status==='active'?'Activo':'Inactivo'}</div>
+        <div class="agent-icon"><i class="fas ${a.icono || 'fa-bolt'}"></i></div>
+        <div class="agent-status ${a.estado}"><span class="dot"></span>${a.estado==='activo'?'Activo':'Inactivo'}</div>
       </div>
-      <div class="agent-name">${a.name}</div>
-      <div class="agent-desc">${a.desc}</div>
+      <div class="agent-name">${a.nombre}</div>
+      <div class="agent-desc">${a.descripcion || ''}</div>
       <div class="agent-footer">
         <div class="agent-stats">
-          <span><i class="fas fa-bolt"></i> ${a.tasks} tareas</span>
-          <span><i class="fas fa-check-circle"></i> ${a.success}% éxito</span>
+          <span><i class="fas fa-bolt"></i> ${a.tareas||0} tareas</span>
+          <span><i class="fas fa-check-circle"></i> ${a.exito||0}% éxito</span>
         </div>
         <label class="agent-toggle">
-          <input type="checkbox" ${a.status==='active'?'checked':''} onchange="toggleAgent(${a.id},this.checked)">
+          <input type="checkbox" ${a.estado==='activo'?'checked':''} onchange="toggleAgent('${a.id}',this.checked)">
           <span class="agent-toggle-slider"></span>
         </label>
       </div>`;
     grid.appendChild(card);
   });
   document.getElementById('activeCount').textContent=activeCount+' Activos';
-  document.getElementById('totalAgents').textContent=agents.length;
 }
 
-function toggleAgent(id,active){
+async function toggleAgent(id,active){
   const a=agents.find(x=>x.id===id);if(!a)return;
-  a.status=active?'active':'inactive';a.tasks=active?a.tasks:0;
-  renderAgents();
-  showToast(`${a.name} ${active?'activado':'desactivado'}`,active?'success':'warning');
-  addLog(active?'success':'warn',`Agente "${a.name}" ${active?'iniciado':'detenido'} por admin`);
+  try {
+    const res=await apiFetch('/api/automation/'+encodeURIComponent(id),{
+      method:'PATCH',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({estado:active?'activo':'inactivo'})
+    });
+    if(!res.ok) throw new Error((await res.json()).error||'Error');
+    a.estado=active?'activo':'inactivo';
+    renderAgents();
+    showToast(`${a.nombre} ${active?'activado':'desactivado'}`,active?'success':'warning');
+    loadLogs();
+  } catch(err){ showToast('Error: '+err.message,'error'); loadAgents(); }
 }
 
 // ── AI Config ────────────────────────────────────────
 function updateTemp(val){document.getElementById('tempValue').textContent=parseFloat(val).toFixed(1)}
-function saveAIConfig(){showToast('✓ Configuración IA actualizada','success')}
+function saveAIConfig(){
+  localStorage.setItem('ai_global_model', document.getElementById('globalModel').value);
+  localStorage.setItem('ai_temperature', document.getElementById('tempRange').value);
+  localStorage.setItem('ai_system_prompt', document.getElementById('systemPrompt').value);
+  showToast('✓ Configuración IA actualizada','success');
+}
 function resetAIConfig(){
   document.getElementById('globalModel').value='gemma3n';
   document.getElementById('tempRange').value=0.7;updateTemp(0.7);
   document.getElementById('systemPrompt').value='Eres un asistente empresarial especializado en automatización de procesos. Responde de forma concisa, profesional y en español. Prioriza la precisión sobre la creatividad.';
+  saveAIConfig();
   showToast('↩️ Configuración reseteada a valores por defecto','info');
 }
+
+// ── Asistente IA (Monica) ────────────────────────────
+let aiHistory = [];
+async function sendAiChat(){
+  const input=document.getElementById('aiInput');
+  const text=input.value.trim();
+  if(!text) return;
+  input.value='';
+  const chat=document.getElementById('aiChat');
+  chat.insertAdjacentHTML('beforeend',`<div class="ai-chat-msg user"><div class="ai-chat-bubble">${text.replace(/</g,'&lt;')}</div></div>`);
+  chat.insertAdjacentHTML('beforeend',`<div class="ai-chat-msg bot"><div class="ai-chat-bubble"><i class="fas fa-spinner fa-spin"></i> Pensando...</div></div>`);
+  chat.scrollTop=chat.scrollHeight;
+  const sysPrompt=document.getElementById('systemPrompt').value;
+  const temp=parseFloat(document.getElementById('tempRange').value);
+  try{
+    const res=await apiFetch('/api/ai/chat',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({message:text,history:aiHistory.slice(-10),systemPrompt:sysPrompt,temperature:temp})
+    });
+    const data=await res.json();
+    if(!res.ok) throw new Error(data.error||'Error');
+    const reply=data.reply||'Sin respuesta.';
+    aiHistory.push({role:'user',content:text},{role:'assistant',content:reply});
+    chat.querySelector('.ai-chat-msg.bot:last-child .ai-chat-bubble').innerHTML=reply.replace(/</g,'&lt;');
+  }catch(err){
+    chat.querySelector('.ai-chat-msg.bot:last-child .ai-chat-bubble').innerHTML='⚠️ '+err.message;
+  }
+  chat.scrollTop=chat.scrollHeight;
+}
+
+// ── Log Console (registros reales) ───────────────────
+function addLog(level,msg,agent='Sistema'){
+  const now=new Date();const time=now.toTimeString().slice(0,8);
+  logsLoaded.unshift({time,level,msg,agent});
+  renderLogs();
+}
+
+async function loadLogs(){
+  try{
+    const res=await apiFetch('/api/automation');
+    if(!res.ok) return;
+    const data=await res.json();
+    logsLoaded=(data.runs||[]).map(r=>({
+      time:(r.created_at?new Date(r.created_at):new Date()).toTimeString().slice(0,8),
+      level:r.nivel||'info',
+      msg:r.mensaje||'',
+      agent:r.agente||'Sistema'
+    }));
+    renderLogs();
+  }catch(err){ /* silencioso */ }
+}
+
+function renderLogs(filter='all'){
+  const consoleEl=document.getElementById('logConsole');
+  if(!consoleEl) return;
+  const filtered=filter==='all'?logsLoaded:logsLoaded.filter(l=>l.level===filter);
+  if(!filtered.length){
+    consoleEl.innerHTML='<div class="log-entry"><span class="log-time">--:--:--</span><span class="log-level info">info</span><span class="log-msg">Sin ejecuciones registradas todavía</span></div>';
+    return;
+  }
+  consoleEl.innerHTML='';
+  filtered.forEach(l=>{
+    const entry=document.createElement('div');entry.className='log-entry';
+    entry.innerHTML=`<span class="log-time">${l.time}</span><span class="log-level ${l.level}">${l.level}</span><span class="log-msg">${l.msg}</span><span class="log-agent">[${l.agent}]</span>`;
+    consoleEl.appendChild(entry);
+  });
+}
+
+function filterLogs(level){renderLogs(level)}
+function clearLogs(){showToast('Los registros provienen del servidor y no pueden limpiarse localmente','info')}
 
 // ── Flow Editor ──────────────────────────────────────
 function selectFlowNode(node){
@@ -557,77 +694,42 @@ function addFlowStep(type){
   showToast(`➕ Paso "${names[type]}" agregado al flujo`,'info');
 }
 
-// ── Log Console ──────────────────────────────────────
-const logData=[];
-const sampleAgents=['Soporte N1','Clasificador Facturas','Reporte Semanal','Validador KYC','Sincronizador CRM'];
-const sampleMsgs=[
-  'Ticket #4921 clasificado: Facturación',
-  'Datos extraídos: Total $1,240.00 · IVA 16%',
-  'Reporte mensual generado y enviado a dirección@empresa.com',
-  'Documento KYC verificado: Match 98.7%',
-  'Sincronización completada: 45 contactos actualizados',
-  'Error de conexión con NocoDB: Timeout después de 5s',
-  'Trigger ejecutado: Webhook recibido de Shopify',
-  'IA procesando: Temperatura 0.7 · Modelo Gemma 3N',
-  'Acción fallida: Email no válido en campo destinatario',
-  'Flujo pausado: Límite de rate-limit alcanzado'
-];
-
-function addLog(level,msg,agent='Sistema'){
-  const now=new Date();const time=now.toTimeString().slice(0,8);
-  const log={time,level,msg,agent};logData.push(log);
-  renderLogs();
-  const console=document.getElementById('logConsole');
-  console.scrollTop=console.scrollHeight;
-}
-
-function renderLogs(filter='all'){
-  const console=document.getElementById('logConsole');console.innerHTML='';
-  const filtered=filter==='all'?logData:logData.filter(l=>l.level===filter);
-  filtered.forEach(l=>{
-    const entry=document.createElement('div');entry.className='log-entry';
-    entry.innerHTML=`<span class="log-time">${l.time}</span><span class="log-level ${l.level}">${l.level}</span><span class="log-msg">${l.msg}</span><span class="log-agent">[${l.agent}]</span>`;
-    console.appendChild(entry);
-  });
-}
-
-function filterLogs(level){renderLogs(level)}
-function clearLogs(){logData.length=0;renderLogs();showToast('🗑️ Consola limpiada','info')}
-
-// Simulate live logs
-let logInterval;
-function startLogSimulation(){
-  logInterval=setInterval(()=>{
-    if(Math.random()>0.6){
-      const levels=['success','success','success','info','warn','error'];
-      const level=levels[Math.floor(Math.random()*levels.length)];
-      const msg=sampleMsgs[Math.floor(Math.random()*sampleMsgs.length)];
-      const agent=sampleAgents[Math.floor(Math.random()*sampleAgents.length)];
-      addLog(level,msg,agent);
-    }
-  },3500);
-}
-
 // ── New Flow ─────────────────────────────────────────
 function openModal(id){document.getElementById(id).classList.add('active')}
 function closeModal(id){document.getElementById(id).classList.remove('active')}
-function createFlow(){
+async function createFlow(){
   const form=document.getElementById('newFlowForm');
   if(!form.checkValidity()){form.reportValidity();return}
-  const name=document.getElementById('flowName').value;
-  agents.unshift({id:Date.now(),name:name,icon:'fa-robot',desc:document.getElementById('flowDesc').value||'Nuevo agente automatizado',status:'active',tasks:0,success:0});
-  closeModal('newFlowModal');form.reset();renderAgents();
-  showToast(`🚀 Agente "${name}" creado y activado`,'success');
-  addLog('success',`Nuevo agente "${name}" configurado y puesto en marcha`,'Admin');
+  const name=document.getElementById('flowName').value.trim();
+  const desc=document.getElementById('flowDesc').value.trim();
+  const trigger=document.getElementById('flowTrigger')?.value||'';
+  const accion=document.getElementById('flowAction')?.value||'';
+  try{
+    const res=await apiFetch('/api/automation',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({nombre:name,descripcion:desc,trigger_flow:trigger,accion,icono:'fa-robot'})
+    });
+    if(!res.ok) throw new Error((await res.json()).error||'Error');
+    closeModal('newFlowModal');form.reset();
+    await loadAgents();
+    showToast(`🚀 Agente "${name}" creado y activado`,'success');
+  }catch(err){showToast('Error: '+err.message,'error')}
 }
 
 // ── Utilities ────────────────────────────────────────
-function exportFlows(){showToast('📦 Exportando configuración de flujos a JSON...','info');setTimeout(()=>showToast('✓ "automation_flows_2026.json" descargado','success'),1200)}
-function refreshAgents(){showToast('🔄 Sincronizando estado de agentes...','info');setTimeout(()=>{renderAgents();showToast('✓ Todos los agentes actualizados','success')},800)}
+function exportFlows(){showToast('La exportación de flujos estará disponible próximamente.','info')}
+async function refreshAgents(){showToast('🔄 Sincronizando estado de agentes...','info');await loadAgents();showToast('✓ Todos los agentes actualizados','success')}
 
 // ── Init ────────────────────────────────────────────
 window.addEventListener('load',()=>{
-  renderAgents();renderLogs();startLogSimulation();
+  const gm=localStorage.getItem('ai_global_model');
+  const tp=localStorage.getItem('ai_temperature');
+  const sp=localStorage.getItem('ai_system_prompt');
+  if(gm)document.getElementById('globalModel').value=gm;
+  if(tp){document.getElementById('tempRange').value=tp;updateTemp(tp)}
+  if(sp)document.getElementById('systemPrompt').value=sp;
+  loadAgents();
   setTimeout(()=>{document.querySelectorAll('.reveal').forEach((el,i)=>{setTimeout(()=>el.classList.add('in'),i*50)})},100);
 });
 

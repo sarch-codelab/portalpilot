@@ -915,15 +915,101 @@ async function enviarCorreoPortalPilot(emailDestinatario, asunto, titulo, subtit
 // ======================================================================
 
 // 🔧 FIX VERCEL: Health check endpoint
-app.get('/api/health', (req, res) => {
+app.get('/api/health', async (req, res) => {
+  let dbStatus = 'ok';
+  if (supabase) {
+    const { error } = await supabase.from('tenants').select('count', { count: 'exact', head: true });
+    if (error) dbStatus = 'error: ' + error.message;
+  }
   res.json({
     status: 'ok',
     timestamp: new Date().toISOString(),
     environment: IS_SERVERLESS ? 'serverless' : 'local',
-    nocodb_configured: !!API_TOKEN,
     supabase_configured: !!supabase,
+    database_status: dbStatus,
     jwt_configured: !!process.env.JWT_SECRET
   });
+});
+
+// ======================================================================
+// NOTIFICACIONES API (SUPABASE REAL)
+// ======================================================================
+app.get('/api/notificaciones', async (req, res) => {
+  try {
+    if (!requireSupabase(res)) return;
+    const { data: notifs, error } = await supabase
+      .from('notificaciones')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(50);
+
+    if (error) throw error;
+    const unreadCount = (notifs || []).filter(n => !n.leida).length;
+    res.json({ notificaciones: notifs || [], unread_count: unreadCount });
+  } catch (err) {
+    res.status(500).json({ error: err.message || 'Error al obtener notificaciones' });
+  }
+});
+
+app.put('/api/notificaciones/:id/read', async (req, res) => {
+  try {
+    if (!requireSupabase(res)) return;
+    const { id } = req.params;
+    const { error } = await supabase
+      .from('notificaciones')
+      .update({ leida: true })
+      .eq('id', id);
+
+    if (error) throw error;
+    res.json({ success: true, message: 'Notificación marcada como leída' });
+  } catch (err) {
+    res.status(500).json({ error: err.message || 'Error al actualizar notificación' });
+  }
+});
+
+app.post('/api/notificaciones', async (req, res) => {
+  try {
+    if (!requireSupabase(res)) return;
+    const { empresa_codigo, titulo, mensaje, tipo, prioridad } = req.body;
+    const { data, error } = await supabase
+      .from('notificaciones')
+      .insert({
+        empresa_codigo: empresa_codigo || 'ROOT',
+        titulo: titulo || 'Notificación',
+        mensaje: mensaje || '',
+        tipo: tipo || 'info',
+        prioridad: prioridad || 'normal'
+      });
+
+    if (error) throw error;
+    res.json({ success: true, notificacion: data });
+  } catch (err) {
+    res.status(500).json({ error: err.message || 'Error al crear notificación' });
+  }
+});
+
+// ======================================================================
+// STORAGE UPLOAD API (SUPABASE STORAGE)
+// ======================================================================
+app.post('/api/upload-image', async (req, res) => {
+  try {
+    if (!requireSupabase(res)) return;
+    const { imageBase64, filename, contentType } = req.body;
+    if (!imageBase64) return res.status(400).json({ error: 'Base64 image data missing' });
+
+    const base64Data = imageBase64.replace(/^data:image\/\w+;base64,/, '');
+    const buffer = Buffer.from(base64Data, 'base64');
+    const filePath = `uploads/${Date.now()}_${filename || 'image.png'}`;
+    const mime = contentType || 'image/png';
+
+    const { data, error } = await supabase.storage.upload('portal-pilot-assets', filePath, buffer, mime);
+    if (error) throw error;
+
+    const publicUrl = supabase.storage.getPublicUrl('portal-pilot-assets', filePath);
+    res.json({ success: true, url: publicUrl, path: filePath });
+  } catch (err) {
+    res.status(500).json({ error: err.message || 'Error al subir imagen a Supabase Storage' });
+  }
 });
 
 app.get('/api/config', (req, res) => {

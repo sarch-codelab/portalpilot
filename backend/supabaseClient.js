@@ -41,6 +41,10 @@ if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
     const builder = {
       select(cols) { _op = 'select'; _select = cols || '*'; return builder; },
       eq(col, val) { _filters.push(`${col}=eq.${encodeURIComponent(val)}`); return builder; },
+      neq(col, val) { _filters.push(`${col}=neq.${encodeURIComponent(val)}`); return builder; },
+      in(col, vals) { _filters.push(`${col}=in.(${vals.map(v => encodeURIComponent(v)).join(',')})`); return builder; },
+      gte(col, val) { _filters.push(`${col}=gte.${encodeURIComponent(val)}`); return builder; },
+      lte(col, val) { _filters.push(`${col}=lte.${encodeURIComponent(val)}`); return builder; },
       ilike(col, pattern) { _filters.push(`${col}=ilike.${encodeURIComponent(pattern)}`); return builder; },
       single() { _single = true; return builder; },
       maybeSingle() { _maybeSingle = true; return builder; },

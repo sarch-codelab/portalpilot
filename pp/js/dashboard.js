@@ -571,10 +571,10 @@ function showWidgetDetails(widgetType) {
         <div class="detail-card"><div class="detail-icon"><i class="fas fa-history"></i></div><div class="detail-label">Último Backup</div><div class="detail-value" style="font-size:14px;">Hace 2h</div></div>
         <div class="detail-card full"><div class="detail-label">Estado de componentes</div>
           <div class="detail-list">
-            <div class="detail-list-item"><span>NocoDB Primary</span><span style="color:var(--green);">● Operativo</span></div>
-            <div class="detail-list-item"><span>NocoDB Replica</span><span style="color:var(--green);">● Operativo</span></div>
-            <div class="detail-list-item"><span>Ollama Service</span><span style="color:var(--green);">● Operativo</span></div>
-            <div class="detail-list-item"><span>Redis Cache</span><span style="color:var(--yellow);">● Degradado</span></div>
+            <div class="detail-list-item"><span>Supabase PostgreSQL Primary</span><span style="color:var(--green);">● Operativo</span></div>
+            <div class="detail-list-item"><span>Supabase Storage (Assets)</span><span style="color:var(--green);">● Operativo</span></div>
+            <div class="detail-list-item"><span>IA Groq Proxy Service</span><span style="color:var(--green);">● Operativo</span></div>
+            <div class="detail-list-item"><span>Redis Cache</span><span style="color:var(--green);">● Operativo</span></div>
           </div>
         </div>`
     },
@@ -583,9 +583,9 @@ function showWidgetDetails(widgetType) {
       icon: 'fa-heartbeat',
       html: `
         <div class="detail-card"><div class="detail-icon"><i class="fas fa-plug"></i></div><div class="detail-label">API REST</div><div class="detail-value" style="color:var(--green);font-size:14px;">99.98% uptime</div></div>
-        <div class="detail-card"><div class="detail-icon"><i class="fas fa-database"></i></div><div class="detail-label">NocoDB</div><div class="detail-value" style="color:var(--green);font-size:14px;">99.95% uptime</div></div>
-        <div class="detail-card"><div class="detail-icon"><i class="fas fa-brain"></i></div><div class="detail-label">Gemma 3N</div><div class="detail-value" style="color:var(--green);font-size:14px;">99.90% uptime</div></div>
-        <div class="detail-card"><div class="detail-icon"><i class="fas fa-link"></i></div><div class="detail-label">Blockchain</div><div class="detail-value" style="color:var(--yellow);font-size:14px;">98.20% uptime</div></div>`
+        <div class="detail-card"><div class="detail-icon"><i class="fas fa-database"></i></div><div class="detail-label">Supabase</div><div class="detail-value" style="color:var(--green);font-size:14px;">99.99% uptime</div></div>
+        <div class="detail-card"><div class="detail-icon"><i class="fas fa-brain"></i></div><div class="detail-label">IA Groq</div><div class="detail-value" style="color:var(--green);font-size:14px;">99.90% uptime</div></div>
+        <div class="detail-card"><div class="detail-icon"><i class="fas fa-link"></i></div><div class="detail-label">Blockchain</div><div class="detail-value" style="color:var(--green);font-size:14px;">99.50% uptime</div></div>`
     },
     'calendar': {
       title: 'Todos los Eventos',

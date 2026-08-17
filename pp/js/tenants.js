@@ -323,7 +323,7 @@ function renderTenants(data = filteredTenants) {
   tbody.innerHTML = '';
 
   if (tenantsLoadError) {
-    tbody.innerHTML = `<tr><td colspan="6" class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>No se pudieron cargar los tenants.</p><p>Verifica que el servidor y NocoDB estén disponibles.</p><button class="btn btn-acc btn-sm" onclick="refreshTenants()">Reintentar</button></td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="6" class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>No se pudieron cargar los tenants.</p><p>Verifica que el servidor Supabase esté disponible.</p><button class="btn btn-acc btn-sm" onclick="refreshTenants()">Reintentar</button></td></tr>`;
     return;
   }
 

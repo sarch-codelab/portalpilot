@@ -2202,7 +2202,7 @@
                 return;
             }
             if (usersLoadError) {
-                tbody.innerHTML = `<tr><td colspan="7" class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>No se pudieron cargar los usuarios.</p><p>Verifica que NocoDB y el servidor estén disponibles.</p><button class="btn btn-acc btn-sm" onclick="refreshUsers()">Reintentar</button></td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="7" class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>No se pudieron cargar los usuarios.</p><p>Verifica que el servidor Supabase esté disponible.</p><button class="btn btn-acc btn-sm" onclick="refreshUsers()">Reintentar</button></td></tr>`;
                 return;
             }
             if (data.length === 0) {

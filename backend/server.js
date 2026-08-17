@@ -250,7 +250,7 @@ function generateVerificationCode(length = 6) {
 const PORT = process.env.PORT || 5173;
 const NOCODB_URL = process.env.NOCODB_URL || 'https://app.nocodb.com';
 const API_TOKEN = process.env.NOCODB_API_TOKEN || process.env.NOCODB_API_KEY || '';
-const JWT_SECRET = process.env.JWT_SECRET;
+const JWT_SECRET = process.env.JWT_SECRET || 'portalpilot_production_jwt_secret_key_2026_secure';
 
 if (!process.env.JWT_SECRET || !API_TOKEN) {
   console.warn('[STARTUP] WARNING: JWT_SECRET o NOCODB_API_TOKEN no están definidas localmente. Algunas rutas locales de API fallarán, pero el servidor estático funcionará.');
@@ -1278,7 +1278,8 @@ app.post('/api/login', loginLimiter, async (req, res) => {
     return res.status(401).json({ error: 'Credenciales inválidas (usuario no encontrado).' });
 
   } catch (error) {
-    return handleNocoDbError(res, error, 'No se pudo validar el inicio de sesión en este momento.');
+    console.error('[LOGIN] Error en proceso de login:', error.stack || error.message);
+    return res.status(401).json({ error: error.message || 'No se pudo validar el inicio de sesión.' });
   }
 });
 

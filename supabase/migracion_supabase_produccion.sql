@@ -1,7 +1,6 @@
 -- ============================================================================
--- SCRIPT UNIFICADO DE MIGRACIÓN SUPABASE PRODUCCIÓN: PORTAL PILOT (BULLETPROOF V3)
--- Solución 100% Resiliente: Asigna ID explícito gen_random_uuid() a todos los inserts
--- y establece DEFAULT en columnas ID de las tablas preexistentes.
+-- SCRIPT UNIFICADO DE MIGRACIÓN SUPABASE PRODUCCIÓN: PORTAL PILOT (BULLETPROOF V4)
+-- Solución Total: Elimina restricciones de FK rígidas preexistentes a auth.users (usuarios_id_fkey)
 -- ============================================================================
 
 -- 1. EXTENSIONES NECESARIAS
@@ -25,7 +24,6 @@ CREATE TABLE IF NOT EXISTS public.tenants (
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Asegurar columnas e id default
 ALTER TABLE public.tenants ALTER COLUMN id SET DEFAULT gen_random_uuid();
 ALTER TABLE public.tenants ADD COLUMN IF NOT EXISTS codigo VARCHAR(50);
 ALTER TABLE public.tenants ADD COLUMN IF NOT EXISTS nombre_empresa VARCHAR(150);
@@ -40,7 +38,6 @@ ALTER TABLE public.tenants ADD COLUMN IF NOT EXISTS logo_url TEXT;
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_tenants_codigo_unique ON public.tenants(codigo);
 
--- Inserción de Tenant ROOT predeterminado con ID explícito
 INSERT INTO public.tenants (id, codigo, nombre_empresa, rtn, plan, estado)
 SELECT gen_random_uuid(), 'ROOT', 'Portal Pilot System Admin', '00000000000000', 'enterprise', 'activo'
 WHERE NOT EXISTS (SELECT 1 FROM public.tenants WHERE codigo = 'ROOT');
@@ -66,7 +63,11 @@ CREATE TABLE IF NOT EXISTS public.usuarios (
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Asegurar columnas e id default
+-- 🔥 IMPORTANTE: Eliminar restricciones FK rígidas a auth.users que causan error 23503
+ALTER TABLE public.usuarios DROP CONSTRAINT IF EXISTS usuarios_id_fkey;
+ALTER TABLE public.usuarios DROP CONSTRAINT IF EXISTS usuarios_empresa_id_fkey;
+ALTER TABLE public.usuarios DROP CONSTRAINT IF EXISTS usuarios_empresa_codigo_fkey;
+
 ALTER TABLE public.usuarios ALTER COLUMN id SET DEFAULT gen_random_uuid();
 ALTER TABLE public.usuarios ADD COLUMN IF NOT EXISTS email VARCHAR(120);
 ALTER TABLE public.usuarios ADD COLUMN IF NOT EXISTS password_hash TEXT;
@@ -85,12 +86,10 @@ ALTER TABLE public.usuarios ADD COLUMN IF NOT EXISTS ultimo_acceso TIMESTAMPTZ;
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_usuarios_email_unique ON public.usuarios(email);
 
--- Inserción de Usuario ROOT de Emergencia con ID explícito
 INSERT INTO public.usuarios (id, email, password_hash, password, nombre, rol, empresa_codigo, estado, activo)
 SELECT gen_random_uuid(), 'admin@portalpilot.com', '$2a$10$7vN5tDkI46c.r.O0sL7/vOq22gZ6zG98t8vX09Z9/5vG5vG5vG5vG', 'admin123', 'Super Admin Portal Pilot', 'root', 'ROOT', 'activo', true
 WHERE NOT EXISTS (SELECT 1 FROM public.usuarios WHERE email = 'admin@portalpilot.com');
 
--- Actualizar credenciales si el usuario admin ya existía
 UPDATE public.usuarios 
 SET password_hash = '$2a$10$7vN5tDkI46c.r.O0sL7/vOq22gZ6zG98t8vX09Z9/5vG5vG5vG5vG',
     password = 'admin123',
@@ -226,4 +225,4 @@ CREATE POLICY "public_storage_select" ON storage.objects FOR SELECT USING (bucke
 DROP POLICY IF EXISTS "public_storage_insert" ON storage.objects;
 CREATE POLICY "public_storage_insert" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'portal-pilot-assets');
 
--- Fin del script v3
+-- Fin del script v4

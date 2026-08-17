@@ -1,6 +1,6 @@
 -- ============================================================================
--- SCRIPT UNIFICADO DE MIGRACIÓN SUPABASE PRODUCCIÓN: PORTAL PILOT (BULLETPROOF)
--- Solución 100% Idempotente que se adapta a tablas preexistentes.
+-- SCRIPT UNIFICADO DE MIGRACIÓN SUPABASE PRODUCCIÓN: PORTAL PILOT (BULLETPROOF V2)
+-- 100% Idempotente: No requiere restricciones UNIQUE previas para insersiones.
 -- ============================================================================
 
 -- 1. EXTENSIONES NECESARIAS
@@ -9,7 +9,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 -- 2. TABLA DE EMPRESAS / TENANTS
 CREATE TABLE IF NOT EXISTS public.tenants (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    codigo VARCHAR(50) UNIQUE,
+    codigo VARCHAR(50),
     nombre_empresa VARCHAR(150),
     rtn VARCHAR(20),
     email VARCHAR(100),
@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS public.tenants (
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Asegurar columnas si la tabla ya existía previa
+-- Asegurar columnas e índices
 ALTER TABLE public.tenants ADD COLUMN IF NOT EXISTS codigo VARCHAR(50);
 ALTER TABLE public.tenants ADD COLUMN IF NOT EXISTS nombre_empresa VARCHAR(150);
 ALTER TABLE public.tenants ADD COLUMN IF NOT EXISTS rtn VARCHAR(20);
@@ -35,15 +35,17 @@ ALTER TABLE public.tenants ADD COLUMN IF NOT EXISTS limite_usuarios INT DEFAULT 
 ALTER TABLE public.tenants ADD COLUMN IF NOT EXISTS estado VARCHAR(20) DEFAULT 'activo';
 ALTER TABLE public.tenants ADD COLUMN IF NOT EXISTS logo_url TEXT;
 
--- Inserción de Tenant ROOT predeterminado si no existe
+CREATE UNIQUE INDEX IF NOT EXISTS idx_tenants_codigo_unique ON public.tenants(codigo);
+
+-- Inserción de Tenant ROOT predeterminado
 INSERT INTO public.tenants (codigo, nombre_empresa, rtn, plan, estado)
-VALUES ('ROOT', 'Portal Pilot System Admin', '00000000000000', 'enterprise', 'activo')
-ON CONFLICT (codigo) DO NOTHING;
+SELECT 'ROOT', 'Portal Pilot System Admin', '00000000000000', 'enterprise', 'activo'
+WHERE NOT EXISTS (SELECT 1 FROM public.tenants WHERE codigo = 'ROOT');
 
 -- 3. TABLA DE USUARIOS DEL PORTAL Y APP
 CREATE TABLE IF NOT EXISTS public.usuarios (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    email VARCHAR(120) UNIQUE,
+    email VARCHAR(120),
     password_hash TEXT,
     password TEXT,
     nombre VARCHAR(100),
@@ -61,7 +63,8 @@ CREATE TABLE IF NOT EXISTS public.usuarios (
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Asegurar columnas si la tabla usuarios preexistía
+-- Asegurar columnas e índices
+ALTER TABLE public.usuarios ADD COLUMN IF NOT EXISTS email VARCHAR(120);
 ALTER TABLE public.usuarios ADD COLUMN IF NOT EXISTS password_hash TEXT;
 ALTER TABLE public.usuarios ADD COLUMN IF NOT EXISTS password TEXT;
 ALTER TABLE public.usuarios ADD COLUMN IF NOT EXISTS nombre VARCHAR(100);
@@ -76,13 +79,19 @@ ALTER TABLE public.usuarios ADD COLUMN IF NOT EXISTS foto_perfil_url TEXT;
 ALTER TABLE public.usuarios ADD COLUMN IF NOT EXISTS telefono VARCHAR(30);
 ALTER TABLE public.usuarios ADD COLUMN IF NOT EXISTS ultimo_acceso TIMESTAMPTZ;
 
+CREATE UNIQUE INDEX IF NOT EXISTS idx_usuarios_email_unique ON public.usuarios(email);
+
 -- Inserción de Usuario ROOT de Emergencia
 INSERT INTO public.usuarios (email, password_hash, password, nombre, rol, empresa_codigo, estado, activo)
-VALUES ('admin@portalpilot.com', '$2a$10$7vN5tDkI46c.r.O0sL7/vOq22gZ6zG98t8vX09Z9/5vG5vG5vG5vG', 'admin123', 'Super Admin Portal Pilot', 'root', 'ROOT', 'activo', true)
-ON CONFLICT (email) DO UPDATE SET 
-    password_hash = EXCLUDED.password_hash,
-    password = EXCLUDED.password,
-    empresa_codigo = EXCLUDED.empresa_codigo;
+SELECT 'admin@portalpilot.com', '$2a$10$7vN5tDkI46c.r.O0sL7/vOq22gZ6zG98t8vX09Z9/5vG5vG5vG5vG', 'admin123', 'Super Admin Portal Pilot', 'root', 'ROOT', 'activo', true
+WHERE NOT EXISTS (SELECT 1 FROM public.usuarios WHERE email = 'admin@portalpilot.com');
+
+-- Actualizar credenciales si el usuario admin ya existía
+UPDATE public.usuarios 
+SET password_hash = '$2a$10$7vN5tDkI46c.r.O0sL7/vOq22gZ6zG98t8vX09Z9/5vG5vG5vG5vG',
+    password = 'admin123',
+    empresa_codigo = 'ROOT'
+WHERE email = 'admin@portalpilot.com';
 
 -- 4. TABLA DE NOTIFICACIONES
 CREATE TABLE IF NOT EXISTS public.notificaciones (
@@ -108,7 +117,8 @@ ALTER TABLE public.notificaciones ADD COLUMN IF NOT EXISTS leida BOOLEAN DEFAULT
 ALTER TABLE public.notificaciones ADD COLUMN IF NOT EXISTS link TEXT;
 
 INSERT INTO public.notificaciones (empresa_codigo, titulo, mensaje, tipo, prioridad)
-VALUES ('ROOT', 'Sistema Portal Pilot Activo', 'Bienvenido a Portal Pilot. El servidor Supabase está 100% operativo.', 'success', 'alta');
+SELECT 'ROOT', 'Sistema Portal Pilot Activo', 'Bienvenido a Portal Pilot. El servidor Supabase está 100% operativo.', 'success', 'alta'
+WHERE NOT EXISTS (SELECT 1 FROM public.notificaciones WHERE titulo = 'Sistema Portal Pilot Activo');
 
 -- 5. TABLA DE AUDITORÍA Y LOGS
 CREATE TABLE IF NOT EXISTS public.auditoria_logs (
@@ -133,12 +143,20 @@ CREATE TABLE IF NOT EXISTS public.configuraciones_globales (
 );
 
 INSERT INTO public.configuraciones_globales (clave, valor, entorno, sensible, descripcion)
-VALUES 
-    ('SITE_NAME', 'Portal Pilot Honduras', 'production', false, 'Nombre público del sistema'),
-    ('PRIMARY_DOMAIN', 'https://portal-pilot.vercel.app', 'production', false, 'Dominio principal Web'),
-    ('API_DOMAIN', 'https://portalpilot-app.vercel.app', 'production', false, 'Dominio principal API Serverless'),
-    ('MAX_USERS_DEFAULT', '10', 'production', false, 'Límite por defecto de usuarios por tenant')
-ON CONFLICT (clave) DO NOTHING;
+SELECT 'SITE_NAME', 'Portal Pilot Honduras', 'production', false, 'Nombre público del sistema'
+WHERE NOT EXISTS (SELECT 1 FROM public.configuraciones_globales WHERE clave = 'SITE_NAME');
+
+INSERT INTO public.configuraciones_globales (clave, valor, entorno, sensible, descripcion)
+SELECT 'PRIMARY_DOMAIN', 'https://portal-pilot.vercel.app', 'production', false, 'Dominio principal Web'
+WHERE NOT EXISTS (SELECT 1 FROM public.configuraciones_globales WHERE clave = 'PRIMARY_DOMAIN');
+
+INSERT INTO public.configuraciones_globales (clave, valor, entorno, sensible, descripcion)
+SELECT 'API_DOMAIN', 'https://portalpilot-app.vercel.app', 'production', false, 'Dominio principal API Serverless'
+WHERE NOT EXISTS (SELECT 1 FROM public.configuraciones_globales WHERE clave = 'API_DOMAIN');
+
+INSERT INTO public.configuraciones_globales (clave, valor, entorno, sensible, descripcion)
+SELECT 'MAX_USERS_DEFAULT', '10', 'production', false, 'Límite por defecto de usuarios por tenant'
+WHERE NOT EXISTS (SELECT 1 FROM public.configuraciones_globales WHERE clave = 'MAX_USERS_DEFAULT');
 
 -- 7. TABLA DE PLANES DE PAGO
 CREATE TABLE IF NOT EXISTS public.planes_pago (
@@ -153,11 +171,16 @@ CREATE TABLE IF NOT EXISTS public.planes_pago (
 );
 
 INSERT INTO public.planes_pago (id, nombre, precio_mensual, precio_anual, limite_usuarios, limite_bodegas, caracteristicas)
-VALUES 
-    ('starter', 'Plan Starter', 29.00, 290.00, 3, 1, '["POS Básico", "Facturación SAR", "1 Bodega", "Soporte Standard"]'),
-    ('pro', 'Plan Pro Business', 79.00, 790.00, 10, 5, '["POS Avanzado", "Facturación SAR", "5 Bodegas", "IA Groq Integrada", "Multisucursal"]'),
-    ('enterprise', 'Plan Enterprise', 199.00, 1990.00, 100, 50, '["Acceso Ilimitado", "IA Groq Dedicada", "Bots RPA", "Auditoría Blockchain", "Soporte 24/7 VIP"]')
-ON CONFLICT (id) DO NOTHING;
+SELECT 'starter', 'Plan Starter', 29.00, 290.00, 3, 1, '["POS Básico", "Facturación SAR", "1 Bodega", "Soporte Standard"]'
+WHERE NOT EXISTS (SELECT 1 FROM public.planes_pago WHERE id = 'starter');
+
+INSERT INTO public.planes_pago (id, nombre, precio_mensual, precio_anual, limite_usuarios, limite_bodegas, caracteristicas)
+SELECT 'pro', 'Plan Pro Business', 79.00, 790.00, 10, 5, '["POS Avanzado", "Facturación SAR", "5 Bodegas", "IA Groq Integrada", "Multisucursal"]'
+WHERE NOT EXISTS (SELECT 1 FROM public.planes_pago WHERE id = 'pro');
+
+INSERT INTO public.planes_pago (id, nombre, precio_mensual, precio_anual, limite_usuarios, limite_bodegas, caracteristicas)
+SELECT 'enterprise', 'Plan Enterprise', 199.00, 1990.00, 100, 50, '["Acceso Ilimitado", "IA Groq Dedicada", "Bots RPA", "Auditoría Blockchain", "Soporte 24/7 VIP"]'
+WHERE NOT EXISTS (SELECT 1 FROM public.planes_pago WHERE id = 'enterprise');
 
 -- 8. RLS Y PERMISOS DE LECTURA/ESCRITURA ACCESIBLES
 ALTER TABLE public.tenants ENABLE ROW LEVEL SECURITY;
@@ -196,4 +219,4 @@ CREATE POLICY "public_storage_select" ON storage.objects FOR SELECT USING (bucke
 DROP POLICY IF EXISTS "public_storage_insert" ON storage.objects;
 CREATE POLICY "public_storage_insert" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'portal-pilot-assets');
 
--- Fin del script corregido
+-- Fin del script v2

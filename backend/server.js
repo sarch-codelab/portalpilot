@@ -1106,9 +1106,7 @@ app.post('/api/registro', async (req, res) => {
         codigo: empresaCodigo,
         nombre_empresa: empresaNombre || 'Portal Pilot',
         plan: plan || 'pro',
-        estado: 'activo',
-        logo_url: company_logo || null,
-        banner_url: company_banner || null
+        estado: 'activo'
       }, { onConflict: 'codigo' });
 
       // Hashear contraseña y crear usuario en Supabase
@@ -1127,9 +1125,7 @@ app.post('/api/registro', async (req, res) => {
         empresa_codigo: empresaCodigo,
         estado: 'activo',
         activo: true,
-        foto_perfil_url: profile_pic || company_logo || null,
-        avatar_url: profile_pic || company_logo || null,
-        banner_url: profile_banner || company_banner || null
+        foto_perfil_url: profile_pic || company_logo || null
       });
 
       if (userErr) {

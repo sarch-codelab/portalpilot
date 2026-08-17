@@ -1,181 +1,134 @@
 const axios = require('axios');
 
-const SUPABASE_URL = (process.env.SUPABASE_URL || '').replace(/\/+$/, '');
-const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY || '';
-const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || '';
+function getSupabaseUrl() {
+  return (process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || '').replace(/\/+$/, '');
+}
 
-let supabase = null;
+function getSupabaseKey() {
+  return process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+}
 
-if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
-  const missing = [];
-  if (!SUPABASE_URL) missing.push('SUPABASE_URL');
-  if (!SUPABASE_SERVICE_KEY) missing.push('SUPABASE_SERVICE_KEY');
-  console.warn(`[SUPABASE] NO inicializado — falta: ${missing.join(', ')}. Rutas de trabajadores retornarán 503.`);
-} else {
-  const restBase = `${SUPABASE_URL}/rest/v1`;
-  const authBase = `${SUPABASE_URL}/auth/v1`;
+function from(table) {
+  const urlBase = getSupabaseUrl();
+  const key = getSupabaseKey();
+
+  if (!urlBase || !key) {
+    console.warn(`[SUPABASE] ADVERTENCIA: SUPABASE_URL o SUPABASE_SERVICE_ROLE_KEY no configurados al consultar la tabla "${table}".`);
+  }
+
+  const restBase = `${urlBase}/rest/v1`;
   const serviceHeaders = {
-    apikey: SUPABASE_SERVICE_KEY,
-    Authorization: `Bearer ${SUPABASE_SERVICE_KEY}`,
+    apikey: key,
+    Authorization: `Bearer ${key}`,
     'Content-Type': 'application/json',
     Prefer: 'return=representation'
   };
 
-  function buildRestHeaders(opts = {}) {
-    const h = { ...serviceHeaders };
-    if (opts.headers) Object.assign(h, opts.headers);
-    return h;
-  }
+  let _select = null;
+  let _filters = [];
+  let _orderCol = null;
+  let _orderAsc = true;
+  let _limit = null;
+  let _single = false;
+  let _maybeSingle = false;
+  let _op = 'select';
+  let _body = null;
+  let _onConflict = null;
 
-  function from(table) {
-    let _select = null;
-    let _filters = [];
-    let _orderCol = null;
-    let _orderAsc = true;
-    let _limit = null;
-    let _single = false;
-    let _maybeSingle = false;
-    let _op = 'select';
-    let _body = null;
+  const builder = {
+    select(cols) { _op = 'select'; _select = cols || '*'; return builder; },
+    eq(col, val) { _filters.push(`${col}=eq.${encodeURIComponent(val)}`); return builder; },
+    neq(col, val) { _filters.push(`${col}=neq.${encodeURIComponent(val)}`); return builder; },
+    in(col, vals) { _filters.push(`${col}=in.(${vals.map(v => encodeURIComponent(v)).join(',')})`); return builder; },
+    gte(col, val) { _filters.push(`${col}=gte.${encodeURIComponent(val)}`); return builder; },
+    lte(col, val) { _filters.push(`${col}=lte.${encodeURIComponent(val)}`); return builder; },
+    ilike(col, pattern) { _filters.push(`${col}=ilike.${encodeURIComponent(pattern)}`); return builder; },
+    single() { _single = true; return builder; },
+    maybeSingle() { _maybeSingle = true; return builder; },
+    order(col, opts) { _orderCol = col; _orderAsc = opts && opts.ascending !== undefined ? opts.ascending : true; return builder; },
+    limit(n) { _limit = n; return builder; },
 
-    const builder = {
-      select(cols) { _op = 'select'; _select = cols || '*'; return builder; },
-      eq(col, val) { _filters.push(`${col}=eq.${encodeURIComponent(val)}`); return builder; },
-      neq(col, val) { _filters.push(`${col}=neq.${encodeURIComponent(val)}`); return builder; },
-      in(col, vals) { _filters.push(`${col}=in.(${vals.map(v => encodeURIComponent(v)).join(',')})`); return builder; },
-      gte(col, val) { _filters.push(`${col}=gte.${encodeURIComponent(val)}`); return builder; },
-      lte(col, val) { _filters.push(`${col}=lte.${encodeURIComponent(val)}`); return builder; },
-      ilike(col, pattern) { _filters.push(`${col}=ilike.${encodeURIComponent(pattern)}`); return builder; },
-      single() { _single = true; return builder; },
-      maybeSingle() { _maybeSingle = true; return builder; },
-      order(col, opts) { _orderCol = col; _orderAsc = opts && opts.ascending !== undefined ? opts.ascending : true; return builder; },
-      limit(n) { _limit = n; return builder; },
+    insert(data) { _op = 'insert'; _body = data; return builder; },
+    upsert(data, opts) { _op = 'upsert'; _body = data; _onConflict = opts && opts.onConflict ? opts.onConflict : null; return builder; },
+    update(data) { _op = 'update'; _body = data; return builder; },
+    delete() { _op = 'delete'; return builder; },
 
-      insert(data) { _op = 'insert'; _body = data; return builder; },
-      upsert(data, opts) { _op = 'upsert'; _body = data; _onConflict = opts && opts.onConflict ? opts.onConflict : null; return builder; },
-      update(data) { _op = 'update'; _body = data; return builder; },
-      delete() { _op = 'delete'; return builder; },
+    then(resolve, reject) {
+      const exec = async () => {
+        try {
+          const headers = { ...serviceHeaders };
+          let resp;
 
-      then(resolve, reject) {
-        const exec = async () => {
-          try {
-            const url = new URL(`${restBase}/${table}`);
-            const headers = buildRestHeaders();
-            let resp;
+          if (_op === 'select') {
+            const params = new URLSearchParams();
+            params.set('select', _select || '*');
+            _filters.forEach(f => params.append('and', `(${f})`));
+            if (_orderCol) params.set('order', `${_orderCol}.${_orderAsc ? 'asc' : 'desc'}`);
+            if (_limit) params.set('limit', _limit);
+            if (_single || _maybeSingle) headers.Prefer = 'return=representation';
 
-            if (_op === 'select') {
-              const params = new URLSearchParams();
-              params.set('select', _select || '*');
-              _filters.forEach(f => params.append('and', `(${f})`));
-              if (_orderCol) params.set('order', `${_orderCol}.${_orderAsc ? 'asc' : 'desc'}`);
-              if (_limit) params.set('limit', _limit);
-              if (_single || _maybeSingle) headers.Prefer = 'return=representation';
+            resp = await axios.get(`${restBase}/${table}?${params.toString()}`, { headers });
+            let rows = resp.data || [];
 
-              resp = await axios.get(`${restBase}/${table}?${params.toString()}`, { headers });
-              let rows = resp.data || [];
-
-              if (_single) {
-                if (rows.length === 0) return resolve({ data: null, error: { message: 'Row not found', code: 'PGRST116' } });
-                return resolve({ data: rows[0], error: null });
-              }
-              if (_maybeSingle) {
-                return resolve({ data: rows[0] || null, error: null });
-              }
-              return resolve({ data: rows, error: null });
-
-            } else if (_op === 'insert') {
-              resp = await axios.post(`${restBase}/${table}`, _body, { headers });
-              return resolve({ data: resp.data, error: null });
-
-            } else if (_op === 'upsert') {
-              if (_onConflict) headers.Prefer = `return=representation,resolution=merge-duplicates,on_conflict=${_onConflict}`;
-              else headers.Prefer = 'return=representation,resolution=merge-duplicates';
-              resp = await axios.post(`${restBase}/${table}`, _body, { headers });
-              return resolve({ data: resp.data, error: null });
-
-            } else if (_op === 'update') {
-              const params = new URLSearchParams();
-              _filters.forEach(f => params.append('and', `(${f})`));
-              resp = await axios.patch(`${restBase}/${table}?${params.toString()}`, _body, { headers });
-              return resolve({ data: resp.data, error: null });
-
-            } else if (_op === 'delete') {
-              const params = new URLSearchParams();
-              _filters.forEach(f => params.append('and', `(${f})`));
-              resp = await axios.delete(`${restBase}/${table}?${params.toString()}`, { headers });
-              return resolve({ data: null, error: null });
+            if (_single) {
+              if (rows.length === 0) return resolve({ data: null, error: { message: 'Row not found', code: 'PGRST116' } });
+              return resolve({ data: rows[0], error: null });
             }
-          } catch (err) {
-            const msg = err.response?.data?.message || err.response?.data?.msg || err.message;
-            return resolve({ data: null, error: { message: msg } });
+            if (_maybeSingle) {
+              return resolve({ data: rows[0] || null, error: null });
+            }
+            return resolve({ data: rows, error: null });
+
+          } else if (_op === 'insert') {
+            resp = await axios.post(`${restBase}/${table}`, _body, { headers });
+            return resolve({ data: resp.data, error: null });
+
+          } else if (_op === 'upsert') {
+            if (_onConflict) headers.Prefer = `return=representation,resolution=merge-duplicates,on_conflict=${_onConflict}`;
+            else headers.Prefer = 'return=representation,resolution=merge-duplicates';
+            resp = await axios.post(`${restBase}/${table}`, _body, { headers });
+            return resolve({ data: resp.data, error: null });
+
+          } else if (_op === 'update') {
+            const params = new URLSearchParams();
+            _filters.forEach(f => params.append('and', `(${f})`));
+            resp = await axios.patch(`${restBase}/${table}?${params.toString()}`, _body, { headers });
+            return resolve({ data: resp.data, error: null });
+
+          } else if (_op === 'delete') {
+            const params = new URLSearchParams();
+            _filters.forEach(f => params.append('and', `(${f})`));
+            resp = await axios.delete(`${restBase}/${table}?${params.toString()}`, { headers });
+            return resolve({ data: null, error: null });
           }
-        };
-        exec().catch(reject);
-      }
-    };
-
-    return builder;
-  }
-
-  const authClient = {
-    signInWithPassword({ email, password }) {
-      return axios.post(`${authBase}/token?grant_type=password`, { email, password }, {
-        headers: { apikey: SUPABASE_SERVICE_KEY, 'Content-Type': 'application/json' }
-      }).then(r => ({ data: { user: r.data.user, session: r.data.session }, error: null }))
-        .catch(err => ({ data: null, error: { message: err.response?.data?.error_description || err.message } }));
-    },
-
-    admin: {
-      createUser({ email, password, email_confirm }) {
-        return axios.post(`${authBase}/admin/users`, { email, password, email_confirm }, {
-          headers: { ...serviceHeaders, apikey: SUPABASE_SERVICE_KEY, Authorization: `Bearer ${SUPABASE_SERVICE_KEY}` }
-        }).then(r => ({ data: { user: r.data }, error: null }))
-          .catch(err => ({ data: null, error: { message: err.response?.data?.msg || err.message } }));
-      },
-
-      updateUser(id, updates) {
-        return axios.put(`${authBase}/admin/users/${id}`, updates, {
-          headers: { ...serviceHeaders, apikey: SUPABASE_SERVICE_KEY, Authorization: `Bearer ${SUPABASE_SERVICE_KEY}` }
-        }).then(r => ({ data: r.data, error: null }))
-          .catch(err => ({ data: null, error: { message: err.response?.data?.msg || err.message } }));
-      },
-
-      deleteUser(id) {
-        return axios.delete(`${authBase}/admin/users/${id}`, {
-          headers: { apikey: SUPABASE_SERVICE_KEY, Authorization: `Bearer ${SUPABASE_SERVICE_KEY}` }
-        }).then(() => ({ data: null, error: null }))
-          .catch(err => ({ data: null, error: { message: err.response?.data?.msg || err.message } }));
-      }
-    }
-  };
-
-  const storageClient = {
-    async upload(bucket, filePath, fileBuffer, contentType) {
-      const url = `${SUPABASE_URL}/storage/v1/object/${bucket}/${filePath}`;
-      const headers = {
-        apikey: SUPABASE_SERVICE_KEY,
-        Authorization: `Bearer ${SUPABASE_SERVICE_KEY}`,
-        'Content-Type': contentType,
-        'x-upsert': 'true'
+        } catch (err) {
+          console.error(`[SUPABASE REST ERROR] ${_op.toUpperCase()} en "${table}":`, err.response?.data || err.message);
+          return resolve({ data: null, error: err.response?.data || { message: err.message } });
+        }
       };
-      const resp = await axios.put(url, fileBuffer, { headers, maxBodyLength: Infinity, maxContentLength: Infinity });
-      return { data: { path: resp.data.Key || filePath }, error: null };
-    },
-    getPublicUrl(bucket, filePath) {
-      return `${SUPABASE_URL}/storage/v1/object/public/${bucket}/${filePath}`;
+      exec();
     }
   };
 
-  supabase = { from, auth: authClient, storage: storageClient };
-  console.log(`[SUPABASE] Cliente HTTP inicializado (${SUPABASE_URL.substring(0, 30)}...)`);
+  return builder;
 }
 
+const supabaseClient = {
+  from,
+  auth: {
+    signInWithPassword: async () => ({ data: null, error: { message: 'Supabase Auth deshabilitado (usando PostgreSQL directo)' } })
+  }
+};
+
 function requireSupabase(res) {
-  if (!supabase) {
-    res.status(503).json({ error: 'Supabase no está configurado. Agrega SUPABASE_URL y SUPABASE_SERVICE_KEY al .env' });
+  if (!getSupabaseUrl() || !getSupabaseKey()) {
+    if (res) res.status(503).json({ error: 'Supabase no está configurado en las variables de entorno' });
     return false;
   }
   return true;
 }
 
-module.exports = { supabase, requireSupabase };
+module.exports = {
+  supabase: supabaseClient,
+  requireSupabase
+};

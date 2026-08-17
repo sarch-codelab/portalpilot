@@ -1,9 +1,13 @@
+const path = require('path');
+if (process.env.NODE_ENV !== 'production') {
+  require('dotenv').config({ path: path.join(__dirname, '.env') });
+}
+
 const express = require('express');
 const cors = require('cors');
 const axios = require('axios');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const path = require('path');
 const fs = require('fs');
 const nodemailer = require('nodemailer');
 const crypto = require('crypto');
@@ -11,22 +15,9 @@ const http = require('http');
 const https = require('https');
 const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
-let supabase = null;
-let requireSupabase = (res) => { res.status(503).json({ error: 'Supabase no disponible' }); return false; };
-try {
-  const sb = require('./supabaseClient');
-  supabase = sb.supabase;
-  requireSupabase = sb.requireSupabase;
-  console.log(`[STARTUP] Supabase client: ${supabase ? 'ACTIVO' : 'INACTIVO (sin config)'}`);
-} catch (err) {
-  console.error('[STARTUP] Error cargando supabaseClient:', err.message);
-  console.warn('[STARTUP] El servidor funcionará solo con NocoDB');
-}
 
-// 🔧 FIX VERCEL: dotenv solo en desarrollo local
-if (process.env.NODE_ENV !== 'production') {
-  require('dotenv').config({ path: path.join(__dirname, '.env') });
-}
+const { supabase, requireSupabase } = require('./supabaseClient');
+console.log(`[STARTUP] Supabase client: ${supabase ? 'ACTIVO' : 'INACTIVO'}`);
 
 const app = express();
 

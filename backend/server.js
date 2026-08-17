@@ -1096,12 +1096,16 @@ app.post('/api/registro', async (req, res) => {
         return res.status(409).json({ error: 'El correo ya está registrado.' });
       }
 
+      const { company_banner, company_logo, profile_banner, profile_pic } = req.body || {};
+
       // Crear tenant en Supabase
       await supabase.from('tenants').upsert({
         codigo: empresaCodigo,
         nombre_empresa: empresaNombre || 'Portal Pilot',
         plan: plan || 'pro',
-        estado: 'activo'
+        estado: 'activo',
+        logo_url: company_logo || null,
+        banner_url: company_banner || null
       }, { onConflict: 'codigo' });
 
       // Hashear contraseña y crear usuario en Supabase
@@ -1119,7 +1123,10 @@ app.post('/api/registro', async (req, res) => {
         rol: 'admin',
         empresa_codigo: empresaCodigo,
         estado: 'activo',
-        activo: true
+        activo: true,
+        foto_perfil_url: profile_pic || company_logo || null,
+        avatar_url: profile_pic || company_logo || null,
+        banner_url: profile_banner || company_banner || null
       });
 
       if (userErr) {
@@ -1423,43 +1430,45 @@ app.post('/api/support-ticket', async (req, res) => {
 });
 
 app.get('/api/tenants', authenticate, async (req, res) => {
-  if (!requireNocoDbToken(res)) return;
   try {
-    const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 50, 10), 200);
-    const response = await nocodbApi.get(EMPRESAS_TABLE, { params: { limit } });
-    const empresas = response.data.list || [];
+    let tenantsFormat = [];
+    if (supabase) {
+      const { data: supaTenants, error } = await supabase.from('tenants').select('*');
+      if (!error && supaTenants && supaTenants.length > 0) {
+        tenantsFormat = supaTenants.map(t => ({
+          id: t.id || t.codigo || 'ROOT',
+          codigo: t.codigo || t.id || 'ROOT',
+          name: t.nombre_empresa || t.nombre || t.codigo || 'Empresa',
+          domain: t.dominio || `${(t.codigo || 'empresa').toLowerCase()}.portalpilot.app`,
+          plan: t.plan || 'enterprise',
+          status: t.estado || 'activo',
+          users: 1,
+          registered: t.created_at || new Date().toISOString(),
+          country: t.pais || 'Honduras',
+          logo_url: t.logo_url || null,
+          banner_url: t.banner_url || null
+        }));
+      }
+    }
 
-    // 🔧 FIX VERCEL: Reducir límite de usuarios
-    const usuariosRes = await nocodbApi.get(USUARIOS_TABLE, { params: { limit: 500 } });
-    const usuariosList = usuariosRes.data.list || [];
-
-    const activeUsers = usuariosList.filter(u => !isDeletedStatus(u.status || u.Status || u.estado || u.Estado || 'active'));
-    const usersCountByEmpresa = activeUsers.reduce((acc, user) => {
-      const code = user.empresa_codigo || user.Empresa_Codigo || user.codigo || user.Codigo || '';
-      if (!code) return acc;
-      acc[code] = (acc[code] || 0) + 1;
-      return acc;
-    }, {});
-
-    const tenantsFormat = empresas
-      .filter(emp => !isDeletedStatus(emp.status || emp.Status || emp.estado || emp.Estado || 'active'))
-      .map(emp => {
-        const tenantCode = emp.codigo || emp.Codigo || emp.id || emp.Id || '';
-        return {
-          id: String(tenantCode || `ID-${emp.Id || emp.id}`),
-          name: emp.nombre || emp.Nombre || 'Sin Nombre',
-          domain: emp.dominio || emp.Dominio || 'N/A',
-          plan: emp.plan || emp.Plan || 'starter',
-          status: normalizeStatus(emp.status || emp.Status || emp.estado || emp.Estado || 'active'),
-          users: usersCountByEmpresa[tenantCode] || 0,
-          registered: emp.CreatedAt || emp.created_at || new Date().toISOString(),
-          country: emp.pais || emp.Pais || 'N/A'
-        };
-      });
+    if (tenantsFormat.length === 0) {
+      tenantsFormat = [{
+        id: 'ROOT',
+        codigo: 'ROOT',
+        name: 'Portal Pilot Honduras',
+        domain: 'portalpilot.pp.ia',
+        plan: 'enterprise',
+        status: 'activo',
+        users: 1,
+        registered: new Date().toISOString(),
+        country: 'Honduras'
+      }];
+    }
 
     res.json(tenantsFormat);
   } catch (error) {
-    return handleServerError(res, error);
+    console.error('[GET TENANTS] Error:', error.message);
+    res.status(500).json({ error: 'Error al obtener la lista de empresas (tenants).' });
   }
 });
 
@@ -2312,83 +2321,25 @@ app.put('/api/users/:id', authenticate, async (req, res) => {
 app.delete('/api/users/:id', authenticate, async (req, res) => {
   try {
     const { id } = req.params;
-    const source = req.query.source || 'supabase';
 
-    if (source === 'nocodb') {
-      // ═══ NOCODB: Delete owner/admin by email or ID ═══
+    if (supabase) {
       try {
-        let nocoUser = null;
-        // Try by record ID first
-        try {
-          const resp = await nocodbApi.get(`${USUARIOS_TABLE}/${id}`);
-          nocoUser = resp.data;
-        } catch (_) {}
-        // Try by email (id might be email)
-        if (!nocoUser && id.includes('@')) {
-          const resp = await nocodbApi.get(USUARIOS_TABLE, {
-            params: { where: `(email,eq,${id})`, limit: 1 }
-          });
-          nocoUser = resp.data?.list?.[0] || null;
-        }
+        await supabase.from('usuario_modulos').delete().eq('usuario_id', id);
+      } catch (e) {}
 
-        if (!nocoUser) return res.status(404).json({ error: 'Usuario no encontrado en NocoDB.' });
-
-        const recordId = extractNocoRecordId(nocoUser);
-        const nombreUsuario = nocoUser.nombre || nocoUser.Nombre || '';
-        const emailUsuario = nocoUser.email || nocoUser.Email || 'N/A';
-
-        if (recordId) {
-          await deleteNocoRecord(USUARIOS_TABLE, recordId);
-        } else {
-          const whereEmail = buildNocoWhereFilter('email', emailUsuario);
-          if (whereEmail) await deleteNocoRecordByFilter(USUARIOS_TABLE, whereEmail);
-        }
-
-        return res.json({ message: 'Usuario eliminado de NocoDB exitosamente' });
-      } catch (err) {
-        console.warn('[DELETE USER NOCODB] Error:', err.message);
-        return handleServerError(res, err);
+      if (id.includes('@')) {
+        await supabase.from('usuarios').delete().eq('email', id.toLowerCase());
+      } else {
+        await supabase.from('usuarios').delete().eq('id', id);
       }
     }
 
-    // ═══ SUPABASE: Delete trabajador ═══
-    if (!requireSupabase(res)) return;
-
-    // 1. Fetch user data before deleting
-    const { data: userRecord } = await supabase
-      .from('usuarios')
-      .select('id, nombre, apellido, email')
-      .eq('id', id)
-      .single();
-
-    const nombreUsuario = userRecord ? `${userRecord.nombre || ''} ${userRecord.apellido || ''}`.trim() : `ID: ${id}`;
-    const emailUsuario = userRecord?.email || 'N/A';
-
-    // 2. Delete module assignments
-    await supabase.from('usuario_modulos').delete().eq('usuario_id', id);
-
-    // 3. Delete profile
-    await supabase.from('usuarios').delete().eq('id', id);
-
-    // 4. Delete Supabase Auth user
-    const { error: authErr } = await supabase.auth.admin.deleteUser(id);
-    if (authErr) console.warn('[SUPABASE] Error eliminando auth user:', authErr.message);
-
-    // 5. Notify admin
-    await enviarCorreoPortalPilot(
-      process.env.EMAIL_USER,
-      '🗑️ Trabajador Eliminado',
-      'Eliminación de Trabajador',
-      'Se ha eliminado un trabajador.',
-      `<ul style="list-style: none; padding: 0;">
-        <li><strong>ID:</strong> ${id}</li>
-        <li><strong>Nombre:</strong> ${nombreUsuario}</li>
-        <li><strong>Email:</strong> ${emailUsuario}</li>
-      </ul>`
-    );
-
-    res.json({ message: 'Trabajador eliminado exitosamente' });
+    return res.json({ success: true, message: 'Usuario eliminado exitosamente' });
   } catch (error) {
+    console.error('[DELETE USER] Error:', error.message);
+    return res.status(500).json({ error: error.message || 'Error al eliminar usuario' });
+  }
+});
     return handleServerError(res, error);
   }
 });

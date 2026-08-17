@@ -2274,6 +2274,21 @@ app.delete('/api/users/:id', authenticate, async (req, res) => {
       }
     }
 
+    // 🗑️ Limpieza también en NocoDB si aplica
+    try {
+      if (id.match(/^\d+$/)) {
+        await nocodbApi.delete(`${USUARIOS_TABLE}/${id}`);
+      } else if (id.includes('@')) {
+        const nocoResp = await nocodbApi.get(USUARIOS_TABLE, { params: { where: `(email,eq,${id})`, limit: 1 } });
+        const nocoUser = nocoResp.data?.list?.[0];
+        if (nocoUser && (nocoUser.Id || nocoUser.id)) {
+          await nocodbApi.delete(`${USUARIOS_TABLE}/${nocoUser.Id || nocoUser.id}`);
+        }
+      }
+    } catch (e) {
+      console.warn('[DELETE USER NOCODB] Warning:', e.message);
+    }
+
     return res.json({ success: true, message: 'Usuario eliminado exitosamente' });
   } catch (error) {
     console.error('[DELETE USER] Error:', error.message);

@@ -262,10 +262,6 @@ if (!process.env.JWT_SECRET && !IS_SERVERLESS) {
 console.log(`[NocoDB] URL=${NOCODB_URL} TOKEN_CONFIGURED=${!!API_TOKEN}`);
 
 function requireNocoDbToken(res) {
-  if (!API_TOKEN) {
-    res.status(503).json({ error: 'NocoDB API token no configurado. El servicio de base de datos no está disponible.' });
-    return false;
-  }
   return true;
 }
 
@@ -1086,7 +1082,6 @@ app.get('/api/test-email', async (req, res) => {
 app.post('/api/registro', async (req, res) => {
   try {
     if (!requireNocoDbToken(res)) return;
-
     const {
       empresaNombre, empresaCodigo, dominioWorkspace, landPage,
       empresaSize, sise, empresaSector, empresaCountry, zonaHoraria,
@@ -1102,93 +1097,51 @@ app.post('/api/registro', async (req, res) => {
     }
 
     const emailNorm = String(email).trim().toLowerCase();
-    const empresaSectorNormalizado = normalizeSectorValue(empresaSector);
-    const existingUsers = await nocodbApi.get(USUARIOS_TABLE, {
-      params: { where: buildNocoWhereFilter('email', emailNorm), limit: 1 }
-    });
 
-    if ((existingUsers.data?.list || []).length > 0) {
-      return res.status(409).json({ error: 'El correo ya está registrado.' });
-    }
-
-    const empresaData = {
-      nombre: empresaNombre || 'Portal Pilot',
-      codigo: empresaCodigo,
-      dominio: dominioWorkspace || null,
-      land_page: landPage || null,
-      size: empresaSize || null,
-      sise: sise || null,
-      sector: empresaSectorNormalizado || null,
-      pais: empresaCountry || null,
-      zona_horaria: zonaHoraria || null,
-      plan: plan || 'startup',
-      logo_url: logoUrl || null,
-      banner_url: bannerUrl || null,
-      status: 'active',
-      Status: 'active',
-      estado: 'active',
-      Estado: 'active'
-    };
-
-    try {
-      const empresaExistenteRes = await nocodbApi.get(EMPRESAS_TABLE, {
-        params: { where: buildNocoWhereFilter('codigo', empresaCodigo), limit: 1 }
-      });
-      const empresaExistente = empresaExistenteRes.data?.list?.[0] || null;
-
-      if (empresaExistente) {
-        const empresaRecordId = extractNocoRecordId(empresaExistente);
-        if (empresaRecordId) {
-          await nocodbApi.patch(buildNocoRecordPath(EMPRESAS_TABLE, empresaRecordId), empresaData);
-        } else {
-          await nocodbApi.post(EMPRESAS_TABLE, empresaData);
-        }
-      } else {
-        await nocodbApi.post(EMPRESAS_TABLE, empresaData);
+    // Consultar existencia previa en Supabase
+    if (supabase) {
+      const { data: existing } = await supabase.from('usuarios').select('id').eq('email', emailNorm).maybeSingle();
+      if (existing) {
+        return res.status(409).json({ error: 'El correo ya está registrado.' });
       }
-    } catch (err) {
-      console.error('[REGISTRO] Error al crear/actualizar la empresa:', err.response?.data || err.message);
-      throw err;
+
+      // Crear tenant en Supabase
+      await supabase.from('tenants').upsert({
+        codigo: empresaCodigo,
+        nombre_empresa: empresaNombre || 'Portal Pilot',
+        plan: plan || 'pro',
+        estado: 'activo'
+      }, { onConflict: 'codigo' });
+
+      // Hashear contraseña y crear usuario en Supabase
+      const salt = await bcrypt.genSalt(10);
+      const passwordHash = await bcrypt.hash(password, salt);
+
+      const { data: newUser, error: userErr } = await supabase.from('usuarios').insert({
+        email: emailNorm,
+        password_hash: passwordHash,
+        password: passwordHash,
+        nombre: `${usuarioNombre} ${usuarioApellido}`.trim(),
+        rol: 'admin',
+        empresa_codigo: empresaCodigo,
+        estado: 'activo',
+        activo: true
+      }).select().single();
+
+      if (userErr) {
+        console.error('[REGISTRO] Error insertando usuario en Supabase:', userErr.message);
+        throw new Error(userErr.message);
+      }
     }
 
-    const salt = await bcrypt.genSalt(10);
-    const passwordHash = await bcrypt.hash(password, salt);
-
-    const nuevoUsuario = {
-      nombre: usuarioNombre,
-      apellido: usuarioApellido,
-      email: emailNorm,
-      cargo: cargo || null,
-      area: area || 'Sin asignar',
-      rango: rango || 'Administrador',
-      rol: 'owner',
-      foto_perfil_url: perfilFotoUrl || null,
-      banner_perfil_url: perfilBannerUrl || null,
-      password: passwordHash,
-      dosfa_activo: dosFaActivo || false,
-      dosfa_secret: dosFaSecret || null,
-      dosfa_backup_codes: dosFaBackupCodes ? JSON.stringify(dosFaBackupCodes) : null,
-      terminos_aceptados: terminosAceptados || false,
-      empresa_codigo: empresaCodigo,
-      dominio_workspace: dominioWorkspace || null,
-      status: 'active',
-      Status: 'active',
-      estado: 'active',
-      Estado: 'active'
-    };
-
-    await nocodbApi.post(USUARIOS_TABLE, nuevoUsuario);
-
-    await enviarOnboardingEmail(emailNorm);
-
-    res.status(201).json({ 
+    return res.status(201).json({ 
       message: 'Tenant creado con éxito',
       empresaCodigo,
       dominioWorkspace: dominioWorkspace || null,
       plan: plan || null
     });
   } catch (error) {
-    return handleNocoDbError(res, error, 'No se pudo completar el registro en este momento.');
+    return res.status(500).json({ error: error.message || 'No se pudo completar el registro en este momento.' });
   }
 });
 
@@ -1230,101 +1183,11 @@ app.post('/api/enviar-codigo-verificacion', async (req, res) => {
 
 app.post('/api/login', loginLimiter, async (req, res) => {
   try {
-    console.log('[LOGIN] start', { hasToken: !!API_TOKEN, body: req.body });
-
     const { email, password } = req.body;
-
     if (!email || !password) {
       return res.status(400).json({ error: 'Por favor, proporciona email y contraseña.' });
     }
 
-    const emailNorm = email.trim().toLowerCase();
-
-    // ═══ PASO 1: Intentar login en NocoDB (owners/admins) ═══
-    let nocodbUser = null;
-    if (API_TOKEN) {
-      try {
-        const r1 = await nocodbApi.get(USUARIOS_TABLE, {
-          params: { where: `(email,eq,${emailNorm})`, limit: 10 }
-        });
-        const responseData = r1.data.list || [];
-
-        if (responseData.length > 0) {
-          const matchedUsers = (await Promise.all(responseData.map(async usuario => {
-            if (!usuario.password) return null;
-            const isMatch = await bcrypt.compare(password, usuario.password);
-            if (isMatch) return usuario;
-            return null;
-          }))).filter(Boolean);
-
-          if (matchedUsers.length > 0) {
-            nocodbUser = matchedUsers[0];
-          }
-        }
-      } catch (err) {
-        console.warn('[LOGIN] NocoDB lookup falló, intentando Supabase:', err.message);
-      }
-    }
-
-    // ═══ PASO 2: Si no se encontró en NocoDB, intentar Supabase Auth (trabajadores) ═══
-    if (!nocodbUser && supabase) {
-      try {
-        const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-          email: emailNorm,
-          password: password
-        });
-
-        if (!authError && authData?.user) {
-          // Buscar perfil en tabla usuarios (sin FK join)
-          const { data: perfil } = await supabase
-            .from('usuarios')
-            .select('id, empresa_id, nombre, apellido, email, rol_global, activo, foto_perfil_url, banner_perfil_url')
-            .eq('id', authData.user.id)
-            .single();
-
-          if (perfil) {
-            let empresaCodigo = '', empresaNombre = 'Portal Pilot';
-            if (perfil.empresa_id) {
-              const { data: emp } = await supabase.from('empresas').select('nombre, codigo').eq('id', perfil.empresa_id).single();
-              if (emp) { empresaCodigo = emp.codigo || ''; empresaNombre = emp.nombre || empresaCodigo || 'Portal Pilot'; }
-            }
-
-            const accountToken = jwt.sign(
-              {
-                sub: perfil.id,
-                rol: perfil.rol_global || 'user',
-                empresa_codigo: empresaCodigo,
-                empresa_nombre: empresaNombre
-              },
-              JWT_SECRET,
-              { expiresIn: '2h' }
-            );
-
-            await enviarAlertaNuevoAcceso(emailNorm, req, true);
-            await registrarAuditoria(empresaCodigo, 'Login exitoso', `Inicio de sesión correcto de ${perfil.nombre || ''} ${perfil.apellido || ''}`.trim(), 'login', `${perfil.nombre || ''} ${perfil.apellido || ''}`.trim(), req);
-
-            return res.status(200).json({
-              message: 'Login exitoso',
-              token: accountToken,
-              user: {
-                id: perfil.id,
-                nombre: perfil.nombre || '',
-                apellido: perfil.apellido || '',
-                email: perfil.email || emailNorm,
-                rol: perfil.rol_global || 'user',
-                empresa_codigo: empresaCodigo,
-                empresa_nombre: empresaNombre,
-                tenant: empresaCodigo,
-                status: perfil.activo ? 'active' : 'inactive',
-                foto_perfil_url: perfil.foto_perfil_url || null,
-                banner_perfil_url: perfil.banner_perfil_url || null,
-                token: accountToken
-              },
-              accounts: []
-            });
-          }
-        }
-      } catch (err) {
         console.warn('[LOGIN] Supabase Auth falló:', err.message);
       }
     }

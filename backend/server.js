@@ -1314,7 +1314,7 @@ app.get('/api/tenant/modules', authenticate, async (req, res) => {
     const modulos = getModulesForAreaAndPlan(area, plan);
     res.json({ success: true, empresa_codigo: tenantCode, area, plan, modulos_activos: modulos });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ success: false, error: err.message || 'Error consultando módulos' });
   }
 });
 

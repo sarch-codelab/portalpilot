@@ -43,12 +43,12 @@ function from(table) {
       _select = cols || '*';
       return builder;
     },
-    eq(col, val) { _filters.push(`${col}=eq.${encodeURIComponent(val)}`); return builder; },
-    neq(col, val) { _filters.push(`${col}=neq.${encodeURIComponent(val)}`); return builder; },
-    in(col, vals) { _filters.push(`${col}=in.(${vals.map(v => encodeURIComponent(v)).join(',')})`); return builder; },
-    gte(col, val) { _filters.push(`${col}=gte.${encodeURIComponent(val)}`); return builder; },
-    lte(col, val) { _filters.push(`${col}=lte.${encodeURIComponent(val)}`); return builder; },
-    ilike(col, pattern) { _filters.push(`${col}=ilike.${encodeURIComponent(pattern)}`); return builder; },
+    eq(col, val) { _filters.push({ col, op: 'eq', val }); return builder; },
+    neq(col, val) { _filters.push({ col, op: 'neq', val }); return builder; },
+    in(col, vals) { _filters.push({ col, op: 'in', val: `(${vals.map(v => encodeURIComponent(v)).join(',')})` }); return builder; },
+    gte(col, val) { _filters.push({ col, op: 'gte', val }); return builder; },
+    lte(col, val) { _filters.push({ col, op: 'lte', val }); return builder; },
+    ilike(col, pattern) { _filters.push({ col, op: 'ilike', val: pattern }); return builder; },
     single() { _single = true; return builder; },
     maybeSingle() { _maybeSingle = true; return builder; },
     order(col, opts) { _orderCol = col; _orderAsc = opts && opts.ascending !== undefined ? opts.ascending : true; return builder; },
@@ -68,7 +68,10 @@ function from(table) {
           if (_op === 'select') {
             const params = new URLSearchParams();
             params.set('select', _select || '*');
-            _filters.forEach(f => params.append('and', `(${f})`));
+            _filters.forEach(f => {
+              if (f.op === 'in') params.append(f.col, `in.${f.val}`);
+              else params.append(f.col, `${f.op}.${f.val}`);
+            });
             if (_orderCol) params.set('order', `${_orderCol}.${_orderAsc ? 'asc' : 'desc'}`);
             if (_limit) params.set('limit', _limit);
             if (_single || _maybeSingle) headers.Prefer = 'return=representation';
@@ -103,7 +106,10 @@ function from(table) {
           } else if (_op === 'update') {
             headers.Prefer = 'return=representation';
             const params = new URLSearchParams();
-            _filters.forEach(f => params.append('and', `(${f})`));
+            _filters.forEach(f => {
+              if (f.op === 'in') params.append(f.col, `in.${f.val}`);
+              else params.append(f.col, `${f.op}.${f.val}`);
+            });
             resp = await axios.patch(`${restBase}/${table}?${params.toString()}`, _body, { headers });
             let rows = resp.data || [];
             let result = (_single || _maybeSingle) ? (rows[0] || rows) : rows;
@@ -111,7 +117,10 @@ function from(table) {
 
           } else if (_op === 'delete') {
             const params = new URLSearchParams();
-            _filters.forEach(f => params.append('and', `(${f})`));
+            _filters.forEach(f => {
+              if (f.op === 'in') params.append(f.col, `in.${f.val}`);
+              else params.append(f.col, `${f.op}.${f.val}`);
+            });
             resp = await axios.delete(`${restBase}/${table}?${params.toString()}`, { headers });
             return resolve({ data: null, error: null });
           }

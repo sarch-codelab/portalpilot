@@ -382,58 +382,50 @@
           <!-- ALERTS -->
           <div class="alerts-panel reveal" data-widget="alerts">
             <div class="panel-header">
-              <div class="panel-title"><i class="fas fa-exclamation-triangle"></i> Alertas Críticas</div>
+              <div class="panel-title"><i class="fas fa-shield-check"></i> Estado del Sistema y Alertas</div>
               <button class="btn btn-ghost btn-xs" id="viewAllAlerts">Ver todas</button>
             </div>
             <div class="alert-list">
-              <div class="alert-item critical">
-                <div class="alert-icon"><i class="fas fa-times"></i></div>
+              <div class="alert-item info">
+                <div class="alert-icon" style="background:rgba(48,209,88,0.15);color:var(--green);"><i class="fas fa-database"></i></div>
                 <div class="alert-content">
-                  <div class="alert-title">Intento de acceso no autorizado</div>
-                  <div class="alert-desc">IP 185.220.101.42 intentó acceder a <strong>FinanceLab</strong>.</div>
-                  <div class="alert-time"><i class="fas fa-clock"></i> Hace 12 minutos</div>
-                </div>
-              </div>
-              <div class="alert-item warning">
-                <div class="alert-icon"><i class="fas fa-exclamation"></i></div>
-                <div class="alert-content">
-                  <div class="alert-title">Uso elevado de recursos</div>
-                  <div class="alert-desc">Nodo <strong>node-ia-03</strong> superó 85% de GPU.</div>
-                  <div class="alert-time"><i class="fas fa-clock"></i> Hace 1 hora</div>
+                  <div class="alert-title">Base de datos Supabase PostgreSQL</div>
+                  <div class="alert-desc">Conexión activa y sincronizada en tiempo real.</div>
+                  <div class="alert-time"><i class="fas fa-clock"></i> Sistema en vivo</div>
                 </div>
               </div>
               <div class="alert-item info">
-                <div class="alert-icon"><i class="fas fa-info"></i></div>
+                <div class="alert-icon" style="background:rgba(139,92,246,0.15);color:var(--accent-soft);"><i class="fas fa-file-invoice-dollar"></i></div>
                 <div class="alert-content">
-                  <div class="alert-title">Actualización disponible</div>
-                  <div class="alert-desc">Gemma 3N v1.2.4 lista para staging.</div>
-                  <div class="alert-time"><i class="fas fa-clock"></i> Hace 3 horas</div>
+                  <div class="alert-title">Módulo de Facturación Electrónica SAR</div>
+                  <div class="alert-desc">Parámetros de CAI y facturación habilitados.</div>
+                  <div class="alert-time"><i class="fas fa-clock"></i> Listo para operar</div>
+                </div>
+              </div>
+              <div class="alert-item info">
+                <div class="alert-icon" style="background:rgba(48,209,88,0.15);color:var(--green);"><i class="fas fa-user-shield"></i></div>
+                <div class="alert-content">
+                  <div class="alert-title">Seguridad y Sesión Activa</div>
+                  <div class="alert-desc">Token JWT verificado y permisos asignados.</div>
+                  <div class="alert-time"><i class="fas fa-clock"></i> Sesión segura</div>
                 </div>
               </div>
             </div>
-          </div>
-
-              <div class="service-name"><i class="fas fa-link"></i> Blockchain</div>
-              <div class="service-status"><span class="status-dot yellow"></span> Degradado</div>
-            </div>
-            <div style="padding-top:12px;"><button class="btn btn-ghost btn-sm"
-                style="width:100%;justify-content:center;" id="checkServices"><i class="fas fa-sync-alt"></i>
-                Verificar</button></div>
           </div>
 
           <!-- CALENDAR -->
           <div class="calendar-panel reveal" data-widget="calendar">
             <div class="panel-header">
-              <div class="panel-title"><i class="fas fa-calendar-alt"></i> Calendario</div>
+              <div class="panel-title"><i class="fas fa-calendar-alt"></i> Calendario Comercial</div>
               <div class="calendar-nav">
                 <button class="cal-nav-btn" id="calPrev"><i class="fas fa-chevron-left"></i></button>
-                <span class="cal-month" id="calMonth">Junio 2026</span>
+                <span class="cal-month" id="calMonth">Agosto 2026</span>
                 <button class="cal-nav-btn" id="calNext"><i class="fas fa-chevron-right"></i></button>
               </div>
             </div>
             <div class="calendar-grid" id="calendarGrid"></div>
             <div class="calendar-events">
-              <div class="events-title"><i class="fas fa-bolt"></i> Próximos Eventos</div>
+              <div class="events-title"><i class="fas fa-bolt"></i> Próximos Eventos Comercial</div>
               <div class="events-list" id="eventsList"></div>
             </div>
           </div>
@@ -441,33 +433,22 @@
           <!-- ACTIVITY -->
           <div class="activity-panel reveal" data-widget="activity">
             <div class="panel-header">
-              <div class="panel-title"><i class="fas fa-history"></i> Actividad Reciente</div>
+              <div class="panel-title"><i class="fas fa-history"></i> Actividad del Sistema</div>
               <button class="btn btn-ghost btn-xs" id="viewHistory">Ver historial</button>
             </div>
             <div class="activity-list">
               <div class="activity-item">
-                <div class="activity-avatar">TC</div>
+                <div class="activity-avatar" style="background:var(--accent);color:#fff;">PP</div>
                 <div class="activity-content">
-                  <div class="activity-text"><strong>TechCorp</strong> desplegó bot RPA para <em>"Análisis Q4"</em>
-                  </div>
-                  <div class="activity-meta"><span><i class="fas fa-user"></i> admin@techcorp.io</span><span><i
-                        class="fas fa-clock"></i> Hace 8 min</span></div>
+                  <div class="activity-text"><strong>Portal Pilot Admin</strong> inició sesión en el sistema</div>
+                  <div class="activity-meta"><span><i class="fas fa-user"></i> portalpilot.hn@gmail.com</span><span><i class="fas fa-clock"></i> Reciente</span></div>
                 </div>
               </div>
               <div class="activity-item">
-                <div class="activity-avatar">HL</div>
+                <div class="activity-avatar" style="background:var(--green);color:#fff;">RT</div>
                 <div class="activity-content">
-                  <div class="activity-text"><strong>HealthSys</strong> actualizó seguridad biométrica</div>
-                  <div class="activity-meta"><span><i class="fas fa-user"></i> security@healthsys.com</span><span><i
-                        class="fas fa-clock"></i> Hace 24 min</span></div>
-                </div>
-              </div>
-              <div class="activity-item">
-                <div class="activity-avatar">RP</div>
-                <div class="activity-content">
-                  <div class="activity-text"><strong>RetailPlus</strong> exportó auditoría (472 transacciones)</div>
-                  <div class="activity-meta"><span><i class="fas fa-user"></i> ops@retailplus.co</span><span><i
-                        class="fas fa-clock"></i> Hace 1 hora</span></div>
+                  <div class="activity-text"><strong>Tenant ROOT</strong> verificado y activo en la nube</div>
+                  <div class="activity-meta"><span><i class="fas fa-building"></i> Portal Pilot Honduras</span><span><i class="fas fa-clock"></i> Activo</span></div>
                 </div>
               </div>
             </div>

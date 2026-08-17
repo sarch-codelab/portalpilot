@@ -1182,6 +1182,33 @@ app.post('/api/enviar-codigo-verificacion', async (req, res) => {
   }
 });
 
+function getModulesForAreaAndPlan(area = '', plan = 'pro') {
+  const areaNorm = (area || '').toLowerCase();
+  const planNorm = (plan || 'pro').toLowerCase();
+
+  let modulos = [];
+
+  if (areaNorm.includes('retail')) {
+    modulos = ['pos_caja', 'inventario_rapido', 'control_stock', 'facturacion_sar', 'credito_clientes'];
+  } else if (areaNorm.includes('membresía') || areaNorm.includes('tecnológica') || areaNorm.includes('membresia')) {
+    modulos = ['gestion_membresias', 'ventas_mayoreo', 'pos_escaner', 'facturacion_sar', 'analytics_ventas'];
+  } else if (areaNorm.includes('tradicional') || areaNorm.includes('pulpería')) {
+    modulos = ['pos_pulperia', 'control_caja', 'inventario_basico', 'cuentas_por_cobrar', 'facturacion_sar'];
+  } else if (areaNorm.includes('moderno') || areaNorm.includes('supermercado')) {
+    modulos = ['pos_multicaja', 'inventario_avanzado', 'transferencias_bodega', 'facturacion_sar', 'despacho_flotas'];
+  } else {
+    modulos = ['pos_ventas', 'inventario_multibodega', 'facturacion_sar', 'clientes_proveedores', 'reportes_comerciales'];
+  }
+
+  if (planNorm === 'starter') {
+    modulos = modulos.slice(0, 3);
+  } else if (planNorm === 'enterprise' || planNorm === 'corporativo') {
+    modulos.push('automatizacion_rpa', 'flota_vehiculos', 'api_keys_seguridad');
+  }
+
+  return modulos;
+}
+
 app.post('/api/login', loginLimiter, async (req, res) => {
   try {
     const { email, password } = req.body || {};
@@ -1238,6 +1265,17 @@ app.post('/api/login', loginLimiter, async (req, res) => {
       { expiresIn: '30d' }
     );
 
+
+    let tenantData = null;
+    if (supabase && userRow.empresa_codigo) {
+      const { data: t } = await supabase.from('tenants').select('*').eq('codigo', userRow.empresa_codigo).maybeSingle();
+      tenantData = t;
+    }
+
+    const userArea = tenantData?.area || userRow.area || 'Área Comercial';
+    const userPlan = tenantData?.plan || 'pro';
+    const activeModules = getModulesForAreaAndPlan(userArea, userPlan);
+
     return res.status(200).json({
       message: 'Login exitoso',
       token: accountToken,
@@ -1249,6 +1287,9 @@ app.post('/api/login', loginLimiter, async (req, res) => {
         rol: userRow.rol || 'admin',
         empresa_codigo: userRow.empresa_codigo || 'ROOT',
         tenant: userRow.empresa_codigo || 'ROOT',
+        area: userArea,
+        plan: userPlan,
+        modulos_activos: activeModules,
         status: userRow.estado || 'activo',
         foto_perfil_url: userRow.avatar_url || userRow.foto_perfil_url || null,
         token: accountToken
@@ -1257,6 +1298,23 @@ app.post('/api/login', loginLimiter, async (req, res) => {
   } catch (error) {
     console.error('[LOGIN] Error general en /api/login:', error.stack || error.message);
     return res.status(500).json({ error: 'Error interno en el servidor de autenticación' });
+  }
+});
+
+app.get('/api/tenant/modules', authenticate, async (req, res) => {
+  try {
+    const tenantCode = getTenantCode(req) || 'ROOT';
+    let tenant = null;
+    if (supabase) {
+      const { data: t } = await supabase.from('tenants').select('*').eq('codigo', tenantCode).maybeSingle();
+      tenant = t;
+    }
+    const area = tenant?.area || 'Área Comercial';
+    const plan = tenant?.plan || 'enterprise';
+    const modulos = getModulesForAreaAndPlan(area, plan);
+    res.json({ success: true, empresa_codigo: tenantCode, area, plan, modulos_activos: modulos });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 });
 

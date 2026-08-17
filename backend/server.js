@@ -2340,9 +2340,6 @@ app.delete('/api/users/:id', authenticate, async (req, res) => {
     return res.status(500).json({ error: error.message || 'Error al eliminar usuario' });
   }
 });
-    return handleServerError(res, error);
-  }
-});
 
 // ═══ SUBIDA DE IMÁGENES (Supabase Storage) ═══
 const UPLOADS_BUCKET = 'uploads';

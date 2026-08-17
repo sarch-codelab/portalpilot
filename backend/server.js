@@ -1901,51 +1901,29 @@ app.get('/api/users', authenticate, async (req, res) => {
     const allUsers = [];
     const seenEmails = new Set();
 
-    // ═══ SUPABASE: Usuarios trabajadores ═══
     if (supabase) {
       try {
-        let query = supabase
+        const { data: supaUsers, error: supaErr } = await supabase
           .from('usuarios')
-          .select('id, empresa_id, nombre, apellido, email, rol_global, activo, created_at, updated_at, foto_perfil_url');
+          .select('*')
+          .order('created_at', { ascending: false });
 
-        if (!isRootUser(req)) {
-          const currentTenant = getTenantCode(req);
-          if (!currentTenant) return res.status(403).json({ error: 'Acceso restringido.' });
-          const { data: emp } = await supabase.from('empresas').select('id').eq('codigo', currentTenant).single();
-          if (emp) query = query.eq('empresa_id', emp.id);
-        } else if (req.query.empresa) {
-          const { data: emp } = await supabase.from('empresas').select('id').eq('codigo', req.query.empresa).single();
-          if (emp) query = query.eq('empresa_id', emp.id);
-        }
-
-        const { data: supaUsers, error: supaErr } = await query.order('created_at', { ascending: false });
         if (supaErr) console.warn('[GET USERS] Supabase error:', supaErr.message);
 
-        // Load empresas for name resolution
-        let empresasMap = {};
-        if (supaUsers && supaUsers.length > 0) {
-          const empIds = [...new Set(supaUsers.map(u => u.empresa_id).filter(Boolean))];
-          if (empIds.length > 0) {
-            const { data: emps } = await supabase.from('empresas').select('id, nombre, codigo');
-            if (emps) emps.forEach(e => { empresasMap[e.id] = e; });
-          }
-        }
-
         (supaUsers || []).filter(u => u.activo !== false).forEach(u => {
-          const emp = empresasMap[u.empresa_id] || {};
           const email = (u.email || '').toLowerCase();
           if (email && !seenEmails.has(email)) {
             seenEmails.add(email);
             allUsers.push({
               id: u.id,
               displayId: u.id,
-              nombre: u.nombre || '',
+              nombre: u.nombre || u.email.split('@')[0],
               apellido: u.apellido || '',
               email: email,
-              rol: u.rol_global || 'user',
-              tenant_code: emp.codigo || '',
-              tenant: emp.nombre || emp.codigo || 'N/A',
-              status: u.activo ? 'active' : 'inactive',
+              rol: u.rol || u.rol_global || 'Owner',
+              tenant_code: u.empresa_codigo || 'ROOT',
+              tenant: u.empresa_codigo || 'Portal Pilot',
+              status: 'active',
               registered: u.created_at || new Date().toISOString(),
               lastActivity: u.updated_at || null,
               avatar: u.foto_perfil_url || null,
@@ -1955,44 +1933,7 @@ app.get('/api/users', authenticate, async (req, res) => {
           }
         });
       } catch (err) {
-        console.warn('[GET USERS] Supabase falló:', err.message);
-      }
-    }
-
-    // ═══ NOCODB: Owners/Admins registrados ═══
-    if (isRootUser(req) || !req.query.empresa) {
-      try {
-        const nocoParams = { limit: 500 };
-        const nocoResp = await nocodbApi.get(USUARIOS_TABLE, { params: nocoParams });
-        const nocoUsers = nocoResp.data?.list || [];
-
-        nocoUsers.forEach(u => {
-          const email = (u.email || u.Email || '').toLowerCase();
-          const rawEstado = (u.estado || u.Estado || 'Activo').toString().trim().toLowerCase();
-          const isActive = !['inactivo', 'inactive', 'suspendido', 'suspended'].includes(rawEstado);
-          if (email && !seenEmails.has(email) && isActive) {
-            seenEmails.add(email);
-            const empresaCodigo = u.empresa_codigo || u.Empresa_Codigo || u.EmpresaCodigo || 'ROOT';
-            allUsers.push({
-              id: u.Id || u.id || u.ID || email,
-              displayId: u.Id || u.id || email,
-              nombre: u.nombre || u.Nombre || '',
-              apellido: u.apellido || u.Apellido || '',
-              email: email,
-              rol: u.rol || u.Rol || u.rol_global || 'Owner',
-              tenant_code: empresaCodigo,
-              tenant: empresaCodigo,
-              status: 'active',
-              registered: u.created_at || u.Created_at || u.fecha_registro || new Date().toISOString(),
-              lastActivity: u.updated_at || null,
-              avatar: u.foto_perfil_url || u.banner_perfil_url || null,
-              notas: '',
-              source: 'nocodb'
-            });
-          }
-        });
-      } catch (err) {
-        console.warn('[GET USERS] NocoDB falló:', err.message);
+        console.warn('[GET USERS] Error consultando usuarios:', err.message);
       }
     }
 

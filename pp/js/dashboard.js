@@ -911,14 +911,36 @@ renderHeatmap();
 // ── Status Pulse ────
 document.querySelectorAll('.status-dot').forEach(d => d.style.animationDelay = Math.random() * 2 + 's');
 
-// ── KPI Simulation ────
-function updateKPIs() {
-  document.getElementById('kpiTenants').textContent = Math.floor(Math.random() * 10) + 20;
-  document.getElementById('kpiUsers').textContent = (Math.floor(Math.random() * 200) + 1100).toLocaleString();
-  document.getElementById('kpiRevenue').textContent = `$${Math.floor(Math.random() * 30) + 170}K`;
-  document.getElementById('kpiHealth').textContent = `${(Math.random() * 5 + 95).toFixed(1)}%`;
+// ── Real KPI Fetching (Supabase) ────
+async function fetchRealKPIs() {
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    const isLocalhost = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+    const API_ROOT = isLocalhost ? 'https://portal-pilot.vercel.app' : '';
+    const headers = { 'Authorization': `Bearer ${token}` };
+
+    const [tRes, uRes] = await Promise.all([
+      fetch(`${API_ROOT}/api/tenants`, { headers }).then(r => r.ok ? r.json() : []),
+      fetch(`${API_ROOT}/api/users`, { headers }).then(r => r.ok ? r.json() : [])
+    ]);
+
+    const tenantCount = Array.isArray(tRes) ? tRes.length : 1;
+    const userCount = Array.isArray(uRes) ? uRes.length : 1;
+
+    const elTenants = document.getElementById('kpiTenants');
+    const elUsers = document.getElementById('kpiUsers');
+    const elHealth = document.getElementById('kpiHealth');
+
+    if (elTenants) elTenants.textContent = tenantCount.toLocaleString();
+    if (elUsers) elUsers.textContent = userCount.toLocaleString();
+    if (elHealth) elHealth.textContent = '100%';
+  } catch (e) {
+    console.warn('[KPI] Error cargando métricas reales:', e);
+  }
 }
-setInterval(updateKPIs, 30000);
+fetchRealKPIs();
+setInterval(fetchRealKPIs, 30000);
 
 // ── Keyboard Shortcuts ────
 document.addEventListener('keydown', e => {

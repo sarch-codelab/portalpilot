@@ -1213,30 +1213,48 @@
             else { input.type = 'password'; icon.classList.replace('fa-eye-slash', 'fa-eye'); }
         };
 
-        // ─── 2FA LOGIC ───
+        // ─── 2FA LOGIC (RFC 6238 COMPATIBLE) ───
         function base32Decode(s) {
-            const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567'; let bits = 0, value = 0; const output = [];
-            for (const c of s.toUpperCase().replace(/=+$/, '')) {
-                const idx = alphabet.indexOf(c); if (idx === -1) continue;
-                value = (value << 5) | idx; bits += 5;
-                if (bits >= 8) { output.push((value >>> (bits - 8)) & 255); bits -= 8; }
+            const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+            let bits = 0, value = 0;
+            const output = [];
+            for (let i = 0; i < s.length; i++) {
+                const c = s[i].toUpperCase();
+                if (c === '=') break;
+                const idx = alphabet.indexOf(c);
+                if (idx === -1) continue;
+                value = (value << 5) | idx;
+                bits += 5;
+                if (bits >= 8) {
+                    output.push((value >>> (bits - 8)) & 255);
+                    bits -= 8;
+                }
             }
             return new Uint8Array(output);
         }
+
         async function computeTOTP(secret, offset = 0) {
-            const epoch = Math.floor(Date.now() / 1000); const counter = Math.floor(epoch / 30) + offset;
-            const buf = new ArrayBuffer(8); const view = new DataView(buf); view.setUint32(4, counter, false);
+            const epoch = Math.floor(Date.now() / 1000);
+            const counter = Math.floor(epoch / 30) + offset;
+            const buf = new ArrayBuffer(8);
+            const view = new DataView(buf);
+            const high = Math.floor(counter / 0x100000000);
+            const low = counter & 0xffffffff;
+            view.setUint32(0, high, false);
+            view.setUint32(4, low, false);
             const keyData = base32Decode(secret);
             const cryptoKey = await crypto.subtle.importKey('raw', keyData, { name: 'HMAC', hash: 'SHA-1' }, false, ['sign']);
-            const sig = await crypto.subtle.sign('HMAC', cryptoKey, buf); const arr = new Uint8Array(sig);
+            const sig = await crypto.subtle.sign('HMAC', cryptoKey, buf);
+            const arr = new Uint8Array(sig);
             const offset2 = arr[arr.length - 1] & 0x0f;
-            const code = ((arr[offset2] & 0x7f) << 24 | (arr[offset2 + 1] & 0xff) << 16 | (arr[offset2 + 2] & 0xff) << 8 | (arr[offset2 + 3] & 0xff)) % 1000000;
+            const code = (((arr[offset2] & 0x7f) << 24) | ((arr[offset2 + 1] & 0xff) << 16) | ((arr[offset2 + 2] & 0xff) << 8) | (arr[offset2 + 3] & 0xff)) % 1000000;
             return code.toString().padStart(6, '0');
         }
 
         function generate2FASetup() {
-            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567'; let secret = '';
-            for (let i = 0; i < 20; i++) secret += chars[Math.floor(Math.random() * chars.length)];
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+            let secret = '';
+            for (let i = 0; i < 16; i++) secret += chars[Math.floor(Math.random() * chars.length)];
             twoFASecret = secret;
             document.getElementById('secretKey').textContent = secret.match(/.{1,4}/g).join(' ');
             const email = document.getElementById('regEmail').value;
@@ -1266,10 +1284,11 @@
         function getOTPValue(groupId) { return Array.from(document.querySelectorAll(`#${groupId} .otp-input`)).map(i => i.value).join(''); }
 
         window.verify2FA = async function () {
-            const code = getOTPValue('otpGroup');
+            const code = getOTPValue('otpGroup').trim();
             if (code.length !== 6) { showMessage('Ingresa el código completo de 6 dígitos', 'error'); return; }
-            const [t0, t1, t_1] = await Promise.all([computeTOTP(twoFASecret, 0), computeTOTP(twoFASecret, 1), computeTOTP(twoFASecret, -1)]);
-            if (code !== t0 && code !== t1 && code !== t_1) { showMessage('Código incorrecto', 'error'); return; }
+            const offsets = [0, -1, 1, -2, 2];
+            const validCodes = await Promise.all(offsets.map(off => computeTOTP(twoFASecret, off)));
+            if (!validCodes.includes(code)) { showMessage('Código 2FA incorrecto. Verifica la hora de tu teléfono.', 'error'); return; }
             showMessage('✓ 2FA verificado correctamente', 'success');
             document.getElementById('backupCodesGrid').innerHTML = backupCodes.map(c => `<div class="backup-code">${c}</div>`).join('');
             document.getElementById('twofa-phase-scan').style.display = 'none';

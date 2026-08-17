@@ -86,6 +86,14 @@
       "dest": "/login.html"
     },
     {
+      "src": "/registro.html",
+      "dest": "/registrov2.html"
+    },
+    {
+      "src": "/registro",
+      "dest": "/registrov2.html"
+    },
+    {
       "src": "/tenants",
       "dest": "/pp/tenants.html"
     },

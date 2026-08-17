@@ -1108,20 +1108,23 @@ app.post('/api/registro', async (req, res) => {
       const salt = await bcrypt.genSalt(10);
       const passwordHash = await bcrypt.hash(password, salt);
 
+      const userUuid = crypto.randomUUID();
       const { data: newUser, error: userErr } = await supabase.from('usuarios').insert({
+        id: userUuid,
         email: emailNorm,
         password_hash: passwordHash,
         password: passwordHash,
         nombre: `${usuarioNombre} ${usuarioApellido}`.trim(),
+        apellido: usuarioApellido || '',
         rol: 'admin',
         empresa_codigo: empresaCodigo,
         estado: 'activo',
         activo: true
-      }).select().single();
+      });
 
       if (userErr) {
-        console.error('[REGISTRO] Error insertando usuario en Supabase:', userErr.message);
-        throw new Error(userErr.message);
+        console.error('[REGISTRO] Error insertando usuario en Supabase:', JSON.stringify(userErr));
+        return res.status(400).json({ error: userErr.message || userErr.details || 'Error al crear usuario en base de datos' });
       }
     }
 
@@ -1132,6 +1135,7 @@ app.post('/api/registro', async (req, res) => {
       plan: plan || null
     });
   } catch (error) {
+    console.error('[REGISTRO EXCEPCION]:', error.stack || error.message);
     return res.status(500).json({ error: error.message || 'No se pudo completar el registro en este momento.' });
   }
 });

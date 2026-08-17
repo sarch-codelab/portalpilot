@@ -1,14 +1,16 @@
 -- ============================================================================
--- SCRIPT UNIFICADO DE MIGRACIÓN SUPABASE PRODUCCIÓN: PORTAL PILOT (BULLETPROOF V2)
--- 100% Idempotente: No requiere restricciones UNIQUE previas para insersiones.
+-- SCRIPT UNIFICADO DE MIGRACIÓN SUPABASE PRODUCCIÓN: PORTAL PILOT (BULLETPROOF V3)
+-- Solución 100% Resiliente: Asigna ID explícito gen_random_uuid() a todos los inserts
+-- y establece DEFAULT en columnas ID de las tablas preexistentes.
 -- ============================================================================
 
 -- 1. EXTENSIONES NECESARIAS
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
 -- 2. TABLA DE EMPRESAS / TENANTS
 CREATE TABLE IF NOT EXISTS public.tenants (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     codigo VARCHAR(50),
     nombre_empresa VARCHAR(150),
     rtn VARCHAR(20),
@@ -23,7 +25,8 @@ CREATE TABLE IF NOT EXISTS public.tenants (
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Asegurar columnas e índices
+-- Asegurar columnas e id default
+ALTER TABLE public.tenants ALTER COLUMN id SET DEFAULT gen_random_uuid();
 ALTER TABLE public.tenants ADD COLUMN IF NOT EXISTS codigo VARCHAR(50);
 ALTER TABLE public.tenants ADD COLUMN IF NOT EXISTS nombre_empresa VARCHAR(150);
 ALTER TABLE public.tenants ADD COLUMN IF NOT EXISTS rtn VARCHAR(20);
@@ -37,14 +40,14 @@ ALTER TABLE public.tenants ADD COLUMN IF NOT EXISTS logo_url TEXT;
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_tenants_codigo_unique ON public.tenants(codigo);
 
--- Inserción de Tenant ROOT predeterminado
-INSERT INTO public.tenants (codigo, nombre_empresa, rtn, plan, estado)
-SELECT 'ROOT', 'Portal Pilot System Admin', '00000000000000', 'enterprise', 'activo'
+-- Inserción de Tenant ROOT predeterminado con ID explícito
+INSERT INTO public.tenants (id, codigo, nombre_empresa, rtn, plan, estado)
+SELECT gen_random_uuid(), 'ROOT', 'Portal Pilot System Admin', '00000000000000', 'enterprise', 'activo'
 WHERE NOT EXISTS (SELECT 1 FROM public.tenants WHERE codigo = 'ROOT');
 
 -- 3. TABLA DE USUARIOS DEL PORTAL Y APP
 CREATE TABLE IF NOT EXISTS public.usuarios (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     email VARCHAR(120),
     password_hash TEXT,
     password TEXT,
@@ -63,7 +66,8 @@ CREATE TABLE IF NOT EXISTS public.usuarios (
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Asegurar columnas e índices
+-- Asegurar columnas e id default
+ALTER TABLE public.usuarios ALTER COLUMN id SET DEFAULT gen_random_uuid();
 ALTER TABLE public.usuarios ADD COLUMN IF NOT EXISTS email VARCHAR(120);
 ALTER TABLE public.usuarios ADD COLUMN IF NOT EXISTS password_hash TEXT;
 ALTER TABLE public.usuarios ADD COLUMN IF NOT EXISTS password TEXT;
@@ -81,9 +85,9 @@ ALTER TABLE public.usuarios ADD COLUMN IF NOT EXISTS ultimo_acceso TIMESTAMPTZ;
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_usuarios_email_unique ON public.usuarios(email);
 
--- Inserción de Usuario ROOT de Emergencia
-INSERT INTO public.usuarios (email, password_hash, password, nombre, rol, empresa_codigo, estado, activo)
-SELECT 'admin@portalpilot.com', '$2a$10$7vN5tDkI46c.r.O0sL7/vOq22gZ6zG98t8vX09Z9/5vG5vG5vG5vG', 'admin123', 'Super Admin Portal Pilot', 'root', 'ROOT', 'activo', true
+-- Inserción de Usuario ROOT de Emergencia con ID explícito
+INSERT INTO public.usuarios (id, email, password_hash, password, nombre, rol, empresa_codigo, estado, activo)
+SELECT gen_random_uuid(), 'admin@portalpilot.com', '$2a$10$7vN5tDkI46c.r.O0sL7/vOq22gZ6zG98t8vX09Z9/5vG5vG5vG5vG', 'admin123', 'Super Admin Portal Pilot', 'root', 'ROOT', 'activo', true
 WHERE NOT EXISTS (SELECT 1 FROM public.usuarios WHERE email = 'admin@portalpilot.com');
 
 -- Actualizar credenciales si el usuario admin ya existía
@@ -95,7 +99,7 @@ WHERE email = 'admin@portalpilot.com';
 
 -- 4. TABLA DE NOTIFICACIONES
 CREATE TABLE IF NOT EXISTS public.notificaciones (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     empresa_codigo VARCHAR(50) DEFAULT 'ROOT',
     usuario_id UUID,
     titulo VARCHAR(150) NOT NULL,
@@ -107,6 +111,7 @@ CREATE TABLE IF NOT EXISTS public.notificaciones (
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+ALTER TABLE public.notificaciones ALTER COLUMN id SET DEFAULT gen_random_uuid();
 ALTER TABLE public.notificaciones ADD COLUMN IF NOT EXISTS empresa_codigo VARCHAR(50) DEFAULT 'ROOT';
 ALTER TABLE public.notificaciones ADD COLUMN IF NOT EXISTS usuario_id UUID;
 ALTER TABLE public.notificaciones ADD COLUMN IF NOT EXISTS titulo VARCHAR(150);
@@ -116,13 +121,13 @@ ALTER TABLE public.notificaciones ADD COLUMN IF NOT EXISTS prioridad VARCHAR(20)
 ALTER TABLE public.notificaciones ADD COLUMN IF NOT EXISTS leida BOOLEAN DEFAULT FALSE;
 ALTER TABLE public.notificaciones ADD COLUMN IF NOT EXISTS link TEXT;
 
-INSERT INTO public.notificaciones (empresa_codigo, titulo, mensaje, tipo, prioridad)
-SELECT 'ROOT', 'Sistema Portal Pilot Activo', 'Bienvenido a Portal Pilot. El servidor Supabase está 100% operativo.', 'success', 'alta'
+INSERT INTO public.notificaciones (id, empresa_codigo, titulo, mensaje, tipo, prioridad)
+SELECT gen_random_uuid(), 'ROOT', 'Sistema Portal Pilot Activo', 'Bienvenido a Portal Pilot. El servidor Supabase está 100% operativo.', 'success', 'alta'
 WHERE NOT EXISTS (SELECT 1 FROM public.notificaciones WHERE titulo = 'Sistema Portal Pilot Activo');
 
 -- 5. TABLA DE AUDITORÍA Y LOGS
 CREATE TABLE IF NOT EXISTS public.auditoria_logs (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     empresa_codigo VARCHAR(50) DEFAULT 'ROOT',
     usuario_email VARCHAR(120),
     accion VARCHAR(100) NOT NULL,
@@ -131,6 +136,8 @@ CREATE TABLE IF NOT EXISTS public.auditoria_logs (
     ip_origen VARCHAR(45),
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+ALTER TABLE public.auditoria_logs ALTER COLUMN id SET DEFAULT gen_random_uuid();
 
 -- 6. TABLA DE CONFIGURACIONES GLOBALES
 CREATE TABLE IF NOT EXISTS public.configuraciones_globales (
@@ -219,4 +226,4 @@ CREATE POLICY "public_storage_select" ON storage.objects FOR SELECT USING (bucke
 DROP POLICY IF EXISTS "public_storage_insert" ON storage.objects;
 CREATE POLICY "public_storage_insert" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'portal-pilot-assets');
 
--- Fin del script v2
+-- Fin del script v3

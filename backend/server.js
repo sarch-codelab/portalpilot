@@ -1183,103 +1183,79 @@ app.post('/api/enviar-codigo-verificacion', async (req, res) => {
 
 app.post('/api/login', loginLimiter, async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password } = req.body || {};
     if (!email || !password) {
       return res.status(400).json({ error: 'Por favor, proporciona email y contraseña.' });
     }
 
-        console.warn('[LOGIN] Supabase Auth falló:', err.message);
+    const emailNorm = String(email).trim().toLowerCase();
+
+    let userRow = null;
+
+    if (supabase) {
+      const { data: found, error: findErr } = await supabase
+        .from('usuarios')
+        .select('*')
+        .eq('email', emailNorm)
+        .maybeSingle();
+
+      if (findErr) {
+        console.warn('[LOGIN] Error buscando usuario en Supabase:', findErr.message);
+      }
+      if (found) {
+        userRow = found;
       }
     }
 
-    // ═══ PASO 3: Si se encontró en NocoDB, procesar respuesta ═══
-    if (nocodbUser) {
-      const loginAccounts = await Promise.all([nocodbUser].map(async usuario => {
-        const rawEmpresa = usuario.empresa_codigo || usuario.Empresa_Codigo || usuario.EmpresaCodigo || usuario.empresaCodigo || 'ROOT';
-        const rawRole = usuario.rol || usuario.Rol || usuario.role || usuario.Role || '';
-        const rawStatus = usuario.status || usuario.Status || usuario.estado || usuario.Estado || 'active';
-        const rawEmail = usuario.email || usuario.Email || usuario.EMAIL || '';
-        const rawName = usuario.nombre || usuario.Nombre || `${usuario.firstName || ''} ${usuario.lastName || ''}`.trim();
-
-        let normalizedEmpresa = rawEmpresa.toString().trim();
-        const userRole = rawRole.toString().trim().toLowerCase();
-        const userStatus = normalizeStatus(rawStatus);
-
-        if (userRole.includes('root') || userRole.includes('superadmin') || normalizedEmpresa.toUpperCase() === 'ROOT') {
-          normalizedEmpresa = 'ROOT';
-        }
-        normalizedEmpresa = normalizedEmpresa.toString().trim().toUpperCase() || 'ROOT';
-
-        let empresaNombre = 'Portal Pilot';
-        if (normalizedEmpresa !== 'ROOT') {
-          try {
-            const tenantInfo = await findTenantByIdentifier(normalizedEmpresa);
-            if (tenantInfo) {
-              empresaNombre = tenantInfo.nombre || tenantInfo.Nombre || normalizedEmpresa;
-            } else {
-              empresaNombre = normalizedEmpresa;
-            }
-          } catch (e) {
-            console.warn('[LOGIN] Error al buscar empresa:', e.message);
-            empresaNombre = normalizedEmpresa;
-          }
-        }
-
-        const accountToken = jwt.sign(
-          {
-            sub: usuario.id || usuario.ID || usuario.Id || usuario._id,
-            rol: rawRole,
-            empresa_codigo: normalizedEmpresa,
-            empresa_nombre: empresaNombre
-          },
-          JWT_SECRET,
-          { expiresIn: '2h' }
-        );
-
-        return {
-          id: usuario.id || usuario.ID || usuario.Id || usuario._id,
-          nombre: rawName || rawEmail,
-          apellido: usuario.apellido || usuario.Apellido || '',
-          email: rawEmail,
-          rol: rawRole,
-          empresa_codigo: normalizedEmpresa,
-          empresa_nombre: empresaNombre,
-          tenant: normalizedEmpresa,
-          status: userStatus,
-          foto_perfil_url: usuario.foto_perfil_url || usuario.Foto_Perfil_Url || null,
-          banner_perfil_url: usuario.banner_perfil_url || usuario.Banner_Perfil_Url || null,
-          token: accountToken
-        };
-      }));
-
-      const hasPendingAccount = loginAccounts.some(acc => acc.status === 'pending');
-      const pendingAccount = loginAccounts.find(acc => acc.status === 'pending');
-      const rootAccount = loginAccounts.find(acc =>
-        (acc.empresa_codigo || '').toString().trim().toUpperCase() === 'ROOT' ||
-        (acc.rol || '').toString().toLowerCase().includes('root')
-      );
-      const selectedAccount = pendingAccount || rootAccount || loginAccounts[0];
-
-      if (!hasPendingAccount) {
-        await enviarAlertaNuevoAcceso(selectedAccount.email, req, true);
-      }
-      await registrarAuditoria(selectedAccount.empresa_codigo, 'Login exitoso', `Inicio de sesión correcto de ${selectedAccount.nombre}`, 'login', selectedAccount.nombre, req);
-
-      return res.status(200).json({
-        message: 'Login exitoso',
-        token: selectedAccount.token,
-        user: selectedAccount,
-        accounts: loginAccounts
-      });
+    if (!userRow) {
+      return res.status(401).json({ error: 'Credenciales inválidas. El usuario no está registrado en el sistema.' });
     }
 
-    // ═══ PASO 4: No se encontró en ninguna base ═══
-    await enviarAlertaNuevoAcceso(emailNorm, req, false);
-    return res.status(401).json({ error: 'Credenciales inválidas (usuario no encontrado).' });
+    let isMatch = false;
+    const storedHash = userRow.password_hash || userRow.password;
+    if (storedHash) {
+      if (storedHash.startsWith('$2')) {
+        isMatch = await bcrypt.compare(password, storedHash);
+      } else {
+        isMatch = (password === storedHash);
+      }
+    }
 
+    if (!isMatch) {
+      return res.status(401).json({ error: 'Contraseña incorrecta. Por favor, verifica tus datos.' });
+    }
+
+    const jwtSecret = JWT_SECRET || process.env.JWT_SECRET || 'portalpilot_production_jwt_secret_key_2026_secure';
+    const accountToken = jwt.sign(
+      {
+        sub: userRow.id,
+        email: userRow.email,
+        rol: userRow.rol || 'admin',
+        empresa_codigo: userRow.empresa_codigo || 'ROOT'
+      },
+      jwtSecret,
+      { expiresIn: '30d' }
+    );
+
+    return res.status(200).json({
+      message: 'Login exitoso',
+      token: accountToken,
+      user: {
+        id: userRow.id,
+        nombre: userRow.nombre || '',
+        apellido: userRow.apellido || '',
+        email: userRow.email,
+        rol: userRow.rol || 'admin',
+        empresa_codigo: userRow.empresa_codigo || 'ROOT',
+        tenant: userRow.empresa_codigo || 'ROOT',
+        status: userRow.estado || 'activo',
+        foto_perfil_url: userRow.avatar_url || userRow.foto_perfil_url || null,
+        token: accountToken
+      }
+    });
   } catch (error) {
-    console.error('[LOGIN] Error en proceso de login:', error.stack || error.message);
-    return res.status(401).json({ error: error.message || 'No se pudo validar el inicio de sesión.' });
+    console.error('[LOGIN] Error general en /api/login:', error.stack || error.message);
+    return res.status(500).json({ error: 'Error interno en el servidor de autenticación' });
   }
 });
 

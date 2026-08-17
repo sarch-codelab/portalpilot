@@ -2526,12 +2526,21 @@
           puede ofrecer.</p>
 
         <div class="download-btns" id="download">
+          <a href="https://github.com/sarch-codelab/portalpilot-app/releases/download/v1.0.0/portal_pilot_app.apk"
+            class="store-btn" style="border-color: #3ddc84;">
+            <i class="fab fa-android" style="color:#3ddc84; font-size: 24px;"></i>
+            <div class="store-text">
+              <small>Descargar APK para</small>
+              <strong>Android (Teléfono)</strong>
+              <span class="version">Android 8.0+ · APK Directo</span>
+            </div>
+          </a>
           <a href="https://github.com/sarch-codelab/portalpilot/releases/download/v1.0.0/portal_pilot_setup.exe"
-            class="store-btn">
-            <i class="fab fa-windows" style="color:#0078d4;"></i>
+            class="store-btn secondary">
+            <i class="fab fa-windows" style="color:#0078d4; font-size: 24px;"></i>
             <div class="store-text">
               <small>Descargar para</small>
-              <strong>Windows</strong>
+              <strong>Windows (Escritorio)</strong>
               <span class="version">Windows 10/11 · 64-bit</span>
             </div>
           </a>
@@ -2541,14 +2550,6 @@
               <small>Descargar para</small>
               <strong>macOS</strong>
               <span class="version">macOS 12+ · Intel & M1/M2</span>
-            </div>
-          </a>
-          <a href="#" class="store-btn secondary">
-            <i class="fab fa-linux" style="color:#fbb824;"></i>
-            <div class="store-text">
-              <small>Descargar para</small>
-              <strong>Linux</strong>
-              <span class="version">Ubuntu 20.04+ · AppImage</span>
             </div>
           </a>
         </div>
@@ -2723,8 +2724,11 @@
       <!-- Platform Tabs -->
       <div style="text-align:center;">
         <div class="platform-tabs">
-          <button class="platform-tab active" onclick="switchPlatform('windows', this)">
-            <i class="fab fa-windows win-icon" style="color:#0078d4;"></i> Windows
+          <button class="platform-tab active" onclick="switchPlatform('android', this)">
+            <i class="fab fa-android android-icon" style="color:#3ddc84;"></i> Android (APK Móvil)
+          </button>
+          <button class="platform-tab" onclick="switchPlatform('windows', this)">
+            <i class="fab fa-windows win-icon" style="color:#0078d4;"></i> Windows (Escritorio)
           </button>
           <button class="platform-tab" onclick="switchPlatform('macos', this)">
             <i class="fab fa-apple"></i> macOS
@@ -2735,8 +2739,80 @@
         </div>
       </div>
 
+      <!-- ANDROID / MOBILE CONTENT -->
+      <div class="platform-content active" id="platform-android">
+        <div class="platform-info">
+          <div class="platform-info-item">
+            <i class="fab fa-android" style="color:#3ddc84; font-size: 16px;"></i>
+            <span>Dispositivos: <strong>Android (Teléfonos y Tablets)</strong></span>
+          </div>
+          <div class="platform-info-divider"></div>
+          <div class="platform-info-item">
+            <i class="fas fa-barcode"></i>
+            <span>POS Cámara: <strong>Escáner de Código de Barras</strong></span>
+          </div>
+          <div class="platform-info-divider"></div>
+          <div class="platform-info-item">
+            <i class="fas fa-wifi"></i>
+            <span>Conexión: <strong>Offline-first (SQLite Local)</strong></span>
+          </div>
+        </div>
+
+        <div class="apps-grid">
+          <!-- Android APK Direct Download Card -->
+          <div class="app-card" style="border-color: rgba(61, 220, 132, 0.4);">
+            <div class="app-card-header">
+              <div class="app-logo workspace" style="background: rgba(61, 220, 132, 0.15);">
+                <img src="img/iconos/Portal%20Pilot.png" alt="Portal Pilot Mobile App">
+              </div>
+              <div class="app-title-wrap">
+                <div class="app-title">Portal Pilot App Móvil</div>
+                <div class="app-version-badge" style="color: #3ddc84; background: rgba(61, 220, 132, 0.1);"><i class="fas fa-circle" style="font-size:5px;"></i> v1.0.0 · APK Oficial</div>
+              </div>
+            </div>
+            <p class="app-description">La aplicación móvil para teléfonos Android. Incluye punto de venta POS con escáner de códigos de barras mediante cámara, facturación electrónica SAR, inventario y sincronización offline con SQLite.</p>
+
+            <div class="app-details">
+              <div class="app-detail">
+                <div class="label">Versión</div>
+                <div class="value">1.0.0</div>
+              </div>
+              <div class="app-detail">
+                <div class="label">Tamaño</div>
+                <div class="value">45 MB</div>
+              </div>
+              <div class="app-detail">
+                <div class="label">Formato</div>
+                <div class="value">.apk (Android)</div>
+              </div>
+              <div class="app-detail">
+                <div class="label">Lanzamiento</div>
+                <div class="value">Agosto 2026</div>
+              </div>
+            </div>
+
+            <div class="app-features-list">
+              <div class="app-feature-item"><i class="fas fa-check"></i> Escáner de código de barras con cámara</div>
+              <div class="app-feature-item"><i class="fas fa-check"></i> POS rápido para cobranza móvil</div>
+              <div class="app-feature-item"><i class="fas fa-check"></i> Facturación electrónica SAR (Honduras)</div>
+              <div class="app-feature-item"><i class="fas fa-check"></i> Funcionamiento 100% Offline (SQLite)</div>
+            </div>
+
+            <a href="https://github.com/sarch-codelab/portalpilot-app/releases/download/v1.0.0/portal_pilot_app.apk"
+              class="app-download-btn" style="background: #3ddc84; color: #000; font-weight: 700;">
+              <i class="fas fa-download"></i> Descargar APK Directo (.apk)
+            </a>
+
+            <div class="app-sha">
+              <i class="fas fa-shield-alt"></i>
+              <code>Compilación oficial firmada para Android</code>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- WINDOWS CONTENT -->
-      <div class="platform-content active" id="platform-windows">
+      <div class="platform-content" id="platform-windows">
         <div class="platform-info">
           <div class="platform-info-item">
             <i class="fas fa-microchip"></i>

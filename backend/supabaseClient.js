@@ -36,7 +36,13 @@ function from(table) {
   let _onConflict = null;
 
   const builder = {
-    select(cols) { _op = 'select'; _select = cols || '*'; return builder; },
+    select(cols) {
+      if (!_body && _op === 'select') {
+        _op = 'select';
+      }
+      _select = cols || '*';
+      return builder;
+    },
     eq(col, val) { _filters.push(`${col}=eq.${encodeURIComponent(val)}`); return builder; },
     neq(col, val) { _filters.push(`${col}=neq.${encodeURIComponent(val)}`); return builder; },
     in(col, vals) { _filters.push(`${col}=in.(${vals.map(v => encodeURIComponent(v)).join(',')})`); return builder; },
@@ -80,20 +86,28 @@ function from(table) {
             return resolve({ data: rows, error: null });
 
           } else if (_op === 'insert') {
+            headers.Prefer = 'return=representation';
             resp = await axios.post(`${restBase}/${table}`, _body, { headers });
-            return resolve({ data: resp.data, error: null });
+            let rows = resp.data || [];
+            let result = (_single || _maybeSingle) ? (rows[0] || rows) : rows;
+            return resolve({ data: result, error: null });
 
           } else if (_op === 'upsert') {
             if (_onConflict) headers.Prefer = `return=representation,resolution=merge-duplicates,on_conflict=${_onConflict}`;
             else headers.Prefer = 'return=representation,resolution=merge-duplicates';
             resp = await axios.post(`${restBase}/${table}`, _body, { headers });
-            return resolve({ data: resp.data, error: null });
+            let rows = resp.data || [];
+            let result = (_single || _maybeSingle) ? (rows[0] || rows) : rows;
+            return resolve({ data: result, error: null });
 
           } else if (_op === 'update') {
+            headers.Prefer = 'return=representation';
             const params = new URLSearchParams();
             _filters.forEach(f => params.append('and', `(${f})`));
             resp = await axios.patch(`${restBase}/${table}?${params.toString()}`, _body, { headers });
-            return resolve({ data: resp.data, error: null });
+            let rows = resp.data || [];
+            let result = (_single || _maybeSingle) ? (rows[0] || rows) : rows;
+            return resolve({ data: result, error: null });
 
           } else if (_op === 'delete') {
             const params = new URLSearchParams();

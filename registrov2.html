@@ -1086,32 +1086,62 @@
         // Almacén temporal de imágenes para upload
         const pendingUploads = { 'company-banner': null, 'company-logo': null, 'profile-banner': null, 'profile-pic': null };
 
-        window.previewImage = function(input, previewId, zoneId) {
-            if (input.files && input.files[0]) {
+        function compressImage(file, maxDimension = 500, quality = 0.65) {
+            return new Promise((resolve) => {
                 const reader = new FileReader();
-                reader.onload = function(e) {
-                    const zone = document.getElementById(zoneId);
-                    if (!zone) return;
-                    const existingImg = zone.querySelector('img.preview-img');
-                    if (existingImg) {
-                        existingImg.src = e.target.result;
-                    } else {
-                        const img = document.createElement('img');
-                        img.src = e.target.result;
-                        img.className = 'preview-img';
-                        img.style.cssText = 'width:100%;height:100%;object-fit:cover;position:absolute;inset:0;border-radius:inherit;transition:transform 0.1s ease;';
-                        zone.appendChild(img);
-                    }
-                    zone.classList.add('has-image');
-                    if (zoneId === 'zone-company-banner') {
-                        document.getElementById('bannerCompanyEditor').classList.add('visible');
-                    } else if (zoneId === 'zone-profile-banner') {
-                        document.getElementById('bannerProfileEditor').classList.add('visible');
-                    }
-                    const uploadKey = zoneId.replace('zone-', '').replace(/-/g, '_');
-                    pendingUploads[uploadKey] = e.target.result;
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        let width = img.width;
+                        let height = img.height;
+                        if (width > maxDimension || height > maxDimension) {
+                            if (width > height) {
+                                height = Math.round((height * maxDimension) / width);
+                                width = maxDimension;
+                            } else {
+                                width = Math.round((width * maxDimension) / height);
+                                height = maxDimension;
+                            }
+                        }
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+                        resolve(canvas.toDataURL('image/jpeg', quality));
+                    };
+                    img.onerror = () => resolve(null);
+                    img.src = e.target.result;
                 };
-                reader.readAsDataURL(input.files[0]);
+                reader.onerror = () => resolve(null);
+                reader.readAsDataURL(file);
+            });
+        }
+
+        window.previewImage = async function(input, previewId, zoneId) {
+            if (input.files && input.files[0]) {
+                const compressedBase64 = await compressImage(input.files[0], 500, 0.65);
+                if (!compressedBase64) return;
+                const zone = document.getElementById(zoneId);
+                if (!zone) return;
+                const existingImg = zone.querySelector('img.preview-img');
+                if (existingImg) {
+                    existingImg.src = compressedBase64;
+                } else {
+                    const img = document.createElement('img');
+                    img.src = compressedBase64;
+                    img.className = 'preview-img';
+                    img.style.cssText = 'width:100%;height:100%;object-fit:cover;position:absolute;inset:0;border-radius:inherit;transition:transform 0.1s ease;';
+                    zone.appendChild(img);
+                }
+                zone.classList.add('has-image');
+                if (zoneId === 'zone-company-banner') {
+                    document.getElementById('bannerCompanyEditor')?.classList.add('visible');
+                } else if (zoneId === 'zone-profile-banner') {
+                    document.getElementById('bannerProfileEditor')?.classList.add('visible');
+                }
+                const uploadKey = zoneId.replace('zone-', '').replace(/-/g, '_');
+                pendingUploads[uploadKey] = compressedBase64;
             }
         };
 

@@ -4,18 +4,18 @@
     <meta charset="UTF-8">
     <link rel="icon" type="image/png" href="img/iconos/Portal%20Pilot.png">
     <meta name="description" content="Portal Pilot: ERP comercial integral para pulperías, supermercados, distribuidoras y cadenas retail. Facturación electrónica SAR, inventario multi-bodega, POS y más con IA integrada.">
-    <meta property="og:title" content="Portal Pilot — Gestión Empresarial Inteligente">
+    <meta property="og:title" content="Portal Pilot — Activación de Plan Comercial">
     <meta property="og:description" content="Portal Pilot: ERP comercial integral para pulperías, supermercados, distribuidoras y cadenas retail. Facturación electrónica SAR, inventario multi-bodega, POS y más con IA integrada.">
     <meta property="og:image" content="https://portal-pilot.vercel.app/img/iconos/Portal%20Pilot.png">
     <meta property="og:url" content="https://portal-pilot.vercel.app/pay_plan.html">
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="Portal Pilot">
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="Portal Pilot — Gestión Empresarial Inteligente">
+    <meta name="twitter:title" content="Portal Pilot — Activación de Plan Comercial">
     <meta name="twitter:description" content="Portal Pilot: ERP comercial integral para pulperías, supermercados, distribuidoras y cadenas retail. Facturación electrónica SAR, inventario multi-bodega, POS y más con IA integrada.">
     <meta name="twitter:image" content="https://portal-pilot.vercel.app/img/iconos/Portal%20Pilot.png">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Activar Plan — Portal Pilot</title>
+    <title>Activar Plan Comercial — Portal Pilot</title>
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <style>
@@ -34,13 +34,13 @@
             font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
             background: var(--bg); color: var(--text); overflow-x: hidden; line-height: 1.6;
             -webkit-font-smoothing: antialiased; min-height: 100vh;
-            background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(139, 92, 246, 0.08) 0%, transparent 50%), var(--bg);
+            background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(139, 92, 246, 0.10) 0%, transparent 50%), var(--bg);
         }
 
         .container { max-width: 800px; margin: 0 auto; padding: 40px 24px 80px; }
 
         .checkout-header {
-            display: flex; align-items: center; justify-content: space-between; margin-bottom: 40px;
+            display: flex; align-items: center; justify-content: space-between; margin-bottom: 36px;
             padding-bottom: 24px; border-bottom: 1px solid var(--border);
         }
         .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; }
@@ -51,7 +51,7 @@
         .brand-name { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; color: var(--white); letter-spacing: 1.5px; }
 
         .plan-card {
-            background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 32px; margin-bottom: 24px;
+            background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 28px; margin-bottom: 28px;
         }
         .plan-card h2 {
             font-family: 'Syne', sans-serif; font-size: 24px; font-weight: 700; color: var(--white); margin-bottom: 4px;
@@ -63,41 +63,42 @@
         .plan-billing { font-size: 13px; color: var(--text-muted); margin-bottom: 20px; }
 
         .plan-features { list-style: none; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .plan-features li {
-            font-size: 13px; color: var(--text-dim); display: flex; align-items: center; gap: 8px;
-        }
+        .plan-features li { font-size: 13px; color: var(--text-dim); display: flex; align-items: center; gap: 8px; }
         .plan-features li i { color: var(--green); font-size: 12px; flex-shrink: 0; }
 
-        .company-id-box {
-            background: var(--bg-soft); border: 1px dashed var(--border-strong); border-radius: var(--radius);
-            padding: 16px; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between;
-        }
-        .company-id-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); font-weight: 600; margin-bottom: 4px; }
-        .company-id-value {
-            font-family: 'JetBrains Mono', monospace; font-size: 16px; font-weight: 600; color: var(--white); letter-spacing: 1px;
-        }
-        .copy-id-btn {
-            background: var(--surface-2); border: 1px solid var(--border); color: var(--text-dim);
-            width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center;
-            cursor: pointer; transition: all 0.2s;
-        }
-        .copy-id-btn:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
-
-        .bank-card {
+        /* TABS MÉTODOS DE PAGO */
+        .payment-methods-card {
             background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 32px; margin-bottom: 24px;
         }
-        .bank-card h3 {
+        .payment-methods-card h3 {
             font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 700; color: var(--white); margin-bottom: 20px;
             display: flex; align-items: center; gap: 10px;
         }
-        .bank-card h3 i { color: var(--accent-soft); }
+        .payment-methods-card h3 i { color: var(--accent-soft); }
+
+        .payment-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px; }
+        .payment-tab {
+            background: var(--surface-2); border: 1.5px solid var(--border); border-radius: var(--radius);
+            padding: 16px; text-align: center; cursor: pointer; transition: all 0.25s ease;
+            display: flex; align-items: center; justify-content: center; gap: 10px; font-weight: 600; font-size: 14px; color: var(--text-dim);
+        }
+        .payment-tab:hover { border-color: var(--border-strong); color: var(--white); }
+        .payment-tab.active {
+            border-color: var(--accent); background: rgba(139, 92, 246, 0.12); color: var(--white);
+            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15);
+        }
+        .payment-tab i { font-size: 18px; color: var(--accent-soft); }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
 
         .info-box {
             background: rgba(139, 92, 246, 0.08); border: 1px solid rgba(139, 92, 246, 0.2);
             border-radius: var(--radius); padding: 16px; margin-bottom: 20px; display: flex; gap: 12px;
         }
         .info-box i { color: var(--accent-soft); margin-top: 2px; flex-shrink: 0; }
-        .info-box p { font-size: 13px; color: var(--text-dim); line-height: 1.6; }
+        .info-box p { font-size: 13px; color: var(--text-dim); line-height: 1.6; margin: 0; }
         .info-box strong { color: var(--white); }
 
         .bank-info-box {
@@ -109,6 +110,7 @@
         .bank-row .value { color: var(--white); font-family: 'JetBrains Mono', monospace; font-weight: 500; }
 
         .form-group { margin-bottom: 20px; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
         .form-label {
             display: block; font-size: 11px; font-weight: 600; color: var(--text-dim);
             text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;
@@ -129,6 +131,13 @@
         .btn-submit:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(139, 92, 246, 0.35); }
         .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
 
+        .toast-msg {
+            display: none; padding: 14px 18px; border-radius: var(--radius); font-size: 13px; font-weight: 600;
+            margin-bottom: 20px; align-items: center; gap: 10px; animation: fadeIn 0.3s ease;
+        }
+        .toast-msg.success { display: flex; background: rgba(48, 209, 88, 0.12); border: 1px solid rgba(48, 209, 88, 0.3); color: var(--green); }
+        .toast-msg.error { display: flex; background: rgba(255, 69, 58, 0.12); border: 1px solid rgba(255, 69, 58, 0.3); color: var(--red); }
+
         .secure-footer {
             display: flex; align-items: center; justify-content: center; gap: 16px; margin-top: 24px;
             padding-top: 20px; border-top: 1px solid var(--border);
@@ -138,62 +147,8 @@
         @media (max-width: 600px) {
             .plan-features { grid-template-columns: 1fr; }
             .checkout-header { flex-direction: column; gap: 16px; align-items: flex-start; }
-        }
-
-        @media (max-width: 768px) {
-            .container { padding: 32px 20px 60px; }
-            .checkout-header { margin-bottom: 32px; gap: 12px; }
-            .brand { font-size: 14px; gap: 8px; }
-            .brand-icon { width: 32px; height: 32px; font-size: 14px; }
-            h2 { font-size: 28px; }
-            .plan-price { font-size: 32px; }
-            .plan-features { gap: 10px; }
-            .form-input { font-size: 14px; }
-            .btn-submit { font-size: 13px; }
-        }
-
-        @media (max-width: 480px) {
-            .container { padding: 24px 16px 48px; }
-            .checkout-header { flex-direction: column; gap: 16px; }
-            .brand { font-size: 13px; }
-            .brand-icon { width: 28px; height: 28px; }
-            .brand-name { font-size: 12px; }
-            h2 { font-size: 24px; margin-bottom: 12px; }
-            .plan-price { font-size: 28px; margin-bottom: 8px; }
-            .plan-price span { font-size: 14px; }
-            .plan-billing { font-size: 12px; margin-bottom: 16px; }
-            .plan-features { gap: 8px; }
-            .plan-features li { font-size: 13px; }
-            .company-id-box { flex-direction: column; gap: 12px; padding: 14px; }
-            .company-id-label { font-size: 11px; }
-            .company-id-value { font-size: 14px; }
-            .bank-card h3 { font-size: 16px; margin-bottom: 16px; }
-            .bank-row { flex-direction: column; gap: 6px; }
-            .bank-row .label { font-size: 11px; }
-            .bank-row .value { font-size: 13px; }
-            .form-group { margin-bottom: 16px; }
-            .form-label { font-size: 12px; }
-            .form-input { font-size: 14px; padding: 10px 12px; }
-            .btn-submit { width: 100%; font-size: 13px; height: 44px; }
-            .info-box p { font-size: 12px; }
-        }
-
-        @media (max-width: 360px) {
-            .container { padding: 20px 12px 40px; }
-            .checkout-header { margin-bottom: 20px; }
-            .brand { font-size: 12px; gap: 6px; }
-            .brand-icon { width: 24px; height: 24px; font-size: 12px; }
-            h2 { font-size: 20px; }
-            .plan-price { font-size: 24px; }
-            .plan-features li { font-size: 12px; padding-left: 8px; }
-            .plan-features li i { font-size: 12px; }
-            .company-id-box { padding: 12px; margin-bottom: 16px; }
-            .bank-card { padding: 16px; }
-            .bank-info-box { gap: 8px; }
-            .form-input { font-size: 13px; }
-            .btn-submit { font-size: 12px; }
-            .secure-footer { flex-direction: column; gap: 8px; }
-            .secure-footer span { font-size: 10px; }
+            .payment-tabs { grid-template-columns: 1fr; }
+            .form-row { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -223,63 +178,82 @@
             </ul>
         </div>
 
-        <div class="company-id-box">
-            <div>
-                <div class="company-id-label">ID de tu Empresa</div>
-                <div class="company-id-value" id="companyIdDisplay">PP-XXXX-XXXX</div>
-            </div>
-            <button class="copy-id-btn" onclick="copyCompanyId()" title="Copiar ID">
-                <i class="fas fa-copy"></i>
-            </button>
-        </div>
+        <div id="toastMessage" class="toast-msg"></div>
 
-        <div class="bank-card">
-            <h3><i class="fas fa-university"></i> Pago por Transferencia Bancaria</h3>
+        <div class="payment-methods-card">
+            <h3><i class="fas fa-credit-card"></i> Método de Pago Aceptado</h3>
 
-            <div class="info-box">
-                <i class="fas fa-info-circle"></i>
-                <p>
-                    Realiza una transferencia por el monto del plan y envía el comprobante.
-                    Tu cuenta se activará una vez confirmemos el pago.<br>
-                    Incluye el <strong>ID de tu Empresa</strong> en el concepto de la transferencia.
-                </p>
-            </div>
-
-            <div class="bank-info-box">
-                <div class="bank-row">
-                    <span class="label">Banco</span>
-                    <span class="value">Banco Atlántida</span>
+            <!-- 2 MÉTODOS DE PAGO: TARJETA DIGITAL Y TRANSFERENCIA -->
+            <div class="payment-tabs">
+                <div class="payment-tab active" id="tabCardBtn" onclick="switchPaymentTab('card')">
+                    <i class="fas fa-credit-card"></i> Tarjeta Débito / Crédito
                 </div>
-                <div class="bank-row">
-                    <span class="label">Cuenta Corriente</span>
-                    <span class="value">0107-0010-9001234567</span>
-                </div>
-                <div class="bank-row">
-                    <span class="label">Nombre</span>
-                    <span class="value">Portal Pilot S. de R.L.</span>
-                </div>
-                <div class="bank-row">
-                    <span class="label">RTN</span>
-                    <span class="value">0801-1990-12345-678901-1234</span>
-                </div>
-                <div class="bank-row">
-                    <span class="label">Concepto obligatorio</span>
-                    <span class="value" style="color:var(--accent-soft);" id="bankConcept">PP-XXXX-XXXX</span>
-                </div>
-                <div class="bank-row">
-                    <span class="label">Monto a pagar</span>
-                    <span class="value" id="bankAmount" style="color:var(--green);">L.1,499.00</span>
+                <div class="payment-tab" id="tabBankBtn" onclick="switchPaymentTab('bank')">
+                    <i class="fas fa-building-columns"></i> Transferencia Bancaria
                 </div>
             </div>
 
-            <div class="form-group">
-                <label class="form-label">Correo electrónico de contacto</label>
-                <input type="email" class="form-input" placeholder="tu@empresa.com" id="contactEmail">
+            <!-- MÉTODO 1: TARJETA DIGITAL -->
+            <div class="tab-content active" id="tabCard">
+                <div class="info-box">
+                    <i class="fas fa-lock"></i>
+                    <p>Procesamiento digital seguro SSL de 256 bits. Tu correo recibirá inmediatamente la <strong>confirmación y factura digital</strong> de activación.</p>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Nombre en la tarjeta</label>
+                    <input type="text" class="form-input" id="cardName" placeholder="Ej. Juan Pérez">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Número de tarjeta</label>
+                    <input type="text" class="form-input" id="cardNumber" placeholder="0000 0000 0000 0000" maxlength="19" oninput="formatCardNumber(this)">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Expiración (MM/YY)</label>
+                        <input type="text" class="form-input" id="cardExpiry" placeholder="12/28" maxlength="5">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Código CVC</label>
+                        <input type="password" class="form-input" id="cardCvc" placeholder="123" maxlength="4">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Correo electrónico de notificación</label>
+                    <input type="email" class="form-input" id="cardEmail" placeholder="tu@empresa.com">
+                </div>
+                <button class="btn-submit" id="btnPayCard" onclick="processPayment('tarjeta')">
+                    <i class="fas fa-shield-check"></i> Pagar y Activar Plan
+                </button>
             </div>
 
-            <button class="btn-submit" onclick="submitPayment()">
-                <i class="fas fa-paper-plane"></i> Enviar Comprobante y Solicitar Activación
-            </button>
+            <!-- MÉTODO 2: TRANSFERENCIA BANCARIA -->
+            <div class="tab-content" id="tabBank">
+                <div class="info-box">
+                    <i class="fas fa-info-circle"></i>
+                    <p>Realiza tu depósito o transferencia por el monto del plan y envía el comprobante para confirmación inmediata por correo electrónico.</p>
+                </div>
+
+                <div class="bank-info-box">
+                    <div class="bank-row"><span class="label">Banco Principal</span><span class="value">Banco Atlántida</span></div>
+                    <div class="bank-row"><span class="label">Cuenta Corriente</span><span class="value">0107-0010-9001234567</span></div>
+                    <div class="bank-row"><span class="label">Banco Secundario</span><span class="value">BAC Credomatic</span></div>
+                    <div class="bank-row"><span class="label">Cuenta de Ahorros</span><span class="value">7412-5890-001</span></div>
+                    <div class="bank-row"><span class="label">Titular</span><span class="value">Portal Pilot S. de R.L.</span></div>
+                    <div class="bank-row"><span class="label">Monto a Transferir</span><span class="value" id="bankAmount" style="color:var(--green);">L.1,499.00</span></div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Número de Referencia / Comprobante</label>
+                    <input type="text" class="form-input" id="bankRef" placeholder="Ej. TR-984512">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Correo electrónico de notificación</label>
+                    <input type="email" class="form-input" id="bankEmail" placeholder="tu@empresa.com">
+                </div>
+                <button class="btn-submit" id="btnPayBank" onclick="processPayment('transferencia')">
+                    <i class="fas fa-paper-plane"></i> Enviar Comprobante de Transferencia
+                </button>
+            </div>
         </div>
 
         <div class="secure-footer">
@@ -289,12 +263,26 @@
     </div>
 
     <script>
+        const isLocalhost = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+        const API_ROOT = isLocalhost ? 'https://portal-pilot.vercel.app' : '';
+
+        // Resolver plan y datos de registro previo
         const urlParams = new URLSearchParams(window.location.search);
         const selectedPlan = (urlParams.get('plan') || 'business').toLowerCase();
-        const companyID = urlParams.get('companyId') || 'PP-XXXX-XXXX';
 
-        document.getElementById('companyIdDisplay').textContent = companyID;
-        document.getElementById('bankConcept').textContent = companyID;
+        // Recuperar correo almacenado de registro previo si existe
+        const savedRegistration = sessionStorage.getItem('portalPilotRegistrationData') || localStorage.getItem('portalPilotRegistrationData');
+        let regData = {};
+        if (savedRegistration) {
+            try { regData = JSON.parse(savedRegistration); } catch (e) {}
+        }
+        const userEmail = regData.email || localStorage.getItem('userEmail') || '';
+        const tenantCode = regData.companyId || urlParams.get('companyId') || localStorage.getItem('empresaCodigo') || 'ROOT';
+
+        if (userEmail) {
+            document.getElementById('cardEmail').value = userEmail;
+            document.getElementById('bankEmail').value = userEmail;
+        }
 
         const planConfig = {
             starter: {
@@ -304,10 +292,9 @@
                 features: [
                     '<i class="fas fa-check"></i> 1 usuario activo',
                     '<i class="fas fa-check"></i> 50 consultas IA/mes',
-                    '<i class="fas fa-check"></i> 2 módulos a elegir',
+                    '<i class="fas fa-check"></i> Módulos comerciales',
                     '<i class="fas fa-check"></i> Facturación Electrónica SAR',
-                    '<i class="fas fa-check"></i> Soporte por comunidad',
-                    '<i class="fas fa-check"></i> 100 MB almacenamiento'
+                    '<i class="fas fa-check"></i> Soporte standard'
                 ]
             },
             business: {
@@ -317,10 +304,10 @@
                 features: [
                     '<i class="fas fa-check"></i> Hasta 25 usuarios activos',
                     '<i class="fas fa-check"></i> IA Groq ilimitada',
-                    '<i class="fas fa-check"></i> Todos los módulos',
+                    '<i class="fas fa-check"></i> Todos los módulos comerciales',
                     '<i class="fas fa-check"></i> Facturación Electrónica SAR',
-                    '<i class="fas fa-check"></i> Hasta 3 empresas',
-                    '<i class="fas fa-check"></i> Soporte email 24h'
+                    '<i class="fas fa-check"></i> Hasta 3 bodegas/empresas',
+                    '<i class="fas fa-check"></i> Soporte prioritario'
                 ]
             },
             enterprise: {
@@ -329,11 +316,11 @@
                 amount: 'L.4,999.00',
                 features: [
                     '<i class="fas fa-check"></i> Usuarios ilimitados',
-                    '<i class="fas fa-check"></i> IA personalizada',
-                    '<i class="fas fa-check"></i> Todos los módulos + API',
+                    '<i class="fas fa-check"></i> IA dedicada + Bots RPA',
+                    '<i class="fas fa-check"></i> Módulos Enterprise + Flotas',
                     '<i class="fas fa-check"></i> Facturación Electrónica SAR',
-                    '<i class="fas fa-check"></i> Empresas ilimitadas',
-                    '<i class="fas fa-check"></i> Soporte prioritario 24/7'
+                    '<i class="fas fa-check"></i> Bodegas ilimitadas',
+                    '<i class="fas fa-check"></i> Soporte VIP 24/7'
                 ]
             }
         };
@@ -344,31 +331,93 @@
         document.getElementById('bankAmount').textContent = plan.amount;
         document.getElementById('planFeatures').innerHTML = plan.features.map(f => '<li>' + f + '</li>').join('');
 
-        function copyCompanyId() {
-            navigator.clipboard.writeText(companyID).then(() => {
-                const btn = document.querySelector('.copy-id-btn');
-                btn.innerHTML = '<i class="fas fa-check" style="color:var(--green);"></i>';
-                setTimeout(() => { btn.innerHTML = '<i class="fas fa-copy"></i>'; }, 2000);
-            });
+        function switchPaymentTab(method) {
+            document.querySelectorAll('.payment-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            if (method === 'card') {
+                document.getElementById('tabCardBtn').classList.add('active');
+                document.getElementById('tabCard').classList.add('active');
+            } else {
+                document.getElementById('tabBankBtn').classList.add('active');
+                document.getElementById('tabBank').classList.add('active');
+            }
         }
 
-        function submitPayment() {
-            const email = document.getElementById('contactEmail').value.trim();
+        function formatCardNumber(input) {
+            let val = input.value.replace(/\D/g, '');
+            let formatted = val.match(/.{1,4}/g)?.join(' ') || val;
+            input.value = formatted.substring(0, 19);
+        }
+
+        function showToast(text, isError = false) {
+            const toast = document.getElementById('toastMessage');
+            toast.className = 'toast-msg ' + (isError ? 'error' : 'success');
+            toast.innerHTML = (isError ? '<i class="fas fa-exclamation-circle"></i> ' : '<i class="fas fa-circle-check"></i> ') + text;
+            toast.style.display = 'flex';
+            toast.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        async function processPayment(metodo) {
+            const emailInputId = metodo === 'tarjeta' ? 'cardEmail' : 'bankEmail';
+            const email = document.getElementById(emailInputId).value.trim();
+            const btnId = metodo === 'tarjeta' ? 'btnPayCard' : 'btnPayBank';
+            const btn = document.getElementById(btnId);
+
             if (!email || !email.includes('@')) {
-                alert('Ingresa un correo válido.');
+                showToast('Ingresa un correo electrónico de notificación válido.', true);
                 return;
             }
-            const btn = document.querySelector('.btn-submit');
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Enviando solicitud...';
 
-            setTimeout(() => {
-                btn.innerHTML = '<i class="fas fa-check"></i> ¡Solicitud Enviada! Te contactaremos.';
-                btn.style.background = 'var(--green)';
-                setTimeout(() => {
-                    window.location.href = 'login.html?welcome=1';
-                }, 2000);
-            }, 1500);
+            if (metodo === 'tarjeta') {
+                const num = document.getElementById('cardNumber').value.replace(/\s/g, '');
+                if (num.length < 13) {
+                    showToast('Ingresa un número de tarjeta válido.', true);
+                    return;
+                }
+            } else {
+                const ref = document.getElementById('bankRef').value.trim();
+                if (!ref) {
+                    showToast('Ingresa la referencia o comprobante de la transferencia.', true);
+                    return;
+                }
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando confirmación...';
+
+            try {
+                const payload = {
+                    email,
+                    plan: selectedPlan,
+                    metodoPago: metodo,
+                    empresaCodigo: tenantCode
+                };
+
+                const res = await fetch(`${API_ROOT}/api/confirmar-pago`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await res.json();
+
+                if (res.ok && data.success) {
+                    showToast(data.message || `¡Pago activado exitosamente! Correo de confirmación enviado a ${email}.`, false);
+                    btn.innerHTML = '<i class="fas fa-check"></i> ¡Pago Confirmado!';
+                    btn.style.background = 'var(--green)';
+
+                    setTimeout(() => {
+                        window.location.href = `login.html?welcome=1&email=${encodeURIComponent(email)}`;
+                    }, 3500);
+                } else {
+                    throw new Error(data.error || 'Error al confirmar el pago');
+                }
+            } catch (err) {
+                console.error(err);
+                showToast(err.message || 'No se pudo confirmar el pago. Intenta de nuevo.', true);
+                btn.disabled = false;
+                btn.innerHTML = metodo === 'tarjeta' ? '<i class="fas fa-shield-check"></i> Pagar y Activar Plan' : '<i class="fas fa-paper-plane"></i> Enviar Comprobante de Transferencia';
+            }
         }
     </script>
 </body>

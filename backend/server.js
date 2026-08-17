@@ -1254,6 +1254,63 @@ app.post('/api/login', loginLimiter, async (req, res) => {
   }
 });
 
+app.post('/api/confirmar-pago', async (req, res) => {
+  try {
+    const { email, plan, metodoPago, empresaCodigo } = req.body || {};
+    if (!email || !email.includes('@')) {
+      return res.status(400).json({ error: 'El correo electrónico es obligatorio y debe ser válido.' });
+    }
+
+    const emailNorm = String(email).trim().toLowerCase();
+    const planNombre = plan ? String(plan).toUpperCase() : 'PRO';
+
+    // Actualizar plan del tenant en Supabase si existe
+    if (supabase && empresaCodigo && !empresaCodigo.includes('XXXX')) {
+      await supabase.from('tenants').update({ plan: planNombre.toLowerCase(), estado: 'activo' }).eq('codigo', empresaCodigo);
+    }
+
+    // Enviar correo de confirmación de pago
+    try {
+      await transporter.sendMail({
+        from: `"Portal Pilot Billing" <${EMAIL_FROM}>`,
+        to: emailNorm,
+        subject: `🎉 ¡Pago Confirmado! Tu Plan ${planNombre} en Portal Pilot está Activo`,
+        html: `
+          <div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;background:#0b0b10;color:#e0e0f0;border-radius:16px;padding:32px;border:1px solid rgba(139,92,246,0.3);">
+            <div style="text-align:center;margin-bottom:24px;">
+              <h1 style="color:#a78bfa;margin:0;font-size:26px;">Portal Pilot</h1>
+              <p style="color:#30d158;font-weight:700;font-size:16px;margin-top:4px;">✓ Confirmación de Pago Exitoso</p>
+            </div>
+            <p>Hola,</p>
+            <p>Tu pago para el <strong>Plan ${planNombre}</strong> ha sido procesado y verificado correctamente.</p>
+            <div style="background:#16161a;padding:20px;border-radius:12px;margin:20px 0;border:1px solid rgba(255,255,255,0.1);">
+              <p style="margin:4px 0;font-size:14px;"><strong>Método de pago:</strong> ${metodoPago === 'tarjeta' ? 'Tarjeta de Crédito/Débito Digital' : 'Transferencia Bancaria'}</p>
+              <p style="margin:4px 0;font-size:14px;"><strong>Estado:</strong> <span style="color:#30d158;font-weight:700;">ACTIVO</span></p>
+              <p style="margin:4px 0;font-size:14px;"><strong>ID de Empresa:</strong> ${empresaCodigo || 'ROOT'}</p>
+            </div>
+            <p>Ya puedes acceder a tu panel con todos los módulos comerciales habilitados.</p>
+            <div style="text-align:center;margin-top:28px;">
+              <a href="https://portal-pilot.vercel.app/login.html" style="background:linear-gradient(135deg,#8b5cf6,#a78bfa);color:#fff;padding:12px 28px;border-radius:30px;text-decoration:none;font-weight:700;display:inline-block;">Iniciar Sesión en Portal Pilot</a>
+            </div>
+          </div>
+        `
+      });
+    } catch (e) {
+      console.warn('[CONFIRMAR PAGO] Advertencia enviando correo:', e.message);
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: `¡Pago del Plan ${planNombre} activado con éxito! Se ha enviado el comprobante a ${emailNorm}.`,
+      plan: planNombre,
+      email: emailNorm
+    });
+  } catch (error) {
+    console.error('[CONFIRMAR PAGO] Error:', error.message);
+    return res.status(500).json({ error: 'Error al procesar la confirmación del pago.' });
+  }
+});
+
 app.post('/api/refresh', authenticate, (req, res) => {
   try {
     const newToken = jwt.sign(

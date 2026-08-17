@@ -52,6 +52,7 @@ if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
       limit(n) { _limit = n; return builder; },
 
       insert(data) { _op = 'insert'; _body = data; return builder; },
+      upsert(data, opts) { _op = 'upsert'; _body = data; _onConflict = opts && opts.onConflict ? opts.onConflict : null; return builder; },
       update(data) { _op = 'update'; _body = data; return builder; },
       delete() { _op = 'delete'; return builder; },
 
@@ -83,6 +84,12 @@ if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
               return resolve({ data: rows, error: null });
 
             } else if (_op === 'insert') {
+              resp = await axios.post(`${restBase}/${table}`, _body, { headers });
+              return resolve({ data: resp.data, error: null });
+
+            } else if (_op === 'upsert') {
+              if (_onConflict) headers.Prefer = `return=representation,resolution=merge-duplicates,on_conflict=${_onConflict}`;
+              else headers.Prefer = 'return=representation,resolution=merge-duplicates';
               resp = await axios.post(`${restBase}/${table}`, _body, { headers });
               return resolve({ data: resp.data, error: null });
 

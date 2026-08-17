@@ -142,6 +142,8 @@ function escapeHtml(str) {
     .replace(/'/g, '&#39;');
 }
 
+const JWT_SECRET = process.env.JWT_SECRET || 'portalpilot_production_jwt_secret_key_2026_secure';
+
 function authenticate(req, res, next) {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];

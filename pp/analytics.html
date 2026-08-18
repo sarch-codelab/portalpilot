@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="icon" type="image/png" href="../img/iconos/Portal%20Pilot.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Analytics — Portal Pilot</title>
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+  <link rel="stylesheet" href="css/analytics.css">
+  <link rel="stylesheet" href="../css/notifications.css">
+</head>
+
+<body>
+
+  <!-- PROGRESS & CURSOR -->
+  <div id="progress">
+    <div id="progress-fill"></div>
+  </div>
+  <div id="cursor-dot"></div>
+  <div id="cursor-ring"></div>
+  <div id="cursor-glow"></div>
+  <div class="overlay" id="overlay"></div>
+
+  <!-- LOGOUT MODAL -->
+  <div class="modal-overlay" id="logoutModal">
+    <div class="modal">
+      <div class="modal-icon"><i class="fas fa-sign-out-alt"></i></div>
+      <h3 class="modal-title">¿Cerrar sesión?</h3>
+      <p class="modal-desc">Estás a punto de cerrar tu sesión en Portal Pilot. ¿Deseas continuar?</p>
+      <div class="modal-actions">
+        <button class="modal-btn cancel" id="modalCancel">Cancelar</button>
+        <button class="modal-btn confirm" id="modalConfirm">Sí, cerrar</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="dashboard" id="dashboard">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <h2 class="logo">PORTAL PILOT</h2>
+      </div>
+
+      <a href="perfil.html" class="profile-section" style="text-decoration:none;cursor:pointer;" title="Ver perfil">
+        <img src="../img/asuka.png" alt="Perfil" class="avatar"
+          onerror="this.src='https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80'">
+        <div class="profile-info">
+          <span class="name">Ajendra S.</span>
+          <span class="role">UI/UX Designer</span>
+        </div>
+      </a>
+
+      <nav class="sidebar-nav">
+        <a href="dashboard.html" class="sidebar-link"><i class="fas fa-home"></i> <span>Dashboard</span></a>
+        <a href="tenants.html" class="sidebar-link"><i class="fas fa-building"></i> <span>Tenants</span></a>
+        <a href="usuarios.html" class="sidebar-link"><i class="fas fa-users"></i> <span>Usuarios</span></a>
+        <a href="bots_rpa.html" class="sidebar-link"><i class="fas fa-robot"></i> <span>Bots RPA</span></a>
+        <a href="auditoria.html" class="sidebar-link"><i class="fas fa-link"></i> <span>Auditoría</span></a>
+        <a href="analytics.html" class="sidebar-link active"><i class="fas fa-chart-line"></i> <span>Analytics</span></a>
+        <a href="billing_plans.html" class="sidebar-link"><i class="fas fa-credit-card"></i> <span>Billing &amp; Planes</span></a>
+        <a href="system_health.html" class="sidebar-link"><i class="fas fa-heartbeat"></i> <span>System Health</span></a>
+        <a href="global_settings.html" class="sidebar-link"><i class="fas fa-cog"></i> <span>Configuración
+            Global</span></a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <button class="footer-btn" id="darkModeToggle"><i class="fas fa-moon"></i> <span>Dark Mode</span></button>
+        <button class="footer-btn logout" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> <span>Cerrar
+            Sesión</span></button>
+      </div>
+
+      <button class="toggle-btn" id="toggleSidebar" aria-label="Toggle Sidebar">
+        <i class="fas fa-chevron-right"></i>
+      </button>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+
+      <!-- TOP BAR -->
+      <header class="topbar">
+        <div class="topbar-left">
+          <div class="topbar-title">Centro de <span>Analytics</span></div>
+          <div class="topbar-search">
+            <i class="fas fa-search"></i>
+            <input type="text" id="globalSearch" placeholder="Buscar métricas, reportes...">
+          </div>
+        </div>
+        <div class="topbar-right">
+          <button class="topbar-btn" title="Notificaciones"><i class="fas fa-bell"></i><span
+              class="badge">2</span></button>
+        </div>
+      </header>
+
+      <!-- PAGE HEADER -->
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Métricas <span>del Sistema</span></h1>
+          <p class="page-subtitle">Análisis detallado de uso, rendimiento y crecimiento de la plataforma Portal Pilot.</p>
+        </div>
+        <div class="page-actions">
+          <button class="btn btn-outline btn-sm"><i class="fas fa-file-pdf"></i> Exportar PDF</button>
+          <button class="btn btn-ghost btn-sm"><i class="fas fa-sync-alt"></i> Actualizar</button>
+        </div>
+      </div>
+
+      <!-- FILTERS BAR -->
+      <div class="filters-bar">
+        <div class="filter-group">
+          <label>Período:</label>
+          <select class="filter-select" id="filterPeriod">
+            <option value="today">Hoy</option>
+            <option value="7d" selected>Últimos 7 días</option>
+            <option value="30d">Últimos 30 días</option>
+            <option value="90d">Últimos 90 días</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label>Tenant:</label>
+          <select class="filter-select" id="filterTenant">
+            <option value="">Todos</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label>Métrica:</label>
+          <select class="filter-select" id="filterMetric">
+            <option value="usage">Uso</option>
+            <option value="revenue">Ingresos</option>
+            <option value="growth">Crecimiento</option>
+          </select>
+        </div>
+        <button class="filter-reset"><i class="fas fa-undo"></i> Limpiar filtros</button>
+      </div>
+
+      <!-- KPI CARDS -->
+      <div class="analytics-grid">
+
+        <div class="kpi-card reveal">
+          <div class="kpi-header">
+            <div class="kpi-icon"><i class="fas fa-users"></i></div>
+            <span class="kpi-trend up"><i class="fas fa-arrow-up"></i> +12.5%</span>
+          </div>
+          <div class="kpi-value">2,847</div>
+          <div class="kpi-label">Total Usuarios</div>
+          <div class="kpi-footer"><i class="fas fa-circle" style="color:var(--green);font-size:6px;"></i> Registrados en la plataforma</div>
+        </div>
+
+        <div class="kpi-card reveal" style="transition-delay:.05s;">
+          <div class="kpi-header">
+            <div class="kpi-icon"><i class="fas fa-user-check"></i></div>
+            <span class="kpi-trend up"><i class="fas fa-arrow-up"></i> +8.3%</span>
+          </div>
+          <div class="kpi-value">1,204</div>
+          <div class="kpi-label">Usuarios Activos (hoy)</div>
+          <div class="kpi-footer"><i class="fas fa-circle" style="color:var(--green);font-size:6px;"></i> Sesiones activas en curso</div>
+        </div>
+
+        <div class="kpi-card reveal" style="transition-delay:.1s;">
+          <div class="kpi-header">
+            <div class="kpi-icon"><i class="fas fa-dollar-sign"></i></div>
+            <span class="kpi-trend up"><i class="fas fa-arrow-up"></i> +18.2%</span>
+          </div>
+          <div class="kpi-value">$34,580</div>
+          <div class="kpi-label">Ingresos Mensuales</div>
+          <div class="kpi-footer"><i class="fas fa-circle" style="color:var(--green);font-size:6px;"></i> MRR actualizado</div>
+        </div>
+
+        <div class="kpi-card reveal" style="transition-delay:.15s;">
+          <div class="kpi-header">
+            <div class="kpi-icon"><i class="fas fa-handshake"></i></div>
+            <span class="kpi-trend up"><i class="fas fa-arrow-up"></i> +2.1%</span>
+          </div>
+          <div class="kpi-value">94.7%</div>
+          <div class="kpi-label">Tasa de Retención</div>
+          <div class="kpi-footer"><i class="fas fa-circle" style="color:var(--green);font-size:6px;"></i> Últimos 30 días</div>
+        </div>
+
+        <!-- CHART CARDS -->
+        <div class="chart-card reveal">
+          <div class="chart-header">
+            <div class="chart-title">Crecimiento de Usuarios</div>
+            <div class="chart-actions">
+              <button data-period="7D">7D</button>
+              <button data-period="30D" class="active">30D</button>
+              <button data-period="90D">90D</button>
+            </div>
+          </div>
+          <div class="chart-container" id="chartGrowth">
+            <div class="chart-placeholder">
+              <i class="fas fa-chart-area"></i>
+              <p>Gráfico de crecimiento de usuarios</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="chart-card reveal" style="transition-delay:.1s;">
+          <div class="chart-header">
+            <div class="chart-title">Actividad por Tenant</div>
+            <div class="chart-actions">
+              <button data-period="7D">7D</button>
+              <button data-period="30D" class="active">30D</button>
+              <button data-period="90D">90D</button>
+            </div>
+          </div>
+          <div class="chart-container" id="chartActivity">
+            <div class="chart-placeholder">
+              <i class="fas fa-chart-bar"></i>
+              <p>Gráfico de actividad por tenant</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- RECENT ACTIVITY TABLE -->
+        <div class="table-card reveal">
+          <div class="table-header">
+            <div class="table-title">Actividad Reciente</div>
+          </div>
+          <div class="table-container">
+            <table class="analytics-table">
+              <thead>
+                <tr>
+                  <th>Fecha</th>
+                  <th>Evento</th>
+                  <th>Usuario</th>
+                  <th>Impacto</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>18 Ago 2026, 14:32</td>
+                  <td>Nuevo tenant registrado</td>
+                  <td>admin@techcorp.io</td>
+                  <td><span class="impact-badge high">Alto</span></td>
+                </tr>
+                <tr>
+                  <td>18 Ago 2026, 12:15</td>
+                  <td>Bot RPA ejecutado</td>
+                  <td>sistema@portalpilot.io</td>
+                  <td><span class="impact-badge medium">Medio</span></td>
+                </tr>
+                <tr>
+                  <td>18 Ago 2026, 10:48</td>
+                  <td>Plan actualizado</td>
+                  <td>admin@logistics.hn</td>
+                  <td><span class="impact-badge high">Alto</span></td>
+                </tr>
+                <tr>
+                  <td>17 Ago 2026, 18:03</td>
+                  <td>Usuario desactivado</td>
+                  <td>admin@retail.mx</td>
+                  <td><span class="impact-badge low">Bajo</span></td>
+                </tr>
+                <tr>
+                  <td>17 Ago 2026, 15:27</td>
+                  <td>Facturación generada</td>
+                  <td>sistema@portalpilot.io</td>
+                  <td><span class="impact-badge medium">Medio</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- Scripts -->
+  <script src="../auth-check.js"></script>
+  <script src="js/portal-admin-guard.js"></script>
+  <script src="../js/notifications.js"></script>
+  <script src="../js/sidebar-loader.js"></script>
+</body>
+
+</html>

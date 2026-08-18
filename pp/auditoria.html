@@ -3,9 +3,9 @@
 
 <head>
   <meta charset="UTF-8">
-    <link rel="icon" type="image/png" href="../img/iconos/Portal%20Pilot.png">
+  <link rel="icon" type="image/png" href="../img/iconos/Portal%20Pilot.png">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tenants — Portal Pilot</title>
+  <title>Auditoría — Portal Pilot</title>
 
   <!-- Fuentes e iconos -->
   <link
@@ -13,8 +13,8 @@
     rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
-  <!-- ✅ CSS específico de tenants -->
-  <link rel="stylesheet" href="css/tenants.css">
+  <!-- CSS específico de auditoría -->
+  <link rel="stylesheet" href="css/auditoria.css">
   <link rel="stylesheet" href="../css/notifications.css">
 </head>
 
@@ -63,14 +63,15 @@
       <!-- Nav -->
       <nav class="sidebar-nav">
         <a href="dashboard.html" class="sidebar-link"><i class="fas fa-home"></i> <span>Dashboard</span></a>
-        <a href="tenants.html" class="sidebar-link active"><i class="fas fa-building"></i> <span>Tenants</span></a>
+        <a href="tenants.html" class="sidebar-link"><i class="fas fa-building"></i> <span>Tenants</span></a>
         <a href="usuarios.html" class="sidebar-link"><i class="fas fa-users"></i> <span>Usuarios</span></a>
         <a href="bots_rpa.html" class="sidebar-link"><i class="fas fa-robot"></i> <span>Bots RPA</span></a>
-        <a href="auditoria.html" class="sidebar-link"><i class="fas fa-link"></i> <span>Auditoría</span></a>
+        <a href="auditoria.html" class="sidebar-link active"><i class="fas fa-link"></i> <span>Auditoría</span></a>
         <a href="analytics.html" class="sidebar-link"><i class="fas fa-chart-line"></i> <span>Analytics</span></a>
         <a href="billing_plans.html" class="sidebar-link"><i class="fas fa-credit-card"></i> <span>Billing &amp; Planes</span></a>
         <a href="system_health.html" class="sidebar-link"><i class="fas fa-heartbeat"></i> <span>System Health</span></a>
-        <a href="global_settings.html" class="sidebar-link"><i class="fas fa-cog"></i> <span>Configuración Global</span></a>
+        <a href="global_settings.html" class="sidebar-link"><i class="fas fa-cog"></i> <span>Configuración
+            Global</span></a>
       </nav>
 
       <!-- Footer -->
@@ -92,33 +93,29 @@
       <!-- TOP BAR -->
       <header class="topbar">
         <div class="topbar-left">
-          <div class="topbar-title">Gestión de <span>Tenants</span></div>
+          <div class="topbar-title">Gestión de <span>Auditoría</span></div>
           <div class="topbar-search">
             <i class="fas fa-search"></i>
-            <input type="text" id="globalSearch" placeholder="Buscar empresa, dominio, email..."
-              onkeyup="filterTenants()">
+            <input type="text" id="globalSearch" placeholder="Buscar usuario, acción, recurso..."
+              onkeyup="filterLogs()">
           </div>
         </div>
         <div class="topbar-right">
           <button class="topbar-btn" title="Notificaciones"><i class="fas fa-bell"></i><span
               class="badge">2</span></button>
-          <!--  Al hacer click aparece una pantalla emergente con la lista de notificaciones como alertas de error acceso denegado tenant creado exitosamente, etceterea. -->
-          <button class="btn btn-acc btn-sm" onclick="openModal('createModal')"><i class="fas fa-plus"></i> Nuevo
-            Tenant</button>
         </div>
       </header>
 
       <!-- PAGE HEADER -->
       <div class="page-header">
         <div>
-          <h1 class="page-title">Empresas <span>Activas</span></h1>
-          <p class="page-subtitle">Administra todas las empresas registradas en tu plataforma. Gestiona planes, usuarios
-            y accede a logs específicos de cada tenant.</p>
+          <h1 class="page-title">Logs de <span>Auditoría</span></h1>
+          <p class="page-subtitle">Registro completo de actividades y eventos del sistema. Rastrea acciones de usuarios, cambios de configuración y accesos para garantizar la seguridad.</p>
         </div>
         <div class="page-actions">
-          <button class="btn btn-outline btn-sm" onclick="exportTenants()"><i class="fas fa-download"></i> Exportar
+          <button class="btn btn-outline btn-sm" onclick="exportLogs()"><i class="fas fa-download"></i> Exportar
             CSV</button>
-          <button class="btn btn-ghost btn-sm" onclick="refreshTenants()"><i class="fas fa-sync-alt"></i>
+          <button class="btn btn-ghost btn-sm" onclick="refreshLogs()"><i class="fas fa-sync-alt"></i>
             Actualizar</button>
         </div>
       </div>
@@ -126,30 +123,37 @@
       <!-- FILTERS BAR -->
       <div class="filters-bar">
         <div class="filter-group">
-          <label>Plan:</label>
-          <select class="filter-select" id="filterPlan" onchange="applyFilters()">
+          <label>Acción:</label>
+          <select class="filter-select" id="filterAction" onchange="applyFilters()">
             <option value="">Todos</option>
-            <option value="starter">Starter</option>
-            <option value="business">Business</option>
-            <option value="enterprise">Enterprise</option>
+            <option value="login">Login</option>
+            <option value="logout">Logout</option>
+            <option value="crear">Crear</option>
+            <option value="editar">Editar</option>
+            <option value="eliminar">Eliminar</option>
+            <option value="acceso_denegado">Acceso Denegado</option>
           </select>
         </div>
         <div class="filter-group">
-          <label>Estado:</label>
-          <select class="filter-select" id="filterStatus" onchange="applyFilters()">
-            <option value="">Todos</option>
-            <option value="active">Activo</option>
-            <option value="suspended">Suspendido</option>
-            <option value="pending">Pendiente</option>
+          <label>Usuario:</label>
+          <input type="text" class="filter-input" id="filterUser" placeholder="Nombre o email..."
+            onkeyup="applyFilters()">
+        </div>
+        <div class="filter-group">
+          <label>Rango:</label>
+          <select class="filter-select" id="filterRange" onchange="applyFilters()">
+            <option value="today">Hoy</option>
+            <option value="7days" selected>Últimos 7 días</option>
+            <option value="30days">Últimos 30 días</option>
+            <option value="custom">Personalizado</option>
           </select>
         </div>
         <div class="filter-group">
           <label>Ordenar por:</label>
           <select class="filter-select" id="filterSort" onchange="applyFilters()">
-            <option value="name">Nombre</option>
-            <option value="date" selected>Fecha Registro</option>
-            <option value="users">N° Usuarios</option>
-            <option value="plan">Plan</option>
+            <option value="date" selected>Fecha</option>
+            <option value="user">Usuario</option>
+            <option value="action">Acción</option>
           </select>
         </div>
         <button class="filter-reset" onclick="resetFilters()"><i class="fas fa-undo"></i> Limpiar filtros</button>
@@ -157,24 +161,24 @@
 
       <!-- TABLE -->
       <div class="table-container">
-        <table class="tenants-table">
+        <table class="audit-table">
           <thead>
             <tr>
-              <th class="sortable asc" data-sort="name">Empresa</th>
-              <th class="sortable" data-sort="plan">Plan</th>
-              <th class="sortable" data-sort="status">Estado</th>
-              <th class="sortable" data-sort="users">Usuarios</th>
-              <th class="sortable" data-sort="date">Registro</th>
-              <th>Acciones</th>
+              <th class="sortable asc" data-sort="date">Fecha & Hora</th>
+              <th class="sortable" data-sort="user">Usuario</th>
+              <th class="sortable" data-sort="action">Acción</th>
+              <th>Recurso</th>
+              <th>IP</th>
+              <th>Detalles</th>
             </tr>
           </thead>
-          <tbody id="tenantsBody"></tbody>
+          <tbody id="auditBody"></tbody>
         </table>
       </div>
 
       <!-- PAGINATION -->
       <div class="pagination">
-        <div class="pagination-info">Mostrando <strong>1-10</strong> de <strong id="totalCount">0</strong> tenants</div>
+        <div class="pagination-info">Mostrando <strong>1-20</strong> de <strong id="totalCount">0</strong> registros</div>
         <div class="pagination-btns">
           <button class="pagination-btn" id="prevBtn" disabled><i class="fas fa-chevron-left"></i></button>
           <button class="pagination-btn active" id="page1">1</button>
@@ -188,76 +192,7 @@
     </main>
   </div>
 
-  <!-- MODALS (Create & Confirm) -->
-  <div class="modal-overlay" id="createModal">
-    <div class="modal">
-      <div class="modal-header">
-        <div class="modal-title"><i class="fas fa-plus" style="margin-right:8px;color:var(--accent);"></i>Nuevo Tenant
-        </div>
-        <button class="modal-close" onclick="closeModal('createModal')"><i class="fas fa-times"></i></button>
-      </div>
-      <div class="modal-body">
-        <form id="createTenantForm">
-          <div class="form-group">
-            <label class="form-label">Nombre de la Empresa *</label>
-            <input type="text" id="t-nombre" class="form-input" placeholder="Ej: TechCorp Solutions" required>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label class="form-label">Dominio *</label>
-              <input type="text" id="t-dominio" class="form-input" placeholder="techcorp.portalpilot.io" required>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Plan *</label>
-              <select id="t-plan" class="form-select" required>
-                <option value="">Seleccionar...</option>
-                <option value="starter">Starter</option>
-                <option value="business" selected>Business</option>
-                <option value="enterprise">Enterprise</option>
-              </select>
-            </div>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Email Admin *</label>
-            <input type="email" id="t-emailAdmin" class="form-input" placeholder="admin@empresa.com" required>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label class="form-label">País</label>
-              <select id="t-pais" class="form-select">
-                <option value="">Seleccionar...</option>
-                <option value="mx" selected>México</option>
-                <option value="es">España</option>
-                <option value="co">Colombia</option>
-                <option value="ar">Argentina</option>
-                <option value="us">Estados Unidos</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Zona Horaria</label>
-              <select id="t-zona" class="form-select">
-                <option value="America/Mexico_City" selected>México (GMT-6)</option>
-                <option value="Europe/Madrid">España (GMT+1)</option>
-                <option value="America/Bogota">Colombia (GMT-5)</option>
-                <option value="America/Argentina/Buenos_Aires">Argentina (GMT-3)</option>
-              </select>
-            </div>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Notas Internas</label>
-            <textarea id="t-notas" class="form-input" rows="3"
-              placeholder="Información adicional para el equipo..."></textarea>
-            <div class="form-hint"><i class="fas fa-info-circle"></i> Solo visible para administradores</div>
-          </div>
-        </form>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-ghost" onclick="closeModal('createModal')">Cancelar</button>
-        <button class="btn btn-acc" onclick="createTenant()"><i class="fas fa-rocket"></i> Crear Tenant</button>
-      </div>
-    </div>
-  </div>
-
+  <!-- MODAL (Confirm) -->
   <div class="modal-overlay" id="confirmModal">
     <div class="modal">
       <div class="modal-header">
@@ -277,16 +212,15 @@
   <!-- DETAIL PANEL -->
   <div class="detail-panel" id="detailPanel">
     <div class="detail-header">
-      <div class="modal-title">Detalle de Tenant</div>
+      <div class="modal-title">Detalle del Registro</div>
       <button class="detail-close" onclick="closeDetailPanel()"><i class="fas fa-times"></i></button>
     </div>
     <div class="detail-body" id="detailContent"></div>
   </div>
 
-  <!-- ✅ Scripts -->
+  <!-- Scripts -->
   <script src="../auth-check.js"></script>
   <script src="js/portal-admin-guard.js"></script>
-  <script src="js/tenants.js"></script>
   <script src="../js/notifications.js"></script>
   <script src="../js/sidebar-loader.js"></script>
 </body>

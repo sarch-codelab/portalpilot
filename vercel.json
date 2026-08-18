@@ -114,6 +114,22 @@
       "dest": "/pp/billing_plans.html"
     },
     {
+      "src": "/bots_rpa",
+      "dest": "/pp/bots_rpa.html"
+    },
+    {
+      "src": "/auditoria",
+      "dest": "/pp/auditoria.html"
+    },
+    {
+      "src": "/analytics",
+      "dest": "/pp/analytics.html"
+    },
+    {
+      "src": "/system_health",
+      "dest": "/pp/system_health.html"
+    },
+    {
       "src": "/perfil",
       "dest": "/pp/perfil.html"
     },

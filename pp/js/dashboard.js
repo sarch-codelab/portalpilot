@@ -538,17 +538,18 @@ function showWidgetDetails(widgetType) {
 
   const details = {
     'kpi-tenants': {
-      title: 'Detalle de Tenants',
+      title: 'Detalle de Empresas',
       icon: 'fa-building',
       html: `
-        <div class="detail-card"><div class="detail-icon"><i class="fas fa-building"></i></div><div class="detail-label">Total Tenants</div><div class="detail-value">24</div></div>
-        <div class="detail-card"><div class="detail-icon"><i class="fas fa-check-circle"></i></div><div class="detail-label">Activos</div><div class="detail-value">24</div></div>
-        <div class="detail-card full"><div class="detail-label">Top Tenants por uso</div>
+        <div class="detail-card"><div class="detail-icon"><i class="fas fa-building"></i></div><div class="detail-label">Empresas Registradas</div><div class="detail-value" id="detailTenantCount">—</div></div>
+        <div class="detail-card"><div class="detail-icon"><i class="fas fa-check-circle"></i></div><div class="detail-label">Estado</div><div class="detail-value" style="font-size:14px;color:var(--green);">Todas operativas</div></div>
+        <div class="detail-card full"><div class="detail-label">Áreas Comerciales Soportadas</div>
           <div class="detail-list">
-            <div class="detail-list-item"><span>TechCorp</span><span>4,521 req/día</span></div>
-            <div class="detail-list-item"><span>HealthSys</span><span>3,847 req/día</span></div>
-            <div class="detail-list-item"><span>RetailPlus</span><span>2,956 req/día</span></div>
-            <div class="detail-list-item"><span>FinanceLab</span><span>1,823 req/día</span></div>
+            <div class="detail-list-item"><span>Área Comercial</span><span>General</span></div>
+            <div class="detail-list-item"><span>Sector Retail (al por Menor)</span><span>Pulperías, Supermercados</span></div>
+            <div class="detail-list-item"><span>Base Tecnológica / Membresía</span><span>Clubes de compras</span></div>
+            <div class="detail-list-item"><span>Canal Tradicional</span><span>Mercaditos de barrio</span></div>
+            <div class="detail-list-item"><span>Canal Moderno</span><span>Grandes cadenas</span></div>
           </div>
         </div>`
     },
@@ -556,25 +557,25 @@ function showWidgetDetails(widgetType) {
       title: 'Detalle de Usuarios',
       icon: 'fa-users',
       html: `
-        <div class="detail-card"><div class="detail-icon"><i class="fas fa-users"></i></div><div class="detail-label">Total</div><div class="detail-value">1,247</div></div>
-        <div class="detail-card"><div class="detail-icon"><i class="fas fa-circle"></i></div><div class="detail-label">Online</div><div class="detail-value" style="color:var(--green);">142</div></div>
-        <div class="detail-card"><div class="detail-icon"><i class="fas fa-user-plus"></i></div><div class="detail-label">Nuevos hoy</div><div class="detail-value">18</div></div>
-        <div class="detail-card"><div class="detail-icon"><i class="fas fa-user-shield"></i></div><div class="detail-label">Administradores</div><div class="detail-value">12</div></div>`
+        <div class="detail-card"><div class="detail-icon"><i class="fas fa-users"></i></div><div class="detail-label">Total Registrados</div><div class="detail-value" id="detailUserCount">—</div></div>
+        <div class="detail-card"><div class="detail-icon"><i class="fas fa-circle"></i></div><div class="detail-label">Estado</div><div class="detail-value" style="color:var(--green);font-size:14px;">Activos en el sistema</div></div>
+        <div class="detail-card"><div class="detail-icon"><i class="fas fa-user-plus"></i></div><div class="detail-label">Fuente de Datos</div><div class="detail-value" style="font-size:14px;">Supabase PostgreSQL</div></div>
+        <div class="detail-card"><div class="detail-icon"><i class="fas fa-user-shield"></i></div><div class="detail-label">Roles Disponibles</div><div class="detail-value" style="font-size:14px;">Owner, Admin, User</div></div>`
     },
     'kpi-health': {
       title: 'Panel de Base de Datos',
       icon: 'fa-database',
       html: `
-        <div class="detail-card"><div class="detail-icon"><i class="fas fa-database"></i></div><div class="detail-label">Capacidad Total</div><div class="detail-value">98.5%</div></div>
-        <div class="detail-card"><div class="detail-icon"><i class="fas fa-tachometer-alt"></i></div><div class="detail-label">Latencia</div><div class="detail-value">12ms</div></div>
-        <div class="detail-card"><div class="detail-icon"><i class="fas fa-hdd"></i></div><div class="detail-label">Almacenamiento</div><div class="detail-value">847 GB</div></div>
-        <div class="detail-card"><div class="detail-icon"><i class="fas fa-history"></i></div><div class="detail-label">Último Backup</div><div class="detail-value" style="font-size:14px;">Hace 2h</div></div>
-        <div class="detail-card full"><div class="detail-label">Estado de componentes</div>
+        <div class="detail-card"><div class="detail-icon"><i class="fas fa-database"></i></div><div class="detail-label">Motor</div><div class="detail-value" style="font-size:14px;">Supabase PostgreSQL</div></div>
+        <div class="detail-card"><div class="detail-icon"><i class="fas fa-tachometer-alt"></i></div><div class="detail-label">Estado</div><div class="detail-value" style="color:var(--green);font-size:14px;">Operativo</div></div>
+        <div class="detail-card"><div class="detail-icon"><i class="fas fa-shield-alt"></i></div><div class="detail-label">Seguridad</div><div class="detail-value" style="font-size:14px;">JWT + bcrypt</div></div>
+        <div class="detail-card"><div class="detail-icon"><i class="fas fa-cloud"></i></div><div class="detail-label">Hosting</div><div class="detail-value" style="font-size:14px;">Vercel Edge</div></div>
+        <div class="detail-card full"><div class="detail-label">Componentes del Sistema</div>
           <div class="detail-list">
-            <div class="detail-list-item"><span>Supabase PostgreSQL Primary</span><span style="color:var(--green);">● Operativo</span></div>
-            <div class="detail-list-item"><span>Supabase Storage (Assets)</span><span style="color:var(--green);">● Operativo</span></div>
-            <div class="detail-list-item"><span>IA Groq Proxy Service</span><span style="color:var(--green);">● Operativo</span></div>
-            <div class="detail-list-item"><span>Redis Cache</span><span style="color:var(--green);">● Operativo</span></div>
+            <div class="detail-list-item"><span>Supabase PostgreSQL</span><span style="color:var(--green);">● Operativo</span></div>
+            <div class="detail-list-item"><span>Supabase Storage</span><span style="color:var(--green);">● Operativo</span></div>
+            <div class="detail-list-item"><span>API REST (Vercel Serverless)</span><span style="color:var(--green);">● Operativo</span></div>
+            <div class="detail-list-item"><span>Portal Pilot App (Expo)</span><span style="color:var(--green);">● Operativo</span></div>
           </div>
         </div>`
     },
@@ -596,10 +597,10 @@ function showWidgetDetails(widgetType) {
       title: 'Estadísticas de Actividad',
       icon: 'fa-fire',
       html: `
-        <div class="detail-card"><div class="detail-icon"><i class="fas fa-fire"></i></div><div class="detail-label">Total peticiones (año)</div><div class="detail-value">284,521</div></div>
-        <div class="detail-card"><div class="detail-icon"><i class="fas fa-calendar-day"></i></div><div class="detail-label">Día más activo</div><div class="detail-value" style="font-size:14px;">15 Mar</div></div>
-        <div class="detail-card"><div class="detail-icon"><i class="fas fa-chart-line"></i></div><div class="detail-label">Promedio diario</div><div class="detail-value">779</div></div>
-        <div class="detail-card"><div class="detail-icon"><i class="fas fa-bolt"></i></div><div class="detail-label">Pico máximo</div><div class="detail-value">2,847</div></div>`
+        <div class="detail-card"><div class="detail-icon"><i class="fas fa-fire"></i></div><div class="detail-label">Estado General</div><div class="detail-value" style="font-size:14px;color:var(--green);">En línea</div></div>
+        <div class="detail-card"><div class="detail-icon"><i class="fas fa-server"></i></div><div class="detail-label">Servidor</div><div class="detail-value" style="font-size:14px;">Vercel Edge</div></div>
+        <div class="detail-card"><div class="detail-icon"><i class="fas fa-chart-line"></i></div><div class="detail-label">Uptime</div><div class="detail-value">100%</div></div>
+        <div class="detail-card"><div class="detail-icon"><i class="fas fa-bolt"></i></div><div class="detail-label">Región</div><div class="detail-value" style="font-size:14px;">IAD1 (US East)</div></div>`
     }
   };
 
@@ -641,14 +642,14 @@ function createBarChart(containerId, data, gradient) {
 
 const chartDataSets = {
   tenants: {
-    '7D': [{ label: 'Lun', value: 3 }, { label: 'Mar', value: 5 }, { label: 'Mié', value: 4 }, { label: 'Jue', value: 7 }, { label: 'Vie', value: 6 }, { label: 'Sáb', value: 2 }, { label: 'Dom', value: 1 }],
-    '30D': [{ label: 'S1', value: 12 }, { label: 'S2', value: 18 }, { label: 'S3', value: 15 }, { label: 'S4', value: 24 }, { label: 'S5', value: 31 }, { label: 'S6', value: 28 }, { label: 'S7', value: 35 }, { label: 'S8', value: 42 }],
-    '90D': [{ label: 'Ene', value: 85 }, { label: 'Feb', value: 92 }, { label: 'Mar', value: 78 }, { label: 'Abr', value: 105 }, { label: 'May', value: 112 }, { label: 'Jun', value: 98 }]
+    '7D': [{ label: 'Lun', value: 0 }, { label: 'Mar', value: 1 }, { label: 'Mié', value: 0 }, { label: 'Jue', value: 0 }, { label: 'Vie', value: 1 }, { label: 'Sáb', value: 0 }, { label: 'Dom', value: 0 }],
+    '30D': [{ label: 'S1', value: 1 }, { label: 'S2', value: 0 }, { label: 'S3', value: 2 }, { label: 'S4', value: 1 }],
+    '90D': [{ label: 'Jun', value: 0 }, { label: 'Jul', value: 2 }, { label: 'Ago', value: 3 }]
   },
   tokens: {
-    'input': [{ label: '1-7', value: 30 }, { label: '8-14', value: 45 }, { label: '15-21', value: 55 }, { label: '22-28', value: 65 }, { label: '29-30', value: 40 }],
-    'total': [{ label: '1-7', value: 45 }, { label: '8-14', value: 62 }, { label: '15-21', value: 78 }, { label: '22-28', value: 91 }, { label: '29-30', value: 54 }],
-    'output': [{ label: '1-7', value: 15 }, { label: '8-14', value: 17 }, { label: '15-21', value: 23 }, { label: '22-28', value: 26 }, { label: '29-30', value: 14 }]
+    'input': [{ label: 'S1', value: 5 }, { label: 'S2', value: 8 }, { label: 'S3', value: 12 }, { label: 'S4', value: 6 }],
+    'total': [{ label: 'S1', value: 10 }, { label: 'S2', value: 15 }, { label: 'S3', value: 22 }, { label: 'S4', value: 14 }],
+    'output': [{ label: 'S1', value: 5 }, { label: 'S2', value: 7 }, { label: 'S3', value: 10 }, { label: 'S4', value: 8 }]
   }
 };
 
@@ -765,7 +766,7 @@ function renderChartView(view, dataType, mainView, statsView) {
   }
 
   statsView.innerHTML = `
-    <div class="stat-card"><div class="stat-label">Total</div><div class="stat-value">${total}</div><div class="stat-trend up"><i class="fas fa-arrow-up"></i> +${(Math.random() * 20 + 5).toFixed(1)}%</div></div>
+    <div class="stat-card"><div class="stat-label">Total</div><div class="stat-value">${total}</div></div>
     <div class="stat-card"><div class="stat-label">Promedio</div><div class="stat-value">${avg}</div></div>
     <div class="stat-card"><div class="stat-label">Máximo</div><div class="stat-value" style="color:var(--green);">${max}</div></div>
     <div class="stat-card"><div class="stat-label">Mínimo</div><div class="stat-value" style="color:var(--yellow);">${min}</div></div>`;
@@ -784,19 +785,15 @@ document.querySelectorAll('.chart-view-tab').forEach(tab => {
 
 // ── Calendar ────
 const calendarEvents = [
-  { date: '2026-06-25', title: 'Renovación SSL TechCorp', priority: 'high', time: '16:00' },
-  { date: '2026-06-26', title: 'Backup NocoDB programado', priority: 'med', time: '02:00' },
-  { date: '2026-06-27', title: 'Actualización Gemma 3N v1.2.5', priority: 'med', time: '03:00' },
-  { date: '2026-06-28', title: 'Auditoría bloque #4829', priority: 'low', time: '10:00' },
-  { date: '2026-06-30', title: 'Vencimiento licencia HealthSys', priority: 'high', time: '23:59' },
-  { date: '2026-07-02', title: 'Despliegue bot RPA FinanceLab', priority: 'med', time: '14:00' },
-  { date: '2026-07-05', title: 'Mantenimiento programado', priority: 'high', time: '01:00' },
-  { date: '2026-07-10', title: 'Revisión trimestral RetailPlus', priority: 'low', time: '11:00' },
-  { date: '2026-07-15', title: 'Backup completo mensual', priority: 'med', time: '02:00' },
-  { date: '2026-07-20', title: 'Auditoría de seguridad', priority: 'high', time: '09:00' },
+  { date: '2026-08-20', title: 'Revisión plataforma Portal Pilot', priority: 'med', time: '10:00' },
+  { date: '2026-08-25', title: 'Backup programado Supabase', priority: 'med', time: '02:00' },
+  { date: '2026-08-30', title: 'Cierre mensual facturación SAR', priority: 'high', time: '23:59' },
+  { date: '2026-09-01', title: 'Inicio nuevo período comercial', priority: 'med', time: '08:00' },
+  { date: '2026-09-05', title: 'Auditoría interna de seguridad', priority: 'high', time: '09:00' },
+  { date: '2026-09-15', title: 'Actualización app móvil Portal Pilot', priority: 'med', time: '14:00' },
 ];
 
-let currentCalDate = new Date(2026, 5, 1); // Junio 2026
+let currentCalDate = new Date();
 
 function renderCalendar() {
   const grid = document.getElementById('calendarGrid');

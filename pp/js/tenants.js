@@ -359,7 +359,7 @@ function renderTenants(data = filteredTenants) {
         <div class="tenant-actions">
           <button class="action-icon-btn" title="Ver detalle" onclick="event.stopPropagation();window.location.href='tenant_detail.html?id=' + encodeURIComponent('${t.id}')"><i class="fas fa-eye"></i></button>
           <button class="action-icon-btn" title="Cambiar plan" onclick="event.stopPropagation();showChangePlan('${t.id}')"><i class="fas fa-exchange-alt"></i></button>
-          <button class="action-icon-btn ${t.status === 'active' ? 'warning' : ''}" title="${t.status === 'active' ? 'Desactivar' : 'Activar'} Tenant" onclick="event.stopPropagation();toggleTenantStatus('${t.id}')"><i class="fas ${t.status === 'active' ? 'fa-ban' : 'fa-check-circle'}"></i></button>
+          <button class="action-icon-btn ${t.status === 'active' ? 'warning' : 'green'}" title="${t.status === 'active' ? 'Desactivar' : 'Activar'} Tenant" onclick="event.stopPropagation();toggleTenantStatus('${t.id}')"><i class="fas ${t.status === 'active' ? 'fa-ban' : 'fa-check-circle'}"></i></button>
           <button class="action-icon-btn danger" title="Eliminar Tenant" onclick="event.stopPropagation();confirmAction('Eliminar Tenant','¿Eliminar ${t.name} y todos los usuarios relacionados? Esta acción no se puede deshacer.',()=>deleteTenant('${t.id}','${t.name}'))"><i class="fas fa-trash-alt"></i></button>
           <button class="action-icon-btn" title="Ver Detalle Completo" onclick="event.stopPropagation();window.location.href='tenant_detail.html?id=' + encodeURIComponent('${t.id}')"><i class="fas fa-external-link-alt"></i></button>
         </div>
@@ -540,11 +540,14 @@ async function createTenant() {
 // ── Confirm Action ───────────────
 let pendingAction = null;
 
-function confirmAction(title, message, callback) {
+function confirmAction(title, message, callback, opts = {}) {
   document.getElementById('confirmTitle').textContent = title;
   document.getElementById('confirmMessage').textContent = message;
+  const btn = document.getElementById('confirmActionBtn');
+  btn.textContent = opts.btnText || 'Confirmar';
+  btn.className = 'btn ' + (opts.btnClass || 'btn-danger');
   pendingAction = callback;
-  document.getElementById('confirmActionBtn').onclick = () => {
+  btn.onclick = () => {
     if (pendingAction) pendingAction();
     closeModal('confirmModal');
     pendingAction = null;
@@ -573,7 +576,8 @@ function toggleTenantStatus(id) {
       t.status = wasActive ? 'suspended' : 'active';
       filterTenants();
       alert(`✓ Tenant "${t.name}" ${wasActive ? 'desactivado' : 'activado'} exitosamente`);
-    }
+    },
+    { btnText: wasActive ? 'Desactivar' : 'Activar', btnClass: wasActive ? 'btn-danger' : 'btn-success' }
   );
 }
 

@@ -212,6 +212,17 @@ button {
   color: #fff;
 }
 
+.btn-success {
+  background: rgba(16, 185, 129, 0.15);
+  color: var(--green);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.btn-success:hover {
+  background: var(--green);
+  color: #fff;
+}
+
 .btn-sm {
   padding: 8px 18px;
   font-size: 12px;
@@ -961,6 +972,28 @@ button {
 .action-icon-btn.danger:hover {
   background: var(--red);
   border-color: var(--red);
+}
+
+.action-icon-btn.warning {
+  color: var(--yellow);
+  border-color: rgba(251, 191, 36, 0.3);
+}
+
+.action-icon-btn.warning:hover {
+  background: var(--yellow);
+  color: #000;
+  border-color: var(--yellow);
+}
+
+.action-icon-btn.green {
+  color: var(--green);
+  border-color: rgba(52, 211, 153, 0.3);
+}
+
+.action-icon-btn.green:hover {
+  background: var(--green);
+  color: #000;
+  border-color: var(--green);
 }
 
 /* ─── MODALS ──────────────────────── */

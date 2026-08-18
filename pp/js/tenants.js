@@ -359,7 +359,7 @@ function renderTenants(data = filteredTenants) {
         <div class="tenant-actions">
           <button class="action-icon-btn" title="Ver detalle" onclick="event.stopPropagation();window.location.href='tenant_detail.html?id=' + encodeURIComponent('${t.id}')"><i class="fas fa-eye"></i></button>
           <button class="action-icon-btn" title="Cambiar plan" onclick="event.stopPropagation();showChangePlan('${t.id}')"><i class="fas fa-exchange-alt"></i></button>
-          <button class="action-icon-btn" title="Gestionar acceso" onclick="event.stopPropagation();manageAccess('${t.id}')"><i class="fas fa-user-cog"></i></button>
+          <button class="action-icon-btn ${t.status === 'active' ? 'warning' : ''}" title="${t.status === 'active' ? 'Desactivar' : 'Activar'} Tenant" onclick="event.stopPropagation();toggleTenantStatus('${t.id}')"><i class="fas ${t.status === 'active' ? 'fa-ban' : 'fa-check-circle'}"></i></button>
           <button class="action-icon-btn danger" title="Eliminar Tenant" onclick="event.stopPropagation();confirmAction('Eliminar Tenant','¿Eliminar ${t.name} y todos los usuarios relacionados? Esta acción no se puede deshacer.',()=>deleteTenant('${t.id}','${t.name}'))"><i class="fas fa-trash-alt"></i></button>
           <button class="action-icon-btn" title="Ver Detalle Completo" onclick="event.stopPropagation();window.location.href='tenant_detail.html?id=' + encodeURIComponent('${t.id}')"><i class="fas fa-external-link-alt"></i></button>
         </div>
@@ -561,8 +561,20 @@ function toggleStatus(id, currentStatus) {
   filterTenants();
 }
 
-function manageAccess(id) {
-  alert(`🔐 Gestionar acceso para tenant: ${id}\n\nFuncionalidad completa en: tenants.html?id=${id}`);
+function toggleTenantStatus(id) {
+  const t = tenants.find(x => x.id === id);
+  if (!t) return;
+  const wasActive = t.status === 'active';
+  const action = wasActive ? 'desactivar' : 'activar';
+  confirmAction(
+    `${wasActive ? 'Desactivar' : 'Activar'} Tenant`,
+    `¿Deseas ${action} el tenant "${t.name}"?${wasActive ? '\n\nLos usuarios de este tenant no podrán acceder hasta que sea reactivado.' : '\n\nLos usuarios podrán volver a acceder a la plataforma.'}`,
+    () => {
+      t.status = wasActive ? 'suspended' : 'active';
+      filterTenants();
+      alert(`✓ Tenant "${t.name}" ${wasActive ? 'desactivado' : 'activado'} exitosamente`);
+    }
+  );
 }
 
 function showChangePlan(id) {

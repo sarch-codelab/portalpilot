@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="UTF-8">
-    <link rel="icon" type="image/png" href="../img/iconos/Portal%20Pilot.png">
+  <link rel="icon" type="image/png" href="../img/iconos/Portal%20Pilot.png">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>System Health — Portal Pilot</title>
 
@@ -11,81 +11,129 @@
     href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap"
     rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-  <link rel="stylesheet" href="css/dashboard.css">
+  <link rel="stylesheet" href="css/tenants.css">
   <link rel="stylesheet" href="../css/notifications.css">
 </head>
 
 <body>
 
+  <!-- PROGRESS & CURSOR -->
   <div id="progress">
     <div id="progress-fill"></div>
   </div>
+  <div id="cursor-dot"></div>
+  <div id="cursor-ring"></div>
+  <div id="cursor-glow"></div>
+  <div class="overlay" id="overlay"></div>
 
-  <aside class="sidebar" id="sidebar">
-    <div class="sidebar-header">
-      <h2 class="logo">PORTAL PILOT</h2>
-    </div>
-    <nav class="sidebar-nav">
-      <a href="dashboard.html" class="sidebar-link"><i class="fas fa-home"></i> <span>Dashboard</span></a>
-      <a href="tenants.html" class="sidebar-link"><i class="fas fa-building"></i> <span>Tenants</span></a>
-      <a href="usuarios.html" class="sidebar-link"><i class="fas fa-users"></i> <span>Usuarios</span></a>
-      <a href="bots_rpa.html" class="sidebar-link"><i class="fas fa-robot"></i> <span>Bots RPA</span></a>
-      <a href="auditoria.html" class="sidebar-link"><i class="fas fa-link"></i> <span>Auditoría</span></a>
-      <a href="analytics.html" class="sidebar-link"><i class="fas fa-chart-line"></i> <span>Analytics</span></a>
-      <a href="billing_plans.html" class="sidebar-link"><i class="fas fa-credit-card"></i> <span>Billing &amp; Planes</span></a>
-      <a href="system_health.html" class="sidebar-link active"><i class="fas fa-heartbeat"></i> <span>System Health</span></a>
-      <a href="global_settings.html" class="sidebar-link"><i class="fas fa-cog"></i> <span>Configuración Global</span></a>
-    </nav>
-    <div class="sidebar-footer">
-      <button class="footer-btn logout" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> <span>Cerrar Sesión</span></button>
-    </div>
-  </aside>
-
-  <!-- MAIN -->
-  <main class="main-content">
-    <header class="topbar">
-      <div class="topbar-left">
-        <div class="topbar-title">System <span>Health</span></div>
-      </div>
-      <div class="topbar-right">
-        <button class="topbar-btn" id="refreshHealthBtn" title="Actualizar"><i class="fas fa-sync-alt"></i></button>
-      </div>
-    </header>
-
-    <div class="health-grid" id="healthGrid">
-      <div class="health-card">
-        <i class="fas fa-server"></i>
-        <div class="health-label">API Backend</div>
-        <div class="health-value" id="status-api">Comprobando...</div>
-      </div>
-      <div class="health-card">
-        <i class="fas fa-database"></i>
-        <div class="health-label">NocoDB</div>
-        <div class="health-value" id="status-nocodb">Comprobando...</div>
-      </div>
-      <div class="health-card">
-        <i class="fas fa-cloud"></i>
-        <div class="health-label">Supabase</div>
-        <div class="health-value" id="status-supabase">Comprobando...</div>
-      </div>
-      <div class="health-card">
-        <i class="fas fa-key"></i>
-        <div class="health-label">JWT / Sesión</div>
-        <div class="health-value" id="status-jwt">Comprobando...</div>
-      </div>
-      <div class="health-card">
-        <i class="fas fa-globe"></i>
-        <div class="health-label">Entorno</div>
-        <div class="health-value" id="status-env">Comprobando...</div>
-      </div>
-      <div class="health-card">
-        <i class="fas fa-clock"></i>
-        <div class="health-label">Última comprobación</div>
-        <div class="health-value" id="status-time">—</div>
+  <!-- LOGOUT MODAL -->
+  <div class="modal-overlay" id="logoutModal">
+    <div class="modal">
+      <div class="modal-icon"><i class="fas fa-sign-out-alt"></i></div>
+      <h3 class="modal-title">¿Cerrar sesión?</h3>
+      <p class="modal-desc">Estás a punto de cerrar tu sesión en Portal Pilot. ¿Deseas continuar?</p>
+      <div class="modal-actions">
+        <button class="modal-btn cancel" id="modalCancel">Cancelar</button>
+        <button class="modal-btn confirm" id="modalConfirm">Sí, cerrar</button>
       </div>
     </div>
-  </main>
+  </div>
 
+  <div class="dashboard" id="dashboard">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <h2 class="logo">PORTAL PILOT</h2>
+      </div>
+
+      <a href="perfil.html" class="profile-section" style="text-decoration:none;cursor:pointer;" title="Ver perfil">
+        <img src="../img/asuka.png" alt="Perfil" class="avatar"
+          onerror="this.src='https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80'">
+        <div class="profile-info">
+          <span class="name">Ajendra S.</span>
+          <span class="role">UI/UX Designer</span>
+        </div>
+      </a>
+
+      <nav class="sidebar-nav">
+        <a href="dashboard.html" class="sidebar-link"><i class="fas fa-home"></i> <span>Dashboard</span></a>
+        <a href="tenants.html" class="sidebar-link"><i class="fas fa-building"></i> <span>Tenants</span></a>
+        <a href="usuarios.html" class="sidebar-link"><i class="fas fa-users"></i> <span>Usuarios</span></a>
+        <a href="bots_rpa.html" class="sidebar-link"><i class="fas fa-robot"></i> <span>Bots RPA</span></a>
+        <a href="auditoria.html" class="sidebar-link"><i class="fas fa-link"></i> <span>Auditoría</span></a>
+        <a href="analytics.html" class="sidebar-link"><i class="fas fa-chart-line"></i> <span>Analytics</span></a>
+        <a href="billing_plans.html" class="sidebar-link"><i class="fas fa-credit-card"></i> <span>Billing &amp; Planes</span></a>
+        <a href="system_health.html" class="sidebar-link active"><i class="fas fa-heartbeat"></i> <span>System Health</span></a>
+        <a href="global_settings.html" class="sidebar-link"><i class="fas fa-cog"></i> <span>Configuración Global</span></a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <button class="footer-btn" id="darkModeToggle"><i class="fas fa-moon"></i> <span>Dark Mode</span></button>
+        <button class="footer-btn logout" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> <span>Cerrar Sesión</span></button>
+      </div>
+
+      <button class="toggle-btn" id="toggleSidebar" aria-label="Toggle Sidebar">
+        <i class="fas fa-chevron-right"></i>
+      </button>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+      <header class="topbar">
+        <div class="topbar-left">
+          <div class="topbar-title">System <span>Health</span></div>
+        </div>
+        <div class="topbar-right">
+          <button class="topbar-btn" title="Notificaciones"><i class="fas fa-bell"></i><span class="badge">0</span></button>
+          <button class="topbar-btn" id="refreshHealthBtn" title="Actualizar"><i class="fas fa-sync-alt"></i></button>
+        </div>
+      </header>
+
+      <!-- PAGE HEADER -->
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Salud del <span>Sistema</span></h1>
+          <p class="page-subtitle">Monitorea el estado de todos los servicios de la plataforma en tiempo real.</p>
+        </div>
+      </div>
+
+      <div class="health-grid" id="healthGrid">
+        <div class="health-card">
+          <i class="fas fa-server"></i>
+          <div class="health-label">API Backend</div>
+          <div class="health-value" id="status-api">Comprobando...</div>
+        </div>
+        <div class="health-card">
+          <i class="fas fa-database"></i>
+          <div class="health-label">Supabase</div>
+          <div class="health-value" id="status-supabase">Comprobando...</div>
+        </div>
+        <div class="health-card">
+          <i class="fas fa-key"></i>
+          <div class="health-label">JWT / Sesión</div>
+          <div class="health-value" id="status-jwt">Comprobando...</div>
+        </div>
+        <div class="health-card">
+          <i class="fas fa-globe"></i>
+          <div class="health-label">Entorno</div>
+          <div class="health-value" id="status-env">Comprobando...</div>
+        </div>
+        <div class="health-card">
+          <i class="fas fa-shield-alt"></i>
+          <div class="health-label">CORS / Seguridad</div>
+          <div class="health-value" id="status-cors">Comprobando...</div>
+        </div>
+        <div class="health-card">
+          <i class="fas fa-clock"></i>
+          <div class="health-label">Última Comprobación</div>
+          <div class="health-value" id="status-time">—</div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- ✅ Scripts -->
   <script src="../auth-check.js"></script>
   <script src="js/portal-admin-guard.js"></script>
   <script src="../js/notifications.js"></script>
@@ -107,17 +155,17 @@
           .then(r => r.json())
           .then(data => {
             setValue('status-api', data.status === 'ok' ? 'Operativo' : 'Degradado', data.status === 'ok');
-            setValue('status-nocodb', data.nocodb_configured ? 'Configurado' : 'No configurado', !!data.nocodb_configured);
             setValue('status-supabase', data.supabase_configured ? 'Configurado' : 'No configurado', !!data.supabase_configured);
             setValue('status-jwt', data.jwt_configured ? 'Configurado' : 'No configurado', !!data.jwt_configured);
             setValue('status-env', data.environment === 'serverless' ? 'Vercel (serverless)' : 'Local', true);
+            setValue('status-cors', data.status === 'ok' ? 'Configurado' : 'Revisar', data.status === 'ok');
           })
           .catch(() => {
             setValue('status-api', 'Sin respuesta', false);
-            setValue('status-nocodb', '—', null);
             setValue('status-supabase', '—', null);
             setValue('status-jwt', '—', null);
             setValue('status-env', '—', null);
+            setValue('status-cors', '—', null);
           })
           .finally(() => {
             setValue('status-time', new Date().toLocaleTimeString('es-HN'), true);
@@ -133,31 +181,38 @@
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
       gap: 18px;
-      padding: 24px;
+      padding: 24px clamp(12px, 3vw, 32px);
     }
     .health-card {
-      background: #141425;
-      border: 1px solid rgba(139, 92, 246, 0.2);
-      border-radius: 14px;
-      padding: 22px;
-      color: #fff;
+      background: var(--card, #141425);
+      border: 1px solid var(--border, rgba(139, 92, 246, 0.2));
+      border-radius: var(--radius-lg, 14px);
+      padding: 24px;
+      color: var(--white, #fff);
       font-family: 'DM Sans', sans-serif;
+      transition: transform .2s, box-shadow .2s;
+    }
+    .health-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 28px rgba(139, 92, 246, 0.15);
     }
     .health-card i {
       font-size: 22px;
-      color: #8b5cf6;
+      color: var(--accent, #8b5cf6);
       margin-bottom: 12px;
     }
     .health-label {
       font-size: 12px;
-      color: #94a3b8;
+      color: var(--gray, #94a3b8);
       letter-spacing: 0.5px;
       text-transform: uppercase;
+      font-weight: 600;
     }
     .health-value {
       font-size: 16px;
       font-weight: 600;
       margin-top: 6px;
+      color: var(--white, #fff);
     }
   </style>
 </body>

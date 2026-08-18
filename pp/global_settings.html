@@ -254,49 +254,151 @@
     /* ===== LAYOUT PRINCIPAL ===== */
     .dashboard {
       display: grid;
-      grid-template-columns: 240px 1fr;
+      grid-template-columns: var(--sidebar-width, 260px) 1fr;
       min-height: 100vh;
+      transition: grid-template-columns 0.3s ease;
+      width: 100vw;
+    }
+
+    .dashboard.sidebar-collapsed {
+      grid-template-columns: var(--sidebar-collapsed, 72px) 1fr;
     }
 
     /* ===== SIDEBAR ===== */
     .sidebar {
       background: var(--bg2);
       border-right: 1px solid var(--border);
-      padding: 24px 16px;
+      padding: 20px 16px;
       position: sticky;
       top: 0;
       height: 100vh;
       display: flex;
       flex-direction: column;
-      gap: 8px;
       z-index: 50;
+      transition: width 0.3s ease;
+      width: var(--sidebar-width, 260px);
+      overflow: visible;
     }
 
-    .sidebar-logo {
-      font-family: 'Syne', sans-serif;
-      font-size: 16px;
-      font-weight: 800;
-      color: var(--white);
+    .sidebar.collapsed {
+      width: var(--sidebar-collapsed, 72px);
+      padding: 20px 8px;
+    }
+
+    .sidebar-header {
       display: flex;
       align-items: center;
       gap: 10px;
-      padding: 8px 12px;
-      margin-bottom: 24px;
-      border-radius: var(--radius);
+      margin-bottom: 16px;
     }
 
-    .sidebar-logo .logo-icon {
-      width: 34px;
-      height: 34px;
-      border-radius: 8px;
-      overflow: hidden;
+    .logo {
+      font-family: 'Syne', sans-serif;
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--white);
+      white-space: nowrap;
+    }
+
+    /* Toggle Button */
+    .toggle-btn {
+      position: absolute;
+      right: -16px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: var(--card);
+      border: 1px solid var(--border);
+      color: var(--white);
+      font-size: 12px;
+      padding: 8px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      z-index: 60;
+      transition: background 0.25s, border-color 0.25s;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    .toggle-btn:hover {
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+
+    .toggle-btn i {
+      transition: transform 0.3s ease;
+      display: block;
+    }
+
+    .sidebar.collapsed .toggle-btn i {
+      transform: rotate(180deg);
+    }
+
+    .toggle-btn::before,
+    .toggle-btn::after {
+      content: '';
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 1px;
+      height: 180px;
+      background: linear-gradient(to bottom, transparent 0%, transparent 15%, var(--accent) 45%, var(--accent) 55%, transparent 85%, transparent 100%);
+      opacity: 0.5;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+      box-shadow: 0 0 8px var(--accent-glow);
+    }
+
+    .toggle-btn::before { top: -185px; }
+    .toggle-btn::after { bottom: -185px; }
+
+    .sidebar.collapsed .toggle-btn::before,
+    .sidebar.collapsed .toggle-btn::after { opacity: 0.25; }
+
+    /* Profile Section */
+    .profile-section {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: var(--radius);
+      background: var(--card);
+      margin-bottom: 16px;
+      transition: var(--transition, all 0.3s);
+    }
+
+    .sidebar.collapsed .profile-section {
+      justify-content: center;
+      padding: 8px;
+    }
+
+    .avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid var(--accent);
       flex-shrink: 0;
     }
-    .sidebar-logo .logo-icon img {
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
+
+    .profile-info {
+      display: flex;
+      flex-direction: column;
+      white-space: nowrap;
+      overflow: hidden;
     }
+
+    .name {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--white);
+    }
+
+    .role {
+      font-size: 10px;
+      color: var(--gray);
     }
 
     .sidebar-nav {
@@ -304,18 +406,21 @@
       flex-direction: column;
       gap: 4px;
       flex: 1;
+      overflow-y: auto;
     }
 
     .sidebar-link {
       display: flex;
       align-items: center;
       gap: 12px;
-      padding: 12px 16px;
+      padding: 11px 14px;
       border-radius: var(--radius);
       font-size: 13px;
       font-weight: 500;
       color: var(--gray2);
-      transition: all .2s;
+      transition: var(--transition, all 0.3s);
+      white-space: nowrap;
+      text-decoration: none;
     }
 
     .sidebar-link:hover,
@@ -324,56 +429,83 @@
       color: var(--white);
     }
 
+    .sidebar-link.active {
+      border-left: 2px solid var(--accent);
+      padding-left: 12px;
+    }
+
     .sidebar-link i {
       width: 18px;
       text-align: center;
       font-size: 14px;
+      flex-shrink: 0;
     }
 
-    .sidebar-link.active {
-      border-left: 2px solid var(--accent);
-      padding-left: 14px;
+    .sidebar.collapsed .logo,
+    .sidebar.collapsed .profile-info,
+    .sidebar.collapsed .sidebar-link span,
+    .sidebar.collapsed .footer-btn span {
+      display: none;
     }
 
+    .sidebar.collapsed .sidebar-link {
+      justify-content: center;
+      padding: 11px;
+    }
+
+    .sidebar.collapsed .sidebar-link.active {
+      padding-left: 11px;
+      border-left: none;
+      border-bottom: 2px solid var(--accent);
+    }
+
+    /* Sidebar Footer */
     .sidebar-footer {
-      padding-top: 16px;
+      padding-top: 12px;
       border-top: 1px solid var(--border);
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 4px;
     }
 
-    .sidebar-user {
+    .footer-btn {
       display: flex;
       align-items: center;
-      gap: 10px;
-      padding: 10px 12px;
+      gap: 12px;
+      padding: 11px 14px;
       border-radius: var(--radius);
-      background: var(--card);
+      background: transparent;
+      border: none;
+      color: var(--gray2);
+      font-size: 13px;
+      font-weight: 500;
+      transition: var(--transition, all 0.3s);
+      width: 100%;
+      text-align: left;
+      cursor: pointer;
+      white-space: nowrap;
     }
 
-    .sidebar-avatar {
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, var(--accent), var(--cyan));
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 14px;
-      color: #fff;
-      font-weight: 600;
-    }
-
-    .sidebar-username {
-      font-size: 12px;
-      font-weight: 600;
+    .footer-btn:hover {
+      background: rgba(139, 92, 246, 0.1);
       color: var(--white);
     }
 
-    .sidebar-role {
-      font-size: 11px;
-      color: var(--gray);
+    .footer-btn.logout:hover {
+      color: var(--red);
+      background: rgba(248, 113, 113, 0.1);
+    }
+
+    .sidebar.collapsed .footer-btn {
+      justify-content: center;
+      padding: 11px;
+    }
+
+    .footer-btn i {
+      width: 18px;
+      text-align: center;
+      font-size: 14px;
+      flex-shrink: 0;
     }
 
     /* ===== MAIN CONTENT ===== */
@@ -381,6 +513,9 @@
       display: flex;
       flex-direction: column;
       gap: 0;
+      width: 100%;
+      min-width: 0;
+      overflow-x: hidden;
     }
 
     /* ===== TOPBAR ===== */
@@ -528,6 +663,7 @@
       display: grid;
       grid-template-columns: repeat(2, 1fr);
       gap: 20px;
+      overflow: hidden;
     }
 
     .settings-card {
@@ -639,6 +775,7 @@
 
     .form-input {
       width: 100%;
+      max-width: 100%;
       padding: 12px 16px;
       border-radius: 8px;
       background: var(--card2);
@@ -647,6 +784,7 @@
       font-size: 14px;
       outline: none;
       transition: border-color .2s;
+      box-sizing: border-box;
     }
 
     .form-input:focus {
@@ -1191,10 +1329,6 @@
 
     /* Tablet y móvil: Sidebar off-canvas */
     @media (max-width: 1024px) {
-      .sidebar-toggle {
-        display: flex !important;
-      }
-
       .sidebar {
         position: fixed !important;
         left: -260px !important;
@@ -1461,12 +1595,35 @@
     </div>
   </div>
 
-  <!-- DASHBOARD PRINCIPAL -->
-  <div class="dashboard">
-    <aside class="sidebar" id="sidebar">
-      <div class="sidebar-logo">
-        <div class="logo-icon"><img src="../img/iconos/Portal%20Pilot.png" alt="Portal Pilot"></div>PORTAL PILOT
+  <!-- LOGOUT MODAL -->
+  <div class="modal-overlay" id="logoutModal">
+    <div class="modal">
+      <div class="modal-icon"><i class="fas fa-sign-out-alt"></i></div>
+      <h3 class="modal-title">¿Cerrar sesión?</h3>
+      <p class="modal-desc">Estás a punto de cerrar tu sesión en Portal Pilot. ¿Deseas continuar?</p>
+      <div class="modal-actions">
+        <button class="modal-btn cancel" id="modalCancel">Cancelar</button>
+        <button class="modal-btn confirm" id="modalConfirm">Sí, cerrar</button>
       </div>
+    </div>
+  </div>
+
+  <!-- DASHBOARD PRINCIPAL -->
+  <div class="dashboard" id="dashboard">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <h2 class="logo">PORTAL PILOT</h2>
+      </div>
+
+      <a href="perfil.html" class="profile-section" style="text-decoration:none;cursor:pointer;" title="Ver perfil">
+        <img src="../img/asuka.png" alt="Perfil" class="avatar"
+          onerror="this.src='https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80'">
+        <div class="profile-info">
+          <span class="name">Ajendra S.</span>
+          <span class="role">UI/UX Designer</span>
+        </div>
+      </a>
+
       <nav class="sidebar-nav">
         <a href="dashboard.html" class="sidebar-link"><i class="fas fa-home"></i> <span>Dashboard</span></a>
         <a href="tenants.html" class="sidebar-link"><i class="fas fa-building"></i> <span>Tenants</span></a>
@@ -1478,17 +1635,15 @@
         <a href="system_health.html" class="sidebar-link"><i class="fas fa-heartbeat"></i> <span>System Health</span></a>
         <a href="global_settings.html" class="sidebar-link active"><i class="fas fa-cog"></i> <span>Configuración Global</span></a>
       </nav>
+
       <div class="sidebar-footer">
-        <a href="#" class="sidebar-link"><i class="fas fa-question-circle"></i> Ayuda</a>
-        <a href="#" class="sidebar-link"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</a>
-        <div class="sidebar-user">
-          <div class="sidebar-avatar" id="sidebarAvatar">AD</div>
-          <div>
-            <div class="sidebar-username" id="sidebarName">Admin User</div>
-            <div class="sidebar-role" id="sidebarRole">Super Admin</div>
-          </div>
-        </div>
+        <button class="footer-btn" id="darkModeToggle"><i class="fas fa-moon"></i> <span>Dark Mode</span></button>
+        <button class="footer-btn logout" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> <span>Cerrar Sesión</span></button>
       </div>
+
+      <button class="toggle-btn" id="toggleSidebar" aria-label="Toggle Sidebar">
+        <i class="fas fa-chevron-right"></i>
+      </button>
     </aside>
 
     <main class="main-content">

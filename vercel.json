@@ -2,6 +2,14 @@
   "version": 2,
   "builds": [
     {
+      "src": "api/ping-search-engines.js",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "api/support-ticket.js",
+      "use": "@vercel/node"
+    },
+    {
       "src": "backend/server.js",
       "use": "@vercel/node",
       "config": {
@@ -64,6 +72,14 @@
     {
       "src": "/sitemap.xml",
       "dest": "/sitemap.xml"
+    },
+    {
+      "src": "/api/ping-search-engines",
+      "dest": "/api/ping-search-engines.js"
+    },
+    {
+      "src": "/api/support-ticket",
+      "dest": "/api/support-ticket.js"
     },
     {
       "src": "/api/(.*)",

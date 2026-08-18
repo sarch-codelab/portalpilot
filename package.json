@@ -5,7 +5,9 @@
   "main": "backend/server.js",
   "scripts": {
     "start": "node backend/server.js",
-    "dev": "node backend/server.js"
+    "dev": "node backend/server.js",
+    "post-deploy-ping": "node scripts/post-deploy-ping.js",
+    "ping": "node scripts/post-deploy-ping.js"
   },
   "dependencies": {
     "axios": "^1.16.1",

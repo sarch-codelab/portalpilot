@@ -1690,11 +1690,11 @@ app.get('/api/tenant/:id', authenticate, async (req, res) => {
     }
 
     const preview = {
-      id: tenantCode,
-      name: tenant.nombre || tenant.Nombre,
-      domain: tenant.dominio || tenant.Dominio,
+      id: tenant.codigo || tenantCode,
+      name: tenant.nombre_empresa || tenant.nombre || tenant.Nombre,
+      domain: tenant.dominio || tenant.Dominio || tenant.email,
       plan: tenant.plan || tenant.Plan,
-      status: tenant.estado || tenant.Estado,
+      status: (tenant.estado || tenant.Estado || '').toString().toLowerCase() === 'activo' ? 'active' : (tenant.estado || tenant.Estado || '').toString().toLowerCase() === 'suspendido' ? 'suspended' : (tenant.estado || tenant.Estado),
       country: tenant.pais || tenant.Pais
     };
 
@@ -1703,8 +1703,8 @@ app.get('/api/tenant/:id', authenticate, async (req, res) => {
       detail = {
         notes: tenant.notas,
         timezone: tenant.zona_horaria,
-        createdAt: tenant.CreatedAt,
-        updatedAt: tenant.UpdatedAt
+        createdAt: tenant.created_at || tenant.CreatedAt,
+        updatedAt: tenant.updated_at || tenant.UpdatedAt
       };
     }
 

@@ -830,9 +830,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const statusEl = document.getElementById('tenant-status');
             if (statusEl) {
-                const st = (preview.status || 'activo').toLowerCase();
-                statusEl.textContent = st === 'activo' ? 'Activo' : st === 'suspendido' ? 'Suspendido' : st === 'pending' ? 'Pendiente' : preview.status || 'Activo';
-                statusEl.className = 'badge badge-' + (st === 'activo' ? 'success' : st === 'suspendido' ? 'danger' : 'warning');
+                const st = (preview.status || 'active').toLowerCase();
+                const statusMap = { active: 'Activo', suspended: 'Suspendido', activo: 'Activo', suspendido: 'Suspendido', pending: 'Pendiente' };
+                statusEl.textContent = statusMap[st] || preview.status || 'Activo';
+                const isGreen = (st === 'active' || st === 'activo');
+                const isRed = (st === 'suspended' || st === 'suspendido');
+                statusEl.className = 'badge badge-' + (isGreen ? 'success' : isRed ? 'danger' : 'warning');
             }
             const planEl = document.getElementById('tenant-plan');
             if (planEl) planEl.textContent = preview.plan || 'Sin plan';

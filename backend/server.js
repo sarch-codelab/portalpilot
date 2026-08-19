@@ -1147,6 +1147,9 @@ app.post('/api/registro', async (req, res) => {
       }
     }
 
+    // AUTOMATION HOOK: tenant_creado
+    dispatchAutomationEvent(empresaCodigo, 'tenant_creado', { empresaCodigo, plan, email: emailAdmin }).catch(() => {});
+
     return res.status(201).json({ 
       message: 'Tenant creado con éxito',
       empresaCodigo,
@@ -2268,6 +2271,11 @@ app.post('/api/users', authenticate, async (req, res) => {
       </ul>`
     );
 
+    // AUTOMATION HOOK: usuario_creado
+    dispatchAutomationEvent(empresaCodigo, 'usuario_creado', {
+      nombre, email, rol: rol || 'user', empresaCodigo
+    }).catch(() => {});
+
     res.status(201).json({
       message: 'Trabajador creado exitosamente',
       user: {
@@ -2921,6 +2929,218 @@ app.patch('/api/automation/:id', authenticate, async (req, res) => {
   } catch (err) {
     return handleServerError(res, err);
   }
+});
+
+// ═══════════════════════════════════════════════════════════
+// AUTOMATION ENGINE — Event dispatching + polling execution
+// ═══════════════════════════════════════════════════════════
+
+async function dispatchAutomationEvent(empresaCodigo, eventType, payload) {
+  if (!supabase || !empresaCodigo) return;
+  try {
+    const { data: rules, error } = await supabase
+      .from('automation_rules')
+      .select('*')
+      .eq('empresa_codigo', empresaCodigo)
+      .eq('trigger_type', eventType)
+      .eq('enabled', true);
+    if (error || !rules || !rules.length) return;
+
+    for (const rule of rules) {
+      if (!checkConditions(rule.conditions, payload)) continue;
+      await executeActions(empresaCodigo, rule, payload);
+      await supabase.from('automation_rules').update({
+        last_executed_at: new Date().toISOString(),
+        execution_count: (rule.execution_count || 0) + 1,
+        updated_at: new Date().toISOString()
+      }).eq('id', rule.id);
+    }
+  } catch (err) {
+    console.warn('[AUTOMATION] dispatchEvent error:', err.message);
+  }
+}
+
+function checkConditions(conditions, payload) {
+  if (!conditions || typeof conditions !== 'object') return true;
+  const c = typeof conditions === 'string' ? JSON.parse(conditions) : conditions;
+  if (c.rol && payload.rol !== c.rol) return false;
+  if (c.dias_minimas && payload.dias_vencida < c.dias_minimas) return false;
+  if (c.estado && payload.estado !== c.estado) return false;
+  if (c.tipo && payload.tipo !== c.tipo) return false;
+  return true;
+}
+
+async function executeActions(empresaCodigo, rule, payload) {
+  const actions = typeof rule.actions === 'string' ? JSON.parse(rule.actions) : (rule.actions || []);
+  for (const action of actions) {
+    try {
+      if (action.tipo === 'notificar') {
+        await supabase.from('notificaciones').insert([{
+          empresa_codigo: empresaCodigo,
+          titulo: interpolate(action.titulo || 'Automatización', payload),
+          mensaje: interpolate(action.mensaje || '', payload),
+          tipo: 'automatizacion',
+          leida: false,
+          created_at: new Date().toISOString()
+        }]);
+      } else if (action.tipo === 'email') {
+        await enviarCorreoPortalPilot(
+          process.env.EMAIL_USER,
+          action.asunto || 'Automatización Portal Pilot',
+          interpolate(action.titulo || 'Notificación', payload),
+          interpolate(action.mensaje || '', payload),
+          interpolate(action.html || '<p>Notificación automática</p>', payload)
+        ).catch(() => {});
+      } else if (action.tipo === 'log') {
+        await registrarAuditoria({
+          empresaCodigo,
+          accion: action.accion || rule.trigger_type,
+          descripcion: interpolate(action.descripcion || `${rule.nombre} ejecutado`, payload),
+          tipo: 'automatizacion',
+          usuarioNombre: 'Sistema'
+        });
+      }
+      await supabase.from('automation_runs').insert([{
+        empresa_codigo: empresaCodigo,
+        automatizacion_id: rule.id,
+        agente: rule.nombre,
+        mensaje: `${action.tipo}: ${action.titulo || action.accion || 'ejecutado'}`,
+        nivel: 'success'
+      }]);
+    } catch (err) {
+      console.warn(`[AUTOMATION] Action ${action.tipo} error:`, err.message);
+    }
+  }
+}
+
+function interpolate(str, data) {
+  if (!str || !data) return str || '';
+  return str.replace(/\{\{(\w+)\}\}/g, (m, key) => data[key] !== undefined ? data[key] : m);
+}
+
+// ── CRUD: Automation Rules ──────────────────────────────
+app.get('/api/automation/rules', authenticate, async (req, res) => {
+  if (!requireSupabase(res)) return;
+  try {
+    const tenant = normalizeTenantCode(getTenantCode(req));
+    const { data, error } = await supabase
+      .from('automation_rules')
+      .select('*')
+      .eq('empresa_codigo', tenant)
+      .order('created_at', { ascending: false });
+    if (error) return res.status(500).json({ error: error.message });
+    return res.json({ rules: data || [] });
+  } catch (err) { return handleServerError(res, err); }
+});
+
+app.post('/api/automation/rules', authenticate, async (req, res) => {
+  if (!requireSupabase(res)) return;
+  try {
+    const tenant = normalizeTenantCode(getTenantCode(req));
+    if (!tenant) return res.status(400).json({ error: 'Empresa no identificada' });
+    const b = req.body || {};
+    const nombre = (b.nombre || '').toString().trim();
+    const trigger_type = (b.trigger_type || '').toString().trim();
+    if (!nombre || !trigger_type) return res.status(400).json({ error: 'nombre y trigger_type son requeridos' });
+    const validTriggers = ['usuario_creado', 'factura_vencida', 'stock_bajo', 'factura_creada', 'tenant_creado'];
+    if (!validTriggers.includes(trigger_type)) return res.status(400).json({ error: `trigger_type inválido. Válidos: ${validTriggers.join(', ')}` });
+    const { data, error } = await supabase.from('automation_rules').insert([{
+      empresa_codigo: tenant,
+      nombre,
+      descripcion: (b.descripcion || '').toString().slice(0, 500),
+      trigger_type,
+      conditions: b.conditions || {},
+      actions: b.actions || [],
+      enabled: true,
+      execution_count: 0
+    }]);
+    if (error) return res.status(500).json({ error: error.message });
+    const row = Array.isArray(data) ? data[0] : null;
+    return res.status(201).json({ rule: row });
+  } catch (err) { return handleServerError(res, err); }
+});
+
+app.patch('/api/automation/rules/:id', authenticate, async (req, res) => {
+  if (!requireSupabase(res)) return;
+  try {
+    const tenant = normalizeTenantCode(getTenantCode(req));
+    const update = { updated_at: new Date().toISOString() };
+    if (req.body.enabled !== undefined) update.enabled = !!req.body.enabled;
+    if (req.body.nombre) update.nombre = req.body.nombre;
+    if (req.body.descripcion !== undefined) update.descripcion = req.body.descripcion;
+    if (req.body.conditions) update.conditions = req.body.conditions;
+    if (req.body.actions) update.actions = req.body.actions;
+    const { data, error } = await supabase.from('automation_rules').update(update)
+      .eq('id', req.params.id).eq('empresa_codigo', tenant);
+    if (error) return res.status(500).json({ error: error.message });
+    return res.json({ rule: Array.isArray(data) ? data[0] : null, success: true });
+  } catch (err) { return handleServerError(res, err); }
+});
+
+app.delete('/api/automation/rules/:id', authenticate, async (req, res) => {
+  if (!requireSupabase(res)) return;
+  try {
+    const tenant = normalizeTenantCode(getTenantCode(req));
+    const { error } = await supabase.from('automation_rules').delete()
+      .eq('id', req.params.id).eq('empresa_codigo', tenant);
+    if (error) return res.status(500).json({ error: error.message });
+    return res.json({ success: true });
+  } catch (err) { return handleServerError(res, err); }
+});
+
+// ── Polling: Execute all enabled checks ──────────────────
+app.post('/api/automation/execute', authenticate, async (req, res) => {
+  if (!requireSupabase(res)) return;
+  try {
+    const tenant = normalizeTenantCode(getTenantCode(req));
+    if (!tenant) return res.status(400).json({ error: 'Empresa no identificada' });
+    const results = [];
+
+    // Check factura_vencida
+    try {
+      const { data: facturas } = await supabase.from('facturas')
+        .select('id, correlativo, total, created_at, empresa_id')
+        .eq('empresa_codigo', tenant);
+      if (facturas && facturas.length) {
+        const now = new Date();
+        const vencidas = facturas.filter(f => {
+          if (!f.created_at) return false;
+          const diff = (now - new Date(f.created_at)) / (1000 * 60 * 60 * 24);
+          return diff >= 3 && (f.estado || 'emitida') !== 'pagada';
+        });
+        if (vencidas.length > 0) {
+          await dispatchAutomationEvent(tenant, 'factura_vencida', {
+            dias_vencida: 3,
+            cantidad: vencidas.length,
+            total: vencidas.reduce((s, f) => s + (Number(f.total) || 0), 0)
+          });
+          results.push({ trigger: 'factura_vencida', matched: vencidas.length });
+        }
+      }
+    } catch (_) {}
+
+    // Check stock_bajo
+    try {
+      const empresa = await resolverEmpresaSupabase(tenant);
+      if (empresa) {
+        const { data: productos } = await supabase.from('productos')
+          .select('id, nombre, stock_actual, stock_minimo')
+          .eq('empresa_id', empresa.id);
+        if (productos && productos.length) {
+          const bajos = productos.filter(p => (Number(p.stock_actual) || 0) <= (Number(p.stock_minimo) || 0));
+          if (bajos.length > 0) {
+            await dispatchAutomationEvent(tenant, 'stock_bajo', {
+              cantidad: bajos.length,
+              productos: bajos.map(p => p.nombre).join(', ')
+            });
+            results.push({ trigger: 'stock_bajo', matched: bajos.length });
+          }
+        }
+      }
+    } catch (_) {}
+
+    return res.json({ executed: true, results, timestamp: new Date().toISOString() });
+  } catch (err) { return handleServerError(res, err); }
 });
 
 // 🔧 FIX VERCEL: Exportación limpia para serverless

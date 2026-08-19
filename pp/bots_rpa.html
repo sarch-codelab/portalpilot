@@ -103,16 +103,16 @@
         <div class="topbar-right">
           <button class="topbar-btn" title="Notificaciones"><i class="fas fa-bell"></i><span
               class="badge">2</span></button>
-          <button class="btn btn-acc btn-sm" onclick="openModal('createModal')"><i class="fas fa-plus"></i> Nuevo
-            Bot</button>
+          <button class="btn btn-ghost btn-sm" onclick="executeAutomation()" title="Ejecutar verificación de condiciones"><i class="fas fa-play-circle"></i> Ejecutar</button>
+          <button class="btn btn-acc btn-sm" onclick="openModal('createModal')"><i class="fas fa-plus"></i> Nueva Regla</button>
         </div>
       </header>
 
       <!-- PAGE HEADER -->
       <div class="page-header">
         <div>
-          <h1 class="page-title">Bots <span>RPA</span></h1>
-          <p class="page-subtitle">Administra y configura los bots de automatización robótica de procesos. Monitorea ejecuciones, errores y rendimiento en tiempo real.</p>
+          <h1 class="page-title">Automatizaciones <span>RPA</span></h1>
+          <p class="page-subtitle">Configura reglas automáticas que se ejecutan cuando ocurren eventos en el sistema. Facturas vencidas, stock bajo, nuevos usuarios y más.</p>
         </div>
         <div class="page-actions">
           <button class="btn btn-outline btn-sm" onclick="exportBots()"><i class="fas fa-download"></i> Exportar
@@ -137,9 +137,11 @@
           <label>Tipo:</label>
           <select class="filter-select" id="filterType" onchange="applyFilters()">
             <option value="">Todos</option>
-            <option value="assistant">Asistente</option>
-            <option value="automatic">Automático</option>
-            <option value="hybrid">Híbrido</option>
+            <option value="usuario_creado">Nuevo Usuario</option>
+            <option value="factura_vencida">Factura Vencida</option>
+            <option value="stock_bajo">Stock Bajo</option>
+            <option value="factura_creada">Factura Creada</option>
+            <option value="tenant_creado">Nuevo Tenant</option>
           </select>
         </div>
         <div class="filter-group">
@@ -158,9 +160,9 @@
         <table class="bots-table">
           <thead>
             <tr>
-              <th class="sortable asc" data-sort="name">Bot</th>
-              <th class="sortable" data-sort="type">Tipo</th>
-              <th class="sortable" data-sort="tenant">Tenant</th>
+              <th class="sortable asc" data-sort="name">Automatización</th>
+              <th class="sortable" data-sort="type">Trigger</th>
+              <th>Acciones</th>
               <th class="sortable" data-sort="status">Estado</th>
               <th class="sortable" data-sort="lastRun">Última Ejecución</th>
               <th>Acciones</th>
@@ -190,7 +192,7 @@
   <div class="modal-overlay" id="createModal">
     <div class="modal">
       <div class="modal-header">
-        <div class="modal-title"><i class="fas fa-plus" style="margin-right:8px;color:var(--accent);"></i>Nuevo Bot RPA
+        <div class="modal-title"><i class="fas fa-bolt" style="margin-right:8px;color:var(--accent);"></i>Nueva Automatización
         </div>
         <button class="modal-close" onclick="closeModal('createModal')"><i class="fas fa-times"></i></button>
       </div>
@@ -201,12 +203,14 @@
             <input type="text" id="b-nombre" class="form-input" placeholder="Ej: Bot Facturación Automática" required>
           </div>
           <div class="form-group">
-            <label class="form-label">Tipo *</label>
+            <label class="form-label">Tipo de Trigger *</label>
             <select id="b-tipo" class="form-select" required>
-              <option value="">Seleccionar...</option>
-              <option value="assistant">Asistente</option>
-              <option value="automatic">Automático</option>
-              <option value="hybrid">Híbrido</option>
+              <option value="">Seleccionar trigger...</option>
+              <option value="usuario_creado">👤 Nuevo Usuario registrado</option>
+              <option value="factura_vencida">📄 Factura vencida (3+ días)</option>
+              <option value="stock_bajo">📦 Stock bajo del mínimo</option>
+              <option value="factura_creada">💰 Factura creada</option>
+              <option value="tenant_creado">🏢 Nuevo Tenant registrado</option>
             </select>
           </div>
           <div class="form-group">
@@ -214,21 +218,16 @@
             <input type="text" id="b-descripcion" class="form-input" placeholder="Breve descripción del bot...">
           </div>
           <div class="form-group">
-            <label class="form-label">Tenant asignado *</label>
-            <select id="b-tenant" class="form-select" required>
-              <option value="">Seleccionar tenant...</option>
-            </select>
-          </div>
-          <div class="form-group">
             <label class="form-label">Acciones a ejecutar</label>
-            <textarea id="b-acciones" class="form-input" rows="4"
-              placeholder="Describe las acciones o tareas que el bot debe ejecutar..."></textarea>
+            <textarea id="b-acciones" class="form-input" rows="3"
+              placeholder="Describe qué debe hacer esta automatización (se creará una notificación automática)..."></textarea>
+            <div class="form-hint"><i class="fas fa-info-circle"></i> Se creará una notificación cuando se ejecute</div>
           </div>
         </form>
       </div>
       <div class="modal-footer">
         <button class="btn btn-ghost" onclick="closeModal('createModal')">Cancelar</button>
-        <button class="btn btn-acc" onclick="createBot()"><i class="fas fa-robot"></i> Crear Bot</button>
+        <button class="btn btn-acc" onclick="createBot()"><i class="fas fa-bolt"></i> Crear Regla</button>
       </div>
     </div>
   </div>

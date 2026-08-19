@@ -661,9 +661,8 @@
     .settings-grid {
       padding: 24px clamp(16px, 4vw, 40px);
       display: grid;
-      grid-template-columns: repeat(2, 1fr);
+      grid-template-columns: 5fr 4fr;
       gap: 20px;
-      overflow: hidden;
     }
 
     .settings-card {
@@ -673,7 +672,7 @@
       padding: 24px;
       display: flex;
       flex-direction: column;
-      gap: 20px;
+      gap: 16px;
     }
 
     .settings-card.full {
@@ -718,6 +717,22 @@
     .settings-card-badge.warning {
       background: rgba(251, 191, 36, 0.15);
       color: var(--yellow);
+    }
+
+    .flag-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13px;
+      color: var(--text);
+    }
+
+    .settings-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: auto;
+      padding-top: 12px;
+      justify-content: flex-end;
     }
 
     /* ===== BANNER PREVIEW ===== */
@@ -894,11 +909,12 @@
       width: 100%;
       border-collapse: separate;
       border-spacing: 0;
+      table-layout: auto;
     }
 
     .env-table th {
       text-align: left;
-      padding: 12px 16px;
+      padding: 10px 14px;
       font-size: 11px;
       font-weight: 600;
       letter-spacing: 1px;
@@ -906,13 +922,15 @@
       color: var(--gray);
       background: var(--card2);
       border-bottom: 1px solid var(--border);
+      white-space: nowrap;
     }
 
     .env-table td {
-      padding: 12px 16px;
+      padding: 10px 14px;
       font-size: 13px;
       color: var(--text);
       border-bottom: 1px solid var(--border);
+      word-break: break-all;
     }
 
     .env-table tr:last-child td {
@@ -923,15 +941,16 @@
       font-family: monospace;
       font-weight: 600;
       color: var(--cyan);
+      white-space: nowrap;
     }
 
     .env-value {
       font-family: monospace;
       color: var(--gray2);
-      max-width: 200px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
+      max-width: none;
+      overflow: visible;
+      text-overflow: unset;
+      white-space: normal;
     }
 
     .env-value.masked {
@@ -1704,15 +1723,15 @@
             <div class="form-group"><label class="form-label">Fecha Fin</label><input type="datetime-local"
                 class="form-input" id="bannerEnd"></div>
           </div>
-          <div class="form-group">
-            <label class="form-label" style="display:flex;align-items:center;gap:8px">
+          <div class="form-group" style="margin-bottom:0">
+            <div style="display:flex;align-items:center;gap:10px">
               <label class="form-switch"><input type="checkbox" id="bannerActive" onchange="toggleBanner()"><span
                   class="form-switch-slider"></span></label>
-              Activar Banner Global
-            </label>
+              <span style="font-size:13px;color:var(--text);font-weight:600;">Activar Banner Global</span>
+            </div>
           </div>
           <div id="bannerPreviewContainer"></div>
-          <div style="display:flex;gap:8px;margin-top:auto">
+          <div class="settings-actions">
             <button class="btn btn-outline btn-sm" onclick="previewBanner()"><i class="fas fa-eye"></i> Vista
               Previa</button>
             <button class="btn btn-acc btn-sm" onclick="publishBanner()"><i class="fas fa-paper-plane"></i>
@@ -1739,7 +1758,7 @@
               <tbody id="envTableBody"></tbody>
             </table>
           </div>
-          <div style="display:flex;gap:8px;margin-top:auto">
+          <div class="settings-actions">
             <button class="btn btn-outline btn-sm" onclick="addEnvVar()"><i class="fas fa-plus"></i> Nueva
               Variable</button>
             <button class="btn btn-warning btn-sm" onclick="syncEnvVars()"><i class="fas fa-sync-alt"></i>
@@ -1763,28 +1782,13 @@
             <div class="settings-card-title"><i class="fas fa-toggle-on"></i> Feature Flags</div>
           </div>
           <div style="display:flex;flex-direction:column;gap:14px">
-            <label
-              style="display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--text)"><span>🧪
-                Modo Beta para nuevos features</span><label class="form-switch"><input type="checkbox" checked><span
-                  class="form-switch-slider"></span></label></label>
-            <label
-              style="display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--text)"><span>🔐
-                Requiere 2FA para todos los admins</span><label class="form-switch"><input type="checkbox" checked><span
-                  class="form-switch-slider"></span></label></label>
-            <label
-              style="display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--text)"><span>📊
-                Analytics detallados en dashboard</span><label class="form-switch"><input type="checkbox"><span
-                  class="form-switch-slider"></span></label></label>
-            <label
-              style="display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--text)"><span>🌍
-                Multi-región (CDN global)</span><label class="form-switch"><input type="checkbox"><span
-                  class="form-switch-slider"></span></label></label>
-            <label
-              style="display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--text)"><span>🤖
-                Auto-scaling de bots RPA</span><label class="form-switch"><input type="checkbox" checked><span
-                  class="form-switch-slider"></span></label></label>
+            <div class="flag-row"><span>🧪 Modo Beta para nuevos features</span><label class="form-switch"><input type="checkbox" checked><span class="form-switch-slider"></span></label></div>
+            <div class="flag-row"><span>🔐 Requiere 2FA para todos los admins</span><label class="form-switch"><input type="checkbox" checked><span class="form-switch-slider"></span></label></div>
+            <div class="flag-row"><span>📊 Analytics detallados en dashboard</span><label class="form-switch"><input type="checkbox"><span class="form-switch-slider"></span></label></div>
+            <div class="flag-row"><span>🌍 Multi-región (CDN global)</span><label class="form-switch"><input type="checkbox"><span class="form-switch-slider"></span></label></div>
+            <div class="flag-row"><span>🤖 Auto-scaling de bots RPA</span><label class="form-switch"><input type="checkbox" checked><span class="form-switch-slider"></span></label></div>
           </div>
-          <div style="margin-top:auto;display:flex;gap:8px">
+          <div class="settings-actions">
             <button class="btn btn-outline btn-sm" onclick="resetFlags()"><i class="fas fa-undo"></i> Resetear</button>
             <button class="btn btn-acc btn-sm" onclick="saveFlags()"><i class="fas fa-save"></i> Guardar</button>
           </div>

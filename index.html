@@ -898,6 +898,16 @@
         </div>
       </div>
 
+      <!-- FREE TRIAL BANNER -->
+      <div class="reveal" style="max-width:600px;margin:0 auto 32px;background:linear-gradient(135deg,rgba(52,211,153,0.12),rgba(52,211,153,0.04));border:1px solid rgba(52,211,153,0.25);border-radius:16px;padding:24px 28px;text-align:center;">
+        <div style="font-size:13px;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">🚀 Prueba Gratis — 15 Días</div>
+        <div style="font-size:15px;color:var(--white);font-weight:600;margin-bottom:6px;">Prueba Business sin compromiso</div>
+        <div style="font-size:13px;color:var(--text-dim);line-height:1.5;">Acceso completo a todos los módulos, hasta 25 usuarios y 3 empresas. Sin tarjeta de crédito requerida.</div>
+        <button class="btn btn-ghost btn-sm glow-on-hover glow-ghost" style="margin-top:16px;border:1px solid rgba(52,211,153,0.4);color:var(--green);" onclick="selectPlan('starter')">
+          <i class="fas fa-play" style="margin-right:6px;"></i> Iniciar Prueba Gratis
+        </button>
+      </div>
+
       <div class="pricing-table-wrapper">
         <div class="pricing-table reveal">
           <div class="pt-head">
@@ -906,74 +916,152 @@
               <div style="font-size:13px;color:var(--text-muted);margin-top:8px;line-height:1.6;">Todas las funciones base
                 incluidas. Precios en Lempiras (HNL).</div>
             </div>
-            <div class="pt-col-head">
-              <div class="ch-name">Starter</div>
-              <div class="ch-price"><sup>L</sup><span id="p1">499</span><span class="period">/mes</span></div>
-            </div>
             <div class="pt-col-head featured-col">
               <div class="ch-name" style="display:flex;align-items:center;gap:8px;">Business <span
-                  style="background:var(--white);color:#000;font-size:9px;padding:2px 8px;border-radius:10px;font-weight:600;">POPULAR</span>
+                  style="background:var(--white);color:#000;font-size:9px;padding:2px 8px;border-radius:10px;font-weight:600;">⭐ POPULAR</span>
               </div>
-              <div class="ch-price"><sup>L</sup><span id="p2">1,499</span><span class="period">/mes</span></div>
+              <div class="ch-price"><sup>L</sup><span id="p1">1,499</span><span class="period">/mes</span></div>
             </div>
             <div class="pt-col-head">
               <div class="ch-name">Enterprise</div>
-              <div class="ch-price"><sup>L</sup><span>4,999</span><span class="period">/mes</span></div>
+              <div class="ch-price"><sup>L</sup><span id="p2">4,999</span><span class="period">/mes</span></div>
             </div>
           </div>
+          <!-- Usuarios activos -->
           <div class="pt-row">
             <div class="pt-cell">Usuarios activos</div>
-            <div class="pt-cell">1 usuario</div>
-            <div class="pt-cell featured-col">Hasta 25 usuarios</div>
-            <div class="pt-cell">Ilimitados</div>
+            <div class="pt-cell featured-col">Hasta <strong>25</strong></div>
+            <div class="pt-cell"><strong>Ilimitados</strong></div>
           </div>
+          <!-- Empresas / Tenants -->
           <div class="pt-row">
-            <div class="pt-cell">IA Groq API</div>
-            <div class="pt-cell">50 consultas/mes</div>
-            <div class="pt-cell featured-col"><i class="fas fa-check check-yes"></i> Ilimitada</div>
-            <div class="pt-cell"><i class="fas fa-check check-yes"></i> Personalizada</div>
+            <div class="pt-cell">Empresas / Tenants</div>
+            <div class="pt-cell featured-col">Hasta <strong>3</strong></div>
+            <div class="pt-cell"><strong>Ilimitadas</strong></div>
           </div>
+          <!-- Módulos incluidos -->
           <div class="pt-row">
             <div class="pt-cell">Módulos incluidos</div>
-            <div class="pt-cell">2 módulos</div>
-            <div class="pt-cell featured-col">Todos los módulos</div>
-            <div class="pt-cell">Todos + API</div>
+            <div class="pt-cell featured-col"><strong>Todos</strong></div>
+            <div class="pt-cell"><strong>Todos + módulos Enterprise</strong></div>
           </div>
+          <!-- Facturación Electrónica SAR -->
           <div class="pt-row">
             <div class="pt-cell">Facturación Electrónica SAR</div>
-            <div class="pt-cell"><i class="fas fa-check check-yes"></i></div>
             <div class="pt-cell featured-col"><i class="fas fa-check check-yes"></i></div>
             <div class="pt-cell"><i class="fas fa-check check-yes"></i></div>
           </div>
+          <!-- IA Portal Pilot -->
           <div class="pt-row">
-            <div class="pt-cell">Multi-empresa</div>
-            <div class="pt-cell"><i class="fas fa-times check-no"></i></div>
-            <div class="pt-cell featured-col">Hasta 3</div>
-            <div class="pt-cell">Ilimitadas</div>
+            <div class="pt-cell">IA Portal Pilot</div>
+            <div class="pt-cell featured-col">Uso generoso</div>
+            <div class="pt-cell">IA avanzada / personalizada</div>
           </div>
+          <!-- API -->
           <div class="pt-row">
-            <div class="pt-cell">Soporte técnico</div>
-            <div class="pt-cell">Comunidad</div>
-            <div class="pt-cell featured-col">Email 24h</div>
-            <div class="pt-cell">Prioritario 24/7</div>
+            <div class="pt-cell">API</div>
+            <div class="pt-cell featured-col"><i class="fas fa-times check-no"></i></div>
+            <div class="pt-cell"><i class="fas fa-check check-yes"></i> API completa</div>
           </div>
+          <!-- Automatizaciones -->
+          <div class="pt-row">
+            <div class="pt-cell">Automatizaciones</div>
+            <div class="pt-cell featured-col">Estándar</div>
+            <div class="pt-cell"><strong>Avanzadas</strong></div>
+          </div>
+          <!-- RPA -->
+          <div class="pt-row">
+            <div class="pt-cell">RPA</div>
+            <div class="pt-cell featured-col">Estándar</div>
+            <div class="pt-cell"><strong>Avanzado</strong></div>
+          </div>
+          <!-- Multiempresa -->
+          <div class="pt-row">
+            <div class="pt-cell">Multiempresa</div>
+            <div class="pt-cell featured-col">Hasta <strong>3 empresas</strong></div>
+            <div class="pt-cell"><strong>Ilimitada</strong></div>
+          </div>
+          <!-- Almacenamiento -->
           <div class="pt-row">
             <div class="pt-cell">Almacenamiento</div>
-            <div class="pt-cell">100 MB</div>
-            <div class="pt-cell featured-col">5 GB</div>
-            <div class="pt-cell">Ilimitado</div>
+            <div class="pt-cell featured-col"><strong>5 GB</strong></div>
+            <div class="pt-cell"><strong>50 GB+</strong></div>
           </div>
+          <!-- Roles y permisos -->
+          <div class="pt-row">
+            <div class="pt-cell">Roles y permisos</div>
+            <div class="pt-cell featured-col"><i class="fas fa-check check-yes"></i></div>
+            <div class="pt-cell"><i class="fas fa-check check-yes"></i> Avanzados</div>
+          </div>
+          <!-- Auditoría / Logs -->
+          <div class="pt-row">
+            <div class="pt-cell">Auditoría / Logs</div>
+            <div class="pt-cell featured-col"><i class="fas fa-check check-yes"></i></div>
+            <div class="pt-cell"><strong>Auditoría avanzada</strong></div>
+          </div>
+          <!-- Reportes -->
+          <div class="pt-row">
+            <div class="pt-cell">Reportes</div>
+            <div class="pt-cell featured-col">Estándar</div>
+            <div class="pt-cell"><strong>Avanzados + personalizados</strong></div>
+          </div>
+          <!-- Integraciones -->
+          <div class="pt-row">
+            <div class="pt-cell">Integraciones</div>
+            <div class="pt-cell featured-col">Estándar</div>
+            <div class="pt-cell"><strong>Personalizadas</strong></div>
+          </div>
+          <!-- Soporte -->
+          <div class="pt-row">
+            <div class="pt-cell">Soporte</div>
+            <div class="pt-cell featured-col">Email prioritario</div>
+            <div class="pt-cell"><strong>Prioritario 24/7</strong></div>
+          </div>
+          <!-- SLA -->
+          <div class="pt-row">
+            <div class="pt-cell">SLA</div>
+            <div class="pt-cell featured-col">Estándar</div>
+            <div class="pt-cell"><strong>99.9%</strong></div>
+          </div>
+          <!-- Onboarding -->
+          <div class="pt-row">
+            <div class="pt-cell">Onboarding</div>
+            <div class="pt-cell featured-col">Autogestionado</div>
+            <div class="pt-cell"><strong>Asistido</strong></div>
+          </div>
+          <!-- Migración de datos -->
+          <div class="pt-row">
+            <div class="pt-cell">Migración de datos</div>
+            <div class="pt-cell featured-col"><i class="fas fa-times check-no"></i></div>
+            <div class="pt-cell"><i class="fas fa-check check-yes"></i></div>
+          </div>
+          <!-- Personalización -->
+          <div class="pt-row">
+            <div class="pt-cell">Personalización</div>
+            <div class="pt-cell featured-col"><i class="fas fa-times check-no"></i></div>
+            <div class="pt-cell"><i class="fas fa-check check-yes"></i></div>
+          </div>
+          <!-- Account Manager -->
+          <div class="pt-row">
+            <div class="pt-cell">Account Manager</div>
+            <div class="pt-cell featured-col"><i class="fas fa-times check-no"></i></div>
+            <div class="pt-cell"><i class="fas fa-check check-yes"></i></div>
+          </div>
+          <!-- Capacitación empresarial -->
+          <div class="pt-row">
+            <div class="pt-cell">Capacitación empresarial</div>
+            <div class="pt-cell featured-col"><i class="fas fa-times check-no"></i></div>
+            <div class="pt-cell"><i class="fas fa-check check-yes"></i></div>
+          </div>
+          <!-- Objetivo -->
+          <div class="pt-row" style="background:rgba(255,255,255,0.02);">
+            <div class="pt-cell" style="font-weight:700;color:var(--white);">Objetivo</div>
+            <div class="pt-cell featured-col" style="font-size:12px;">PYMES en crecimiento</div>
+            <div class="pt-cell" style="font-size:12px;">Empresas medianas / grandes</div>
+          </div>
+          <!-- Footer buttons -->
           <div class="pt-footer">
             <div class="pt-footer-cell"></div>
-            <div class="pt-footer-cell">
-              <div class="bb-wrap" style="border-radius:40px;">
-                <button class="btn btn-outline btn-sm glow-on-hover glow-ghost" style="width:100%;justify-content:center;"
-                  onclick="selectPlan('starter')">Elegir Plan</button>
-                <div class="bb-mask">
-                  <div class="bb-beam bb-run" style="--bb-size:60px;--bb-dur:6s;--bb-delay:0s;--bb-from:#ffaa40;--bb-to:#9c40ff;"></div>
-                </div>
-              </div>
-            </div>
             <div class="pt-footer-cell featured-col">
               <div class="bb-wrap" style="border-radius:40px;">
                 <button class="sweep-btn" onclick="selectPlan('business')">

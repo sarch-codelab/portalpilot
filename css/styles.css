@@ -1240,7 +1240,7 @@ nav {
 
 .pt-head {
   display: grid;
-  grid-template-columns: 1.3fr 1fr 1fr 1fr;
+  grid-template-columns: 1.3fr 1fr 1fr;
   border-bottom: 1px solid var(--border);
 }
 
@@ -1292,7 +1292,7 @@ nav {
 
 .pt-row {
   display: grid;
-  grid-template-columns: 1.3fr 1fr 1fr 1fr;
+  grid-template-columns: 1.3fr 1fr 1fr;
   border-bottom: 1px solid var(--border);
 }
 
@@ -1335,7 +1335,7 @@ nav {
 
 .pt-footer {
   display: grid;
-  grid-template-columns: 1.3fr 1fr 1fr 1fr;
+  grid-template-columns: 1.3fr 1fr 1fr;
   border-top: 1px solid var(--border);
   padding: clamp(16px, 2vw, 24px) 0;
 }

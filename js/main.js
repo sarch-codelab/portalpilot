@@ -109,8 +109,8 @@ function toggleFaq(btn) {
 
 // ── Pricing Toggle ───────────────────────────────────
 const prices = {
-  monthly: { p1: '299', p2: '899', p3: 'Custom' },
-  yearly: { p1: '239', p2: '719', p3: 'Custom' }
+  monthly: { p1: '1,499', p2: '4,999' },
+  yearly: { p1: '1,199', p2: '3,999' }
 };
 
 function setPricingToggle(btn, mode) {

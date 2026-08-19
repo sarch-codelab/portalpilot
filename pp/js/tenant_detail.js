@@ -792,11 +792,6 @@ window.addEventListener('load', () => {
             setTimeout(() => el.classList.add('in'), i * 30);
         });
     }, 100);
-
-    const backBtn = document.getElementById('backBtn');
-    if (backBtn && document.referrer.includes('tenants.html')) {
-        backBtn.style.display = 'flex';
-    }
 });
 
 // ── Load Tenant Data from API ──────────────────────
@@ -833,6 +828,19 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('tenant-country').textContent = preview.country || 'N/A';
             document.getElementById('tenant-timezone').textContent = detail.timezone || 'N/A';
 
+            const statusEl = document.getElementById('tenant-status');
+            if (statusEl) {
+                const st = (preview.status || 'activo').toLowerCase();
+                statusEl.textContent = st === 'activo' ? 'Activo' : st === 'suspendido' ? 'Suspendido' : st === 'pending' ? 'Pendiente' : preview.status || 'Activo';
+                statusEl.className = 'badge badge-' + (st === 'activo' ? 'success' : st === 'suspendido' ? 'danger' : 'warning');
+            }
+            const planEl = document.getElementById('tenant-plan');
+            if (planEl) planEl.textContent = preview.plan || 'Sin plan';
+            const regEl = document.getElementById('tenant-registered');
+            if (regEl && detail.createdAt) {
+                regEl.textContent = new Date(detail.createdAt).toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' });
+            }
+
             if (preview.logo) {
                 const logoEl = document.querySelector('.tenant-logo');
                 if (logoEl) {
@@ -843,4 +851,23 @@ document.addEventListener('DOMContentLoaded', () => {
         .catch(err => {
             console.error('❌ Error:', err.message);
         });
+});
+
+// ── Notifications Panel ─────────────────
+function toggleNotifPanel() {
+    const panel = document.getElementById('notifPanel');
+    if (panel) panel.classList.toggle('active');
+}
+function clearNotifications() {
+    const list = document.getElementById('notifList');
+    if (list) list.innerHTML = '<div style="text-align:center;padding:32px 16px;color:var(--gray);font-size:13px;"><i class="fas fa-bell-slash" style="font-size:24px;display:block;margin-bottom:8px;"></i>Sin notificaciones</div>';
+    const badge = document.getElementById('notifBadge');
+    if (badge) badge.style.display = 'none';
+}
+document.addEventListener('click', function(e) {
+    const wrapper = document.getElementById('notifWrapper');
+    if (wrapper && !wrapper.contains(e.target)) {
+        const panel = document.getElementById('notifPanel');
+        if (panel) panel.classList.remove('active');
+    }
 });

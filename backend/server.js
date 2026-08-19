@@ -459,6 +459,19 @@ async function findTenantByIdentifier(identifier) {
   if (!identifier) return null;
   const normalizedIdentifier = String(identifier).trim();
 
+  // 1. Buscar en Supabase primero
+  if (supabase) {
+    try {
+      const { data: tenant, error } = await supabase.from('tenants').select('*').eq('codigo', normalizedIdentifier).maybeSingle();
+      if (!error && tenant) return tenant;
+    } catch (_) {}
+    try {
+      const { data: tenant, error } = await supabase.from('tenants').select('*').eq('id', normalizedIdentifier).maybeSingle();
+      if (!error && tenant) return tenant;
+    } catch (_) {}
+  }
+
+  // 2. Buscar en NocoDB como respaldo
   try {
     const response = await nocodbApi.get(EMPRESAS_TABLE, {
       params: { where: `(codigo,eq,${formatNocoFilter(normalizedIdentifier)})`, limit: 1 }
@@ -1534,33 +1547,93 @@ app.post('/api/tenants', authenticate, async (req, res) => {
     const { nombre, dominio, plan, emailAdmin, pais, zonaHoraria, notas } = req.body;
     const codigo = `PP-${Date.now().toString().slice(-6)}`;
 
-    await nocodbApi.post(EMPRESAS_TABLE, {
-      nombre, codigo, dominio, plan,
-      status: 'pending', Status: 'pending', estado: 'pending', Estado: 'pending',
-      pais, zona_horaria: zonaHoraria, notas
-    });
+    // 1. Crear tenant en Supabase
+    if (supabase) {
+      const { error: tenantErr } = await supabase.from('tenants').insert({
+        codigo,
+        nombre_empresa: nombre,
+        dominio,
+        plan: plan || 'starter',
+        estado: 'activo',
+        pais,
+        zona_horaria: zonaHoraria,
+        notas,
+        email: emailAdmin,
+        limite_usuarios: 10
+      });
+      if (tenantErr) {
+        console.error('[CREAR_TENANT] Error Supabase tenant:', tenantErr.message);
+        throw new Error('No se pudo crear el tenant en la base de datos');
+      }
+    }
+
+    // También intentar NocoDB como respaldo
+    try {
+      await nocodbApi.post(EMPRESAS_TABLE, {
+        nombre, codigo, dominio, plan,
+        status: 'activo', Status: 'activo', estado: 'activo', Estado: 'activo',
+        pais, zona_horaria: zonaHoraria, notas
+      });
+    } catch (nocoErr) {
+      console.warn('[CREAR_TENANT] NocoDB fallback falló:', nocoErr.message);
+    }
 
     const passwordTemporal = generateSecurePassword();
     const salt = await bcrypt.genSalt(10);
     const passwordHash = await bcrypt.hash(passwordTemporal, salt);
 
-    const existingResponse = await nocodbApi.get(USUARIOS_TABLE, {
-      params: { where: `(email,eq,${emailAdmin})`, limit: 1 }
-    });
-    if (existingResponse.data.list && existingResponse.data.list.length > 0) {
-      return res.status(400).json({ error: 'El correo del administrador ya está registrado' });
+    // 2. Verificar si el email ya existe en Supabase
+    if (supabase) {
+      const { data: existing } = await supabase.from('usuarios').select('id').eq('email', emailAdmin.toLowerCase().trim()).maybeSingle();
+      if (existing) {
+        return res.status(400).json({ error: 'El correo del administrador ya está registrado' });
+      }
     }
 
-    const creadoRes = await nocodbApi.post(USUARIOS_TABLE, {
-      nombre: 'Owner', apellido: 'Tenant', email: emailAdmin, rol: 'Owner',
-      password: passwordHash, empresa_codigo: codigo,
-      status: 'pending', Status: 'pending', estado: 'pending', Estado: 'pending',
-      notas: 'Cuenta Owner pendiente de activación'
-    });
+    // 3. Crear usuario Owner en Supabase
+    let adminUserId = null;
+    if (supabase) {
+      const { data: authData, error: authErr } = await supabase.auth.admin.createUser({
+        email: emailAdmin.toLowerCase().trim(),
+        password: passwordTemporal,
+        email_confirm: true
+      });
+      if (authErr) {
+        console.error('[CREAR_TENANT] Error crear auth user:', authErr.message);
+      } else {
+        adminUserId = authData.user.id;
+        const { error: insertErr } = await supabase.from('usuarios').insert({
+          id: adminUserId,
+          email: emailAdmin.toLowerCase().trim(),
+          nombre: 'Owner',
+          apellido: 'Tenant',
+          rol: 'Owner',
+          empresa_codigo: codigo,
+          estado: 'activo',
+          activo: true
+        });
+        if (insertErr) {
+          console.error('[CREAR_TENANT] Error insertar usuario:', insertErr.message);
+        }
+      }
+    }
+
+    // También intentar NocoDB como respaldo
+    let creadoRes = null;
+    try {
+      creadoRes = await nocodbApi.post(USUARIOS_TABLE, {
+        nombre: 'Owner', apellido: 'Tenant', email: emailAdmin, rol: 'Owner',
+        password: passwordHash, empresa_codigo: codigo,
+        status: 'activo', Status: 'activo', estado: 'activo', Estado: 'activo',
+        notas: 'Cuenta Owner'
+      });
+    } catch (nocoUserErr) {
+      console.warn('[CREAR_TENANT] NocoDB usuario fallback falló:', nocoUserErr.message);
+    }
 
     let activationToken = null;
     try {
-      const createdId = creadoRes.data?.id || creadoRes.data?.Id || creadoRes.data?.ID;
+      const createdId = adminUserId || creadoRes?.data?.id || creadoRes?.data?.Id;
       activationToken = jwt.sign(
         { sub: createdId, rol: 'Owner', empresa_codigo: codigo },
         JWT_SECRET,
@@ -1570,10 +1643,8 @@ app.post('/api/tenants', authenticate, async (req, res) => {
       console.warn('[CREAR_TENANT] No se pudo generar token:', e.message);
     }
 
-    // 🔧 FIX VERCEL: await en lugar de void
     await enviarAlertaActivacionCuenta(emailAdmin, passwordTemporal, activationToken, nombre);
 
-    // 🔧 FIX VERCEL: await en lugar de setImmediate
     await enviarCorreoPortalPilot(
       process.env.EMAIL_USER,
       '🏢 Nuevo Tenant Registrado',
@@ -1582,7 +1653,7 @@ app.post('/api/tenants', authenticate, async (req, res) => {
       `<ul style="list-style: none; padding: 0;">
         <li><strong>Nombre:</strong> ${nombre}</li>
         <li><strong>Código:</strong> ${codigo}</li>
-        <li><strong>Plan:</strong> ${plan.toUpperCase()}</li>
+        <li><strong>Plan:</strong> ${(plan || 'starter').toUpperCase()}</li>
         <li><strong>Email Admin:</strong> ${emailAdmin}</li>
       </ul>`
     );
@@ -1590,7 +1661,7 @@ app.post('/api/tenants', authenticate, async (req, res) => {
     res.status(201).json({
       message: 'Tenant y Administrador creados exitosamente',
       tenant: { codigo, nombre, dominio, plan, pais },
-      admin: { email: emailAdmin, status: 'pending' }
+      admin: { email: emailAdmin, status: 'activo' }
     });
   } catch (error) {
     return handleServerError(res, error);

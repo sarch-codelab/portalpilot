@@ -560,17 +560,27 @@
 
             <header class="topbar">
                 <div class="topbar-left">
-                    <button class="topbar-btn" id="backBtn" style="display:none;"
+                    <button class="topbar-btn" id="backBtn"
                         onclick="window.location.href='tenants.html'">
                         <i class="fas fa-arrow-left"></i>
                     </button>
                     <div class="topbar-title">Tenant: <span id="tenantNameDisplay">Cargando la Central NERV</span></div>
                 </div>
                 <div class="topbar-right">
-                    <button class="topbar-btn" title="Notificaciones">
-                        <i class="fas fa-bell"></i>
-                        <span class="badge">3</span>
-                    </button>
+                    <div class="notif-wrapper" id="notifWrapper">
+                        <button class="topbar-btn" title="Notificaciones" onclick="toggleNotifPanel()">
+                            <i class="fas fa-bell"></i>
+                            <span class="badge" id="notifBadge">3</span>
+                        </button>
+                        <div class="notif-panel" id="notifPanel">
+                            <div class="notif-panel-header"><span>Notificaciones</span><button class="notif-clear" onclick="clearNotifications()">Limpiar todo</button></div>
+                            <div class="notif-panel-body" id="notifList">
+                                <div class="notif-item unread"><div class="notif-icon" style="background:rgba(52,211,153,0.15);color:var(--green);"><i class="fas fa-user-plus"></i></div><div class="notif-content"><div class="notif-text">Nuevo usuario agregado al tenant</div><div class="notif-time">Hace 5 min</div></div></div>
+                                <div class="notif-item unread"><div class="notif-icon" style="background:rgba(139,92,246,0.15);color:var(--accent);"><i class="fas fa-cog"></i></div><div class="notif-content"><div class="notif-text">Configuración del tenant actualizada</div><div class="notif-time">Hace 1 hora</div></div></div>
+                                <div class="notif-item"><div class="notif-icon" style="background:rgba(251,191,36,0.15);color:var(--yellow);"><i class="fas fa-exclamation-triangle"></i></div><div class="notif-content"><div class="notif-text">Uso de almacenamiento al 80%</div><div class="notif-time">Hace 3 horas</div></div></div>
+                            </div>
+                        </div>
+                    </div>
                     <button class="btn btn-outline btn-sm" onclick="openTenantPortal()">
                         <i class="fas fa-external-link-alt"></i> Abrir Portal
                     </button>
@@ -1642,6 +1652,7 @@
         </main>
     </div>
 
+    <script src="../auth-check.js"></script>
     <script src="js/portal-admin-guard.js"></script>
     <script src="js/tenant_detail.js"></script>
     <script src="../js/notifications.js"></script>

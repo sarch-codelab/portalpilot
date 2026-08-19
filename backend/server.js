@@ -1498,7 +1498,7 @@ app.get('/api/tenants', authenticate, async (req, res) => {
           name: t.nombre_empresa || t.nombre || t.codigo || 'Empresa',
           domain: t.dominio || `${(t.codigo || 'empresa').toLowerCase()}.portalpilot.app`,
           plan: t.plan || 'enterprise',
-          status: t.estado || 'activo',
+          status: t.estado === 'activo' ? 'active' : t.estado === 'suspendido' ? 'suspended' : t.estado || 'active',
           users: 1,
           registered: t.created_at || new Date().toISOString(),
           country: t.pais || 'Honduras',
@@ -1515,7 +1515,7 @@ app.get('/api/tenants', authenticate, async (req, res) => {
         name: 'Portal Pilot Honduras',
         domain: 'portalpilot.pp.ia',
         plan: 'enterprise',
-        status: 'activo',
+        status: 'active',
         users: 1,
         registered: new Date().toISOString(),
         country: 'Honduras'

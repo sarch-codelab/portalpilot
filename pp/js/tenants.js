@@ -572,10 +572,22 @@ function toggleTenantStatus(id) {
   confirmAction(
     `${wasActive ? 'Desactivar' : 'Activar'} Tenant`,
     `¿Deseas ${action} el tenant "${t.name}"?${wasActive ? '\n\nLos usuarios de este tenant no podrán acceder hasta que sea reactivado.' : '\n\nLos usuarios podrán volver a acceder a la plataforma.'}`,
-    () => {
-      t.status = wasActive ? 'suspended' : 'active';
-      filterTenants();
-      alert(`✓ Tenant "${t.name}" ${wasActive ? 'desactivado' : 'activado'} exitosamente`);
+    async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const newEstado = wasActive ? 'suspendido' : 'activo';
+        const res = await fetch(`/api/tenants/${encodeURIComponent(t.id)}`, {
+          method: 'PUT',
+          headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ estado: newEstado })
+        });
+        if (!res.ok) throw new Error('Error al actualizar');
+        t.status = wasActive ? 'suspended' : 'active';
+        filterTenants();
+        alert(`✓ Tenant "${t.name}" ${wasActive ? 'desactivado' : 'activado'} exitosamente`);
+      } catch (e) {
+        alert(`✗ Error al ${action} tenant: ${e.message}`);
+      }
     },
     { btnText: wasActive ? 'Desactivar' : 'Activar', btnClass: wasActive ? 'btn-danger' : 'btn-success' }
   );

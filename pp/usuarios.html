@@ -1708,6 +1708,78 @@
                 padding: 4px;
             }
         }
+
+        /* ─── NOTIFICATION PANEL ──────────── */
+        .notif-wrapper { position: relative; }
+        .notif-panel {
+            position: absolute;
+            top: calc(100% + 8px);
+            right: 0;
+            width: 340px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            z-index: 999;
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(-8px) scale(0.96);
+            transition: all .2s ease;
+            overflow: hidden;
+        }
+        .notif-panel.active {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateY(0) scale(1);
+        }
+        .notif-panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--border);
+            font-weight: 700;
+            font-size: 13px;
+            color: var(--white);
+        }
+        .notif-clear {
+            background: none;
+            border: none;
+            color: var(--accent);
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: color .2s;
+        }
+        .notif-clear:hover { color: var(--white); }
+        .notif-panel-body {
+            max-height: 320px;
+            overflow-y: auto;
+        }
+        .notif-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border);
+            transition: background .2s;
+            cursor: pointer;
+        }
+        .notif-item:hover { background: var(--card2); }
+        .notif-item.unread { background: rgba(139,92,246,0.05); }
+        .notif-icon {
+            width: 34px;
+            height: 34px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+        .notif-content { flex: 1; min-width: 0; }
+        .notif-text { font-size: 12px; color: var(--text); line-height: 1.4; }
+        .notif-time { font-size: 10px; color: var(--gray); margin-top: 2px; }
     </style>
     <link rel="stylesheet" href="../css/notifications.css">
 </head>
@@ -1789,8 +1861,19 @@
                             placeholder="Buscar usuario, email, tenant..." onkeyup="filterUsers()"></div>
                 </div>
                 <div class="topbar-right">
-                    <button class="topbar-btn" title="Notificaciones"><i class="fas fa-bell"></i><span
-                            class="badge">4</span></button>
+                    <div class="notif-wrapper" id="notifWrapper">
+                        <button class="topbar-btn" title="Notificaciones" onclick="toggleNotifPanel()"><i class="fas fa-bell"></i><span
+                                class="badge" id="notifBadge">4</span></button>
+                        <div class="notif-panel" id="notifPanel">
+                            <div class="notif-panel-header"><span>Notificaciones</span><button class="notif-clear" onclick="clearNotifications()">Limpiar todo</button></div>
+                            <div class="notif-panel-body" id="notifList">
+                                <div class="notif-item unread"><div class="notif-icon" style="background:rgba(52,211,153,0.15);color:var(--green);"><i class="fas fa-user-plus"></i></div><div class="notif-content"><div class="notif-text">Nuevo usuario registrado</div><div class="notif-time">Hace 2 min</div></div></div>
+                                <div class="notif-item unread"><div class="notif-icon" style="background:rgba(248,113,113,0.15);color:var(--red);"><i class="fas fa-ban"></i></div><div class="notif-content"><div class="notif-text">Juan Pérez fue suspendido</div><div class="notif-time">Hace 15 min</div></div></div>
+                                <div class="notif-item"><div class="notif-icon" style="background:rgba(139,92,246,0.15);color:var(--accent);"><i class="fas fa-cog"></i></div><div class="notif-content"><div class="notif-text">Configuración de usuarios actualizada</div><div class="notif-time">Hace 1 hora</div></div></div>
+                                <div class="notif-item"><div class="notif-icon" style="background:rgba(251,191,36,0.15);color:var(--yellow);"><i class="fas fa-exclamation-triangle"></i></div><div class="notif-content"><div class="notif-text">Límite de usuarios cercano al máximo</div><div class="notif-time">Hace 3 horas</div></div></div>
+                            </div>
+                        </div>
+                    </div>
                     <button class="btn btn-acc btn-sm" onclick="openModal('createUserModal')"><i
                             class="fas fa-user-plus"></i> Nuevo Usuario</button>
                 </div>
@@ -1877,7 +1960,7 @@
             </div>
 
             <!-- PAGINATION -->
-            <div class="pagination">
+            <div class="pagination" id="pagination" style="display:none;">
                 <div class="pagination-info">Mostrando <strong>1-10</strong> de <strong id="totalCount">0</strong>
                     usuarios</div>
                 <div class="pagination-btns">
@@ -1951,7 +2034,7 @@
                     onclick="closeModal('confirmModal')"><i class="fas fa-times"></i></button>
             </div>
             <div class="modal-body" style="text-align:center;">
-                <img src="../img/navi/navi-suspender.png" alt="Suspender" style="width:140px;height:auto;object-fit:contain;margin:0 auto 16px auto;display:block;">
+                <img id="confirmImage" src="../img/navi/navi-advertencia.png" alt="Advertencia" style="width:140px;height:auto;object-fit:contain;margin:0 auto 16px auto;display:block;">
                 <p id="confirmMessage" style="font-size:14px;color:var(--gray);line-height:1.6;"></p>
             </div>
             <div class="modal-footer"><button class="btn btn-ghost"
@@ -2234,8 +2317,8 @@
           <td><div class="user-actions">
             <button class="action-icon-btn" title="Ver detalle" onclick="event.stopPropagation();window.location.href='usuario_detail.html?id='+encodeURIComponent('${u.id}')+(( '${u.source}' === 'nocodb' ) ? '&source=nocodb' : '')"><i class="fas fa-eye"></i></button>
             <button class="action-icon-btn" title="Editar" onclick="event.stopPropagation();editUser('${u.id}','${u.source || ''}')"><i class="fas fa-edit"></i></button>
-            <button class="action-icon-btn ${u.status === 'active' ? 'danger' : ''}" title="${u.status === 'active' ? 'Suspender' : 'Activar'}" onclick="event.stopPropagation();confirmAction('${u.status === 'active' ? 'Suspender' : 'Activar'} usuario','¿${u.status === 'active' ? 'Suspender' : 'Activar'} a ${nombre} ${apellido}?',()=>toggleUserStatus('${u.id}','${u.status}','${u.source || ''}'))"><i class="fas fa-${u.status === 'active' ? 'pause' : 'play'}-circle"></i></button>
-            <button class="action-icon-btn danger" title="Eliminar" onclick="event.stopPropagation();confirmAction('Eliminar usuario','¿Eliminar permanentemente a ${nombre} ${apellido}? Esta acción no se puede deshacer.',()=>deleteUser('${u.id}','${u.source || ''}'))"><i class="fas fa-trash"></i></button>
+            <button class="action-icon-btn ${u.status === 'active' ? 'danger' : ''}" title="${u.status === 'active' ? 'Suspender' : 'Activar'}" onclick="event.stopPropagation();confirmAction('${u.status === 'active' ? 'Suspender' : 'Activar'} usuario','¿${u.status === 'active' ? 'Suspender' : 'Activar'} a ${nombre} ${apellido}?',()=>toggleUserStatus('${u.id}','${u.status}','${u.source || ''}'),'../img/navi/${u.status === 'active' ? 'navi-suspender.png' : 'navi-advertencia.png'}')"><i class="fas fa-${u.status === 'active' ? 'pause' : 'play'}-circle"></i></button>
+            <button class="action-icon-btn danger" title="Eliminar" onclick="event.stopPropagation();confirmAction('Eliminar usuario','¿Eliminar permanentemente a ${nombre} ${apellido}? Esta acción no se puede deshacer.',()=>deleteUser('${u.id}','${u.source || ''}'),'../img/navi/navi-eliminar.png')"><i class="fas fa-trash"></i></button>
           </div></td>`;
                 tbody.appendChild(row);
             });
@@ -2299,7 +2382,13 @@
         // ── Pagination ──────────────────────────
         function updatePagination() {
             const total = filteredUsers.length, totalPages = Math.ceil(total / itemsPerPage);
+            const paginationEl = document.getElementById('pagination');
             document.getElementById('totalCount').textContent = total;
+            if (total <= itemsPerPage) {
+                if (paginationEl) paginationEl.style.display = 'none';
+                return;
+            }
+            if (paginationEl) paginationEl.style.display = 'flex';
             document.getElementById('prevBtn').disabled = currentPage <= 1;
             document.getElementById('nextBtn').disabled = currentPage >= totalPages;
             document.querySelectorAll('.pagination-btns .pagination-btn:not(#prevBtn):not(#nextBtn)').forEach(btn => btn.classList.remove('active'));
@@ -2332,8 +2421,8 @@
             }
         }
         function clearSelection() { selectedUsers.clear(); renderUsers(); updateBulkActions(); }
-        function bulkSuspend() { confirmAction('Suspender usuarios', `¿Suspender ${selectedUsers.size} usuario(s) seleccionado(s)?`, () => { selectedUsers.forEach(id => { const u = users.find(x => x.id === id); if (u) u.status = 'suspended'; }); filterUsers(); clearSelection(); showMessage('✓ Usuarios suspendidos', 'success'); }); }
-        function bulkActivate() { confirmAction('Activar usuarios', `¿Activar ${selectedUsers.size} usuario(s) seleccionado(s)?`, () => { selectedUsers.forEach(id => { const u = users.find(x => x.id === id); if (u) u.status = 'active'; }); filterUsers(); clearSelection(); showMessage('✓ Usuarios activados', 'success'); }); }
+        function bulkSuspend() { confirmAction('Suspender usuarios', `¿Suspender ${selectedUsers.size} usuario(s) seleccionado(s)?`, () => { selectedUsers.forEach(id => { const u = users.find(x => x.id === id); if (u) u.status = 'suspended'; }); filterUsers(); clearSelection(); showMessage('✓ Usuarios suspendidos', 'success'); }, '../img/navi/navi-suspender.png'); }
+        function bulkActivate() { confirmAction('Activar usuarios', `¿Activar ${selectedUsers.size} usuario(s) seleccionado(s)?`, () => { selectedUsers.forEach(id => { const u = users.find(x => x.id === id); if (u) u.status = 'active'; }); filterUsers(); clearSelection(); showMessage('✓ Usuarios activados', 'success'); }, '../img/navi/navi-advertencia.png'); }
         function bulkDelete() {
             confirmAction('Eliminar usuarios', `¿Eliminar permanentemente ${selectedUsers.size} usuario(s)? Esta acción NO se puede deshacer.`, async () => {
                 const token = localStorage.getItem('token');
@@ -2359,7 +2448,7 @@
                     console.warn('Errores al eliminar usuarios:', failed);
                     showMessage(`Se eliminaron ${deletedIds.length} usuario(s). ${failed.length} no se pudieron borrar.`, 'warning');
                 }
-            });
+            }, '../img/navi/navi-eliminar.png');
         }
 
         // ── Modals ──────────────────────────────
@@ -2479,11 +2568,16 @@
 
         // ── Confirm Modal ───────────────────────
         let pendingAction = null;
-        function confirmAction(title, message, callback) {
+        function confirmAction(title, message, callback, imgSrc) {
             document.getElementById('confirmTitle').textContent = title;
             document.getElementById('confirmMessage').textContent = message;
+            const confirmImg = document.getElementById('confirmImage');
+            if (confirmImg) confirmImg.src = imgSrc || '../img/navi/navi-advertencia.png';
+            const btn = document.getElementById('confirmActionBtn');
+            btn.textContent = 'Confirmar';
+            btn.className = 'btn btn-danger';
             pendingAction = callback;
-            document.getElementById('confirmActionBtn').onclick = () => { if (pendingAction) pendingAction(); closeModal('confirmModal'); pendingAction = null; };
+            btn.onclick = () => { if (pendingAction) pendingAction(); closeModal('confirmModal'); pendingAction = null; };
             openModal('confirmModal');
         }
 
@@ -2591,8 +2685,8 @@
         <div class="detail-actions">
           <button class="btn btn-ghost" onclick="editUser('${user.id}')"><i class="fas fa-edit"></i> Editar</button>
           <button class="btn btn-ghost" onclick="window.location.href='usuario_detail.html?id=${user.id}'"><i class="fas fa-external-link-alt"></i> Abrir página</button>
-          <button class="btn ${user.status === 'active' ? 'btn-danger' : 'btn-acc'}" onclick="toggleUserStatus('${user.id}','${user.status}')"><i class="fas fa-${user.status === 'active' ? 'pause' : 'play'}-circle"></i> ${user.status === 'active' ? 'Suspender' : 'Activar'}</button>
-          <button class="btn btn-outline" onclick="confirmAction('Eliminar usuario','¿Eliminar permanentemente a ${user.nombre} ${user.apellido}?',()=>deleteUser('${user.id}'))"><i class="fas fa-trash"></i> Eliminar</button>
+          <button class="btn ${user.status === 'active' ? 'btn-danger' : 'btn-acc'}" onclick="confirmAction('${user.status === 'active' ? 'Suspender' : 'Activar'} usuario','¿${user.status === 'active' ? 'Suspender' : 'Activar'} a ${user.nombre} ${user.apellido}?',()=>toggleUserStatus('${user.id}','${user.status}'),'../img/navi/${user.status === 'active' ? 'navi-suspender.png' : 'navi-advertencia.png'}')"><i class="fas fa-${user.status === 'active' ? 'pause' : 'play'}-circle"></i> ${user.status === 'active' ? 'Suspender' : 'Activar'}</button>
+          <button class="btn btn-outline" onclick="confirmAction('Eliminar usuario','¿Eliminar permanentemente a ${user.nombre} ${user.apellido}?',()=>deleteUser('${user.id}'),'../img/navi/navi-eliminar.png')"><i class="fas fa-trash"></i> Eliminar</button>
         </div>`;
             document.getElementById('detailPanel').classList.add('active');
         }
@@ -2615,6 +2709,23 @@
             a.click(); URL.revokeObjectURL(url);
             showMessage('✓ CSV exportado exitosamente', 'success');
         }
+
+        // ── Notifications Panel ─────────────────
+        function toggleNotifPanel() {
+            const panel = document.getElementById('notifPanel');
+            panel.classList.toggle('active');
+        }
+        function clearNotifications() {
+            document.getElementById('notifList').innerHTML = '<div style="text-align:center;padding:32px 16px;color:var(--gray);font-size:13px;"><i class="fas fa-bell-slash" style="font-size:24px;display:block;margin-bottom:8px;"></i>Sin notificaciones</div>';
+            const badge = document.getElementById('notifBadge');
+            if (badge) badge.style.display = 'none';
+        }
+        document.addEventListener('click', function(e) {
+            const wrapper = document.getElementById('notifWrapper');
+            if (wrapper && !wrapper.contains(e.target)) {
+                document.getElementById('notifPanel')?.classList.remove('active');
+            }
+        });
 
 
 

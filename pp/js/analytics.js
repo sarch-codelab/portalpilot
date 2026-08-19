@@ -52,7 +52,7 @@ function renderCharts() {
 function renderGrowthChart() {
   const container = document.getElementById('chartGrowth');
   if (!container) return;
-  const dias = summaryData.dias || summaryData.ultimosDias || [];
+  const dias = summaryData.usage7d || summaryData.dias || summaryData.ultimosDias || [];
   if (!dias.length) {
     container.innerHTML = '<div class="chart-placeholder"><i class="fas fa-chart-area"></i><p>Sin datos de actividad reciente</p></div>';
     return;
@@ -83,8 +83,10 @@ function renderActivityChart() {
   if (!container) return;
   const roles = summaryData.roles || {};
   const gastos = summaryData.gastosCategoria || {};
-  const hasRoles = Object.keys(roles).length > 0;
-  const hasGastos = Object.keys(gastos).length > 0;
+  const rolesIsObj = roles && typeof roles === 'object' && !Array.isArray(roles);
+  const gastosIsObj = gastos && typeof gastos === 'object' && !Array.isArray(gastos);
+  const hasRoles = rolesIsObj && Object.keys(roles).length > 0;
+  const hasGastos = gastosIsObj && Object.keys(gastos).length > 0;
   if (!hasRoles && !hasGastos) {
     container.innerHTML = '<div class="chart-placeholder"><i class="fas fa-chart-bar"></i><p>Sin datos de distribución</p></div>';
     return;

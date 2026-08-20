@@ -2462,8 +2462,8 @@ app.post('/api/upload', authenticate, async (req, res) => {
 // MÓDULO ENTERPRISE: API Keys, IA (Groq), Dashboard, Flota, Seguridad, Automatización
 // ═══════════════════════════════════════════════════════════════
 
-function registrarAuditoria(empresaCodigo, accion, descripcion, tipo = 'sistema', usuarioNombre = '', req = null) {
-  if (!supabase) return Promise.resolve();
+async function registrarAuditoria(empresaCodigo, accion, descripcion, tipo = 'sistema', usuarioNombre = '', req = null) {
+  if (!supabase) return;
   const payload = {
     empresa_codigo: normalizeTenantCode(empresaCodigo || getTenantCode(req || { user: {} })),
     accion: String(accion || '').slice(0, 200),
@@ -2473,10 +2473,10 @@ function registrarAuditoria(empresaCodigo, accion, descripcion, tipo = 'sistema'
     ip: (req && req.ip ? String(req.ip).slice(0, 60) : ''),
     created_at: new Date().toISOString()
   };
-  if (!payload.empresa_codigo) return Promise.resolve();
-  return supabase.from('auditoria').insert([payload]).catch(err => {
+  if (!payload.empresa_codigo) return;
+  try { await supabase.from('auditoria').insert([payload]); } catch (err) {
     console.warn('[AUDITORIA] No se pudo registrar:', err.message);
-  });
+  }
 }
 
 async function resolverEmpresaSupabase(empresaCodigo) {

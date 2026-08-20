@@ -2559,7 +2559,7 @@ const AI_PROVIDERS = {
     getKey: () => process.env.GROQ_API_KEY,
     models: {
       chat: 'llama-3.3-70b-versatile',
-      vision: 'llama-4-scout-17b-16e-instruct',
+      vision: 'qwen/qwen3.6-27b',
       fast: 'llama-3.1-8b-instant'
     }
   },

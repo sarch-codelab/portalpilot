@@ -986,3 +986,123 @@ header#mainHeader.scrolled .nav-bar{
   .pp-announce-inner{ padding:10px 14px; gap:10px; }
   .pp-announce-cta{ font-size:12px; }
 }
+
+/* ==========================================
+   POLISH MOBILE — bonito en teléfono
+   ========================================== */
+@media(max-width:768px){
+  /* — Global rhythm — */
+  section{ padding:64px 0 !important; }
+  .container{ padding:0 16px !important; }
+  .sec-eyebrow{ font-size:11px; letter-spacing:1.5px; }
+  .sec-title,.section-label{ font-size:clamp(26px,7vw,32px) !important; line-height:1.15 !important; letter-spacing:-1px !important; }
+  .sec-sub,.section-sub{ font-size:14px !important; line-height:1.6 !important; }
+
+  /* — Hero: stack, center, respiración — */
+  #hero{ padding:56px 0 32px !important; }
+  .hero-bg-wrapper{ margin:0 !important; padding:0 !important; }
+  .hero-inner{ flex-direction:column !important; gap:28px !important; text-align:center !important; }
+  .hero-left-col{ align-items:center !important; text-align:center !important; max-width:100% !important; }
+  .hero-desc-row{ flex-direction:column !important; gap:12px !important; text-align:center !important; }
+  .hero-desc-left,.hero-desc-right{ text-align:center !important; max-width:520px; margin:0 auto; }
+  .hero-cta-btns{ justify-content:center !important; flex-wrap:wrap; gap:12px !important; }
+  .hero-cta-btns .btn,.hero-cta-btns .cssbuttons-io-button{ width:100% !important; max-width:320px; justify-content:center; }
+  .hero-note{ text-align:center !important; }
+  .hero-right-col{ width:100% !important; align-items:center !important; }
+  .terminal-wrap{ width:100% !important; max-width:100% !important; margin:0 auto; }
+  .navi-hero-img{ margin:0 auto; }
+  /* navi-curioso no tapa en móvil */
+  .hero-right-col > div[style*="position:absolute"]{ display:none !important; }
+
+  .hero-stats-row{ flex-wrap:wrap !important; gap:16px !important; justify-content:center !important; }
+  .hero-divider{ display:none !important; }
+  .hero-stat{ min-width:72px; text-align:center; }
+
+  /* — Clients — */
+  .clients-header{ flex-direction:column !important; gap:16px !important; text-align:center; }
+  .clients-sub{ text-align:center !important; }
+  .logo-badges{ gap:10px !important; justify-content:center !important; }
+  .logo-badge{ padding:10px 14px !important; font-size:12px !important; }
+  .clients-body{ flex-direction:column !important; gap:28px !important; }
+
+  /* — Bento — */
+  .bento{ grid-template-columns:1fr !important; gap:16px !important; }
+  .bento-card{ padding:20px 18px !important; }
+  .bento-card.span-2{ grid-column:auto !important; }
+
+  /* — How it works — */
+  .how-layout{ flex-direction:column !important; gap:32px !important; }
+  .how-left,.how-right{ width:100% !important; }
+  .how-big-title{ font-size:clamp(36px,10vw,48px) !important; line-height:0.95 !important; text-align:center; }
+  .how-desc{ text-align:center; margin:0 auto; }
+  .how-svg-wrap{ display:flex; justify-content:center; }
+  .how-right{ gap:16px !important; }
+  .step-row{ padding:16px !important; }
+
+  /* — Testimonial — */
+  #testimony{ flex-direction:column !important; gap:24px !important; padding:32px 16px !important; text-align:center; }
+  #testimony > div{ width:100% !important; }
+  .testimony-text{ font-size:17px !important; line-height:1.6 !important; }
+  .testimony-author{ justify-content:center !important; }
+  .tech-logos{ justify-content:center !important; flex-wrap:wrap !important; }
+  .key-metrics{ grid-template-columns:repeat(2,1fr) !important; gap:12px !important; }
+
+  /* — Database / Infra — */
+  .db-ultimate-container{ padding:48px 16px !important; }
+  .db-flow-wrapper{ gap:14px !important; }
+  .db-stats-row{ gap:16px !important; }
+
+  /* — Pricing — premium en móvil 1 columna centrada — */
+  .pricing-cards-container{ flex-direction:column !important; align-items:center !important; gap:48px !important; padding:18px 16px 36px !important; }
+  .pricing-card-wrapper{ width:100% !important; max-width:360px; margin:0 auto 36px !important; }
+  .pricing-card{ width:100% !important; max-width:360px !important; padding:28px 18px 22px !important; }
+  /* side-tab en móvil: pill superior centrado, no cortado */
+  .pricing-card-side-tab{
+    left:50% !important;
+    top:-14px !important;
+    transform:translateX(-50%) !important;
+    writing-mode:horizontal-tb !important;
+    height:28px !important;
+    width:auto !important;
+    padding:0 14px !important;
+    border-radius:20px !important;
+    font-size:11px !important;
+    letter-spacing:1.5px !important;
+    box-shadow:0 6px 16px rgba(0,0,0,0.25) !important;
+  }
+  .pricing-card-bottom-tab{ font-size:11px !important; letter-spacing:1.2px !important; }
+
+  /* — FAQ / CTA / Footer — */
+  .faq-list{ gap:12px !important; }
+  .faq-q{ padding:16px !important; }
+  .faq-q-text{ font-size:15px !important; }
+  #cta-final .cta-title{ font-size:clamp(28px,8vw,36px) !important; }
+  .cta-btns{ flex-direction:column !important; gap:12px !important; align-items:stretch !important; }
+  .cta-btns .btn{ width:100% !important; justify-content:center !important; }
+
+  footer .footer-top{ grid-template-columns:1fr !important; gap:32px !important; text-align:center; }
+  .footer-logo{ justify-content:center !important; }
+  .footer-desc{ text-align:center; margin:0 auto; max-width:340px; }
+  .footer-social{ justify-content:center !important; }
+  .footer-col h5{ text-align:center; }
+  .footer-col ul{ align-items:center; }
+  .footer-bottom{ flex-direction:column !important; gap:8px !important; text-align:center !important; }
+}
+
+@media(max-width:480px){
+  section{ padding:48px 0 !important; }
+  .hero-h1{ font-size:clamp(26px,9vw,32px) !important; }
+  .bento-card h3{ font-size:18px !important; }
+  .bento-card p{ font-size:13px !important; }
+  .pricing-card{ max-width:320px !important; }
+  .pricing-card-price{ font-size:2.6rem !important; }
+  .nav-logo img[alt="Portal Pilot"]{ height:18px !important; }
+  .footer-desc{ font-size:13px !important; }
+  .pp-announce-bar .pp-announce-cta{ padding:5px 10px; font-size:11px; }
+}
+
+@media(max-width:360px){
+  .pricing-card{ max-width:300px !important; padding:22px 14px 18px !important; }
+  .logo-badges{ gap:8px !important; }
+  .key-metrics{ grid-template-columns:1fr !important; }
+}

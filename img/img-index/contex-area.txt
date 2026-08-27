@@ -1,0 +1,4 @@
+area-comercial.png: Escena 3D realista de un almacén moderno automatizado con iluminación púrpura. Un gran robot industrial blanco y morado con brazo mecánico y pinza está levantando cajas de madera etiquetadas “Resell”. Alrededor se ven estanterías llenas de cajas, cintas transportadoras, otros robots trabajando y un ambiente de logística de alto volumen. El robot principal tiene un icono de maletín morado brillante en el pecho.
+
+sector-retail.png: Escena 3D de un supermercado moderno con iluminación púrpura. Un robot blanco y morado con ruedas, logo “P” en el pecho y un escáner de código de barras en la cabeza, está escaneando un producto frente a una terminal de autopago. Lleva una canasta morada en la espalda y tiene otra canasta llena de productos a su lado. Al fondo se ven pasillos llenos de mercancía y un letrero de “FOOD”.
+

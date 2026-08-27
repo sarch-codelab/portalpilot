@@ -3,9 +3,7 @@
 
 <head>
   <meta charset="UTF-8">
-  
-    <link rel="icon" type="image/png"  href="img/iconos/robot_logo.png">
-    
+    <link rel="icon" type="image/png" href="img/iconos/robot_logo.png">
     <title>Portal Pilot Honduras — ERP Comercial, POS y Facturación Electrónica SAR</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Portal Pilot Honduras: ERP comercial integral para pulperías, supermercados, distribuidoras y cadenas retail en Honduras. Facturación electrónica SAR, inventario multi-bodega, POS y más con IA integrada.">
@@ -41,9 +39,66 @@
     href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap"
     rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-  <link rel="stylesheet" href="index.css">
+  <link rel="stylesheet" href="index.css?v=9">
 </head>
 <body>
+
+  <!-- TOP ANNOUNCEMENT BANNER — diseño premium, sticky, solo cierra con X -->
+  <div id="top-banner" class="pp-announce-bar">
+    <div class="pp-announce-inner">
+      <div class="pp-announce-left">
+        <span class="pp-announce-dot"></span>
+        <span class="pp-announce-strong">Prueba Gratis — 15 días</span>
+        <span class="pp-announce-sep">·</span>
+        <span class="pp-announce-muted">Business sin compromiso · Sin tarjeta requerida</span>
+      </div>
+      <div class="pp-announce-right">
+        <a href="registrov2.html" class="pp-announce-cta">Iniciar Prueba Gratis <i class="fas fa-arrow-right"></i></a>
+        <button type="button" aria-label="Cerrar banner" class="pp-announce-close" onclick="(function(){var b=document.getElementById('top-banner');b.style.display='none';try{localStorage.setItem('pp_banner_dismissed_at',String(Date.now()));}catch(e){}if(window.syncNavTop)window.syncNavTop();})()"><i class="fas fa-times"></i></button>
+      </div>
+    </div>
+  </div>
+  <script>try{
+    if(localStorage.getItem('pp_banner_dismissed')==='1'){ localStorage.removeItem('pp_banner_dismissed'); }
+    // reset para ver nuevo diseño premium (v7)
+    if(localStorage.getItem('pp_banner_v')!=='7'){ localStorage.removeItem('pp_banner_dismissed_at'); localStorage.setItem('pp_banner_v','7'); }
+    var t=localStorage.getItem('pp_banner_dismissed_at');
+    if(t && (Date.now()-parseInt(t,10) < 10*60*1000)){
+      document.getElementById('top-banner').style.display='none';
+    }
+  }catch(e){}</script>
+  <style>header#mainHeader{transition:top .3s ease}</style>
+  <style>#smPanel,.sm-prelayers{transition:top .3s ease}</style>
+  <script>
+  (function(){
+    window.syncNavTop=function(){
+      var b=document.getElementById('top-banner');
+      var h=document.getElementById('mainHeader');
+      var panel=document.getElementById('smPanel');
+      var layers=document.getElementById('smPrelayers');
+      var visible=b && b.style.display!=='none' && b.offsetHeight>0;
+      var baseTop=16;
+      if(visible){
+        var bh=b.offsetHeight;
+        if(h) h.style.setProperty('top',(bh+baseTop)+'px','important');
+        if(panel){ panel.style.top=bh+'px'; panel.style.height='calc(100% - '+bh+'px)'; }
+        if(layers){ layers.style.top=bh+'px'; layers.style.height='calc(100% - '+bh+'px)'; }
+      } else {
+        if(h) h.style.setProperty('top',baseTop+'px','important');
+        if(panel){ panel.style.top='0px'; panel.style.height='100%'; }
+        if(layers){ layers.style.top='0px'; layers.style.height='100%'; }
+      }
+    };
+    window.addEventListener('load', syncNavTop);
+    window.addEventListener('resize', syncNavTop);
+    setTimeout(syncNavTop, 50);
+    setTimeout(syncNavTop, 300);
+    var b=document.getElementById('top-banner');
+    if(b && window.MutationObserver){
+      new MutationObserver(syncNavTop).observe(b,{attributes:true,attributeFilter:['style']});
+    }
+  })();
+  </script>
 
   <!-- DOT GRID (fondo) -->
   <div class="dot-grid-section">
@@ -70,9 +125,9 @@
   <!-- NAV -->
   <header id="mainHeader">
     <nav class="nav-bar nav-bar-top">
-      <div class="nav-logo">
-        <div class="logo-icon"><img src="img/iconos/robot_logo.png" alt="Portal Pilot"></div>
-        PORTAL PILOT
+      <div class="nav-logo" style="gap:10px;">
+        <div class="logo-icon" style="width:26px;height:26px;"><img src="img/iconos/robot_logo.png" alt="Portal Pilot" style="width:26px;height:26px;object-fit:contain;"></div>
+        <img src="img/iconos/Portal Pilot.png" alt="Portal Pilot" style="height:22px;width:auto;object-fit:contain;display:block;">
       </div>
       <div class="nav-right">
         <a href="login.html" class="btn btn-ghost btn-sm glow-on-hover glow-ghost">Iniciar Sesión</a>
@@ -200,72 +255,10 @@
           </div>
 
           <div class="hero-right-col">
-          <!-- RANK CARD -->
-          <div class="rank-card reveal" style="transition-delay:0s;">
-            <div class="rank-icon">
-              <svg class="rank-svg" xmlns="http://www.w3.org/2000/svg" width="94" height="94" viewBox="0 0 94 94" fill="none">
-                <text x="50%" y="68%" dominant-baseline="middle" text-anchor="middle" font-family="'Syne',sans-serif" font-weight="900" font-size="52" fill="url(#rankGrad)">PP</text>
-                <defs>
-                  <linearGradient id="rankGrad" x1="0" y1="0" x2="96" y2="88" gradientUnits="userSpaceOnUse">
-                    <stop stop-color="#BF66FF"/><stop offset="0.51" stop-color="#6248FF"/><stop offset="1" stop-color="#00DDEB"/>
-                  </linearGradient>
-                </defs>
-              </svg>
-            </div>
-            <div class="rank-info">
-              <p class="rank-num">#1</p>
-              <p class="rank-label">ERP en</p>
-              <p class="rank-label">Honduras</p>
-            </div>
-          </div>
-
-          <!-- LIVE ACTIVITY CARD -->
-          <div class="live-card reveal" style="transition-delay:.1s;">
-            <div class="live-image">
-              <div class="live-badge">LIVE</div>
-              <div class="live-viewers">3 empresas activas</div>
-            </div>
-            <div class="live-content">
-              <div class="live-avatar"></div>
-              <div class="live-text">
-                <span class="live-title">Dashboard en tiempo real — Módulos activos</span>
-                <div class="live-meta">
-                  <span class="live-streamer">Portal Pilot</span>
-                  <span class="live-event">Facturación SAR + Inventario</span>
-                </div>
-                <span class="live-tags">
-                  <a class="live-tag" href="#">Honduras</a>
-                  <a class="live-tag" href="#">SAR</a>
-                  <a class="live-tag" href="#">IA</a>
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <!-- RATING CARD -->
-          <div class="rating-card reveal" style="transition-delay:.2s;">
-            <div class="stats-wrapper">
-              <p class="heading">Rating</p>
-              <div class="bottom-wrapper">
-                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" class="star"><g data-name="Layer 2"><g data-name="star"><rect opacity="0" transform="rotate(90 12 12)" height="24" width="24"></rect><path d="M17.56 21a1 1 0 0 1-.46-.11L12 18.22l-5.1 2.67a1 1 0 0 1-1.45-1.06l1-5.63-4.12-4a1 1 0 0 1-.25-1 1 1 0 0 1 .81-.68l5.7-.83 2.51-5.13a1 1 0 0 1 1.8 0l2.54 5.12 5.7.83a1 1 0 0 1 .81.68 1 1 0 0 1-.25 1l-4.12 4 1 5.63a1 1 0 0 1-.4 1 1 1 0 0 1-.62.18z"></path></g></g></svg>
-                <p class="count">4.5</p>
-              </div>
-            </div>
-            <div class="stats-wrapper">
-              <p class="heading">Review</p>
-              <div class="bottom-wrapper">
-                <svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" class="thumb"><path d="M472.06 334l-144.16-6.13c-4.61-.36-23.9-1.21-23.9-25.87 0-23.81 19.16-25.33 24.14-25.88L472.06 270c12.67.13 23.94 14.43 23.94 32s-11.27 31.87-23.94 32zM330.61 202.33L437.35 194C450 194 464 210.68 464 227.88v.33c0 16.32-11.14 29.62-24.88 29.79l-108.45-1.73C304 253 304 236.83 304 229.88c0-22.88 21.8-27.15 26.61-27.55zM421.85 480l-89.37-8.93C308 470.14 304 453.82 304 443.59c0-18.38 13.41-24.6 26.67-24.6l91-3c14.54.23 26.32 14.5 26.32 32s-11.67 31.67-26.14 32.01zm34.36-71.5l-126.4-6.21c-9.39-.63-25.81-3-25.81-26.37 0-12 4.35-25.61 25-27.53l127.19-3.88c13.16.14 23.81 13.49 23.81 31.4s-10.65 32.43-23.79 32.58z"></path><path fill="none" d="M133.55 238.06A15.85 15.85 0 01126 240a15.82 15.82 0 007.51-1.92zM174.14 168.78l.13-.23-.13.23c-20.5 35.51-30.36 54.95-33.82 62 3.47-7.07 13.34-26.51 33.82-62z"></path><path d="M139.34 232.84l1-2a16.27 16.27 0 01-6.77 7.25 16.35 16.35 0 005.77-5.25z"></path><path d="M316.06 52.62C306.63 39.32 291 32 272 32a16 16 0 00-14.31 8.84c-3 6.07-15.25 24-28.19 42.91-18 26.33-40.35 59.07-55.23 84.8l-.13.23c-20.48 35.49-30.35 54.93-33.82 62l-1 2a16.35 16.35 0 01-5.79 5.22 15.82 15.82 0 01-7.53 2h-25.31A84.69 84.69 0 0016 324.69v38.61a84.69 84.69 0 0084.69 84.7h48.79a17.55 17.55 0 019.58 2.89C182 465.87 225.34 480 272 480c7.45 0 14.19-.14 20.27-.38a8 8 0 006.2-12.68l-.1-.14C289.8 454.41 288 441 288 432a61.2 61.2 0 015.19-24.77 17.36 17.36 0 000-14.05 63.81 63.81 0 010-50.39 17.32 17.32 0 000-14 62.15 62.15 0 010-49.59 18.13 18.13 0 000-14.68A60.33 60.33 0 01288 239c0-8.2 2-21.3 8-31.19a15.63 15.63 0 001.14-13.64c-.38-1-.76-2.07-1.13-3.17a24.84 24.84 0 01-.86-11.58c3-19.34 9.67-36.29 16.74-54.16 3.08-7.78 6.27-15.82 9.22-24.26 6.14-17.57 4.3-35.2-5.05-48.38z"></path></svg>
-                <p class="count">1.1k</p>
-              </div>
-            </div>
-            <div class="stats-wrapper">
-              <p class="heading">Sells</p>
-              <div class="bottom-wrapper">
-                <svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" class="tag"><path d="M448 183.8v-123A44.66 44.66 0 00403.29 16H280.36a30.62 30.62 0 00-21.51 8.89L13.09 270.58a44.86 44.86 0 000 63.34l117 117a44.84 44.84 0 0063.33 0l245.69-245.61A30.6 30.6 0 00448 183.8zM352 144a32 32 0 1132-32 32 32 0 01-32 32z"></path><path d="M496 64a16 16 0 00-16 16v127.37L218.69 468.69a16 16 0 1022.62 22.62l262-262A29.84 29.84 0 00512 208V80a16 16 0 00-16-16z"></path></svg>
-                <p class="count">2.1k</p>
-              </div>
-            </div>
-          </div>
+           <!-- NAVI HERO IMAGE — reemplaza rank/live/rating cards -->
+           <div class="navi-hero-img reveal" style="transition-delay:.05s;">
+             <img src="img/img-index/navi-laptop.png" alt="Navi en laptop — Asistente IA de Portal Pilot" loading="eager" decoding="async">
+           </div>
           <!-- TERMINAL -->
           <div class="terminal-wrap reveal" style="transition-delay:.3s;">
             <div class="t-bar">
@@ -289,6 +282,9 @@
               <div class="t-line"><span class="t-prompt">PP&gt;</span><span class="t-out">Esperando siguiente
                   instrucción...<span class="t-cursor"></span></span></div>
             </div>
+          </div>
+          <div style="position:absolute;bottom:-20px;right:-10px;z-index:3;">
+            <img src="img/img-index/navi-curioso.png" alt="Navi curioso" style="width:100px;height:auto;filter:drop-shadow(0 4px 16px rgba(139,92,246,0.3));">
           </div>
           </div><!-- /hero-right-col -->
         </div>
@@ -789,40 +785,78 @@
           style="display: flex; justify-content: space-around; align-items: center; flex-wrap: wrap; gap: clamp(16px, 3vw, 40px); position: relative; z-index: 2;">
 
           <div class="db-engine-box"
-            style="text-align: center; width: 100%; max-width: 220px; padding: clamp(20px, 3vw, 30px) 20px; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-lg); transition: all 0.3s ease;">
+            style="text-align: center; width: 100%; max-width: 190px; padding: clamp(20px, 3vw, 30px) 20px; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-lg); transition: all 0.3s ease;">
             <div
-              style="width: 80px; height: 80px; background: rgba(139,92,246,0.1); border: 1px solid var(--border); border-radius: 20px; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; font-size: 2.2rem; color: var(--accent-soft);">
-              <i class="fa-solid fa-layer-group"></i>
+              style="width: 80px; height: 80px; background: rgba(62,207,142,0.12); border: 1px solid var(--border); border-radius: 20px; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center;">
+              <img src="img/iconos/supabase.svg" alt="Supabase" style="width:44px;height:44px;object-fit:contain;filter:drop-shadow(0 2px 8px rgba(62,207,142,.35));">
             </div>
             <h4
               style="font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1.15rem; margin-bottom: 6px; color: var(--white);">
               Supabase</h4>
             <span
-              style="font-size: 0.8rem; color: var(--accent-soft); font-family: monospace; background: rgba(139,92,246,0.08); padding: 2px 10px; border-radius: 100px;">Base de Datos App</span>
+              style="font-size: 0.8rem; color: #3ECF8E; font-family: monospace; background: rgba(62,207,142,0.12); padding: 2px 10px; border-radius: 100px;">Base de Datos App</span>
           </div>
 
           <div class="db-connector-line"
-            style="flex: 1; min-width: 100px; height: 2px; background: linear-gradient(90deg, var(--accent-soft), var(--green)); position: relative; max-width: 250px;">
+            style="flex: 1; min-width: 30px; height: 2px; background: linear-gradient(90deg, #3ECF8E, #8cc84b); position: relative; max-width: 90px;">
             <div class="data-pulse"></div>
           </div>
 
           <div class="db-engine-box"
-            style="text-align: center; width: 100%; max-width: 220px; padding: clamp(20px, 3vw, 30px) 20px; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-lg); transition: all 0.3s ease;">
+            style="text-align: center; width: 100%; max-width: 190px; padding: clamp(20px, 3vw, 30px) 20px; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-lg); transition: all 0.3s ease;">
             <div
-              style="width: 80px; height: 80px; background: rgba(48,209,88,0.1); border: 1px solid var(--border); border-radius: 20px; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; font-size: 2.2rem; color: var(--green);">
-              <i class="fa-solid fa-code"></i>
+              style="width: 80px; height: 80px; background: rgba(140,200,75,0.12); border: 1px solid var(--border); border-radius: 20px; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center;">
+              <img src="img/iconos/node-js.svg" alt="Node.js" style="width:48px;height:48px;object-fit:contain;filter:drop-shadow(0 2px 8px rgba(140,200,75,.3));">
             </div>
             <h4
               style="font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1.15rem; margin-bottom: 6px; color: var(--white);">
               Node.js + Express</h4>
             <span
-              style="font-size: 0.8rem; color: var(--green); font-family: monospace; background: rgba(48,209,88,0.08); padding: 2px 10px; border-radius: 100px;">Backend
+              style="font-size: 0.8rem; color: #8cc84b; font-family: monospace; background: rgba(140,200,75,0.12); padding: 2px 10px; border-radius: 100px;">Backend
               Serverless</span>
+          </div>
+
+          <div class="db-connector-line"
+            style="flex: 1; min-width: 30px; height: 2px; background: linear-gradient(90deg, #8cc84b, #3FB6D3); position: relative; max-width: 90px;">
+            <div class="data-pulse"></div>
+          </div>
+
+          <div class="db-engine-box"
+            style="text-align: center; width: 100%; max-width: 190px; padding: clamp(20px, 3vw, 30px) 20px; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-lg); transition: all 0.3s ease;">
+            <div
+              style="width: 80px; height: 80px; background: rgba(63,182,211,0.12); border: 1px solid var(--border); border-radius: 20px; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center;">
+              <img src="img/iconos/flutter.svg" alt="Flutter" style="width:48px;height:48px;object-fit:contain;filter:drop-shadow(0 2px 8px rgba(63,182,211,.3));">
+            </div>
+            <h4
+              style="font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1.15rem; margin-bottom: 6px; color: var(--white);">
+              Flutter</h4>
+            <span
+              style="font-size: 0.8rem; color: #3FB6D3; font-family: monospace; background: rgba(63,182,211,0.12); padding: 2px 10px; border-radius: 100px;">Apps
+              Multiplataforma</span>
+          </div>
+
+          <div class="db-connector-line"
+            style="flex: 1; min-width: 30px; height: 2px; background: linear-gradient(90deg, #3FB6D3, #00C4B3); position: relative; max-width: 90px;">
+            <div class="data-pulse"></div>
+          </div>
+
+          <div class="db-engine-box"
+            style="text-align: center; width: 100%; max-width: 190px; padding: clamp(20px, 3vw, 30px) 20px; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-lg); transition: all 0.3s ease;">
+            <div
+              style="width: 80px; height: 80px; background: rgba(0,196,179,0.12); border: 1px solid var(--border); border-radius: 20px; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center;">
+              <img src="img/iconos/dart.svg" alt="Dart" style="width:46px;height:46px;object-fit:contain;filter:drop-shadow(0 2px 8px rgba(0,196,179,.35));">
+            </div>
+            <h4
+              style="font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1.15rem; margin-bottom: 6px; color: var(--white);">
+              Dart</h4>
+            <span
+              style="font-size: 0.8rem; color: #00C4B3; font-family: monospace; background: rgba(0,196,179,0.12); padding: 2px 10px; border-radius: 100px;">Lenguaje
+              Flutter</span>
           </div>
 
         </div>
 
-        <div
+        <div class="db-stats-row"
           style="margin-top: 40px; padding-top: 28px; border-top: 1px solid var(--border); display: flex; justify-content: center; gap: clamp(20px, 5vw, 60px); flex-wrap: wrap;">
           <div style="text-align: center;">
             <div style="font-family: 'Syne', sans-serif; font-size: 1.8rem; font-weight: 700; color: var(--green);">
@@ -833,12 +867,20 @@
               Auto-escalable en Vercel</div>
           </div>
           <div style="text-align: center;">
-            <div style="font-family: 'Syne', sans-serif; font-size: 1.8rem; font-weight: 700; color: var(--accent-soft);">
+            <div style="font-family: 'Syne', sans-serif; font-size: 1.8rem; font-weight: 700; color: #3ECF8E;">
               Supabase
             </div>
             <div
               style="color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; margin-top: 4px;">
               Base de Datos App</div>
+          </div>
+          <div style="text-align: center;">
+            <div style="font-family: 'Syne', sans-serif; font-size: 1.8rem; font-weight: 700; color: #8cc84b;">
+              Node.js
+            </div>
+            <div
+              style="color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; margin-top: 4px;">
+              Backend Express</div>
           </div>
           <div style="text-align: center;">
             <div style="font-family: 'Syne', sans-serif; font-size: 1.8rem; font-weight: 700; color: var(--green);">
@@ -847,6 +889,22 @@
             <div
               style="color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; margin-top: 4px;">
               IA Ultra Rápida</div>
+          </div>
+          <div style="text-align: center;">
+            <div style="font-family: 'Syne', sans-serif; font-size: 1.8rem; font-weight: 700; color: #3FB6D3;">
+              Flutter
+            </div>
+            <div
+              style="color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; margin-top: 4px;">
+              Apps Nativas</div>
+          </div>
+          <div style="text-align: center;">
+            <div style="font-family: 'Syne', sans-serif; font-size: 1.8rem; font-weight: 700; color: #00C4B3;">
+              Dart
+            </div>
+            <div
+              style="color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; margin-top: 4px;">
+              Lenguaje</div>
           </div>
         </div>
 
@@ -891,203 +949,109 @@
       <div class="pricing-header reveal">
         <div class="sec-eyebrow">Planes</div>
         <div class="sec-title">Precios transparentes para PyMES</div>
-        <div class="sec-sub" style="margin:0 auto 24px;">Soluciones escalables para cada nivel de operación. Sin costos
-          ocultos, sin sorpresas.</div>
+        <div class="sec-sub" style="margin:0 auto 24px;">Soluciones escalables para cada nivel de operación. Sin costos ocultos, sin sorpresas.</div>
         <div class="pricing-toggle">
           <button class="pt-btn active" onclick="setPricingToggle(this,'monthly')">Mensual</button>
-          <button class="pt-btn" onclick="setPricingToggle(this,'yearly')">Anual <span
-              style="font-size:10px;color:var(--green);margin-left:4px;">−20%</span></button>
+          <button class="pt-btn" onclick="setPricingToggle(this,'yearly')">Anual <span style="font-size:10px;color:var(--green);margin-left:4px;">−20%</span></button>
         </div>
       </div>
 
-      <!-- FREE TRIAL BANNER -->
-      <div class="reveal" style="max-width:600px;margin:0 auto 32px;background:linear-gradient(135deg,rgba(52,211,153,0.12),rgba(52,211,153,0.04));border:1px solid rgba(52,211,153,0.25);border-radius:16px;padding:24px 28px;text-align:center;">
-        <div style="font-size:13px;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">🚀 Prueba Gratis — 15 Días</div>
-        <div style="font-size:15px;color:var(--white);font-weight:600;margin-bottom:6px;">Prueba Business sin compromiso</div>
-        <div style="font-size:13px;color:var(--text-dim);line-height:1.5;">Acceso completo a todos los módulos, hasta 25 usuarios y 3 empresas. Sin tarjeta de crédito requerida.</div>
-        <button class="btn btn-ghost btn-sm glow-on-hover glow-ghost" style="margin-top:16px;border:1px solid rgba(52,211,153,0.4);color:var(--green);" onclick="selectPlan('starter')">
-          <i class="fas fa-play" style="margin-right:6px;"></i> Iniciar Prueba Gratis
-        </button>
+      <!-- CARD-BASED PRICING -->
+      <div class="pricing-cards-container reveal">
+
+        <!-- PLAN: STARTER (Prueba Gratis) -->
+        <div class="pricing-card-wrapper plan-starter">
+          <div class="pricing-card-side-tab">Starter</div>
+          <div class="pricing-card">
+            <div class="pricing-card-price-section">
+              <div class="pricing-card-price"><span class="pricing-card-price-text">Gratis</span></div>
+              <div class="pricing-card-subtitle">15 días de prueba<br>Sin tarjeta de crédito</div>
+            </div>
+            <div class="pricing-card-features">
+              <div class="pricing-card-feature"><i class="fas fa-check" style="margin-right:8px;color:var(--green);font-size:11px;"></i> Hasta <strong>10</strong> usuarios</div>
+              <div class="pricing-card-feature"><i class="fas fa-check" style="margin-right:8px;color:var(--green);font-size:11px;"></i> Hasta <strong>1</strong> empresa</div>
+              <div class="pricing-card-feature"><i class="fas fa-check" style="margin-right:8px;color:var(--green);font-size:11px;"></i> Todos los módulos base</div>
+              <div class="pricing-card-feature"><i class="fas fa-check" style="margin-right:8px;color:var(--green);font-size:11px;"></i> Facturación Electrónica SAR</div>
+              <div class="pricing-card-feature"><i class="fas fa-check" style="margin-right:8px;color:var(--green);font-size:11px;"></i> IA Portal Pilot — uso básico</div>
+              <div class="pricing-card-feature"><i class="fas fa-check" style="margin-right:8px;color:var(--green);font-size:11px;"></i> <strong>1 GB</strong> almacenamiento</div>
+              <div class="pricing-card-feature"><i class="fas fa-check" style="margin-right:8px;color:var(--green);font-size:11px;"></i> Soporte por email</div>
+            </div>
+            <button class="pricing-card-btn" onclick="selectPlan('starter')">
+              <i class="fas fa-play" style="margin-right:6px;"></i> Empezar Gratis
+            </button>
+          </div>
+          <div class="pricing-card-bottom-tab">Prueba 15 Días</div>
+        </div>
+
+        <!-- PLAN: BUSINESS (Popular) -->
+        <div class="pricing-card-wrapper plan-business">
+          <div class="pricing-card-side-tab">Business</div>
+          <div class="pricing-card">
+            <div class="pricing-card-price-section">
+              <div class="pricing-card-price"><span class="pricing-card-price-text"><sup style="font-size:1.4rem;">L</sup><span id="p1">1,499</span></span></div>
+              <div class="pricing-card-subtitle">Facturación mensual<br>Todos los módulos incluidos</div>
+            </div>
+            <div class="pricing-card-features">
+              <div class="pricing-card-feature"><i class="fas fa-check" style="margin-right:8px;color:var(--green);font-size:11px;"></i> Hasta <strong>25</strong> usuarios</div>
+              <div class="pricing-card-feature"><i class="fas fa-check" style="margin-right:8px;color:var(--green);font-size:11px;"></i> Hasta <strong>3</strong> empresas</div>
+              <div class="pricing-card-feature"><i class="fas fa-check" style="margin-right:8px;color:var(--green);font-size:11px;"></i> Todos los módulos</div>
+              <div class="pricing-card-feature"><i class="fas fa-check" style="margin-right:8px;color:var(--green);font-size:11px;"></i> Facturación Electrónica SAR</div>
+              <div class="pricing-card-feature"><i class="fas fa-check" style="margin-right:8px;color:var(--green);font-size:11px;"></i> IA Portal Pilot — uso generoso</div>
+              <div class="pricing-card-feature"><i class="fas fa-check" style="margin-right:8px;color:var(--green);font-size:11px;"></i> <strong>5 GB</strong> almacenamiento</div>
+              <div class="pricing-card-feature"><i class="fas fa-check" style="margin-right:8px;color:var(--green);font-size:11px;"></i> Automatizaciones estándar</div>
+              <div class="pricing-card-feature"><i class="fas fa-check" style="margin-right:8px;color:var(--green);font-size:11px;"></i> Roles y permisos</div>
+              <div class="pricing-card-feature"><i class="fas fa-check" style="margin-right:8px;color:var(--green);font-size:11px;"></i> Auditoría / Logs</div>
+              <div class="pricing-card-feature"><i class="fas fa-check" style="margin-right:8px;color:var(--green);font-size:11px;"></i> Reportes estándar</div>
+              <div class="pricing-card-feature"><i class="fas fa-check" style="margin-right:8px;color:var(--green);font-size:11px;"></i> Soporte email prioritario</div>
+            </div>
+            <button class="pricing-card-btn pricing-card-btn-featured" onclick="selectPlan('business')">
+              <i class="fas fa-rocket" style="margin-right:6px;"></i> Elegir Business
+            </button>
+          </div>
+          <div class="pricing-card-bottom-tab">⭐ Popular</div>
+        </div>
+
+        <!-- PLAN: ENTERPRISE -->
+        <div class="pricing-card-wrapper plan-enterprise">
+          <div class="pricing-card-side-tab">Enterprise</div>
+          <div class="pricing-card">
+            <div class="pricing-card-price-section">
+              <div class="pricing-card-price"><span class="pricing-card-price-text"><sup style="font-size:1.4rem;">L</sup><span id="p2">4,999</span></span></div>
+              <div class="pricing-card-subtitle">Facturación mensual<br>Todos los módulos Enterprise</div>
+            </div>
+            <div class="pricing-card-features">
+              <div class="pricing-card-feature"><i class="fas fa-check" style="margin-right:8px;color:var(--green);font-size:11px;"></i> Usuarios <strong>ilimitados</strong></div>
+              <div class="pricing-card-feature"><i class="fas fa-check" style="margin-right:8px;color:var(--green);font-size:11px;"></i> Empresas <strong>ilimitadas</strong></div>
+              <div class="pricing-card-feature"><i class="fas fa-check" style="margin-right:8px;color:var(--green);font-size:11px;"></i> Todos + módulos Enterprise</div>
+              <div class="pricing-card-feature"><i class="fas fa-check" style="margin-right:8px;color:var(--green);font-size:11px;"></i> Facturación Electrónica SAR</div>
+              <div class="pricing-card-feature"><i class="fas fa-check" style="margin-right:8px;color:var(--green);font-size:11px;"></i> IA avanzada / personalizada</div>
+              <div class="pricing-card-feature"><i class="fas fa-check" style="margin-right:8px;color:var(--green);font-size:11px;"></i> <strong>50 GB+</strong> almacenamiento</div>
+              <div class="pricing-card-feature"><i class="fas fa-check" style="margin-right:8px;color:var(--green);font-size:11px;"></i> API completa</div>
+              <div class="pricing-card-feature"><i class="fas fa-check" style="margin-right:8px;color:var(--green);font-size:11px;"></i> Automatizaciones avanzadas</div>
+              <div class="pricing-card-feature"><i class="fas fa-check" style="margin-right:8px;color:var(--green);font-size:11px;"></i> RPA avanzado</div>
+              <div class="pricing-card-feature"><i class="fas fa-check" style="margin-right:8px;color:var(--green);font-size:11px;"></i> Auditoría avanzada</div>
+              <div class="pricing-card-feature"><i class="fas fa-check" style="margin-right:8px;color:var(--green);font-size:11px;"></i> Reportes personalizados</div>
+              <div class="pricing-card-feature"><i class="fas fa-check" style="margin-right:8px;color:var(--green);font-size:11px;"></i> Integraciones personalizadas</div>
+              <div class="pricing-card-feature"><i class="fas fa-check" style="margin-right:8px;color:var(--green);font-size:11px;"></i> Soporte prioritario 24/7</div>
+              <div class="pricing-card-feature"><i class="fas fa-check" style="margin-right:8px;color:var(--green);font-size:11px;"></i> SLA <strong>99.9%</strong></div>
+              <div class="pricing-card-feature"><i class="fas fa-check" style="margin-right:8px;color:var(--green);font-size:11px;"></i> Onboarding asistido</div>
+              <div class="pricing-card-feature"><i class="fas fa-check" style="margin-right:8px;color:var(--green);font-size:11px;"></i> Migración de datos</div>
+              <div class="pricing-card-feature"><i class="fas fa-check" style="margin-right:8px;color:var(--green);font-size:11px;"></i> Personalización completa</div>
+              <div class="pricing-card-feature"><i class="fas fa-check" style="margin-right:8px;color:var(--green);font-size:11px;"></i> Account Manager dedicado</div>
+              <div class="pricing-card-feature"><i class="fas fa-check" style="margin-right:8px;color:var(--green);font-size:11px;"></i> Capacitación empresarial</div>
+            </div>
+            <button class="pricing-card-btn" onclick="selectPlan('enterprise')">
+              <i class="fas fa-building" style="margin-right:6px;"></i> Contactar Ventas
+            </button>
+          </div>
+          <div class="pricing-card-bottom-tab">Empresas Grandes</div>
+        </div>
+
       </div>
 
-      <div class="pricing-table-wrapper">
-        <div class="pricing-table reveal">
-          <div class="pt-head">
-            <div class="pt-col-head">
-              <div class="ch-name">Característica</div>
-              <div style="font-size:13px;color:var(--text-muted);margin-top:8px;line-height:1.6;">Todas las funciones base
-                incluidas. Precios en Lempiras (HNL).</div>
-            </div>
-            <div class="pt-col-head featured-col">
-              <div class="ch-name" style="display:flex;align-items:center;gap:8px;">Business <span
-                  style="background:var(--white);color:#000;font-size:9px;padding:2px 8px;border-radius:10px;font-weight:600;">⭐ POPULAR</span>
-              </div>
-              <div class="ch-price"><sup>L</sup><span id="p1">1,499</span><span class="period">/mes</span></div>
-            </div>
-            <div class="pt-col-head">
-              <div class="ch-name">Enterprise</div>
-              <div class="ch-price"><sup>L</sup><span id="p2">4,999</span><span class="period">/mes</span></div>
-            </div>
-          </div>
-          <!-- Usuarios activos -->
-          <div class="pt-row">
-            <div class="pt-cell">Usuarios activos</div>
-            <div class="pt-cell featured-col">Hasta <strong>25</strong></div>
-            <div class="pt-cell"><strong>Ilimitados</strong></div>
-          </div>
-          <!-- Empresas / Tenants -->
-          <div class="pt-row">
-            <div class="pt-cell">Empresas / Tenants</div>
-            <div class="pt-cell featured-col">Hasta <strong>3</strong></div>
-            <div class="pt-cell"><strong>Ilimitadas</strong></div>
-          </div>
-          <!-- Módulos incluidos -->
-          <div class="pt-row">
-            <div class="pt-cell">Módulos incluidos</div>
-            <div class="pt-cell featured-col"><strong>Todos</strong></div>
-            <div class="pt-cell"><strong>Todos + módulos Enterprise</strong></div>
-          </div>
-          <!-- Facturación Electrónica SAR -->
-          <div class="pt-row">
-            <div class="pt-cell">Facturación Electrónica SAR</div>
-            <div class="pt-cell featured-col"><i class="fas fa-check check-yes"></i></div>
-            <div class="pt-cell"><i class="fas fa-check check-yes"></i></div>
-          </div>
-          <!-- IA Portal Pilot -->
-          <div class="pt-row">
-            <div class="pt-cell">IA Portal Pilot</div>
-            <div class="pt-cell featured-col">Uso generoso</div>
-            <div class="pt-cell">IA avanzada / personalizada</div>
-          </div>
-          <!-- API -->
-          <div class="pt-row">
-            <div class="pt-cell">API</div>
-            <div class="pt-cell featured-col"><i class="fas fa-times check-no"></i></div>
-            <div class="pt-cell"><i class="fas fa-check check-yes"></i> API completa</div>
-          </div>
-          <!-- Automatizaciones -->
-          <div class="pt-row">
-            <div class="pt-cell">Automatizaciones</div>
-            <div class="pt-cell featured-col">Estándar</div>
-            <div class="pt-cell"><strong>Avanzadas</strong></div>
-          </div>
-          <!-- RPA -->
-          <div class="pt-row">
-            <div class="pt-cell">RPA</div>
-            <div class="pt-cell featured-col">Estándar</div>
-            <div class="pt-cell"><strong>Avanzado</strong></div>
-          </div>
-          <!-- Multiempresa -->
-          <div class="pt-row">
-            <div class="pt-cell">Multiempresa</div>
-            <div class="pt-cell featured-col">Hasta <strong>3 empresas</strong></div>
-            <div class="pt-cell"><strong>Ilimitada</strong></div>
-          </div>
-          <!-- Almacenamiento -->
-          <div class="pt-row">
-            <div class="pt-cell">Almacenamiento</div>
-            <div class="pt-cell featured-col"><strong>5 GB</strong></div>
-            <div class="pt-cell"><strong>50 GB+</strong></div>
-          </div>
-          <!-- Roles y permisos -->
-          <div class="pt-row">
-            <div class="pt-cell">Roles y permisos</div>
-            <div class="pt-cell featured-col"><i class="fas fa-check check-yes"></i></div>
-            <div class="pt-cell"><i class="fas fa-check check-yes"></i> Avanzados</div>
-          </div>
-          <!-- Auditoría / Logs -->
-          <div class="pt-row">
-            <div class="pt-cell">Auditoría / Logs</div>
-            <div class="pt-cell featured-col"><i class="fas fa-check check-yes"></i></div>
-            <div class="pt-cell"><strong>Auditoría avanzada</strong></div>
-          </div>
-          <!-- Reportes -->
-          <div class="pt-row">
-            <div class="pt-cell">Reportes</div>
-            <div class="pt-cell featured-col">Estándar</div>
-            <div class="pt-cell"><strong>Avanzados + personalizados</strong></div>
-          </div>
-          <!-- Integraciones -->
-          <div class="pt-row">
-            <div class="pt-cell">Integraciones</div>
-            <div class="pt-cell featured-col">Estándar</div>
-            <div class="pt-cell"><strong>Personalizadas</strong></div>
-          </div>
-          <!-- Soporte -->
-          <div class="pt-row">
-            <div class="pt-cell">Soporte</div>
-            <div class="pt-cell featured-col">Email prioritario</div>
-            <div class="pt-cell"><strong>Prioritario 24/7</strong></div>
-          </div>
-          <!-- SLA -->
-          <div class="pt-row">
-            <div class="pt-cell">SLA</div>
-            <div class="pt-cell featured-col">Estándar</div>
-            <div class="pt-cell"><strong>99.9%</strong></div>
-          </div>
-          <!-- Onboarding -->
-          <div class="pt-row">
-            <div class="pt-cell">Onboarding</div>
-            <div class="pt-cell featured-col">Autogestionado</div>
-            <div class="pt-cell"><strong>Asistido</strong></div>
-          </div>
-          <!-- Migración de datos -->
-          <div class="pt-row">
-            <div class="pt-cell">Migración de datos</div>
-            <div class="pt-cell featured-col"><i class="fas fa-times check-no"></i></div>
-            <div class="pt-cell"><i class="fas fa-check check-yes"></i></div>
-          </div>
-          <!-- Personalización -->
-          <div class="pt-row">
-            <div class="pt-cell">Personalización</div>
-            <div class="pt-cell featured-col"><i class="fas fa-times check-no"></i></div>
-            <div class="pt-cell"><i class="fas fa-check check-yes"></i></div>
-          </div>
-          <!-- Account Manager -->
-          <div class="pt-row">
-            <div class="pt-cell">Account Manager</div>
-            <div class="pt-cell featured-col"><i class="fas fa-times check-no"></i></div>
-            <div class="pt-cell"><i class="fas fa-check check-yes"></i></div>
-          </div>
-          <!-- Capacitación empresarial -->
-          <div class="pt-row">
-            <div class="pt-cell">Capacitación empresarial</div>
-            <div class="pt-cell featured-col"><i class="fas fa-times check-no"></i></div>
-            <div class="pt-cell"><i class="fas fa-check check-yes"></i></div>
-          </div>
-          <!-- Objetivo -->
-          <div class="pt-row" style="background:rgba(255,255,255,0.02);">
-            <div class="pt-cell" style="font-weight:700;color:var(--white);">Objetivo</div>
-            <div class="pt-cell featured-col" style="font-size:12px;">PYMES en crecimiento</div>
-            <div class="pt-cell" style="font-size:12px;">Empresas medianas / grandes</div>
-          </div>
-          <!-- Footer buttons -->
-          <div class="pt-footer">
-            <div class="pt-footer-cell"></div>
-            <div class="pt-footer-cell featured-col">
-              <div class="bb-wrap" style="border-radius:40px;">
-                <button class="sweep-btn" onclick="selectPlan('business')">
-                  <span class="sw-layer sw-white"></span>
-                  <span class="sw-layer sw-purple-light"></span>
-                  <span class="sw-layer sw-purple"></span>
-                  <span class="sw-label">Elegir Plan</span>
-                </button>
-                <div class="bb-mask">
-                  <div class="bb-beam bb-run" style="--bb-size:60px;--bb-dur:4s;--bb-delay:-2s;--bb-from:#ffaa40;--bb-to:#9c40ff;"></div>
-                </div>
-              </div>
-            </div>
-            <div class="pt-footer-cell">
-              <div class="bb-wrap" style="border-radius:40px;">
-                <button class="btn btn-ghost btn-sm glow-on-hover glow-ghost" style="width:100%;justify-content:center;"
-                  onclick="selectPlan('enterprise')">Contactar</button>
-                <div class="bb-mask">
-                  <div class="bb-beam bb-run" style="--bb-size:60px;--bb-dur:8s;--bb-delay:-3s;--bb-from:#9c40ff;--bb-to:#ffaa40;"></div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+      <!-- Detalle completo -->
+      <div class="reveal" style="max-width:700px;margin:48px auto 0;text-align:center;">
+        <p style="font-size:13px;color:var(--text-dim);line-height:1.6;">Todos los precios en <strong style="color:var(--white);">Lempiras (HNL)</strong>. Planes Business e Enterprise incluyen todas las funciones base más las específicas de cada nivel. Precios no incluyen impuestos.</p>
       </div>
     </div>
   </section>
@@ -1160,15 +1124,13 @@
     <div class="container">
       <div class="footer-top">
         <div>
-          <div class="footer-logo">
-            <div class="fl-icon" style="width:40px;height:40px;display:flex;align-items:center;justify-content:center;margin-bottom:12px;border-radius:16px;background:rgba(139,92,246,0.1);border:1px solid rgba(139,92,246,0.2);">
-            <img src="img/iconos/robot_logo.png" alt="Portal Pilot" style="width:40px;height:40px;object-fit:contain;">
-          </div>
-            PORTAL PILOT
+          <div class="footer-logo" style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+            <img src="img/iconos/robot_logo.png" alt="Portal Pilot" style="width:38px;height:38px;object-fit:contain;display:block;flex-shrink:0;">
+            <img src="img/iconos/Portal Pilot.png" alt="Portal Pilot" style="height:28px;width:auto;object-fit:contain;display:block;">
           </div>
           <p class="footer-desc">La plataforma SaaS multi-empresa que combina IA en la nube, módulos de negocio y control de acceso con 2FA para automatizar la gestión corporativa.</p>
           <div class="footer-social">
-            <a href="#" class="fs-btn"><i class="fab fa-twitter"></i></a>
+            <a href="https://instagram.com/portalpilot.hn" class="fs-btn"><i class="fab fa-instagram"></i></a>
             <a href="#" class="fs-btn"><i class="fab fa-linkedin-in"></i></a>
             <a href="#" class="fs-btn"><i class="fab fa-youtube"></i></a>
             <a href="#" class="fs-btn"><i class="fab fa-github"></i></a>
@@ -1219,19 +1181,7 @@
   <!-- GradualBlur fixed bottom -->
   <div id="gradual-blur-overlay"></div>
 
-  <!-- Privacy Consent Banner -->
-  <div class="privacy-banner" id="privacyBanner">
-    <div class="privacy-banner-inner">
-      <div class="privacy-banner-text">
-        <strong>Tu privacidad es importante para nosotros</strong>
-        <p>Procesamos tu información personal para mejorar nuestros sitios y servicios, asistir en campañas y ofrecer contenido personalizado. <a href="privacidad.html">Política de Privacidad</a></p>
-      </div>
-      <div class="privacy-banner-btns">
-        <button class="privacy-btn-ghost" onclick="document.getElementById('privacyBanner').classList.add('hidden')">Más Opciones</button>
-        <button class="privacy-btn-accent" onclick="document.getElementById('privacyBanner').classList.add('hidden')">Aceptar</button>
-      </div>
-    </div>
-  </div>
+
 
   <script src="index.js"></script>
 </body>

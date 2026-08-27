@@ -46,7 +46,7 @@
   const empresaNombre = localStorage.getItem('empresaNombre') || empresaCodigo || 'Enterprise';
 
   // Determinar ruta de login — usando ruta absoluta para funcionar desde cualquier subdirectorio
-  const isSubDir = window.location.pathname.includes('/enterprise/') || window.location.pathname.includes('\\enterprise\\') || window.location.pathname.includes('/pp/') || window.location.pathname.includes('\\pp\\');
+  const isSubDir = window.location.pathname.includes('/empresa/') || window.location.pathname.includes('\\empresa\\') || window.location.pathname.includes('/enterprise/') || window.location.pathname.includes('\\enterprise\\') || window.location.pathname.includes('/pp/') || window.location.pathname.includes('\\pp\\');
   const loginPath = '/login.html';
   const apiRefreshPath = isSubDir ? '../api/refresh' : '/api/refresh';
   const apiAlertaPath = isSubDir ? '../api/alerta-no-autorizado' : '/api/alerta-no-autorizado';
@@ -90,7 +90,7 @@
 
   function getSwitchTarget(account) {
     if (account.empresa_codigo && account.empresa_codigo.toString().trim().toUpperCase() !== 'ROOT') {
-      return isSubDir ? '../enterprise/dashboard.html' : 'enterprise/dashboard.html';
+      return isSubDir ? '../empresa/dashboard.html' : 'empresa/dashboard.html';
     }
     return isSubDir ? '../pp/welcome.html' : 'pp/welcome.html';
   }

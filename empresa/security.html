@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <link rel="icon" type="image/png" href="../img/iconos/Portal%20Pilot.png">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Flota — Portal Pilot</title>
+    <title>Auditoría — Portal Pilot</title>
     <link
         href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap"
         rel="stylesheet">
@@ -231,76 +231,6 @@
         .btn-xs {
             padding: 6px 14px;
             font-size: 11px;
-        }
-
-        /* ─── MODALS ─────────────────────── */
-        .modal-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(8px);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.3s;
-        }
-
-        .modal-overlay.active {
-            opacity: 1;
-            pointer-events: auto;
-        }
-
-        .modal-box {
-            background: var(--bg2);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: 28px 32px;
-            max-width: 440px;
-            width: 92%;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-            text-align: center;
-            transform: translateY(12px);
-            transition: transform 0.3s;
-        }
-
-        .modal-overlay.active .modal-box {
-            transform: translateY(0);
-        }
-
-        .modal-icon {
-            font-size: 34px;
-            color: var(--primary);
-            margin-bottom: 10px;
-        }
-
-        .modal-box h3 {
-            margin: 0 0 6px;
-        }
-
-        .modal-actions {
-            display: flex;
-            justify-content: center;
-            gap: 12px;
-            margin-top: 18px;
-        }
-
-        .modal-input {
-            width: 100%;
-            padding: 10px 14px;
-            border-radius: 10px;
-            border: 1px solid var(--border);
-            background: var(--bg1);
-            color: var(--text);
-            font-family: inherit;
-            font-size: 13px;
-        }
-
-        .modal-input:focus {
-            outline: none;
-            border-color: var(--primary);
         }
 
         /* ─── LAYOUT ──────────────────────── */
@@ -722,8 +652,8 @@
             flex-wrap: wrap;
         }
 
-        /* ─── FLEET LAYOUT ───────── */
-        .fleet-layout {
+        /* ─── AUDIT LAYOUT ───────── */
+        .audit-layout {
             display: grid;
             grid-template-columns: 2fr 1fr;
             gap: 24px;
@@ -731,51 +661,9 @@
         }
 
         @media(max-width:1200px) {
-            .fleet-layout {
+            .audit-layout {
                 grid-template-columns: 1fr;
             }
-        }
-
-        /* ─── KPI BANNER ───────── */
-        .kpi-banner {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 16px;
-            padding: 0 clamp(12px, 3vw, 32px);
-            margin-bottom: 24px;
-        }
-
-        .kpi-card {
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-lg);
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            border-left: 4px solid var(--accent);
-        }
-
-        .kpi-card.alert {
-            border-left-color: var(--red);
-        }
-
-        .kpi-value {
-            font-family: 'Syne', sans-serif;
-            font-size: 24px;
-            font-weight: 800;
-            color: var(--white);
-        }
-
-        .kpi-card.alert .kpi-value {
-            color: var(--red);
-        }
-
-        .kpi-label {
-            font-size: 11px;
-            color: var(--gray);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
         }
 
         /* ─── CARDS ───────────────── */
@@ -805,195 +693,285 @@
             color: var(--accent);
         }
 
-        /* Fleet Grid */
-        .fleet-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-            gap: 16px;
+        /* Filter Bar */
+        .filter-bar {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
         }
 
-        /* Asset Card */
-        .asset-card {
+        .filter-select {
+            padding: 8px 14px;
+            border-radius: 8px;
             background: var(--card2);
             border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 16px;
-            position: relative;
-            transition: all .2s;
+            color: var(--text);
+            font-size: 13px;
+            outline: none;
+            cursor: pointer;
+            transition: border-color .2s;
+            min-width: 180px;
         }
 
-        .asset-card:hover {
-            border-color: var(--border2);
-            transform: translateY(-2px);
+        .filter-select:focus {
+            border-color: var(--accent);
         }
 
-        .asset-card.maintenance {
-            border-color: var(--red);
+        .filter-input {
+            flex: 1;
+            min-width: 200px;
+            padding: 8px 14px;
+            border-radius: 8px;
+            background: var(--card2);
+            border: 1px solid var(--border);
+            color: var(--text);
+            font-size: 13px;
+            outline: none;
         }
 
-        .maintenance-badge {
-            position: absolute;
-            top: 12px;
-            right: 12px;
-            padding: 3px 8px;
+        .filter-input::placeholder {
+            color: var(--gray);
+        }
+
+        /* Hash Chain Table */
+        .hash-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        .hash-table thead {
+            background: var(--card2);
+        }
+
+        .hash-table th {
+            padding: 14px 16px;
+            text-align: left;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: var(--gray);
+        }
+
+        .hash-table td {
+            padding: 14px 16px;
+            font-size: 12px;
+            color: var(--text);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .hash-table tr:hover {
+            background: rgba(139, 92, 246, 0.06);
+        }
+
+        .hash-code {
+            font-family: monospace;
+            font-size: 11px;
+            background: var(--card2);
+            padding: 4px 8px;
             border-radius: 4px;
-            font-size: 10px;
+            color: var(--cyan);
+        }
+
+        .hash-block {
+            font-weight: 600;
+            color: var(--accent);
+        }
+
+        .hash-event {
+            font-weight: 500;
+        }
+
+        .hash-valid {
+            color: var(--green);
             font-weight: 600;
         }
 
-        .maintenance-badge.critical {
-            background: var(--red);
-            color: #fff;
+        .hash-invalid {
+            color: var(--red);
+            font-weight: 600;
         }
 
-        .maintenance-badge.workshop {
-            background: var(--yellow);
-            color: #14213D;
-        }
-
-        .asset-plate {
-            font-weight: 700;
-            color: var(--accent);
-            font-size: 15px;
-            margin-bottom: 8px;
-            font-family: monospace;
-        }
-
-        .asset-meta {
-            font-size: 12px;
-            color: var(--gray);
-            line-height: 1.5;
-            margin-bottom: 12px;
-        }
-
-        .asset-meta b {
-            color: var(--text);
-        }
-
-        .fuel-label {
-            font-size: 11px;
-            color: var(--gray);
-            margin-bottom: 4px;
+        /* Policy Toggles */
+        .policy-item {
             display: flex;
             justify-content: space-between;
-        }
-
-        .fuel-bar {
-            height: 6px;
-            background: var(--bg3);
-            border-radius: 3px;
-            overflow: hidden;
-        }
-
-        .fuel-fill {
-            height: 100%;
-            background: var(--accent);
-            border-radius: 3px;
-            transition: width .3s ease;
-        }
-
-        .fuel-fill.low {
-            background: var(--red);
-        }
-
-        .fuel-fill.medium {
-            background: var(--yellow);
-        }
-
-        /* Timeline */
-        .timeline {
-            position: relative;
-            padding-left: 24px;
-            border-left: 2px solid var(--border);
-        }
-
-        .timeline-item {
-            position: relative;
-            padding-bottom: 20px;
-        }
-
-        .timeline-item::before {
-            content: '';
-            position: absolute;
-            left: -29px;
-            top: 4px;
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            background: var(--accent);
-            border: 2px solid var(--bg2);
-        }
-
-        .timeline-item.alert::before {
-            background: var(--red);
-        }
-
-        .timeline-time {
-            font-size: 11px;
-            color: var(--cyan);
-            font-weight: 600;
-            margin-bottom: 4px;
-            display: block;
-        }
-
-        .timeline-text {
-            font-size: 12px;
-            color: var(--text);
-            line-height: 1.5;
-        }
-
-        .timeline-text b {
-            color: var(--white);
-        }
-
-        /* AI Panel */
-        .ai-panel {
-            background: linear-gradient(135deg, var(--card2), var(--bg3));
-            border: 1px dashed var(--accent);
-            border-radius: var(--radius-lg);
-            padding: 20px;
-        }
-
-        .ai-header {
-            display: flex;
             align-items: center;
-            gap: 8px;
-            margin-bottom: 12px;
+            padding: 14px 0;
+            border-bottom: 1px solid var(--border);
         }
 
-        .ai-avatar {
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
-            background: var(--accent);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 12px;
-            color: #fff;
-            font-weight: 700;
+        .policy-item:last-child {
+            border-bottom: none;
         }
 
-        .ai-name {
+        .policy-info {
+            flex: 1;
+        }
+
+        .policy-title {
             font-size: 13px;
             font-weight: 600;
             color: var(--white);
+            margin-bottom: 4px;
         }
 
-        .ai-status {
-            font-size: 10px;
+        .policy-desc {
+            font-size: 11px;
+            color: var(--gray);
+        }
+
+        /* Toggle Switch */
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--card2);
+            transition: .3s;
+            border-radius: 24px;
+            border: 1px solid var(--border);
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 2px;
+            bottom: 2px;
+            background-color: var(--gray);
+            transition: .3s;
+            border-radius: 50%;
+        }
+
+        input:checked+.toggle-slider {
+            background-color: var(--accent);
+            border-color: var(--accent);
+        }
+
+        input:checked+.toggle-slider:before {
+            transform: translateX(20px);
+            background-color: #fff;
+        }
+
+        /* Access Map */
+        .access-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .access-item {
+            padding: 12px;
+            background: var(--card2);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+        }
+
+        .access-ip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        .access-ip.allowed {
+            background: rgba(52, 211, 153, 0.15);
             color: var(--green);
-            margin-left: 6px;
         }
 
-        .ai-message {
+        .access-ip.remote {
+            background: rgba(167, 139, 250, 0.15);
+            color: var(--cyan);
+        }
+
+        .access-ip.blocked {
+            background: rgba(248, 113, 113, 0.15);
+            color: var(--red);
+        }
+
+        .access-location {
             font-size: 12px;
             color: var(--gray);
-            line-height: 1.5;
+            margin-bottom: 4px;
         }
 
-        .ai-message b {
-            color: var(--text);
+        .access-user {
+            font-size: 11px;
+            color: var(--cyan);
+        }
+
+        .access-time {
+            font-size: 10px;
+            color: var(--gray);
+            margin-top: 4px;
+        }
+
+        /* Stats Row */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .stat-item {
+            background: var(--card2);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 12px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-family: 'Syne', sans-serif;
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--accent);
+        }
+
+        .stat-label {
+            font-size: 10px;
+            color: var(--gray);
+            margin-top: 4px;
+        }
+
+        /* Policy Details */
+        .policy-details {
+            font-size: 12px;
+            color: var(--gray);
+            line-height: 1.6;
+        }
+
+        .policy-details b {
+            color: var(--white);
+        }
+
+        .policy-details .ok {
+            color: var(--green);
+            font-weight: 600;
         }
 
         /* ─── ANIMATIONS & UTILS ───── */
@@ -1073,12 +1051,8 @@
                 display: none;
             }
 
-            .fleet-layout {
+            .audit-layout {
                 grid-template-columns: 1fr;
-            }
-
-            .kpi-banner {
-                grid-template-columns: repeat(2, 1fr);
             }
         }
 
@@ -1087,11 +1061,16 @@
                 font-size: 16px;
             }
 
-            .kpi-banner {
-                grid-template-columns: 1fr;
+            .filter-bar {
+                flex-direction: column;
             }
 
-            .fleet-grid {
+            .filter-select,
+            .filter-input {
+                width: 100%;
+            }
+
+            .stats-row {
                 grid-template-columns: 1fr;
             }
         }
@@ -1116,7 +1095,6 @@
         }
 
         body.light-mode .card:hover,
-        body.light-mode .asset-card:hover,
         body.light-mode .sidebar-link:hover {
             box-shadow: 0 4px 20px rgba(139, 92, 246, 0.15);
         }
@@ -1168,16 +1146,17 @@
             <!-- Profile -->
             <div class="profile-section">
                 <div id="sidebarAvatar" class="avatar" style="display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;color:#fff;background:linear-gradient(135deg,var(--accent),var(--cyan))">AS</div>
-                <div class="profile-info"><span class="name" id="sidebarName">Ajendra S.</span><span class="role" id="sidebarRole">Fleet Manager</span></div>
+                <div class="profile-info"><span class="name" id="sidebarName">Ajendra S.</span><span class="role" id="sidebarRole">Security Admin</span></div>
             </div>
 
             <!-- Nav -->
             <nav class="sidebar-nav">
                 <a href="dashboard.html" class="sidebar-link"><i class="fas fa-home"></i> <span>Dashboard</span></a>
                 <a href="team.html" class="sidebar-link" data-min-plan="business"><i class="fas fa-users"></i> <span>Equipo</span></a>
-                <a href="fleet.html" class="sidebar-link active" data-min-plan="enterprise"><i class="fas fa-truck"></i> <span>Flota</span></a>
+                <a href="fleet.html" class="sidebar-link" data-min-plan="enterprise"><i class="fas fa-truck"></i> <span>Flota</span></a>
                 <a href="automation.html" class="sidebar-link" data-min-plan="enterprise"><i class="fas fa-robot"></i> <span>Bots RPA</span></a>
-                <a href="security.html" class="sidebar-link" data-min-plan="business"><i class="fas fa-shield-alt"></i> <span>Auditoría</span></a>
+                <a href="api_keys.html" class="sidebar-link" data-min-plan="enterprise"><i class="fas fa-key"></i> <span>API Keys</span></a>
+                <a href="security.html" class="sidebar-link active" data-min-plan="business"><i class="fas fa-shield-alt"></i> <span>Auditoría</span></a>
             </nav>
 
             <!-- Footer -->
@@ -1199,100 +1178,156 @@
             <!-- TOP BAR -->
             <header class="topbar">
                 <div class="topbar-left">
-                    <div class="topbar-title">Gestión de <span>Flota</span></div>
-                    <div class="topbar-search"><i class="fas fa-search"></i><input type="text" id="fleetSearch"
-                            placeholder="Buscar placa, chofer, ruta..." onkeyup="filterFleet()"></div>
+                    <div class="topbar-title">Auditoría <span>Blockchain</span></div>
+                    <div class="topbar-search"><i class="fas fa-search"></i><input type="text" id="hashSearch"
+                            placeholder="Buscar hash, evento, IP..." onkeyup="filterHashes()"></div>
                 </div>
                 <div class="topbar-right">
                     <button class="topbar-btn" title="Alertas"><i class="fas fa-bell"></i><span
-                            class="badge">5</span></button>
-                    <button class="btn btn-acc btn-sm" onclick="addNewVehicle()"><i class="fas fa-plus"></i> Nuevo
-                        Vehículo</button>
+                            class="badge">2</span></button>
+                    <button class="btn btn-acc btn-sm" onclick="exportAuditReport()"><i class="fas fa-file-export"></i>
+                        Exportar Reporte Firmado</button>
                 </div>
             </header>
 
             <!-- PAGE HEADER -->
             <div class="page-header">
                 <div>
-                    <h1 class="page-title">Activos <span>en Tiempo Real</span></h1>
-                    <p class="page-subtitle">Monitorea tu flota de vehículos con telemetría IoT. Visualiza ubicación,
-                        combustible, estado mecánico y recibe alertas predictivas de mantenimiento.</p>
+                    <h1 class="page-title">Auditoría <span>Inmutable</span></h1>
+                    <p class="page-subtitle">Visualiza la cadena de hashes criptográficos que garantizan la integridad
+                        de cada evento en tu plataforma. Cada bloque está firmado y verificado en tiempo real.</p>
                 </div>
                 <div class="page-actions">
-                    <button class="btn btn-outline btn-sm" onclick="exportFleetReport()"><i
-                            class="fas fa-file-export"></i> Exportar Reporte</button>
-                    <button class="btn btn-ghost btn-sm" onclick="refreshFleet()"><i class="fas fa-sync-alt"></i>
+                    <button class="btn btn-outline btn-sm" onclick="verifyChain()"><i class="fas fa-shield-alt"></i>
+                        Verificar Cadena</button>
+                    <button class="btn btn-ghost btn-sm" onclick="refreshAudit()"><i class="fas fa-sync-alt"></i>
                         Actualizar</button>
                 </div>
             </div>
 
-            <!-- KPI BANNER -->
-            <div id="fleetSkeleton" data-skeleton style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px">
-                <div class="skeleton" style="height:80px;border-radius:12px"></div>
-                <div class="skeleton" style="height:80px;border-radius:12px"></div>
-                <div class="skeleton" style="height:80px;border-radius:12px"></div>
-                <div class="skeleton" style="height:80px;border-radius:12px"></div>
-            </div>
-            <div class="kpi-banner">
-                <div class="kpi-card reveal">
-                    <div class="kpi-value" id="kpiTotal">—</div>
-                    <div class="kpi-label">Total Vehículos</div>
-                </div>
-                <div class="kpi-card reveal">
-                    <div class="kpi-value" id="kpiTipos">—</div>
-                    <div class="kpi-label">Camiones / Vans</div>
-                </div>
-                <div class="kpi-card reveal">
-                    <div class="kpi-value" id="kpiOperativos">—</div>
-                    <div class="kpi-label">En Ruta / Operativos</div>
-                </div>
-                <div class="kpi-card alert reveal">
-                    <div class="kpi-value" id="kpiMantenimiento">—</div>
-                    <div class="kpi-label">Requieren Mantenimiento</div>
-                </div>
-            </div>
+            <!-- AUDIT LAYOUT -->
+            <div class="audit-layout">
 
-            <!-- FLEET LAYOUT -->
-            <div class="fleet-layout">
-
-                <!-- LEFT: Fleet Grid -->
+                <!-- LEFT: Hash Chain Table -->
                 <div class="main-column">
                     <div class="card reveal">
-                        <h2 class="card-title"><i class="fas fa-th-large"></i> Matriz de Activos</h2>
+                        <h2 class="card-title"><i class="fas fa-link"></i> Visualizador Hash Chain</h2>
 
-                        <div class="fleet-grid" id="fleetGrid">
-                            <div style="grid-column:1/-1;text-align:center;padding:30px;color:var(--gray);">Cargando flota...</div>
+                        <div class="filter-bar">
+                            <select class="filter-select" id="eventFilter" onchange="filterHashes()">
+                                <option value="">Todos los eventos</option>
+                                <option value="login">Login / Autenticación</option>
+                                <option value="fleet">Modificación de Flota</option>
+                                <option value="billing">Transacciones de Pago</option>
+                                <option value="config">Cambios de Configuración</option>
+                                <option value="security">Eventos de Seguridad</option>
+                            </select>
+                            <input type="text" class="filter-input" id="hashInput"
+                                placeholder="Buscar por Hash, bloque o operador..." onkeyup="filterHashes()">
                         </div>
+
+                        <table class="hash-table">
+                            <thead>
+                                <tr>
+                                    <th>Bloque</th>
+                                    <th>Evento / Acción</th>
+                                    <th>Hash Anterior</th>
+                                    <th>Hash Actual</th>
+                                    <th style="text-align:center;">Validación</th>
+                                </tr>
+                            </thead>
+                            <tbody id="hashBody">
+                                <tr><td colspan="5" style="padding:0"><div id="auditSkeleton">
+                                <div class="skeleton-row"><div class="skeleton skeleton-avatar"></div><div class="skeleton-col"><div class="skeleton skeleton-text" style="width:50%"></div><div class="skeleton skeleton-text xs"></div></div><div class="skeleton skeleton-badge"></div></div>
+                                <div class="skeleton-row"><div class="skeleton skeleton-avatar"></div><div class="skeleton-col"><div class="skeleton skeleton-text" style="width:65%"></div><div class="skeleton skeleton-text xs"></div></div><div class="skeleton skeleton-badge"></div></div>
+                                <div class="skeleton-row"><div class="skeleton skeleton-avatar"></div><div class="skeleton-col"><div class="skeleton skeleton-text" style="width:45%"></div><div class="skeleton skeleton-text xs"></div></div><div class="skeleton skeleton-badge"></div></div>
+                                <div class="skeleton-row"><div class="skeleton skeleton-avatar"></div><div class="skeleton-col"><div class="skeleton skeleton-text" style="width:55%"></div><div class="skeleton skeleton-text xs"></div></div><div class="skeleton skeleton-badge"></div></div>
+                                <div class="skeleton-row"><div class="skeleton skeleton-avatar"></div><div class="skeleton-col"><div class="skeleton skeleton-text" style="width:40%"></div><div class="skeleton skeleton-text xs"></div></div><div class="skeleton skeleton-badge"></div></div>
+                                </div></td></tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
 
-                <!-- RIGHT: Timeline & AI -->
+                <!-- RIGHT: Policies & Access Map -->
                 <div class="sidebar-column">
 
-                    <!-- IoT Timeline -->
+                    <!-- Security Policies -->
                     <div class="card reveal">
-                        <h2 class="card-title"><i class="fas fa-satellite"></i> Eventos IoT en Tiempo Real</h2>
-                        <div class="timeline" id="iotTimeline">
-                            <div class="timeline-item">
-                                <span class="timeline-time">—</span>
-                                <div class="timeline-text">Cargando eventos de flota...</div>
+                        <h2 class="card-title"><i class="fas fa-shield-alt"></i> Políticas de Seguridad</h2>
+
+                        <div class="stats-row">
+                            <div class="stat-item">
+                                <div class="stat-value">99.98%</div>
+                                <div class="stat-label">Uptime Auditoría</div>
                             </div>
+                            <div class="stat-item">
+                                <div class="stat-value" id="statHashes">1,247</div>
+                                <div class="stat-label">Hashes Verificados</div>
+                            </div>
+                        </div>
+
+                        <div class="policy-item">
+                            <div class="policy-info">
+                                <div class="policy-title">Forzar 2FA Global</div>
+                                <div class="policy-desc">Obligatorio para roles administrativos</div>
+                            </div>
+                            <label class="toggle-switch"><input type="checkbox" checked><span
+                                    class="toggle-slider"></span></label>
+                        </div>
+                        <div class="policy-item">
+                            <div class="policy-info">
+                                <div class="policy-title">Rotación de Contraseñas</div>
+                                <div class="policy-desc">Cambio obligatorio cada 90 días</div>
+                            </div>
+                            <label class="toggle-switch"><input type="checkbox" checked><span
+                                    class="toggle-slider"></span></label>
+                        </div>
+                        <div class="policy-item">
+                            <div class="policy-info">
+                                <div class="policy-title">Sesión Administrativa</div>
+                                <div class="policy-desc">Timeout automático a las 8 horas</div>
+                            </div>
+                            <label class="toggle-switch"><input type="checkbox"><span
+                                    class="toggle-slider"></span></label>
+                        </div>
+
+                        <div class="policy-details" style="margin-top:16px;">
+                            <p><b>Complejidad:</b> Alta (Mín. 10 chars, alfanumérico + símbolos)</p>
+                            <p><b>Sesión Dirección:</b> <span class="ok">Extendida (24h) para laptops
+                                    corporativas</span></p>
+                            <p><b>Registro de Intentos:</b> Todos los accesos fallidos se auditan en blockchain</p>
                         </div>
                     </div>
 
-                    <!-- AI Assistant Panel -->
-                    <div class="ai-panel reveal" id="aiPanel" style="display:none">
-                        <div class="ai-header">
-                            <div class="ai-avatar">🤖</div>
-                            <div class="ai-name">Astraea Agent <span class="ai-status">● Activo</span></div>
-                        </div>
-                        <p class="ai-message" id="aiMessage">
-                        </p>
-                        <div style="display:flex;gap:8px;margin-top:16px;">
-                            <button class="btn btn-acc btn-sm" style="flex:1;justify-content:center;"
-                                onclick="aprobarSugerenciaIA()"><i class="fas fa-check"></i> Aprobar</button>
-                            <button class="btn btn-ghost btn-sm" style="flex:1;justify-content:center;"
-                                onclick="dismissAI()"><i class="fas fa-times"></i> Descartar</button>
+                    <!-- Access Map -->
+                    <div class="card reveal">
+                        <h2 class="card-title"><i class="fas fa-map-marked-alt"></i> Accesos Recientes</h2>
+                        <div class="access-list">
+                            <div class="access-item">
+                                <span class="access-ip allowed"><i class="fas fa-check-circle"></i> 187.210.34.89</span>
+                                <div class="access-location">Oficina Central Monterrey (IP Permitida)</div>
+                                <div class="access-user">Carlos Mendoza (Owner)</div>
+                                <div class="access-time"><i class="fas fa-clock"></i> Hace 2 min</div>
+                            </div>
+                            <div class="access-item">
+                                <span class="access-ip remote"><i class="fas fa-laptop"></i> Acceso Remoto</span>
+                                <div class="access-location">Laptop Corporativa (CTO Direct)</div>
+                                <div class="access-user">Sesión extendida sin restricción</div>
+                                <div class="access-time"><i class="fas fa-clock"></i> Hace 1 hora</div>
+                            </div>
+                            <div class="access-item">
+                                <span class="access-ip blocked"><i class="fas fa-ban"></i> 201.99.12.45</span>
+                                <div class="access-location"><b>⚠️ Bloqueado: IP No Autorizada</b></div>
+                                <div class="access-user">Intento en módulo Admin</div>
+                                <div class="access-time"><i class="fas fa-clock"></i> Hace 4 horas</div>
+                            </div>
+                            <div class="access-item">
+                                <span class="access-ip allowed"><i class="fas fa-check-circle"></i> 192.168.10.45</span>
+                                <div class="access-location">VPN Corporativa - Sucursal Guadalajara</div>
+                                <div class="access-user">Ana López (Auditor)</div>
+                                <div class="access-time"><i class="fas fa-clock"></i> Hace 6 horas</div>
+                            </div>
                         </div>
                     </div>
 
@@ -1300,47 +1335,6 @@
             </div>
 
         </main>
-
-        <!-- Vehicle Modal -->
-        <div class="modal-overlay" id="vehicleModal" onclick="if(event.target===this)closeVehicleModal()">
-            <div class="modal-box">
-                <div class="modal-icon"><i class="fas fa-truck"></i></div>
-                <h3>Nuevo Vehículo</h3>
-                <div style="display:grid;gap:10px;margin:14px 0;text-align:left">
-                    <input id="vPlaca" class="modal-input" placeholder="Placa (ej. NVA-2027-A)" />
-                    <select id="vTipo" class="modal-input">
-                        <option value="Camión Pesado (Carga)">Camión Pesado (Carga)</option>
-                        <option value="Camión Mediano">Camión Mediano</option>
-                        <option value="Van Ligera (Mensajería)">Van Ligera (Mensajería)</option>
-                        <option value="Van Ligera (Distribución)">Van Ligera (Distribución)</option>
-                        <option value="Motocicleta">Motocicleta</option>
-                    </select>
-                    <input id="vChofer" class="modal-input" placeholder="Conductor asignado" />
-                    <input id="vUbicacion" class="modal-input" placeholder="Ubicación (ej. Base Norte)" />
-                    <div>
-                        <label style="font-size:12px;color:var(--gray)">Combustible (%)</label>
-                        <input id="vCombustible" class="modal-input" type="number" min="0" max="100" value="100" />
-                    </div>
-                </div>
-                <div class="modal-actions">
-                    <button class="btn btn-ghost" onclick="closeVehicleModal()">Cancelar</button>
-                    <button class="btn btn-acc" onclick="submitVehicle()"><i class="fas fa-check"></i> Registrar</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Logout Modal -->
-        <div class="modal-overlay" id="logoutModal" onclick="if(event.target===this)this.classList.remove('active')">
-            <div class="modal-box">
-                <div class="modal-icon"><i class="fas fa-sign-out-alt"></i></div>
-                <h3>¿Cerrar sesión?</h3>
-                <p>Serás redirigido a la página de inicio de sesión.</p>
-                <div class="modal-actions">
-                    <button class="btn btn-ghost" id="modalCancel">Cancelar</button>
-                    <button class="btn btn-acc" id="modalConfirm">Cerrar Sesión</button>
-                </div>
-            </div>
-        </div>
     </div>
 
     <script>
@@ -1350,7 +1344,7 @@
         document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; dot.style.left = mx + 'px'; dot.style.top = my + 'px'; glow.style.left = mx + 'px'; glow.style.top = my + 'px'; });
         function animRing() { rx += (mx - rx) * 0.12; ry += (my - ry) * 0.12; ring.style.left = rx + 'px'; ring.style.top = ry + 'px'; requestAnimationFrame(animRing); }
         animRing();
-        document.querySelectorAll('a,button,.sidebar-link,.asset-card,.topbar-btn').forEach(el => {
+        document.querySelectorAll('a,button,.sidebar-link,.filter-select,.topbar-btn').forEach(el => {
             el.addEventListener('mouseenter', () => { ring.style.width = '50px'; ring.style.height = '50px'; ring.style.opacity = '.5'; });
             el.addEventListener('mouseleave', () => { ring.style.width = '36px'; ring.style.height = '36px'; ring.style.opacity = '1'; });
         });
@@ -1379,15 +1373,9 @@
         const darkModeBtn = document.getElementById('darkModeToggle');
         darkModeBtn.addEventListener('click', () => { document.body.classList.toggle('light-mode'); const isLight = document.body.classList.contains('light-mode'); darkModeBtn.innerHTML = isLight ? '<i class="fas fa-sun"></i> <span>Light Mode</span>' : '<i class="fas fa-moon"></i> <span>Dark Mode</span>'; });
 
-        // ── Logout Modal ─────────────────
-        const logoutBtn = document.getElementById('logoutBtn'), logoutModal = document.getElementById('logoutModal'), modalCancel = document.getElementById('modalCancel'), modalConfirm = document.getElementById('modalConfirm');
-        logoutBtn.addEventListener('click', (e) => { e.preventDefault(); logoutModal.classList.add('active'); });
-        modalCancel.addEventListener('click', () => { logoutModal.classList.remove('active'); });
-        modalConfirm.addEventListener('click', () => { logoutModal.classList.remove('active'); window.location.href='../login.html'; });
-        logoutModal.addEventListener('click', (e) => { if (e.target === logoutModal) { logoutModal.classList.remove('active'); } });
-
-        // ── Fleet Functions ──────────────
-        let vehicles = [];
+        // ── Hash Chain Data ──────────────
+        let hashChain = [];
+        let chainStats = { total: 0, valid: true };
 
         function apiFetch(url, options) {
             const token = localStorage.getItem('token');
@@ -1395,226 +1383,96 @@
             return fetch(url, Object.assign({}, options, { headers }));
         }
 
-        const estadosFleet = {
-            'en-ruta': { label: 'En Ruta', clase: '' },
-            'disponible': { label: 'Disponible', clase: '' },
-            'alerta': { label: 'Alerta', clase: 'maintenance' },
-            'taller': { label: 'Taller', clase: 'maintenance' }
-        };
-
-        async function loadFleet() {
-            const grid = document.getElementById('fleetGrid');
+        async function loadAudit() {
+            const skeleton = document.getElementById('auditSkeleton');
             try {
-                const res = await apiFetch('/api/fleet');
+                const res = await apiFetch('/api/security/audit?limit=200');
                 if (!res.ok) throw new Error((await res.json()).error || 'Error');
                 const data = await res.json();
-                vehicles = data.vehicles || [];
-                renderFleet();
+                hashChain = data.blocks || [];
+                chainStats = data.stats || { total: 0, valid: true };
+                const verified = document.getElementById('statHashes');
+                if (verified) verified.textContent = (chainStats.total || hashChain.length).toLocaleString();
+                if (skeleton) skeleton.closest('tr').style.display = 'none';
+                renderHashes();
             } catch (err) {
-                grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:30px;color:var(--red);">No se pudo cargar la flota: ${err.message}</div>`;
+                if (skeleton) skeleton.closest('tr').style.display = 'none';
+                const tbody = document.getElementById('hashBody');
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:40px;color:var(--red);"><i class="fas fa-exclamation-triangle" style="font-size:24px;margin-bottom:12px;display:block;"></i>No se pudo cargar la auditoría: ${err.message}</td></tr>`;
             }
         }
 
-        function renderFleet() {
-            const grid = document.getElementById('fleetGrid');
-            if (!vehicles.length) {
-                grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:30px;color:var(--gray);">Sin vehículos registrados. Agrega el primero con "Nuevo Vehículo".</div>';
-            } else {
-                grid.innerHTML = vehicles.map(v => {
-                    const st = estadosFleet[v.estado] || estadosFleet['disponible'];
-                    const badge = v.estado === 'alerta' ? '<span class="maintenance-badge critical">CRÍTICO</span>'
-                        : v.estado === 'taller' ? '<span class="maintenance-badge workshop">TALLER</span>' : '';
-                    const fuelClass = v.combustible <= 25 ? 'low' : (v.combustible <= 60 ? 'medium' : '');
-                    const fuelStyle = v.combustible <= 25 ? 'color:var(--red)' : (v.combustible <= 60 ? 'color:var(--yellow)' : '');
-                    return `<div class="asset-card ${st.clase}" data-plate="${v.placa}" data-status="${v.estado}" data-driver="${v.chofer || ''}">
-                        ${badge}
-                        <div class="asset-plate">${v.placa}</div>
-                        <div class="asset-meta">
-                            <b>Tipo:</b> ${v.tipo || 'Vehículo'}<br>
-                            <b>Asignado:</b> ${v.chofer || 'Sin asignar'}<br>
-                            <b>Estado:</b> ${st.label}${v.ubicacion ? ' (' + v.ubicacion + ')' : ''}
-                        </div>
-                        <div class="fuel-label"><span>Combustible</span><span style="${fuelStyle}">${v.combustible}%</span></div>
-                        <div class="fuel-bar">
-                            <div class="fuel-fill ${fuelClass}" style="width:${v.combustible}%${fuelClass === 'medium' ? ';background:var(--yellow)' : ''}"></div>
-                        </div>
-                        <div style="display:flex;gap:6px;margin-top:10px">
-                            <button class="btn btn-ghost btn-xs" onclick="approveMaintenance('${v.id}')" ${v.estado !== 'alerta' ? 'disabled style="opacity:.4"' : ''}><i class="fas fa-wrench"></i> A taller</button>
-                            <button class="btn btn-ghost btn-xs" onclick="marcarDisponible('${v.id}')" ${v.estado === 'disponible' ? 'disabled style="opacity:.4"' : ''}><i class="fas fa-flag-checkered"></i> Disponible</button>
-                        </div>
-                    </div>`;
-                }).join('');
-            }
-            updateKpis();
-        }
-
-        function updateKpis() {
-            const total = vehicles.length;
-            const camiones = vehicles.filter(v => /camión|camion/i.test(v.tipo || '')).length;
-            const vans = vehicles.filter(v => /van/i.test(v.tipo || '')).length;
-            const operativos = vehicles.filter(v => v.estado === 'en-ruta' || v.estado === 'disponible').length;
-            const mantenimiento = vehicles.filter(v => v.estado === 'alerta' || v.estado === 'taller').length;
-            document.getElementById('kpiTotal').textContent = total;
-            document.getElementById('kpiTipos').textContent = camiones + ' / ' + vans;
-            document.getElementById('kpiOperativos').textContent = operativos + ' / ' + (total - mantenimiento);
-            document.getElementById('kpiMantenimiento').textContent = mantenimiento;
-            renderTimeline();
-            renderAISuggestion();
-        }
-
-        function renderTimeline() {
-            const t = document.getElementById('iotTimeline');
-            if (!t) return;
-            const eventos = [];
-            const hora = new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
-            vehicles.forEach(v => {
-                const loc = v.ubicacion ? ' (' + v.ubicacion + ')' : '';
-                if (v.estado === 'alerta') {
-                    eventos.push({ cls: 'alert', html: `<b>${v.placa}:</b> ⚠️ Alerta telemetría — requiere atención inmediata${loc}` });
-                } else if (v.estado === 'taller') {
-                    eventos.push({ cls: '', html: `<b>${v.placa}:</b> Ingreso a taller programado. Mantenimiento preventivo iniciado` });
-                } else if (v.estado === 'en-ruta') {
-                    eventos.push({ cls: '', html: `<b>${v.placa}:</b> En ruta${v.ubicacion ? ' hacia ' + v.ubicacion : ''}. Estable ✅` });
-                }
-            });
-            if (!eventos.length) {
-                t.innerHTML = '<div class="timeline-item"><span class="timeline-time">—</span><div class="timeline-text">Sin eventos recientes. Agrega vehículos para monitorearlos.</div></div>';
+        function renderHashes(data = hashChain) {
+            const tbody = document.getElementById('hashBody');
+            tbody.innerHTML = '';
+            if (data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:40px;color:var(--gray);"><i class="fas fa-search" style="font-size:24px;margin-bottom:12px;display:block;"></i>No se encontraron resultados</td></tr>`;
                 return;
             }
-            t.innerHTML = eventos.slice(0, 5).map(e =>
-                `<div class="timeline-item ${e.cls}"><span class="timeline-time">${hora}</span><div class="timeline-text">${e.html}</div></div>`
-            ).join('');
-        }
-
-        let aiSugerenciaId = null;
-
-        function renderAISuggestion() {
-            const panel = document.getElementById('aiPanel');
-            if (!panel) return;
-            const alerta = vehicles.find(v => v.estado === 'alerta');
-            if (alerta) {
-                aiSugerenciaId = alerta.id;
-                document.getElementById('aiMessage').innerHTML =
-                    `He detectado que la unidad <b>${alerta.placa}</b> requiere mantenimiento inmediato.<br><br>` +
-                    `• 📋 Orden de taller en borrador<br>• 📄 Reporte técnico preliminar<br>• 🔔 Notificación al propietario<br><br>` +
-                    `<i style="color:var(--cyan)">¿Deseas aprobar y enviar la orden de servicio?</i>`;
-                panel.style.display = 'block';
-            } else {
-                panel.style.display = 'none';
-            }
-        }
-
-        function aprobarSugerenciaIA() {
-            if (aiSugerenciaId) {
-                approveMaintenance(aiSugerenciaId);
-            } else {
-                showToast('No hay sugerencias activas.', 'info');
-            }
-        }
-
-        function filterFleet() {
-            const query = document.getElementById('fleetSearch').value.toLowerCase();
-            const cards = document.querySelectorAll('.asset-card');
-            cards.forEach(card => {
-                const plate = (card.dataset.plate || '').toLowerCase();
-                const driver = (card.dataset.driver || '').toLowerCase();
-                const status = (card.dataset.status || '').toLowerCase();
-                const match = plate.includes(query) || driver.includes(query) || status.includes(query);
-                card.style.display = match ? 'block' : 'none';
+            data.forEach(h => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+          <td class="hash-block">#${h.block}</td>
+          <td class="hash-event">${h.event}${h.usuario ? ` <span style="color:var(--gray);font-weight:400;">· ${h.usuario}</span>` : ''}</td>
+          <td><code class="hash-code">${h.prevHash}</code></td>
+          <td><code class="hash-code">${h.currHash}</code></td>
+          <td style="text-align:center;" class="${h.valid ? 'hash-valid' : 'hash-invalid'}">${h.valid ? '<i class="fas fa-check-circle"></i>' : '<i class="fas fa-times-circle"></i>'}</td>
+        `;
+                tbody.appendChild(row);
             });
         }
 
-        function addNewVehicle() {
-            const modal = document.getElementById('vehicleModal');
-            if (modal) modal.classList.add('active');
+        function filterHashes() {
+            const input = document.getElementById('hashInput');
+            const search = document.getElementById('hashSearch');
+            const query = `${input?.value || ''} ${search?.value || ''}`.toLowerCase();
+            const type = document.getElementById('eventFilter').value;
+            const filtered = hashChain.filter(h => {
+                const matchSearch = `${h.event} ${h.prevHash} ${h.currHash} #${h.block}`.toLowerCase().includes(query);
+                return matchSearch && (!type || h.type === type);
+            });
+            renderHashes(filtered);
         }
 
-        async function submitVehicle() {
-            const placa = document.getElementById('vPlaca').value.trim();
-            if (!placa) { showToast('La placa es requerida', 'error'); return; }
-            const body = {
-                placa,
-                tipo: document.getElementById('vTipo').value,
-                chofer: document.getElementById('vChofer').value.trim(),
-                combustible: parseInt(document.getElementById('vCombustible').value, 10) || 100,
-                ubicacion: document.getElementById('vUbicacion').value.trim()
-            };
-            try {
-                const res = await apiFetch('/api/fleet', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(body)
-                });
-                if (!res.ok) throw new Error((await res.json()).error || 'Error');
-                showToast('✓ Vehículo registrado', 'success');
-                document.getElementById('vehicleModal').classList.remove('active');
-                document.getElementById('vPlaca').value = '';
-                document.getElementById('vChofer').value = '';
-                document.getElementById('vUbicacion').value = '';
-                loadFleet();
-            } catch (err) {
-                showToast('Error: ' + err.message, 'error');
-            }
-        }
-
-        function closeVehicleModal() {
-            document.getElementById('vehicleModal').classList.remove('active');
-        }
-
-        async function approveMaintenance(id) {
-            try {
-                const res = await apiFetch('/api/fleet/' + encodeURIComponent(id), {
-                    method: 'PATCH',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ estado: 'taller', fecha_mantenimiento: new Date().toISOString() })
-                });
-                if (!res.ok) throw new Error((await res.json()).error || 'Error');
-                showToast('Orden de mantenimiento aprobada y notificada.', 'success');
-                loadFleet();
-            } catch (err) { showToast('Error: ' + err.message, 'error'); }
-        }
-
-        async function marcarDisponible(id) {
-            try {
-                const res = await apiFetch('/api/fleet/' + encodeURIComponent(id), {
-                    method: 'PATCH',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ estado: 'disponible' })
-                });
-                if (!res.ok) throw new Error((await res.json()).error || 'Error');
-                showToast('Vehículo marcado como disponible.', 'success');
-                loadFleet();
-            } catch (err) { showToast('Error: ' + err.message, 'error'); }
-        }
-
-        function exportFleetReport() {
-            if (!vehicles.length) { showToast('No hay vehículos para exportar', 'warning'); return; }
-            const header = ['Placa', 'Tipo', 'Chofer', 'Estado', 'Combustible%', 'Ubicacion', 'Km'];
-            const rows = vehicles.map(v => [v.placa, v.tipo, v.chofer, v.estado, v.combustible, v.ubicacion, v.km]);
+        // ── Utilities ────────────────────
+        function exportAuditReport() {
+            if (!hashChain.length) { showToast('No hay registros para exportar', 'warning'); return; }
+            const header = ['Bloque', 'Evento', 'Tipo', 'Usuario', 'IP', 'Hash Anterior', 'Hash Actual'];
+            const rows = hashChain.map(h => [h.block, h.event, h.type, h.usuario, h.ip, h.prevHash, h.currHash]);
             const csv = [header, ...rows].map(r => r.map(c => `"${String(c ?? '').replace(/"/g, '""')}"`).join(',')).join('\n');
             const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
             const a = document.createElement('a');
             a.href = URL.createObjectURL(blob);
-            a.download = 'flota_' + (localStorage.getItem('empresaCodigo') || 'tenant') + '.csv';
+            a.download = 'auditoria_' + (localStorage.getItem('empresaCodigo') || 'tenant') + '.csv';
             a.click();
-            showToast('Reporte de flota descargado.', 'success');
+            showToast('Reporte de auditoría descargado.', 'success');
         }
-
-        async function refreshFleet() {
+        async function verifyChain() {
+            try {
+                const res = await apiFetch('/api/security/audit?limit=200');
+                if (!res.ok) throw new Error((await res.json()).error || 'Error');
+                const data = await res.json();
+                const stats = data.stats || {};
+                if (stats.verificados === 0 && stats.total === 0) {
+                    showToast('Aún no hay eventos de auditoría que verificar.', 'warning');
+                } else {
+                    showToast(`Cadena de auditoría verificada: ${stats.verificados ?? 0} de ${stats.total ?? 0} bloques íntegros.`, 'success');
+                }
+            } catch (err) {
+                showToast('Error al verificar: ' + err.message, 'error');
+            }
+        }
+        async function refreshAudit() {
             const btn = document.querySelector('.page-actions .btn-ghost'), icon = btn?.querySelector('i');
             if (icon) icon.classList.add('fa-spin');
-            await loadFleet();
+            await loadAudit();
             if (icon) icon.classList.remove('fa-spin');
-            showToast('Flota actualizada con los últimos datos.', 'success');
-        }
-
-        function dismissAI() {
-            showToast('Sugerencia de IA descartada.', 'info');
+            showToast('Auditoría actualizada con los últimos eventos.', 'success');
         }
 
         // ── Initialize ──────────────────
         window.addEventListener('load', () => {
-            loadFleet();
+            loadAudit();
             setTimeout(() => document.querySelectorAll('.reveal').forEach((el, i) => setTimeout(() => el.classList.add('in'), i * 50)), 100);
         });
 

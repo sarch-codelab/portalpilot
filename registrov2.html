@@ -2,6 +2,14 @@
 <html lang="es">
 
 <head>
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-FGPT99SWLY"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-FGPT99SWLY');
+    </script>
     <meta charset="UTF-8">
     <link rel="icon" type="image/png" href="img/iconos/Portal%20Pilot.png">
     <meta name="description" content="Portal Pilot: ERP comercial integral para pulperías, supermercados, distribuidoras y cadenas retail. Facturación electrónica SAR, inventario multi-bodega, POS y más con IA integrada.">
@@ -670,10 +678,10 @@
 
                 <div class="plan-grid">
                     <!-- Startup -->
-                    <div class="plan-card" onclick="selectPlan('startup', this)">
+                    <div class="plan-card" onclick="selectPlan('starter', this)">
                         <div class="plan-badge">Gratis</div>
-                        <h3>Startup</h3>
-                        <div class="plan-price">$0 <span>/mes</span></div>
+                        <h3>Starter</h3>
+                        <div class="plan-price">GRATIS <span>/15 días</span></div>
                         <ul class="plan-features">
                             <li><i class="fas fa-check"></i> Hasta 5 usuarios</li>
                             <li><i class="fas fa-check"></i> 3 Bots RPA básicos</li>
@@ -683,7 +691,7 @@
                     <!-- Business -->
                     <div class="plan-card" onclick="selectPlan('business', this)">
                         <h3>Business</h3>
-                        <div class="plan-price">$49 <span>/mes</span></div>
+                        <div class="plan-price">L.1,499 <span>/mes</span></div>
                         <ul class="plan-features">
                             <li><i class="fas fa-check"></i> Hasta 25 usuarios</li>
                             <li><i class="fas fa-check"></i> Bots RPA ilimitados</li>
@@ -693,7 +701,7 @@
                     <!-- Enterprise -->
                     <div class="plan-card" onclick="selectPlan('enterprise', this)">
                         <h3>Enterprise</h3>
-                        <div class="plan-price">Custom</div>
+                        <div class="plan-price">L.4,999 <span>/mes</span></div>
                         <ul class="plan-features">
                             <li><i class="fas fa-check"></i> Usuarios ilimitados</li>
                             <li><i class="fas fa-check"></i> Infraestructura dedicada</li>
@@ -1059,7 +1067,7 @@
             document.getElementById('btnPlanContinue').disabled = false;
 
             const startupInfo = document.getElementById('startupInfo');
-            if (plan === 'startup') {
+            if (plan === 'starter') {
                 startupInfo.classList.add('visible');
             } else {
                 startupInfo.classList.remove('visible');
@@ -1076,10 +1084,10 @@
             if (plan === 'business' || plan === 'enterprise') {
                 // Redirigir a la página de pago con el plan seleccionado
                 window.location.href = `pay_plan.html?plan=${plan}`;
-            } else {
-                // Es startup, continuar al siguiente paso
-                nextStep(3);
-            }
+             } else {
+                 // Es starter (plan gratuito), continuar al siguiente paso
+                 nextStep(3);
+             }
 };
 
         // ─── PREVISUALIZACIÓN DE IMÁGENES (NUEVO) ───
@@ -1418,8 +1426,8 @@
 
                 const email = document.getElementById('regEmail').value.trim().toLowerCase();
                 const password = document.getElementById('regPass').value;
-                const plan = document.getElementById('selectedPlan').value || 'startup';
-                const planText = plan === 'startup' ? 'Startup (15 días gratis)' : (plan === 'business' ? 'Business' : 'Enterprise');
+                const plan = document.getElementById('selectedPlan').value || 'starter';
+                const planText = plan === 'starter' ? 'Starter (15 días gratis)' : (plan === 'business' ? 'Business' : 'Enterprise');
                 const pais = document.getElementById('regCountry').value || '';
                 const zonaHoraria = document.getElementById('regTimezone').value || '';
 
@@ -1475,7 +1483,7 @@
                 regStep = 8; updateProgress();
                 showMessage('¡Tenant creado exitosamente!', 'success');
 
-                if (plan === 'startup') {
+            if (plan === 'starter') {
                     setTimeout(function() {
                         window.location.href = `login.html?tenant=${encodeURIComponent(`${dominio}.pp.ia`)}&welcome=1`;
                     }, 4000);

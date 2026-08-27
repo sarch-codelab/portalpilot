@@ -1825,6 +1825,7 @@
   </div>
 
   <!-- ===== JAVASCRIPT ===== -->
+  <script src="../auth-check.js"></script>
   <script src="js/portal-admin-guard.js"></script>
   <script>
     // ===== CUSTOM CURSOR (solo desktop) =====
@@ -1898,7 +1899,6 @@
     const envVars = [
       { key: 'API_BASE_URL', value: 'https://api.portalpilot.io/v1', env: 'production', sensitive: false },
       { key: 'OLLAMA_ENDPOINT', value: 'http://localhost:11434', env: 'production', sensitive: false },
-      { key: 'NOCODB_API_KEY', value: 'nc_••••••••••••••••', env: 'production', sensitive: true },
       { key: 'BLOCKCHAIN_RPC', value: 'https://rpc.portalpilot.chain', env: 'production', sensitive: false },
       { key: 'STRIPE_SECRET_KEY', value: 'sk_live_••••••••••••', env: 'production', sensitive: true },
       { key: 'API_RATE_LIMIT', value: '1000', env: 'production', sensitive: false },

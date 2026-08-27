@@ -2315,7 +2315,7 @@
           <td><span class="status-badge ${u.status}"><span class="status-dot"></span>${u.status.charAt(0).toUpperCase() + u.status.slice(1)}</span></td>
           <td>${u.lastActivity ? formatRelativeTime(u.lastActivity) : '<span style="color:var(--gray)">Nunca</span>'}</td>
           <td><div class="user-actions">
-            <button class="action-icon-btn" title="Ver detalle" onclick="event.stopPropagation();window.location.href='usuario_detail.html?id='+encodeURIComponent('${u.id}')+(( '${u.source}' === 'nocodb' ) ? '&source=nocodb' : '')"><i class="fas fa-eye"></i></button>
+            <button class="action-icon-btn" title="Ver detalle" onclick="event.stopPropagation();window.location.href='usuario_detail.html?id='+encodeURIComponent('${u.id}')"><i class="fas fa-eye"></i></button>
             <button class="action-icon-btn" title="Editar" onclick="event.stopPropagation();editUser('${u.id}','${u.source || ''}')"><i class="fas fa-edit"></i></button>
             <button class="action-icon-btn ${u.status === 'active' ? 'danger' : ''}" title="${u.status === 'active' ? 'Suspender' : 'Activar'}" onclick="event.stopPropagation();confirmAction('${u.status === 'active' ? 'Suspender' : 'Activar'} usuario','¿${u.status === 'active' ? 'Suspender' : 'Activar'} a ${nombre} ${apellido}?',()=>toggleUserStatus('${u.id}','${u.status}','${u.source || ''}'),'../img/navi/${u.status === 'active' ? 'navi-suspender.png' : 'navi-advertencia.png'}')"><i class="fas fa-${u.status === 'active' ? 'pause' : 'play'}-circle"></i></button>
             <button class="action-icon-btn danger" title="Eliminar" onclick="event.stopPropagation();confirmAction('Eliminar usuario','¿Eliminar permanentemente a ${nombre} ${apellido}? Esta acción no se puede deshacer.',()=>deleteUser('${u.id}','${u.source || ''}'),'../img/navi/navi-eliminar.png')"><i class="fas fa-trash"></i></button>
@@ -2617,7 +2617,6 @@
             }
             try {
                 let url = `/api/users/${encodeURIComponent(id)}`;
-                if (source === 'nocodb') url += '?source=nocodb';
                 const response = await fetch(url, {
                     method: 'DELETE',
                     headers: { 'Authorization': `Bearer ${token}` }

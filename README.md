@@ -21,7 +21,7 @@
 |------------|------------|------------------|
 | **App Multi-Plataforma** | Flutter (Android, iOS, Web, Windows) | Negocios comerciales (offline-first) |
 | **Portal Admin (`pp/`)** | HTML/CSS/JS + Express API | Superadministradores (rol `ROOT`) |
-| **Portal Enterprise (`enterprise/`)** | HTML/CSS/JS + Express API | Clientes por tenant (multi-empresa) |
+| **Portal Empresa (`empresa/`)** | HTML/CSS/JS + Express API | Administración avanzada por tenant |
 | **Landing & Auth** | HTML/CSS/JS estático (Vercel) | Público general |
 
 > **Demo en vivo:** [https://portal-pilot.vercel.app](https://portal-pilot.vercel.app)
@@ -106,7 +106,7 @@ Asistentes virtuales integrados en **cada módulo** con latencia ultra-baja. An�
 ### Frontend (Web)
 | Tecnología | Uso |
 |------------|-----|
-| **HTML5 / CSS3 / JS Vanilla** | Portal admin (`pp/`), Enterprise (`enterprise/`), Landing, Auth |
+| **HTML5 / CSS3 / JS Vanilla** | Portal admin (`pp/`), Empresa (`empresa/`), Landing, Auth |
 | **CSS Variables** | Sistema de diseño (modo oscuro, paleta corporativa) |
 | **Inter / JetBrains Mono** | Tipografía principal y monoespaciada |
 | **localStorage** | Persistencia de sesión (JWT, roles, tenant) |
@@ -196,8 +196,6 @@ portalpilot/
 ├── api/                          # Endpoints serverless (app Flutter)
 │   ├── _lib/supabase.js         # Cliente Supabase + helper tenant
 │   ├── login.js                 # Login app (NocoDB + fallback)
-│   ├── matriculas/              # CRUD matrículas (educación)
-│   ├── notas/                   # Notas estado (JSONB)
 │   ├── clientes/                # CRUD clientes
 │   ├── productos/               # Upsert masivo productos/stock
 │   ├── facturas/                # CRUD + anulación facturas
@@ -218,13 +216,13 @@ portalpilot/
 │   ├── system_health.html       # Salud del sistema
 │   └── js/                      # Lógica portal admin
 │
-├── enterprise/                   # Portal Enterprise (clientes)
+├── empresa/                      # Portal web avanzado por empresa
 │   ├── dashboard.html           # Dashboard por plan
 │   ├── fleet.html               # Flotilla (vehículos)
 │   ├── automation.html          # Automatizaciones RPA
 │   ├── team.html                # Equipo (usuarios tenant)
 │   ├── security.html            # Auditoría + API Keys
-│   └── js/                      # Lógica enterprise
+│   └── js/                      # Lógica del portal de empresa
 │
 ├── css/
 │   ├── index.css                # Estilos landing (76KB)
@@ -284,8 +282,6 @@ portalpilot/
 | Endpoint | Tabla Supabase | Función |
 |----------|----------------|---------|
 | `/api/login.js` | NocoDB | Login app con fallback |
-| `/api/matriculas` | `matriculas` | CRUD matrículas (29 campos) |
-| `/api/notas` | `notas_estado` | Snapshot notas JSONB |
 | `/api/clientes` | `clientes` | CRUD clientes |
 | `/api/productos` | `productos` | Upsert masivo stock |
 | `/api/facturas` | `facturas` | CRUD + anulación |
@@ -328,7 +324,7 @@ $$ LANGUAGE SQL STABLE;
 - Validación sintaxis SQL (PostgreSQL) pre-despliegue
 
 ### Buenas Prácticas Implementadas
-- ✅ JWT con roles (`Owner`, `Administrador`, `Miembro`, `profesor`, etc.)
+- ✅ JWT con roles (`Owner`, `Administrador`, `Miembro`)
 - ✅ Auditoría por empresa (`auditoria`): log accesos y operaciones sensibles
 - ✅ Gestión API Keys por tenant con revocación (`api_keys`)
 - ✅ Rate limiting en auth (`loginLimiter`: 5 req/15min)
@@ -451,7 +447,7 @@ chore:    Mantenimiento
 
 ## 🇭🇳 Hecho en Honduras
 
-**Portal Pilot** nace en Honduras para resolver la gestión empresarial real de PyMES y centros educativos de la región. Combina cumplimiento local (Facturación SAR), infraestructura cloud global y IA de vanguardia.
+**Portal Pilot** nace en Honduras para resolver la gestión empresarial real de pulperías, abarroterías, supermercados, distribuidoras y cadenas multi-sucursal de la región. Combina cumplimiento local (Facturación SAR), infraestructura cloud global y IA de vanguardia.
 
 > **¿Listo para automatizar tu empresa?**  
 > [Registrar Empresa Gratis](https://portal-pilot.vercel.app/registrov2.html) · [Ver Planes](https://portal-pilot.vercel.app/#pricing)

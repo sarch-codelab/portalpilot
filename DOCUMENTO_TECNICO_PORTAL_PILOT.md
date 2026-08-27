@@ -75,7 +75,7 @@ Portal Pilot es una plataforma **híbrida** compuesta por tres superficies que c
 
 | Superficie | Ruta / Proyecto | Tecnología | Usuario objetivo |
 |------------|-----------------|------------|------------------|
-| **App de escritorio** | `portal_pilot_app/` | Flutter Desktop (Windows) | Negocios y centros educativos (offline-first) |
+| **App Multi-Plataforma** | `portal_pilot_app/` | Flutter (Android, iOS, Web, Windows) | Negocios comerciales (offline-first) |
 | **Admin Web (portal root)** | `pp/` (dashboard, tenants, usuarios, billing) | HTML/CSS/JS + Express API | Administradores de Portal Pilot (superadmin) |
 | **Portal Enterprise** | `enterprise/` (dashboard, fleet, automation, team, security) | HTML/CSS/JS + Express API | Clientes enterprise (por tenant) |
 
@@ -119,7 +119,7 @@ Portal Pilot es una plataforma **híbrida** compuesta por tres superficies que c
 4. En modo offline, las operaciones de la app se encolan localmente y se sincronizan al restablecer conexión.
 
 ### 3.3 Modo sin conexión (Offline-first)
-- Las operaciones de POS, inventario y matrícula pueden ejecutarse sin red.
+- Las operaciones de POS, inventario y facturación pueden ejecutarse sin red.
 - Los datos se acumulan en la base local y se sincronizan de forma idempotente al volver la conexión.
 - La sincronización respeta el `empresa_codigo` de origen para no mezclar tenants.
 
@@ -285,7 +285,7 @@ La app Flutter sincroniza contra endpoints serverless en `portal_pilot_app/api/`
 - Validación de sintaxis con parser SQL (PostgreSQL) antes de cada despliegue.
 
 ### 9.4 Buenas prácticas
-- Autenticación con JWT y roles (`Owner`, `profesor`, etc.).
+- Autenticación con JWT y roles (`Owner`, `Admin`, `Miembro`).
 - Auditoría por empresa (`auditoria`): log de accesos y operaciones sensibles.
 - Gestión de API keys por tenant con revocación (`api_keys`).
 

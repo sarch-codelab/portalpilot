@@ -194,6 +194,7 @@
     <div id="redirectText" class="redirect-text">Redirigiendo...</div>
     <canvas id="waterCanvas"></canvas>
 
+    <script src="../auth-check.js"></script>
     <script>
         // Obtener datos del usuario desde localStorage
         const storedName = localStorage.getItem('userName') || "Usuario";
@@ -206,7 +207,7 @@
         
         if (storedTenant.toUpperCase() !== "ROOT" && storedTenant.trim() !== "") {
             tenantName = storedTenantName || storedTenant; // Usar el nombre real si existe
-            targetPath = "../enterprise/dashboard.html"; // Dashboard de empresa
+            targetPath = "../empresa/dashboard.html"; // Dashboard de empresa
         } else {
             tenantName = "Portal Pilot";
             targetPath = "dashboard.html"; // Dashboard Admin de Portal Pilot

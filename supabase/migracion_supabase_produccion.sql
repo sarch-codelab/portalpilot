@@ -35,6 +35,7 @@ ALTER TABLE public.tenants ADD COLUMN IF NOT EXISTS plan VARCHAR(50) DEFAULT 'pr
 ALTER TABLE public.tenants ADD COLUMN IF NOT EXISTS limite_usuarios INT DEFAULT 10;
 ALTER TABLE public.tenants ADD COLUMN IF NOT EXISTS estado VARCHAR(20) DEFAULT 'activo';
 ALTER TABLE public.tenants ADD COLUMN IF NOT EXISTS logo_url TEXT;
+ALTER TABLE public.tenants ADD COLUMN IF NOT EXISTS referencia_pago TEXT;
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_tenants_codigo_unique ON public.tenants(codigo);
 
@@ -177,16 +178,39 @@ CREATE TABLE IF NOT EXISTS public.planes_pago (
 );
 
 INSERT INTO public.planes_pago (id, nombre, precio_mensual, precio_anual, limite_usuarios, limite_bodegas, caracteristicas)
-SELECT 'starter', 'Plan Starter', 29.00, 290.00, 3, 1, '["POS Básico", "Facturación SAR", "1 Bodega", "Soporte Standard"]'
+SELECT 'starter', 'Plan Starter', 499.00, 4990.00, 5, 1, '["POS Básico", "Facturación SAR", "1 Bodega", "Soporte Standard", "15 días gratis"]'
 WHERE NOT EXISTS (SELECT 1 FROM public.planes_pago WHERE id = 'starter');
 
 INSERT INTO public.planes_pago (id, nombre, precio_mensual, precio_anual, limite_usuarios, limite_bodegas, caracteristicas)
-SELECT 'pro', 'Plan Pro Business', 79.00, 790.00, 10, 5, '["POS Avanzado", "Facturación SAR", "5 Bodegas", "IA Groq Integrada", "Multisucursal"]'
-WHERE NOT EXISTS (SELECT 1 FROM public.planes_pago WHERE id = 'pro');
+SELECT 'business', 'Plan Business', 1499.00, 14990.00, 25, 5, '["POS Avanzado", "Facturación SAR", "5 Bodegas", "IA Groq Integrada", "Multisucursal", "25 usuarios"]'
+WHERE NOT EXISTS (SELECT 1 FROM public.planes_pago WHERE id = 'business');
 
 INSERT INTO public.planes_pago (id, nombre, precio_mensual, precio_anual, limite_usuarios, limite_bodegas, caracteristicas)
-SELECT 'enterprise', 'Plan Enterprise', 199.00, 1990.00, 100, 50, '["Acceso Ilimitado", "IA Groq Dedicada", "Bots RPA", "Auditoría Blockchain", "Soporte 24/7 VIP"]'
+SELECT 'enterprise', 'Plan Enterprise', 4999.00, 49990.00, 250, 50, '["Acceso Ilimitado", "IA Groq Dedicada", "Bots RPA", "Auditoría Blockchain", "Soporte 24/7 VIP", "Usuarios ilimitados"]'
 WHERE NOT EXISTS (SELECT 1 FROM public.planes_pago WHERE id = 'enterprise');
+
+-- 7b. TABLA DE TICKETS DE SOPORTE
+CREATE TABLE IF NOT EXISTS public.support_tickets (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    empresa_codigo VARCHAR(50) DEFAULT 'ROOT',
+    nombre VARCHAR(100),
+    email VARCHAR(120),
+    empresa VARCHAR(150),
+    plan VARCHAR(50),
+    categoria VARCHAR(50),
+    prioridad VARCHAR(20) DEFAULT 'normal',
+    mensaje TEXT,
+    estado VARCHAR(20) DEFAULT 'open' CHECK (estado IN ('open', 'en_progreso', 'resuelta', 'cerrada')),
+    ticket_id TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE public.support_tickets ALTER COLUMN id SET DEFAULT gen_random_uuid();
+CREATE INDEX IF NOT EXISTS idx_support_tickets_email ON public.support_tickets(email);
+CREATE INDEX IF NOT EXISTS idx_support_tickets_estado ON public.support_tickets(estado);
+CREATE INDEX IF NOT EXISTS idx_support_tickets_created ON public.support_tickets(created_at DESC);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_support_tickets_unique_id ON public.support_tickets(ticket_id) WHERE ticket_id IS NOT NULL;
 
 -- 8. RLS Y PERMISOS DE LECTURA/ESCRITURA ACCESIBLES
 ALTER TABLE public.tenants ENABLE ROW LEVEL SECURITY;
@@ -195,6 +219,7 @@ ALTER TABLE public.notificaciones ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.auditoria_logs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.configuraciones_globales ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.planes_pago ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.support_tickets ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "backend_tenants_policy" ON public.tenants;
 CREATE POLICY "backend_tenants_policy" ON public.tenants FOR ALL USING (true);
@@ -213,6 +238,9 @@ CREATE POLICY "backend_config_policy" ON public.configuraciones_globales FOR ALL
 
 DROP POLICY IF EXISTS "public_planes_policy" ON public.planes_pago;
 CREATE POLICY "public_planes_policy" ON public.planes_pago FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "backend_support_policy" ON public.support_tickets;
+CREATE POLICY "backend_support_policy" ON public.support_tickets FOR ALL USING (true);
 
 -- 9. CONFIGURACIÓN DE STORAGE BUCKET PARA ASSETS (IMÁGENES)
 INSERT INTO storage.buckets (id, name, public) 

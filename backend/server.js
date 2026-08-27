@@ -2901,23 +2901,51 @@ app.post('/api/ai/crm/customer', authenticate, requirePlanFeature('ia'), async (
     const { message, customerId } = req.body;
     if (!message) return res.status(400).json({ error: 'Mensaje requerido' });
 
-    // Fetch customer context
+    // Fetch customer context from clientes table (not usuarios)
     let customerData = null;
     if (customerId) {
-      const { data: cliente } = await supabase.from('usuarios').select('id, nombre, email, telefono, created_at, rol_global').eq('empresa_id', empresa.id).eq('id', customerId).single();
+      const { data: cliente } = await supabase.from('clientes')
+        .select('id, nombre, rtn, email, telefono, direccion, limite_credito, saldo_pendiente, notas, activo, created_at')
+        .eq('empresa_id', empresa.id).eq('id', customerId).single();
       customerData = cliente;
     }
 
-    // Fetch recent interactions (tickets, facturas for this customer)
-    const [ticketsRes, facturasRes] = await Promise.all([
-      customerId ? supabase.from('support_tickets').select('id, nombre, estado, created_at').eq('empresa_id', empresa.id).limit(10) : { data: [] },
-      customerId ? supabase.from('facturas').select('id, total, estado, created_at').eq('empresa_id', empresa.id).eq('usuario_id', customerId).limit(10) : { data: [] }
-    ]);
+    // Fetch recent facturas matching by cliente_nombre or cliente_rtn
+    let facturas = [];
+    if (customerData) {
+      const searchTerm = customerData.rtn || customerData.nombre || '';
+      const { data: byRtn } = await supabase.from('facturas')
+        .select('id, correlativo, cliente_nombre, cliente_rtn, subtotal, isv, total, estado, created_at')
+        .eq('empresa_id', empresa.id)
+        .eq('cliente_rtn', customerData.rtn || '__none__')
+        .order('created_at', { ascending: false }).limit(10);
+      if (byRtn && byRtn.length > 0) {
+        facturas = byRtn;
+      } else {
+        const { data: byName } = await supabase.from('facturas')
+          .select('id, correlativo, cliente_nombre, cliente_rtn, subtotal, isv, total, estado, created_at')
+          .eq('empresa_id', empresa.id)
+          .ilike('cliente_nombre', `%${customerData.nombre}%`)
+          .order('created_at', { ascending: false }).limit(10);
+        facturas = byName || [];
+      }
+    }
+
+    // Fetch recent ventas_fiadas (credit sales) for this customer
+    let fiadas = [];
+    if (customerData) {
+      const { data: fiadaData } = await supabase.from('ventas_fiadas')
+        .select('id, total, saldo_pendiente, estado, fecha_venta, cliente_nombre')
+        .eq('empresa_id', empresa.id)
+        .ilike('cliente_nombre', `%${customerData.nombre}%`)
+        .order('fecha_venta', { ascending: false }).limit(10);
+      fiadas = fiadaData || [];
+    }
 
     const systemPrompt = `Eres el asistente CRM de Portal Pilot para "${empresa.nombre || tenant}".
 ${customerData ? `Datos del cliente:\n${JSON.stringify(customerData, null, 2)}` : 'No se especificó un cliente específico.'}
-Tickets recientes: ${JSON.stringify(ticketsRes.data || [], null, 2)}
-Facturas recientes: ${JSON.stringify(facturasRes.data || [], null, 2)}
+Facturas del cliente: ${JSON.stringify(facturas, null, 2)}
+Ventas fiadas (crédito): ${JSON.stringify(fiadas, null, 2)}
 
 Responde sobre:
 - Resumen del cliente

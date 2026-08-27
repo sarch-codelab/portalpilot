@@ -1,6 +1,15 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+    <!-- Google tag (gtag.js) - GA4 -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-FGPT99SWLY"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-FGPT99SWLY');
+    </script>
+
     <meta charset="UTF-8">
     <link rel="icon" type="image/png" href="img/iconos/Portal%20Pilot.png">
     <meta name="description" content="Portal Pilot: ERP comercial integral para pulperías, supermercados, distribuidoras y cadenas retail. Facturación electrónica SAR, inventario multi-bodega, POS y más con IA integrada.">
@@ -76,7 +85,7 @@
         }
         .payment-methods-card h3 i { color: var(--accent-soft); }
 
-        .payment-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px; }
+        .payment-tabs { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 24px; }
         .payment-tab {
             background: var(--surface-2); border: 1.5px solid var(--border); border-radius: var(--radius);
             padding: 16px; text-align: center; cursor: pointer; transition: all 0.25s ease;
@@ -188,10 +197,13 @@
                 <div class="payment-tab active" id="tabCardBtn" onclick="switchPaymentTab('card')">
                     <i class="fas fa-credit-card"></i> Tarjeta Débito / Crédito
                 </div>
-                <div class="payment-tab" id="tabBankBtn" onclick="switchPaymentTab('bank')">
-                    <i class="fas fa-building-columns"></i> Transferencia Bancaria
-                </div>
-            </div>
+                 <div class="payment-tab" id="tabBankBtn" onclick="switchPaymentTab('bank')">
+                     <i class="fas fa-building-columns"></i> Transferencia Bancaria
+                 </div>
+                 <div class="payment-tab" id="tabTigoBtn" onclick="switchPaymentTab('tigo')">
+                     <i class="fab fa-whatsapp"></i> Tigo Money / WhatsApp
+                 </div>
+             </div>
 
             <!-- MÉTODO 1: TARJETA DIGITAL -->
             <div class="tab-content active" id="tabCard">
@@ -254,6 +266,42 @@
                     <i class="fas fa-paper-plane"></i> Enviar Comprobante de Transferencia
                 </button>
             </div>
+
+            <!-- MÉTODO 3: TIGO MONEY / WHATSAPP -->
+            <div class="tab-content" id="tabTigo">
+                <div class="info-box" style="background:rgba(48,209,88,0.08);border-color:rgba(48,209,88,0.2);">
+                    <i class="fab fa-whatsapp" style="color:#25d36e;"></i>
+                    <p>Paga fácil y seguro con <strong>Tigo Money</strong>. Envía el monto exacto y confirma por WhatsApp. Recibirás la factura digital y activación inmediata.</p>
+                </div>
+
+                <div class="bank-info-box">
+                    <div class="bank-row"><span class="label">Servicio</span><span class="value">Tigo Money Honduras</span></div>
+                    <div class="bank-row"><span class="label">Número Tigo Money</span><span class="value" style="font-family:'JetBrains Mono',monospace;">33154594</span></div>
+                    <div class="bank-row"><span class="label">Nombre del beneficiario</span><span class="value">Portal Pilot</span></div>
+                    <div class="bank-row"><span class="label">Monto a pagar</span><span class="value" id="tigoAmount" style="color:var(--green);">L.1,499.00</span></div>
+                    <div class="bank-row"><span class="label">Referencia</span><span class="value">PP-{PLAN}-{EMAIL}</span></div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Correo electrónico de notificación</label>
+                        <input type="email" class="form-input" id="tigoEmail" placeholder="tu@empresa.com">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Número de comprobante de Tigo Money</label>
+                        <input type="text" class="form-input" id="tigoRef" placeholder="Presiona Generar para crear referencia" readonly>
+                    </div>
+                </div>
+                <button class="btn-submit" id="btnGenTigo" onclick="generarReferenciaTigo()" style="background:linear-gradient(135deg,#25d36e,#128c35);">
+                    <i class="fas fa-qrcode"></i> Generar Referencia Tigo Money
+                </button>
+                <button class="btn-submit" id="btnPayTigo" onclick="processPayment('tigo')" style="background:linear-gradient(135deg,#25d36e,#128c35);display:none;">
+                    <i class="fab fa-whatsapp"></i> Confirmar Pago por Tigo Money
+                </button>
+                <p style="font-size:12px;color:var(--text-muted);margin-top:12px;text-align:center;">
+                    Después de pagar, envía tu comprobante al WhatsApp +504 3315-4594 para confirmación inmediata.
+                </p>
+            </div>
         </div>
 
         <div class="secure-footer">
@@ -282,6 +330,7 @@
         if (userEmail) {
             document.getElementById('cardEmail').value = userEmail;
             document.getElementById('bankEmail').value = userEmail;
+            document.getElementById('tigoEmail').value = userEmail;
         }
 
         const planConfig = {
@@ -329,6 +378,7 @@
         document.getElementById('planName').textContent = plan.name;
         document.getElementById('planPrice').innerHTML = plan.price + ' <span>/mes</span>';
         document.getElementById('bankAmount').textContent = plan.amount;
+        document.getElementById('tigoAmount').textContent = plan.amount;
         document.getElementById('planFeatures').innerHTML = plan.features.map(f => '<li>' + f + '</li>').join('');
 
         function switchPaymentTab(method) {
@@ -337,6 +387,9 @@
             if (method === 'card') {
                 document.getElementById('tabCardBtn').classList.add('active');
                 document.getElementById('tabCard').classList.add('active');
+            } else if (method === 'tigo') {
+                document.getElementById('tabTigoBtn').classList.add('active');
+                document.getElementById('tabTigo').classList.add('active');
             } else {
                 document.getElementById('tabBankBtn').classList.add('active');
                 document.getElementById('tabBank').classList.add('active');
@@ -357,11 +410,49 @@
             toast.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
 
+        async function generarReferenciaTigo() {
+            const email = document.getElementById('tigoEmail').value.trim();
+            const btn = document.getElementById('btnGenTigo');
+
+            if (!email || !email.includes('@')) {
+                showToast('Ingresa un correo electrónico válido.', true);
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generando referencia...';
+
+            try {
+                const res = await fetch(`${API_ROOT}/api/tigo-money-reference`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, plan: selectedPlan, empresaCodigo: tenantCode })
+                });
+                const data = await res.json();
+
+                if (res.ok && data.success) {
+                    document.getElementById('tigoRef').value = data.referencia;
+                    document.getElementById('tigoAmount').textContent = data.amount;
+                    showToast(`Referencia generada: ${data.referencia}. Paga ${data.amount} a Tigo Money ${data.tigo_number}.`, false);
+                    btn.style.display = 'none';
+                    document.getElementById('btnPayTigo').style.display = 'inline-flex';
+                    btn.innerHTML = '<i class="fas fa-check"></i> Referencia Generada';
+                } else {
+                    throw new Error(data.error || 'Error generando referencia.');
+                }
+            } catch (err) {
+                console.error(err);
+                showToast(err.message || 'Error generando referencia de Tigo Money.', true);
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-qrcode"></i> Generar Referencia Tigo Money';
+            }
+        }
+
         async function processPayment(metodo) {
-            const emailInputId = metodo === 'tarjeta' ? 'cardEmail' : 'bankEmail';
-            const email = document.getElementById(emailInputId).value.trim();
-            const btnId = metodo === 'tarjeta' ? 'btnPayCard' : 'btnPayBank';
-            const btn = document.getElementById(btnId);
+            const emailMap = { 'tarjeta': 'cardEmail', 'transferencia': 'bankEmail', 'tigo': 'tigoEmail' };
+            const btnMap = { 'tarjeta': 'btnPayCard', 'transferencia': 'btnPayBank', 'tigo': 'btnPayTigo' };
+            const email = document.getElementById(emailMap[metodo]).value.trim();
+            const btn = document.getElementById(btnMap[metodo]);
 
             if (!email || !email.includes('@')) {
                 showToast('Ingresa un correo electrónico de notificación válido.', true);
@@ -374,10 +465,16 @@
                     showToast('Ingresa un número de tarjeta válido.', true);
                     return;
                 }
-            } else {
+            } else if (metodo === 'transferencia') {
                 const ref = document.getElementById('bankRef').value.trim();
                 if (!ref) {
                     showToast('Ingresa la referencia o comprobante de la transferencia.', true);
+                    return;
+                }
+            } else if (metodo === 'tigo') {
+                const ref = document.getElementById('tigoRef').value.trim();
+                if (!ref) {
+                    showToast('Ingresa la referencia de Tigo Money generada.', true);
                     return;
                 }
             }
@@ -392,6 +489,9 @@
                     metodoPago: metodo,
                     empresaCodigo: tenantCode
                 };
+                if (metodo === 'tigo') {
+                    payload.tigoRef = document.getElementById('tigoRef').value.trim();
+                }
 
                 const res = await fetch(`${API_ROOT}/api/confirmar-pago`, {
                     method: 'POST',
@@ -402,6 +502,13 @@
                 const data = await res.json();
 
                 if (res.ok && data.success) {
+                    gtag('event', 'purchase', {
+                        transaction_id: data.email + '-' + Date.now(),
+                        currency: 'HNL',
+                        value: { starter: 499, business: 1499, enterprise: 4999 }[selectedPlan] || 1499,
+                        plan_name: plan.name,
+                        payment_method: metodo
+                    });
                     showToast(data.message || `¡Pago activado exitosamente! Correo de confirmación enviado a ${email}.`, false);
                     btn.innerHTML = '<i class="fas fa-check"></i> ¡Pago Confirmado!';
                     btn.style.background = 'var(--green)';
@@ -416,7 +523,9 @@
                 console.error(err);
                 showToast(err.message || 'No se pudo confirmar el pago. Intenta de nuevo.', true);
                 btn.disabled = false;
-                btn.innerHTML = metodo === 'tarjeta' ? '<i class="fas fa-shield-check"></i> Pagar y Activar Plan' : '<i class="fas fa-paper-plane"></i> Enviar Comprobante de Transferencia';
+                btn.innerHTML = metodo === 'tarjeta' ? '<i class="fas fa-shield-check"></i> Pagar y Activar Plan' :
+                                 metodo === 'tigo' ? '<i class="fab fa-whatsapp"></i> Confirmar Pago por Tigo Money' :
+                                 '<i class="fas fa-paper-plane"></i> Enviar Comprobante de Transferencia';
             }
         }
     </script>

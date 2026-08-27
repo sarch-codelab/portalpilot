@@ -13,9 +13,10 @@ Allow: /privacidad.html
 Allow: /cookies.html
 Allow: /sla.html
 
-# Block internal admin, enterprise portals & APIs from indexing
+# Block internal admin, company portals & APIs from indexing
 Disallow: /pp/
 Disallow: /enterprise/
+Disallow: /empresa/
 Disallow: /api/
 Disallow: /backend/
 Disallow: /uploads/

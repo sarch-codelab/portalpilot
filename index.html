@@ -38,10 +38,37 @@
   <link
     href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap"
     rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css?family=Quattrocento+Sans&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-  <link rel="stylesheet" href="index.css?v=10">
+  <link rel="stylesheet" href="index.css?v=12">
 </head>
 <body>
+
+  <!-- LOADING SCREEN — se muestra en cada recarga -->
+  <div class="loading" id="ppLoading" aria-hidden="true">
+    <div class="loading-text">
+      <span class="loading-text-words">L</span>
+      <span class="loading-text-words">O</span>
+      <span class="loading-text-words">A</span>
+      <span class="loading-text-words">D</span>
+      <span class="loading-text-words">I</span>
+      <span class="loading-text-words">N</span>
+      <span class="loading-text-words">G</span>
+    </div>
+  </div>
+  <script>
+  (function(){
+    var minMs=1400, t0=Date.now();
+    function hide(){
+      var el=document.getElementById('ppLoading');
+      if(!el) return;
+      var wait=Math.max(0, minMs - (Date.now()-t0));
+      setTimeout(function(){ el.classList.add('hidden'); setTimeout(function(){ if(el && el.parentNode) el.remove(); }, 700); }, wait);
+    }
+    if(document.readyState==='complete') hide();
+    else window.addEventListener('load', hide);
+  })();
+  </script>
 
   <!-- TOP ANNOUNCEMENT BANNER — diseño premium, sticky, solo cierra con X -->
   <div id="top-banner" class="pp-announce-bar">
@@ -636,6 +663,86 @@
             </div>
             <div class="shadow"></div>
           </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ÁREAS COMERCIALES — 5 nichos -->
+  <section id="areas">
+    <div class="container">
+      <div class="section-label-row reveal">
+        <div>
+          <div class="sec-eyebrow">Áreas Comerciales</div>
+          <div class="section-label">Un ERP para cada <span>nicho comercial</span></div>
+        </div>
+        <div class="section-sub">Desde la pulpería de barrio hasta el club de membresía tipo PriceSmart. Mismos módulos, flujos adaptados a tu canal.</div>
+      </div>
+
+      <div class="areas-grid reveal">
+        <!-- 1. Área Comercial -->
+        <div class="areas-card">
+          <div class="bc-icon"><i class="fas fa-briefcase"></i></div>
+          <h3>Área Comercial</h3>
+          <p class="areas-def">Término general para negocios que <strong>compran productos hechos para revenderlos directamente</strong>. Base de todos los demás canales.</p>
+          <ul class="areas-list">
+            <li><i class="fas fa-check"></i> Compra mayoreo → reventa directa</li>
+            <li><i class="fas fa-check"></i> Control de margen y rotación</li>
+            <li><i class="fas fa-check"></i> Facturación SAR + inventario</li>
+          </ul>
+          <div class="bc-tag"><i class="fas fa-layer-group"></i> Base comercial</div>
+        </div>
+
+        <!-- 2. Sector Retail -->
+        <div class="areas-card">
+          <div class="bc-icon"><i class="fas fa-shopping-basket"></i></div>
+          <h3>Sector Retail</h3>
+          <p class="areas-def"><strong>Comercio al por menor</strong>: pulperías, abarroterías y supermercados que venden al <strong>consumidor final</strong>.</p>
+          <ul class="areas-list">
+            <li><i class="fas fa-check"></i> Pulpería / abarrotería / supermercado</li>
+            <li><i class="fas fa-check"></i> POS rápido + código de barras</li>
+            <li><i class="fas fa-check"></i> Ticket promedio bajo, alta rotación</li>
+          </ul>
+          <div class="bc-tag"><i class="fas fa-store"></i> B2C final</div>
+        </div>
+
+        <!-- 3. Comercio Membresía -->
+        <div class="areas-card">
+          <div class="bc-icon"><i class="fas fa-crown"></i></div>
+          <h3>Base Tecnológica / Membresía</h3>
+          <p class="areas-def">Modelo <strong>club de compras a granel</strong> tipo <strong>PriceSmart</strong>: acceso por afiliación anual y beneficios exclusivos.</p>
+          <ul class="areas-list">
+            <li><i class="fas fa-check"></i> Afiliación y renovación anual</li>
+            <li><i class="fas fa-check"></i> Compra por volumen / pallets</li>
+            <li><i class="fas fa-check"></i> Precios socio + control de acceso</li>
+          </ul>
+          <div class="bc-tag"><i class="fas fa-id-badge"></i> Club PriceSmart</div>
+        </div>
+
+        <!-- 4. Canal Tradicional -->
+        <div class="areas-card">
+          <div class="bc-icon"><i class="fas fa-store-alt"></i></div>
+          <h3>Canal Tradicional</h3>
+          <p class="areas-def">Pulperías y <strong>mercaditos de barrio</strong> en Latinoamérica. Cercanía, confianza y crédito personal.</p>
+          <ul class="areas-list">
+            <li><i class="fas fa-check"></i> Barrio / mercado local</li>
+            <li><i class="fas fa-check"></i> Crédito fiado y libreta</li>
+            <li><i class="fas fa-check"></i> POS offline ligero</li>
+          </ul>
+          <div class="bc-tag"><i class="fas fa-home"></i> Barrio</div>
+        </div>
+
+        <!-- 5. Canal Moderno -->
+        <div class="areas-card">
+          <div class="bc-icon"><i class="fas fa-city"></i></div>
+          <h3>Canal Moderno</h3>
+          <p class="areas-def"><strong>Supermercados organizados y grandes cadenas</strong> con operación centralizada y multi-sucursal.</p>
+          <ul class="areas-list">
+            <li><i class="fas fa-check"></i> Cadena / multi-tienda</li>
+            <li><i class="fas fa-check"></i> Multi-caja y multi-bodega</li>
+            <li><i class="fas fa-check"></i> Analytics centralizado + auditoría</li>
+          </ul>
+          <div class="bc-tag"><i class="fas fa-building"></i> Enterprise</div>
         </div>
       </div>
     </div>

@@ -12,3 +12,6 @@ backend/.env
 !.env.example
 
 .env*
+# privado - no subir a git (costos y estrés)
+ANALISIS_COSTOS_PLANES.md
+PRIVADO_*.md

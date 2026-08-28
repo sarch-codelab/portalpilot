@@ -39,7 +39,7 @@
     href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap"
     rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-  <link rel="stylesheet" href="index.css?v=23">
+  <link rel="stylesheet" href="index.css?v=28">
 </head>
 <body>
 
@@ -627,10 +627,36 @@
           </div>
           <div class="bc-tag"><i class="fas fa-gauge"></i> Live analytics</div>
         </div>
-        <div class="bento-card reveal" style="transition-delay:.05s;">
+        <div class="bento-card reveal e-invoice-card" style="transition-delay:.05s;">
           <div class="bc-icon"><i class="fas fa-globe"></i></div>
           <h3>Multi-Empresa Honduras</h3>
           <p>Soporte para múltiples empresas bajo una cuenta. Cada empresa tiene su portal, usuarios y datos separados. Facturación Electrónica SAR integrada.</p>
+          <div class="e-invoice-embed">
+            <div class="scene">
+              <div class="bill-3d bill-2"><div class="bill-center-circle"></div></div>
+              <div class="bill-3d bill-1"><div class="bill-center-circle"></div></div>
+              <div class="coin-3d"><div class="coin-inner-ring"><span class="coin-symbol">$</span></div></div>
+              <div class="coin-3d coin-2"><div class="coin-inner-ring"><span class="coin-symbol">$</span></div></div>
+              <div class="coin-3d coin-3"><div class="coin-inner-ring"><span class="coin-symbol">$</span></div></div>
+              <div class="invoice-container">
+                <div class="invoice-top-flap"><div class="badge-red">E-INVOICE</div></div>
+                <div class="invoice-body">
+                  <div class="invoice-table">
+                    <div class="table-row"><div class="cell-dollar">$</div><div class="cell-line"></div></div>
+                    <div class="table-row"><div class="cell-dollar">$</div><div class="cell-line"></div></div>
+                    <div class="table-row"><div class="cell-dollar">$</div><div class="cell-line"></div></div>
+                    <div class="table-row"><div class="cell-dollar">$</div><div class="cell-line"></div></div>
+                    <div class="table-row"><div class="cell-dollar">$</div><div class="cell-line"></div></div>
+                  </div>
+                  <div class="invoice-footer">
+                    <div class="footer-lines"><div class="f-line f-line-1"></div><div class="f-line f-line-2"></div></div>
+                    <svg class="signature-svg" viewBox="0 0 50 25"><path d="M 4 15 C 4 4, 16 4, 16 15 C 16 22, 22 20, 26 14 C 30 8, 34 16, 46 12" /></svg>
+                  </div>
+                </div>
+              </div>
+              <div class="laptop"><div class="screen"></div><div class="keyboard-base"><div class="keyboard-deck"><div class="key"></div><div class="key"></div><div class="key"></div><div class="key spacebar"></div><div class="key"></div><div class="key"></div><div class="key"></div></div></div></div>
+            </div>
+          </div>
           <div class="bc-tag"><i class="fas fa-earth-americas"></i> Honduras</div>
         </div>
         <div class="bento-card reveal" style="transition-delay:.1s;">
@@ -700,31 +726,7 @@
           </div>
           <div class="bc-tag"><i class="fas fa-plug"></i> API-first</div>
         </div>
-        <div class="bento-card span-2 bento-macbook reveal" style="transition-delay:.15s;">
-          <div class="macbook" style="transition-delay:0s;">
-            <div class="inner">
-              <div class="screen">
-                <div class="face-one">
-                  <div class="camera"></div>
-                  <div class="display">
-                    <div class="shade"></div>
-                  </div>
-                  <span>Portal Pilot</span>
-                </div>
-              </div>
-              <div class="macbody">
-                <div class="face-one">
-                  <div class="touchpad"></div>
-                  <div class="keyboard">
-                    <div class="key"></div><div class="key"></div><div class="key"></div><div class="key"></div><div class="key"></div><div class="key space"></div><div class="key"></div><div class="key"></div><div class="key"></div><div class="key"></div><div class="key"></div><div class="key"></div><div class="key"></div><div class="key"></div><div class="key"></div><div class="key"></div><div class="key"></div><div class="key"></div><div class="key"></div><div class="key"></div><div class="key"></div><div class="key"></div><div class="key"></div><div class="key"></div><div class="key"></div><div class="key"></div><div class="key"></div><div class="key"></div><div class="key"></div><div class="key"></div><div class="key"></div><div class="key"></div><div class="key"></div><div class="key"></div><div class="key"></div><div class="key"></div><div class="key"></div><div class="key"></div><div class="key"></div><div class="key"></div><div class="key"></div><div class="key"></div><div class="key"></div><div class="key"></div><div class="key"></div><div class="key"></div><div class="key"></div><div class="key"></div><div class="key"></div><div class="key"></div><div class="key"></div><div class="key"></div><div class="key"></div><div class="key"></div><div class="key"></div><div class="key"></div><div class="key"></div><div class="key"></div><div class="key f"></div><div class="key f"></div><div class="key f"></div><div class="key f"></div><div class="key f"></div><div class="key f"></div><div class="key f"></div><div class="key f"></div><div class="key f"></div><div class="key f"></div><div class="key f"></div><div class="key f"></div><div class="key f"></div><div class="key f"></div><div class="key f"></div><div class="key f"></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="shadow"></div>
-          </div>
-        </div>
-      </div>
+</div>
     </div>
   </section>
 
@@ -738,13 +740,12 @@
         </div>
         <div class="section-sub">Desde la pulpería de barrio hasta el club de membresía tipo PriceSmart. Mismos módulos, flujos adaptados a tu canal.</div>
       </div>
-
-      <div class="areas-grid reveal">
+<div class="areas-grid reveal">
         <!-- 1. Área Comercial — FEATURED con area-comercial.png -->
         <div class="areas-card areas-card-featured">
           <div class="areas-img-wrap">
             <img src="img/img-index/area-comercial.png" alt="Área Comercial — almacén automatizado con robot Resell" loading="lazy">
-            <div class="bc-icon" style="position:absolute;bottom:12px;right:12px;width:36px;height:36px;background:rgba(10,10,12,0.85);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.12);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--white);"><i class="fas fa-briefcase"></i></div>
+            <div class="bc-icon" style="position:absolute;bottom:12px;left:12px;width:36px;height:36px;background:rgba(10,10,12,0.85);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.12);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--white);"><i class="fas fa-briefcase"></i></div>
           </div>
           <div class="areas-card-body">
             <h3>Área Comercial</h3>
@@ -762,7 +763,7 @@
         <div class="areas-card areas-card-with-img">
           <div class="areas-img-wrap areas-img-wrap--sm">
             <img src="img/img-index/sector-retail.png" alt="Sector Retail — supermercado moderno con robot escáner" loading="lazy">
-            <div class="bc-icon" style="position:absolute;bottom:10px;right:10px;width:32px;height:32px;background:rgba(10,10,12,0.85);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.12);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--white);"><i class="fas fa-shopping-basket"></i></div>
+            <div class="bc-icon" style="position:absolute;bottom:10px;left:10px;width:32px;height:32px;background:rgba(10,10,12,0.85);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.12);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--white);"><i class="fas fa-shopping-basket"></i></div>
           </div>
           <div class="areas-card-body">
             <h3>Sector Retail</h3>
@@ -780,7 +781,7 @@
         <div class="areas-card areas-card-with-img">
           <div class="areas-img-wrap areas-img-wrap--sm">
             <img src="img/img-index/base-tecnologica.png" alt="Base Tecnológica — club membresía tipo PriceSmart" loading="lazy">
-            <div class="bc-icon" style="position:absolute;bottom:10px;right:10px;width:32px;height:32px;background:rgba(10,10,12,0.85);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.12);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--white);"><i class="fas fa-crown"></i></div>
+            <div class="bc-icon" style="position:absolute;bottom:10px;left:10px;width:32px;height:32px;background:rgba(10,10,12,0.85);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.12);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--white);"><i class="fas fa-crown"></i></div>
           </div>
           <div class="areas-card-body">
             <h3>Base Tecnológica / Membresía</h3>
@@ -798,7 +799,7 @@
         <div class="areas-card areas-card-with-img">
           <div class="areas-img-wrap areas-img-wrap--sm">
             <img src="img/img-index/canal-tradicional.png" alt="Canal Tradicional — pulpería y mercadito de barrio" loading="lazy">
-            <div class="bc-icon" style="position:absolute;bottom:10px;right:10px;width:32px;height:32px;background:rgba(10,10,12,0.85);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.12);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--white);"><i class="fas fa-store-alt"></i></div>
+            <div class="bc-icon" style="position:absolute;bottom:10px;left:10px;width:32px;height:32px;background:rgba(10,10,12,0.85);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.12);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--white);"><i class="fas fa-store-alt"></i></div>
           </div>
           <div class="areas-card-body">
             <h3>Canal Tradicional</h3>
@@ -816,7 +817,7 @@
         <div class="areas-card areas-card-with-img">
           <div class="areas-img-wrap areas-img-wrap--sm">
             <img src="img/img-index/canal-moderno.png" alt="Canal Moderno — supermercado organizado y cadena" loading="lazy">
-            <div class="bc-icon" style="position:absolute;bottom:10px;right:10px;width:32px;height:32px;background:rgba(10,10,12,0.85);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.12);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--white);"><i class="fas fa-city"></i></div>
+            <div class="bc-icon" style="position:absolute;bottom:10px;left:10px;width:32px;height:32px;background:rgba(10,10,12,0.85);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.12);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--white);"><i class="fas fa-city"></i></div>
           </div>
           <div class="areas-card-body">
             <h3>Canal Moderno</h3>
@@ -1144,7 +1145,8 @@
         <div class="sec-sub" style="margin:0 auto 24px;">Soluciones escalables para cada nivel de operación. Sin costos ocultos, sin sorpresas.</div>
         <div class="pricing-toggle">
           <button class="pt-btn active" onclick="setPricingToggle(this,'monthly')">Mensual</button>
-          <button class="pt-btn" onclick="setPricingToggle(this,'yearly')">Anual <span style="font-size:10px;color:var(--green);margin-left:4px;">−20%</span></button>
+          <button class="pt-btn" onclick="setPricingToggle(this,'yearly')">Anual <span
+              style="font-size:10px;color:var(--green);margin-left:4px;">−15%</span></button>
         </div>
       </div>
 
@@ -1156,11 +1158,11 @@
           <div class="pricing-card-side-tab">Starter</div>
           <div class="pricing-card">
             <div class="pricing-card-price-section">
-              <div class="pricing-card-price"><span class="pricing-card-price-text">Gratis</span></div>
+              <div class="pricing-card-price"><span class="pricing-card-price-text">Prueba</span></div>
               <div class="pricing-card-subtitle">15 días de prueba<br>Sin tarjeta de crédito</div>
             </div>
             <div class="pricing-card-features">
-              <div class="pricing-card-feature"><i class="fas fa-check" style="margin-right:8px;color:var(--green);font-size:11px;"></i> Hasta <strong>10</strong> usuarios</div>
+              <div class="pricing-card-feature"><i class="fas fa-check" style="margin-right:8px;color:var(--green);font-size:11px;"></i> Hasta <strong>5</strong> usuarios</div>
               <div class="pricing-card-feature"><i class="fas fa-check" style="margin-right:8px;color:var(--green);font-size:11px;"></i> Hasta <strong>1</strong> empresa</div>
               <div class="pricing-card-feature"><i class="fas fa-check" style="margin-right:8px;color:var(--green);font-size:11px;"></i> Todos los módulos base</div>
               <div class="pricing-card-feature"><i class="fas fa-check" style="margin-right:8px;color:var(--green);font-size:11px;"></i> Facturación Electrónica SAR</div>
@@ -1184,7 +1186,7 @@
               <div class="pricing-card-subtitle">Facturación mensual<br>Todos los módulos incluidos</div>
             </div>
             <div class="pricing-card-features">
-              <div class="pricing-card-feature"><i class="fas fa-check" style="margin-right:8px;color:var(--green);font-size:11px;"></i> Hasta <strong>25</strong> usuarios</div>
+              <div class="pricing-card-feature"><i class="fas fa-check" style="margin-right:8px;color:var(--green);font-size:11px;"></i> Hasta <strong>15</strong> usuarios</div>
               <div class="pricing-card-feature"><i class="fas fa-check" style="margin-right:8px;color:var(--green);font-size:11px;"></i> Hasta <strong>3</strong> empresas</div>
               <div class="pricing-card-feature"><i class="fas fa-check" style="margin-right:8px;color:var(--green);font-size:11px;"></i> Todos los módulos</div>
               <div class="pricing-card-feature"><i class="fas fa-check" style="margin-right:8px;color:var(--green);font-size:11px;"></i> Facturación Electrónica SAR</div>
@@ -1375,6 +1377,30 @@
 
 
 
+  <script>
+  // Fix pricing toggle — robusto, 15% dto., fuerza repaint del gradient
+  window.prices = { monthly: { p1: '1,499', p2: '4,999' }, yearly: { p1: '1,274', p2: '4,249' } };
+  window.setPricingToggle = function(btn, mode){
+    try{
+      document.querySelectorAll('.pt-btn').forEach(b=>b.classList.remove('active'));
+      var target = document.querySelector('.pt-btn[onclick*="\''+mode+'\'"]') || btn;
+      if(target) target.classList.add('active');
+      var p=window.prices[mode];
+      var el1=document.getElementById('p1'), el2=document.getElementById('p2');
+      if(el1){ el1.textContent=p.p1; el1.style.display='none'; void el1.offsetHeight; el1.style.display=''; }
+      if(el2){ el2.textContent=p.p2; el2.style.display='none'; void el2.offsetHeight; el2.style.display=''; }
+      document.querySelectorAll('.pricing-card-subtitle').forEach(function(el, idx){
+        if(idx===1 || idx===2){
+          el.innerHTML = (mode==='yearly' ? 'Facturación anual<br>Todos los módulos incluidos' : 'Facturación mensual<br>Todos los módulos incluidos');
+        }
+      });
+    }catch(e){ console.error(e); }
+  };
+  setTimeout(function(){
+    var l=document.getElementById('biosLoading');
+    if(l && l.parentNode){ l.style.opacity='0'; setTimeout(function(){ if(l.parentNode) l.remove(); }, 400); }
+  }, 3000);
+  </script>
   <script src="index.js"></script>
 </body>
 

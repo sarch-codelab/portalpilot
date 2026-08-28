@@ -110,15 +110,29 @@ function toggleFaq(btn) {
 // ── Pricing Toggle ───────────────────────────────────
 const prices = {
   monthly: { p1: '1,499', p2: '4,999' },
-  yearly: { p1: '1,199', p2: '3,999' }
+  yearly: { p1: '1,274', p2: '4,249' }
 };
 
 function setPricingToggle(btn, mode) {
-  document.querySelectorAll('.pt-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  const p = prices[mode];
-  document.getElementById('p1').textContent = p.p1;
-  document.getElementById('p2').textContent = p.p2;
+  try {
+    document.querySelectorAll('.pt-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const p = prices[mode];
+    const el1 = document.getElementById('p1');
+    const el2 = document.getElementById('p2');
+    if (el1) el1.textContent = p.p1;
+    if (el2) el2.textContent = p.p2;
+    // Actualizar subtítulo para reflejar facturación
+    document.querySelectorAll('.pricing-card-subtitle').forEach(el => {
+      if (mode === 'yearly') {
+        el.innerHTML = el.innerHTML.replace('mensual', 'anual');
+      } else {
+        el.innerHTML = el.innerHTML.replace('anual', 'mensual');
+      }
+    });
+  } catch (e) {
+    console.error('Error en toggle precios:', e);
+  }
 }
 
 // ── Plan select feedback ─────────────────────────────

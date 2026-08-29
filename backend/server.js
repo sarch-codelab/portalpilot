@@ -2890,6 +2890,75 @@ Sé conciso. Usa los datos reales, no inventes.`;
   }
 });
 
+// ── AI: POS upsell / cross-sell recomendations ──────────────
+app.post('/api/ai/pos/upsell', authenticate, requirePlanFeature('ia'), async (req, res) => {
+  try {
+    const { carrito, catalogo, maxTokens } = req.body || {};
+    const cart = Array.isArray(carrito) ? carrito : [];
+    const catalog = Array.isArray(catalogo) ? catalogo : [];
+    if (cart.length === 0) return res.status(400).json({ error: 'Falta carrito', reply: null, sugerencias: [] });
+
+    const nombresEnCarrito = new Set(
+      cart.map((c) => String(c.nombre || '').trim().toLowerCase()).filter(Boolean)
+    );
+
+    const tenant = normalizeTenantCode(getTenantCode(req));
+
+    const prompt = [
+      'Eres un vendedor experto de punto de venta. Tu tarea es recomendar productos complementarios (upsell/cross-sell) para el ticket actual.',
+      'Reglas:',
+      '- Recomienda SOLO productos existentes en el cat\u00e1logo proporcionado.',
+      '- No repitas productos que ya est\u00e1n en el carrito.',
+      '- M\u00e1ximo 3 sugerencias, ordenadas por relevancia (la mejor primero).',
+      '- Un motivo corto y persuasivo por sugerencia (m\u00e1x 12 palabras).',
+      '- Responde \u00daNICAMENTE con JSON v\u00e1lido con este formato exacto:',
+      '{"sugerencias":[{"codigo":"CODIGO_DEL_CATALOGO","nombre":"Nombre del producto","motivo":"Motivo corto"}]}',
+      '',
+      'Carrito actual:',
+      JSON.stringify(cart),
+      '',
+      'Cat\u00e1logo disponible:',
+      JSON.stringify(catalog),
+    ].join('\n');
+
+    const messages = [
+      { role: 'system', content: 'Eres el motor de recomendaciones de Portal Pilot POS. Si el cat\u00e1logo est\u00e1 vac\u00edo o no hay productos candidatos, devuelve {"sugerencias":[]}.' },
+      { role: 'user', content: prompt.slice(0, 8000) }
+    ];
+
+    const reply = await callAIGateway({ modelRole: 'chat', messages, maxTokens: maxTokens || 600, temperature: 0.3 });
+    if (!reply.success) return res.status(reply.status || 500).json({ error: reply.error, reply: null, sugerencias: [] });
+
+    let sugerencias = [];
+    try {
+      const clean = String(reply.reply || '').replace(/<\/?think[\s\S]*?>/gi, '').trim();
+      const start = clean.indexOf('{');
+      const end = clean.lastIndexOf('}');
+      if (start >= 0 && end > start) {
+        const parsed = JSON.parse(clean.substring(start, end + 1));
+        const arr = Array.isArray(parsed) ? parsed : (parsed.sugerencias || []);
+        sugerencias = arr
+          .filter((s) => s && s.codigo && !nombresEnCarrito.has(String(s.nombre || '').trim().toLowerCase()))
+          .slice(0, 3)
+          .map((s) => ({
+            codigo: String(s.codigo || ''),
+            nombre: String(s.nombre || ''),
+            motivo: String(s.motivo || ''),
+          }));
+      }
+    } catch (e) {
+      console.error('[AI/UPSELL] No se pudo parsear JSON del modelo:', e.message);
+    }
+
+    await logAIUsage({ empresaCodigo: tenant, empresaId: null, usuarioId: req.user?.sub, provider: reply.provider, model: reply.model, funcion: 'pos_upsell', tokensInput: reply.tokensInput, tokensOutput: reply.tokensOutput, tokensTotal: reply.tokensTotal, durationMs: reply.durationMs, success: true });
+
+    return res.json({ reply: reply.reply, sugerencias, provider: reply.provider, model: reply.model });
+  } catch (err) {
+    console.error('[AI/UPSELL] Error:', err.message);
+    return res.status(500).json({ error: 'Error al generar recomendaciones', reply: null, sugerencias: [] });
+  }
+});
+
 // ── AI: CRM customer summaries ──────────────────────────────
 app.post('/api/ai/crm/customer', authenticate, requirePlanFeature('ia'), async (req, res) => {
   try {

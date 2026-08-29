@@ -2854,36 +2854,113 @@ app.post('/api/ai/pos/analyze', authenticate, requirePlanFeature('ia'), async (r
     const empresa = await resolverEmpresaSupabase(tenant);
     if (!empresa) return res.status(404).json({ error: 'Empresa no encontrada' });
 
-    const { message, dateRange } = req.body;
+    const b = req.body || {};
+    const message = b.message;
     if (!message) return res.status(400).json({ error: 'Mensaje requerido' });
+    const dateRange = b.dateRange || {};
+    const desde = dateRange.from || dateRange.desde || null;
+    const hasta = dateRange.to || dateRange.hasta || null;
 
-    // Fetch recent sales/transactions
-    let query = supabase.from('transacciones').select('id, tipo, categoria, monto, fecha, descripcion, metadata').eq('empresa_id', empresa.id).eq('tipo', 'venta').order('fecha', { ascending: false }).limit(200);
-    if (dateRange?.from) query = query.gte('fecha', dateRange.from);
-    if (dateRange?.to) query = query.lte('fecha', dateRange.to);
-    const { data: ventas } = await query;
+    // 1) Transacciones POS (venta_pos) de Supabase
+    let txs = [];
+    try {
+      let q = supabase.from('transacciones').select('id, monto, metodo_pago, fecha, metadata')
+        .eq('empresa_id', empresa.id).eq('tipo', 'venta_pos');
+      if (desde) q = q.gte('fecha', desde);
+      if (hasta) q = q.lte('fecha', hasta);
+      const { data } = await q.order('fecha', { ascending: false }).limit(2000);
+      txs = data || [];
+    } catch (err) { console.error('[AI/POS] err transacciones:', err.message); }
 
-    const systemPrompt = `Eres el analista de ventas de POS de Portal Pilot para "${empresa.nombre || tenant}".
-Datos de ventas recientes:
-${JSON.stringify(ventas || [], null, 2)}
+    // 2) Facturas (facturación) de Supabase
+    let invs = [];
+    try {
+      let q = supabase.from('facturas').select('id, correlativo, cliente_nombre, items, subtotal, isv_15, isv_18, descuento, total, notas, created_at')
+        .eq('empresa_id', empresa.id);
+      if (desde) q = q.gte('created_at', desde);
+      if (hasta) q = q.lte('created_at', `${hasta}T23:59:59.999Z`);
+      const { data } = await q.order('created_at', { ascending: false }).limit(2000);
+      invs = data || [];
+    } catch (err) { console.error('[AI/POS] err facturas:', err.message); }
 
-Responde preguntas sobre:
-- Top productos vendidos
-- Tendencias de ventas (diarias, semanales)
-- Comparativas de períodos
-- Sugerencias para mejorar ventas
+    // 3) Agregados combinados
+    const metodoDeNota = (notas) => {
+      const n = String(notas || '').toLowerCase();
+      if (n.includes('tarjeta')) return 'tarjeta';
+      if (n.includes('transferencia')) return 'transferencia';
+      if (n.includes('efectivo')) return 'efectivo';
+      return 'otras';
+    };
+    const itemsDe = (raw) => {
+      if (Array.isArray(raw)) return raw;
+      try { const p = JSON.parse(String(raw || '[]')); return Array.isArray(p) ? p : []; } catch { return []; }
+    };
 
-Sé conciso. Usa los datos reales, no inventes.`;
+    let total = 0, efectivo = 0, tarjeta = 0, transferencia = 0, otras = 0;
+    const top = new Map();
+    txs.forEach((v) => {
+      const m = Number(v.monto) || 0;
+      total += m;
+      const mp = String(v.metodo_pago || 'efectivo');
+      if (mp.includes('tarjeta')) tarjeta += m;
+      else if (mp.includes('transferencia')) transferencia += m;
+      else if (mp.includes('efectivo')) efectivo += m;
+      else otras += m;
+      let meta = v.metadata;
+      if (typeof meta === 'string') { try { meta = JSON.parse(meta); } catch { meta = {}; } }
+      const list = (meta && Array.isArray(meta.items)) ? meta.items : (Array.isArray(meta) ? meta : []);
+      list.forEach((i) => {
+        const n = String(i.nombre || i.producto_nombre || '').trim();
+        if (n) top.set(n, (top.get(n) || 0) + (parseInt(i.cantidad, 10) || 1));
+      });
+    });
+    invs.forEach((f) => {
+      const m = Number(f.total) || 0;
+      total += m;
+      const mk = metodoDeNota(f.notas);
+      if (mk === 'tarjeta') tarjeta += m;
+      else if (mk === 'transferencia') transferencia += m;
+      else if (mk === 'efectivo') efectivo += m;
+      else otras += m;
+      itemsDe(f.items).forEach((i) => {
+        const n = String(i.nombre || i.producto_nombre || '').trim();
+        if (n) top.set(n, (top.get(n) || 0) + (parseInt(i.cantidad, 10) || 1));
+      });
+    });
+
+    const numero = txs.length + invs.length;
+    const ticketPromedio = numero > 0 ? Math.round((total / numero) * 100) / 100 : 0;
+    const topProductos = [...top.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5)
+      .map(([producto, cantidad]) => ({ producto, cantidad }));
+
+    const contexto = {
+      total_ventas: Math.round(total * 100) / 100,
+      numero_transacciones: numero,
+      por_metodo_pago: { efectivo, tarjeta, transferencia, otras },
+      ticket_promedio: ticketPromedio,
+      top_productos: topProductos,
+      fuente: { transacciones: txs.length, facturas: invs.length }
+    };
+
+    const sistema = `Eres el analista de caja del POS de Portal Pilot para "${empresa.nombre || tenant}".
+Datos de ventas del periodo (combinados de transacciones POS y facturas):
+${JSON.stringify(contexto, null, 2)}
+
+Instrucciones:
+- Responde en espanol, conciso y con numeros claros.
+- Usa L. (lempiras hondureñas) como moneda, formato "L 1,234.56". Nunca uses EUR/USD.
+- Desglosa por metodo de pago, ticket promedio y top de productos.
+- Si no hay datos de ventas en el periodo, dilo con claridad y NO inventes cifras ni productos.`;
 
     const messages = [];
-    if (systemPrompt) messages.push({ role: 'system', content: systemPrompt.slice(0, 4000) });
+    messages.push({ role: 'system', content: sistema.slice(0, 4000) });
     messages.push({ role: 'user', content: message.slice(0, 4000) });
-    const reply = await callAIGateway({ modelRole: 'chat', messages, maxTokens: 500 });
+    const reply = await callAIGateway({ modelRole: 'chat', messages, maxTokens: 700 });
     if (!reply.success) return res.status(reply.status || 500).json({ error: reply.error });
 
     await logAIUsage({ empresaCodigo: tenant, empresaId: empresa?.id, usuarioId: req.user?.sub, provider: reply.provider, model: reply.model, funcion: 'pos_analysis', tokensInput: reply.tokensInput, tokensOutput: reply.tokensOutput, tokensTotal: reply.tokensTotal, durationMs: reply.durationMs, success: true });
 
-    return res.json({ reply: reply.reply, provider: reply.provider, model: reply.model });
+    return res.json({ reply: reply.reply, provider: reply.provider, model: reply.model, contexto });
   } catch (err) {
     console.error('[AI/POS] Error:', err.message);
     return res.status(500).json({ error: 'Error al analizar ventas' });

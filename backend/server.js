@@ -2558,9 +2558,9 @@ const AI_PROVIDERS = {
     baseUrl: 'https://api.groq.com/openai/v1/chat/completions',
     getKey: () => process.env.GROQ_API_KEY,
     models: {
-      chat: 'llama-3.3-70b-versatile',
+      chat: 'openai/gpt-oss-20b',
       vision: 'qwen/qwen3.6-27b',
-      fast: 'llama-3.1-8b-instant'
+      fast: 'openai/gpt-oss-20b'
     }
   },
   openrouter: {

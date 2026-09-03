@@ -16,11 +16,12 @@ CREATE INDEX IF NOT EXISTS idx_usuarios_empresa_codigo_activo
 
 -- Normaliza los tres planes comercializados. Los límites se vuelven a calcular
 -- en el backend, por lo que estos valores sólo sirven como persistencia y auditoría.
+-- NOTA: El UPDATE recalcula SIEMPRE para corregir tenants con valores antiguos (25/250).
 UPDATE public.tenants
 SET limite_usuarios = CASE lower(COALESCE(plan, 'starter'))
   WHEN 'starter' THEN 5
-  WHEN 'business' THEN 25
-  WHEN 'enterprise' THEN 250
+  WHEN 'business' THEN 15
+  WHEN 'enterprise' THEN 999999
   ELSE 5
 END,
 limite_empresas = CASE lower(COALESCE(plan, 'starter'))
@@ -28,5 +29,4 @@ limite_empresas = CASE lower(COALESCE(plan, 'starter'))
   WHEN 'business' THEN 3
   WHEN 'enterprise' THEN 999999
   ELSE 1
-END
-WHERE limite_usuarios IS NULL OR limite_empresas IS NULL;
+END;

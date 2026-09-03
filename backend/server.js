@@ -195,7 +195,7 @@ const PLAN_ENTITLEMENTS = Object.freeze({
     ]
   },
   business: {
-    maxUsers: 25, maxCompanies: 3,
+    maxUsers: 15, maxCompanies: 3,
     features: [
       'operacion_completa', 'inventario', 'facturacion_sar', 'web_admin', 'reportes', 'ia', 'roles', 'auditoria',
       'pos', 'clientes', 'proveedores', 'compras', 'precios', 'promociones',
@@ -204,7 +204,7 @@ const PLAN_ENTITLEMENTS = Object.freeze({
     ]
   },
   enterprise: {
-    maxUsers: 250, maxCompanies: Number.MAX_SAFE_INTEGER,
+    maxUsers: Number.MAX_SAFE_INTEGER, maxCompanies: Number.MAX_SAFE_INTEGER,
     features: [
       'operacion_completa', 'inventario', 'facturacion_sar', 'web_admin', 'reportes', 'ia', 'roles', 'auditoria',
       'pos', 'clientes', 'proveedores', 'compras', 'precios', 'promociones',
@@ -229,16 +229,29 @@ async function getTenantEntitlements(req) {
   const tenantCode = normalizeTenantCode(getTenantCode(req));
   if (!tenantCode || !supabase) return { plan: 'starter', ...PLAN_ENTITLEMENTS.starter };
   const { data: tenant } = await supabase.from('tenants')
-    .select('plan, limite_usuarios, limite_empresas, estado')
+    .select('plan, limite_usuarios, limite_empresas, estado, created_at')
     .eq('codigo', tenantCode).maybeSingle();
   const plan = normalizePlan(tenant?.plan);
   const base = PLAN_ENTITLEMENTS[plan];
+
+  // Trial de 15 días: si el plan es starter y superó los 15 días desde created_at,
+  // el tenant queda suspendido hasta que pague un plan superior.
+  let status = normalizeStatus(tenant?.estado || 'active');
+  if (plan === 'starter' && status === 'active' && tenant?.created_at) {
+    const created = new Date(tenant.created_at).getTime();
+    const now = Date.now();
+    const DAY_MS = 24 * 60 * 60 * 1000;
+    if (Number.isFinite(created) && now - created > 15 * DAY_MS) {
+      status = 'expired';
+    }
+  }
+
   return {
     plan,
-    maxUsers: Number.isInteger(tenant?.limite_usuarios) ? tenant.limite_usuarios : base.maxUsers,
-    maxCompanies: Number.isInteger(tenant?.limite_empresas) ? tenant.limite_empresas : base.maxCompanies,
+    maxUsers: base.maxUsers,
+    maxCompanies: base.maxCompanies,
     features: base.features,
-    status: normalizeStatus(tenant?.estado || 'active')
+    status
   };
 }
 
@@ -246,6 +259,9 @@ function requirePlanFeature(feature) {
   return async (req, res, next) => {
     try {
       const entitlements = await getTenantEntitlements(req);
+      if (entitlements.status && entitlements.status === 'expired') {
+        return res.status(403).json({ error: 'Tu período de prueba de 15 días ha vencido. Elige un plan para continuar usando Portal Pilot.', code: 'TRIAL_EXPIRED' });
+      }
       if (entitlements.status && entitlements.status !== 'active') {
         return res.status(403).json({ error: 'La empresa no tiene un plan activo.' });
       }
@@ -348,6 +364,9 @@ function normalizeStatus(rawStatus) {
   }
   if (['suspendido', 'suspended', 'blocked', 'bloqueado'].includes(status)) {
     return 'suspended';
+  }
+  if (['expired', 'vencido', 'expirado'].includes(status)) {
+    return 'expired';
   }
   if (['inactivo', 'inactive', 'eliminado', 'deleted', 'removed', 'retired'].includes(status)) {
     return 'inactive';
@@ -982,7 +1001,7 @@ app.post('/api/registro', async (req, res) => {
       await supabase.from('tenants').upsert({
         codigo: empresaCodigo,
         nombre_empresa: empresaNombre || 'Portal Pilot',
-        plan: plan || 'pro',
+        plan: plan || 'starter',
         estado: 'activo'
       }, { onConflict: 'codigo' });
 
@@ -1171,8 +1190,17 @@ app.post('/api/login', loginLimiter, async (req, res) => {
     }
 
     const userArea = tenantData?.area || userRow.area || 'Área Comercial';
-    const userPlan = tenantData?.plan || 'pro';
+    const userPlan = tenantData?.plan || 'starter';
     const activeModules = getModulesForAreaAndPlan(userArea, userPlan);
+
+    // Detectar trial vencido (plan starter > 15 días)
+    let trialExpired = false;
+    if (userPlan && ['starter', 'free', 'startup'].includes(normalizePlan(userPlan)) && tenantData?.created_at) {
+      const created = new Date(tenantData.created_at).getTime();
+      if (Number.isFinite(created) && Date.now() - created > 15 * 24 * 60 * 60 * 1000) {
+        trialExpired = true;
+      }
+    }
 
     return res.status(200).json({
       message: 'Login exitoso',
@@ -1189,6 +1217,7 @@ app.post('/api/login', loginLimiter, async (req, res) => {
         plan: userPlan,
         modulos_activos: activeModules,
         status: userRow.estado || 'activo',
+        trial_expired: trialExpired,
         foto_perfil_url: userRow.avatar_url || userRow.foto_perfil_url || null,
         token: accountToken
       }

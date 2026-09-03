@@ -55,13 +55,14 @@
     });
   }
 
-  function showUpgradeModal(feature) {
+  function showUpgradeModal(feature, customMessage) {
+    const message = customMessage || '"' + feature + '" requiere un plan superior. Actualiza tu plan para desbloquear esta función.';
     const overlay = document.createElement('div');
     overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;z-index:10000';
     overlay.innerHTML = '<div style="background:#0e0e1c;border:1px solid rgba(139,92,246,0.3);border-radius:18px;width:100%;max-width:400px;padding:32px;text-align:center">' +
       '<div style="width:64px;height:64px;border-radius:50%;background:rgba(139,92,246,0.15);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:28px;color:#8b5cf6"><i class="fas fa-lock"></i></div>' +
       '<h3 style="color:#fff;font-size:18px;font-weight:700;margin:0 0 8px">Función bloqueada</h3>' +
-      '<p style="color:#9ca3af;font-size:13px;line-height:1.6;margin:0 0 24px">"' + feature + '" requiere un plan superior. Actualiza tu plan para desbloquear esta función.</p>' +
+      '<p style="color:#9ca3af;font-size:13px;line-height:1.6;margin:0 0 24px">' + message + '</p>' +
       '<div style="display:flex;gap:12px;justify-content:center">' +
       '<button onclick="this.closest(\'div[style*=fixed]\').remove()" style="padding:10px 20px;border-radius:10px;background:rgba(255,255,255,0.05);border:1px solid rgba(139,92,246,0.2);color:#fff;font-size:13px;cursor:pointer">Cerrar</button>' +
       '<a href="../pay_plan.html" style="padding:10px 20px;border-radius:10px;background:#8b5cf6;color:#fff;font-size:13px;font-weight:600;text-decoration:none">Ver Planes</a>' +
@@ -104,6 +105,12 @@
 
   // Init
   window.addEventListener('DOMContentLoaded', async () => {
+    // Si el trial de 15 días venció, bloquear todo y ofrecer upgrade
+    if (localStorage.getItem('trialExpired') === 'true') {
+      lockSidebar('starter');
+      showUpgradeModal('Portal Pilot', 'Tu período de prueba de 15 días ha vencido. Elige un plan (Business o Enterprise) para continuar usando todas las funciones.');
+      return;
+    }
     const plan = await fetchPlan();
     window._currentPlan = plan;
     lockSidebar(plan);

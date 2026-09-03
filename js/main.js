@@ -135,7 +135,7 @@ function setPricingToggle(btn, mode) {
   }
 }
 
-// ── Plan select feedback ─────────────────────────────
+// ── Plan select → redirect a registro con plan preseleccionado ──
 function selectPlan(name, e) {
   const btn = e.currentTarget;
   const orig = btn.textContent;
@@ -148,7 +148,8 @@ function selectPlan(name, e) {
     btn.style.background = '';
     btn.style.borderColor = '';
     btn.style.color = '';
-  }, 2000);
+    window.location.href = 'registrov2.html?plan=' + encodeURIComponent(name);
+  }, 500);
 }
 
 // ── Typing effect for terminal ────────────────────────

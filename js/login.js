@@ -295,6 +295,8 @@ document.addEventListener('DOMContentLoaded', function () {
       localStorage.setItem('empresaCodigo', normalizedEmpresa);
       localStorage.setItem('empresaNombre', empresaNombre);
       localStorage.setItem('currentAccountId', user.id || '');
+      localStorage.setItem('empresaPlan', user.plan || 'starter');
+      localStorage.setItem('trialExpired', user.trial_expired ? 'true' : 'false');
 
       if (data.accounts && data.accounts.length > 1) {
         const normAccounts = data.accounts.map(a => ({

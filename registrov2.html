@@ -678,7 +678,7 @@
 
                 <div class="plan-grid">
                     <!-- Startup -->
-                    <div class="plan-card" onclick="selectPlan('starter', this)">
+                    <div class="plan-card" data-plan="starter" onclick="selectPlan('starter', this)">
                         <div class="plan-badge">Gratis</div>
                         <h3>Prueba</h3>
                         <div class="plan-price">GRATIS <span>/15 días</span></div>
@@ -689,7 +689,7 @@
                         </ul>
                     </div>
                     <!-- Business -->
-                    <div class="plan-card" onclick="selectPlan('business', this)">
+                    <div class="plan-card" data-plan="business" onclick="selectPlan('business', this)">
                         <h3>Business</h3>
                         <div class="plan-price">L.1,499 <span>/mes</span></div>
                         <ul class="plan-features">
@@ -699,7 +699,7 @@
                         </ul>
                     </div>
                     <!-- Enterprise -->
-                    <div class="plan-card" onclick="selectPlan('enterprise', this)">
+                    <div class="plan-card" data-plan="enterprise" onclick="selectPlan('enterprise', this)">
                         <h3>Enterprise</h3>
                         <div class="plan-price">L.4,999 <span>/mes</span></div>
                         <ul class="plan-features">
@@ -1506,6 +1506,23 @@
         });
 
         updateProgress();
+
+        // ─── PLAN DESDE URL (index.html → registrov2) ───
+        (function () {
+            try {
+                const params = new URLSearchParams(window.location.search);
+                const planParam = (params.get('plan') || '').toLowerCase();
+                const planCard = document.querySelector('.plan-card[data-plan="' + planParam + '"]');
+                if (planCard) {
+                    planCard.classList.add('selected');
+                    document.getElementById('selectedPlan').value = planParam;
+                    document.getElementById('btnPlanContinue').disabled = false;
+                    if (planParam === 'starter') {
+                        document.getElementById('startupInfo').classList.add('visible');
+                    }
+                }
+            } catch (e) { console.warn('No se pudo preseleccionar plan:', e); }
+        })();
 
         // ─── TIMEZONE POR PAÍS ───
         window.onCountryChange = function () {

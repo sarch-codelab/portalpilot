@@ -400,7 +400,7 @@ $$ LANGUAGE SQL STABLE;
 | Auditoría / Logs | ✅ | ✅ | ✅ |
 | Soporte | Email | Email prioritario | Prioritario 24/7 |
 
-> Precios en Lempiras (HNL). Sin tarjeta de crédito para el plan Prueba.
+> Precios en Lempiras (HNL). Sin tarjeta de crédito para el plan Prueba. El plan Prueba incluye 15 días de acceso completo; al vencerse, se debe elegir Business o Enterprise para continuar usando el sistema.
 
 ---
 

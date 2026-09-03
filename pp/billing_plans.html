@@ -1542,7 +1542,7 @@
   <div class="dashboard">
     <aside class="sidebar" id="sidebar">
       <div class="sidebar-logo">
-        <div class="logo-icon"><img src="../img/iconos/Portal%20Pilot.png" alt="Portal Pilot"></div>PORTAL PILOT
+        <div class="logo-icon"><img src="../img/iconos/robot_logo.png" alt="Portal Pilot"></div>PORTAL PILOT
       </div>
       <nav class="sidebar-nav">
         <a href="dashboard.html" class="sidebar-link"><i class="fas fa-home"></i> <span>Dashboard</span></a>
@@ -1613,7 +1613,7 @@
           <div class="plan-card reveal" data-plan="free">
             <div class="plan-header">
               <span class="plan-badge free">Free</span>
-              <div class="plan-name">Starter</div>
+              <div class="plan-name">Prueba</div>
               <div class="plan-price">$0 <span>/mes</span></div>
               <div class="plan-period">Para pruebas y pequeños proyectos</div>
             </div>
@@ -1805,15 +1805,15 @@
           <div class="promo-card reveal">
             <div style="display:flex;justify-content:space-between;align-items:start;">
               <div><span class="plan-badge pro" style="margin-bottom:8px;">Activo</span>
-                <div class="promo-code-display"><span class="promo-code">WELCOME20</span><button class="promo-copy-btn"
-                    onclick="copyCode('WELCOME20')" title="Copiar"><i class="fas fa-copy"></i></button></div>
+                <div class="promo-code-display"><span class="promo-code">WELCOME15</span><button class="promo-copy-btn"
+                    onclick="copyCode('WELCOME15')" title="Copiar"><i class="fas fa-copy"></i></button></div>
               </div>
               <div class="plan-feature-toggle active" onclick="togglePromoStatus(this)" style="margin:0;"></div>
             </div>
             <div class="promo-details">
               <div class="promo-detail">
                 <div class="promo-detail-label">Tipo</div>
-                <div class="promo-detail-value">20% descuento</div>
+                <div class="promo-detail-value">15% descuento</div>
               </div>
               <div class="promo-detail">
                 <div class="promo-detail-label">Usos</div>
@@ -1829,9 +1829,9 @@
               </div>
             </div>
             <div class="promo-actions">
-              <button class="btn btn-outline btn-sm" onclick="editPromo('WELCOME20')"><i class="fas fa-edit"></i>
+              <button class="btn btn-outline btn-sm" onclick="editPromo('WELCOME15')"><i class="fas fa-edit"></i>
                 Editar</button>
-              <button class="btn btn-danger btn-sm" onclick="invalidatePromo('WELCOME20')"><i class="fas fa-ban"></i>
+              <button class="btn btn-danger btn-sm" onclick="invalidatePromo('WELCOME15')"><i class="fas fa-ban"></i>
                 Invalidar</button>
             </div>
           </div>
@@ -2014,7 +2014,7 @@
 
     // ── Promo Codes ──────────────────────────────────────
     const promoCodes = [
-      { code: 'WELCOME20', type: 'percent', value: 20, uses: 234, maxUses: Infinity, plan: 'all', active: true, endDate: '2026-12-31' },
+      { code: 'WELCOME15', type: 'percent', value: 15, uses: 234, maxUses: Infinity, plan: 'all', active: true, endDate: '2026-12-31' },
       { code: 'BLACKFRI25', type: 'fixed', value: 50, uses: 500, maxUses: 500, plan: 'pro,enterprise', active: false, endDate: '2025-11-30' },
       { code: 'EARLYBIRD', type: 'percent', value: 15, uses: 89, maxUses: 200, plan: 'enterprise', active: true, endDate: '2027-03-15' }
     ];

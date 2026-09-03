@@ -220,7 +220,7 @@
   <header>
     <nav>
       <a href="index.html" class="nav-logo">
-        <div class="logo-icon"><img src="img/iconos/Portal%20Pilot.png" alt="Portal Pilot"></div>
+        <div class="logo-icon"><img src="img/iconos/robot_logo.png" alt="Portal Pilot"></div>
         PORTAL PILOT
       </a>
       <div class="nav-links">
@@ -323,7 +323,7 @@
           <li><strong>Inventario Multi-Almacén</strong> — Control en tiempo real con stock mínimo</li>
           <li><strong>Contabilidad</strong> — Estados financieros, balances, impuestos</li>
           <li><strong>Nómina Hondureña</strong> — IHSS, RAP, decimoctavo</li>
-          <li><strong>Asistente IA</strong> — Gemma 3N / Llama 3 / Mistral</li>
+          <li><strong>Asistente IA</strong> — Groq API (nube)</li>
           <li><strong>Bots RPA</strong> — Automatización de tareas con editor visual</li>
           <li><strong>Modo Offline</strong> — Funciona sin conexión a internet</li>
         </ul>
@@ -336,7 +336,7 @@
         <p>Descarga e instala Portal Pilot en tu dispositivo (web, móvil o escritorio). Disponible para Android, iOS, Windows, macOS y Linux.</p>
         <div class="step"><div class="step-num">1</div><div class="step-content"><h4>Descarga la app</h4><p>Ve a <a href="download.html" style="color:var(--accent-soft);text-decoration:underline;">portalpilot.hn/download</a> y selecciona tu sistema operativo.</p></div></div>
         <div class="step"><div class="step-num">2</div><div class="step-content"><h4>Ejecuta el instalador</h4><p>Windows: haz doble clic en el .exe. macOS: arrastra a Applications. Linux: <code>chmod +x PortalPilot && ./PortalPilot</code></p></div></div>
-        <div class="step"><div class="step-num">3</div><div class="step-content"><h4>Crea tu cuenta</h4><p>Al abrir la app por primera vez, ingresa tu email o crea una cuenta nueva. El plan gratuito incluye hasta 5 facturas/mes.</p></div></div>
+        <div class="step"><div class="step-num">3</div><div class="step-content"><h4>Crea tu cuenta</h4><p>Al abrir la app por primera vez, ingresa tu email o crea una cuenta nueva. El plan gratuito incluye todos los módulos base por 15 días.</p></div></div>
         <div class="step"><div class="step-num">4</div><div class="step-content"><h4>Configura tu empresa</h4><p>Ingresa los datos de tu empresa: nombre, RTN, CAI del SAR y dirección. Esto se usa para generar facturas válidas.</p></div></div>
         <div class="callout success"><i class="fas fa-check-circle"></i><p>¡Listo! Ya puedes empezar a facturar, gestionar inventario y usar la IA de Portal Pilot.</p></div>
       </div>
@@ -430,17 +430,15 @@
       <div class="doc-section" id="sec-ws-ia" style="display:none">
         <div class="eyebrow">WORKSPACE</div>
         <h1>Asistente de Inteligencia Artificial</h1>
-        <p>Portal Pilot integra modelos de IA local (sin enviar datos a la nube) para asistencia contable, generación de reportes y automatización inteligente.</p>
+        <p>Portal Pilot integra IA en la nube potenciada por Groq API para análisis inteligente, automatización de procesos y asistentes virtuales por módulo. Procesamiento rápido y seguro desde la nube.</p>
         <h2>Modelos Disponibles</h2>
         <table>
-          <tr><th>Modelo</th><th>Uso Principal</th><th>Requisitos</th></tr>
-          <tr><td><strong>Gemma 3N</strong></td><td>Contabilidad, facturación, análisis financiero</td><td>4GB RAM, CPU moderna</td></tr>
-          <tr><td><strong>Llama 3</strong></td><td>Procesamiento de texto, generación de reportes</td><td>8GB RAM, CPU moderna</td></tr>
-          <tr><td><strong>Mistral</strong></td><td>Chat conversacional, asistencia general</td><td>4GB RAM, CPU moderna</td></tr>
+          <tr><th>Servicio</th><th>Uso Principal</th><th>Requisitos</th></tr>
+          <tr><td><strong>Groq API</strong></td><td>Contabilidad, facturación, análisis financiero, chat, reportes</td><td>Conexión a internet</td></tr>
         </table>
         <h2>Configurar</h2>
-        <p>Ve a Configuración → IA y selecciona tu modelo. La primera ejecución descarga el modelo (~2-4GB). Después funciona 100% offline.</p>
-        <div class="callout warn"><i class="fas fa-exclamation-triangle"></i><p>Gemma 3N está optimizado para tareas contables hondureñas. Es el modelo recomendado para uso general en Portal Pilot.</p></div>
+        <p>Ve a Configuración → IA y selecciona tu proveedor. La IA se activa automáticamente según tu plan.</p>
+        <div class="callout warn"><i class="fas fa-exclamation-triangle"></i><p>Groq API es el proveedor recomendado. Ofrece procesamiento rápido y bajo costo para tareas contables hondureñas.</p></div>
       </div>
 
       <!-- WS-OFFLINE -->
@@ -508,12 +506,12 @@
         <p>Cada bot puede usar un modelo de IA diferente. Configura el modelo, temperatura y prompt del sistema.</p>
         <h2>Opciones de Configuración</h2>
         <ul>
-          <li><strong>Modelo:</strong> Gemma 3N (recomendado), Llama 3, Mistral</li>
+          <li><strong>Modelo:</strong> Groq API (nube) — configuración por defecto</li>
           <li><strong>Temperatura:</strong> 0.0 (determinista) a 1.0 (creativo). Para contabilidad usa 0.0-0.2</li>
           <li><strong>Prompt del sistema:</strong> Instrucciones específicas para el bot. Ej: "Eres un asistente contable. Extrae montos y conceptos de emails."</li>
           <li><strong>Max tokens:</strong> Límite de respuesta del modelo (512-2048)</li>
         </ul>
-        <div class="callout info"><i class="fas fa-lightbulb"></i><p>Gemma 3N es el modelo recomendado para bots contables. Está optimizado para tareas de facturación y análisis financiero hondureño.</p></div>
+        <div class="callout info"><i class="fas fa-lightbulb"></i><p>Groq API es el proveedor recomendado para bots. Ofrece procesamiento rápido y bajo costo para tareas de facturación y análisis financiero hondureño.</p></div>
       </div>
 
       <!-- BOTS-TRIGGERS -->
@@ -760,21 +758,21 @@ Content-Type: application/json</code></pre>
       <div class="doc-section" id="sec-planes" style="display:none">
         <div class="eyebrow">PLANES</div>
         <h1>Comparar Planes</h1>
-        <p>Elige el plan que mejor se adapte a tu negocio. Todos incluyen soporte por email y WhatsApp.</p>
+        <p>Elige el plan que mejor se adapte a tu negocio. Todos incluyen soporte por email.</p>
         <table>
-          <tr><th>Característica</th><th>Starter (L.499/mes)</th><th>Business (L.1,499/mes)</th><th>Enterprise (L.4,999/mes)</th></tr>
-          <tr><td>Usuarios</td><td>3</td><td>10</td><td>Ilimitados</td></tr>
-          <tr><td>Facturas/mes</td><td>100</td><td>500</td><td>Ilimitadas</td></tr>
-          <tr><td>Inventario</td><td>1 almacén</td><td>5 almacenes</td><td>Ilimitados</td></tr>
+          <tr><th>Característica</th><th>Prueba (Gratis 15 días)</th><th>Business (L1,499/mes)</th><th>Enterprise (L4,999/mes)</th></tr>
+          <tr><td>Usuarios</td><td>5</td><td>15</td><td>Ilimitados</td></tr>
+          <tr><td>Empresas</td><td>1</td><td>3</td><td>Ilimitadas</td></tr>
+          <tr><td>Facturación SAR/DEI</td><td>✅</td><td>✅</td><td>✅</td></tr>
+          <tr><td>Inventario Multi-Almacén</td><td>✅</td><td>✅</td><td>✅</td></tr>
           <tr><td>Contabilidad</td><td>Básica</td><td>Completa</td><td>Completa + API</td></tr>
-          <tr><td>Nómina</td><td>—</td><td>✅</td><td>✅</td></tr>
-          <tr><td>IA Local</td><td>—</td><td>Gemma 3N</td><td>Gemma 3N + Llama 3</td></tr>
-          <tr><td>Bots RPA</td><td>—</td><td>—</td><td>Ilimitados</td></tr>
-          <tr><td>Serverless</td><td>—</td><td>3 functions</td><td>Ilimitadas</td></tr>
-          <tr><td>Soporte</td><td>Email</td><td>Email + WhatsApp</td><td>Prioritario 24/7</td></tr>
-          <tr><td>Modo Offline</td><td>✅</td><td>✅</td><td>✅</td></tr>
+          <tr><td>Nómina Hondureña</td><td>—</td><td>✅</td><td>✅</td></tr>
+          <tr><td>IA (Groq API)</td><td>Uso básico</td><td>Uso generoso</td><td>Avanzada / personalizada</td></tr>
+          <tr><td>Bots RPA</td><td>—</td><td>Automatizaciones estándar</td><td>Ilimitados</td></tr>
+          <tr><td>Auditoría / Logs</td><td>✅</td><td>✅</td><td>✅</td></tr>
+          <tr><td>Soporte</td><td>Email</td><td>Email prioritario</td><td>Prioritario 24/7</td></tr>
         </table>
-        <div class="callout info"><i class="fas fa-info-circle"></i><p>El plan gratuito incluye 5 facturas/mes, 1 usuario y 1 almacén. Ideal para probar Portal Pilot sin compromiso.</p></div>
+        <div class="callout info"><i class="fas fa-info-circle"></i><p>El plan Prueba es gratuito por 15 días e incluye todos los módulos base con hasta 5 usuarios. Ideal para probar Portal Pilot sin compromiso.</p></div>
       </div>
 
     </main>

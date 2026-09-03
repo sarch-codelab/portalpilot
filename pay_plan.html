@@ -15,14 +15,14 @@
     <meta name="description" content="Portal Pilot: ERP comercial integral para pulperías, supermercados, distribuidoras y cadenas retail. Facturación electrónica SAR, inventario multi-bodega, POS y más con IA integrada.">
     <meta property="og:title" content="Portal Pilot — Activación de Plan Comercial">
     <meta property="og:description" content="Portal Pilot: ERP comercial integral para pulperías, supermercados, distribuidoras y cadenas retail. Facturación electrónica SAR, inventario multi-bodega, POS y más con IA integrada.">
-    <meta property="og:image" content="https://portal-pilot.vercel.app/img/iconos/Portal%20Pilot.png">
+    <meta property="og:image" content="https://portal-pilot.vercel.app/img/iconos/robot_logo.png">
     <meta property="og:url" content="https://portal-pilot.vercel.app/pay_plan.html">
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="Portal Pilot">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Portal Pilot — Activación de Plan Comercial">
     <meta name="twitter:description" content="Portal Pilot: ERP comercial integral para pulperías, supermercados, distribuidoras y cadenas retail. Facturación electrónica SAR, inventario multi-bodega, POS y más con IA integrada.">
-    <meta name="twitter:image" content="https://portal-pilot.vercel.app/img/iconos/Portal%20Pilot.png">
+    <meta name="twitter:image" content="https://portal-pilot.vercel.app/img/iconos/robot_logo.png">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Activar Plan Comercial — Portal Pilot</title>
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -178,7 +178,7 @@
             <div class="plan-price" id="planPrice">L.1,499 <span>/mes</span></div>
             <div class="plan-billing">Facturación mensual. Cancela cuando quieras.</div>
             <ul class="plan-features" id="planFeatures">
-                <li><i class="fas fa-check"></i> Hasta 25 usuarios activos</li>
+                <li><i class="fas fa-check"></i> Hasta 15 usuarios activos</li>
                 <li><i class="fas fa-check"></i> IA Groq ilimitada</li>
                 <li><i class="fas fa-check"></i> Todos los módulos</li>
                 <li><i class="fas fa-check"></i> Facturación Electrónica SAR</li>
@@ -335,15 +335,15 @@
 
         const planConfig = {
             starter: {
-                name: 'Plan Starter',
-                price: 'L.499',
-                amount: 'L.499.00',
+                name: 'Plan Prueba',
+                price: 'Gratis',
+                amount: 'L.0.00',
                 features: [
-                    '<i class="fas fa-check"></i> 1 usuario activo',
-                    '<i class="fas fa-check"></i> 50 consultas IA/mes',
-                    '<i class="fas fa-check"></i> Módulos comerciales',
+                    '<i class="fas fa-check"></i> Hasta 5 usuarios',
+                    '<i class="fas fa-check"></i> Todos los módulos base',
                     '<i class="fas fa-check"></i> Facturación Electrónica SAR',
-                    '<i class="fas fa-check"></i> Soporte standard'
+                    '<i class="fas fa-check"></i> IA Portal Pilot — uso básico',
+                    '<i class="fas fa-check"></i> Soporte por email'
                 ]
             },
             business: {
@@ -351,7 +351,7 @@
                 price: 'L.1,499',
                 amount: 'L.1,499.00',
                 features: [
-                    '<i class="fas fa-check"></i> Hasta 25 usuarios activos',
+                    '<i class="fas fa-check"></i> Hasta 15 usuarios activos',
                     '<i class="fas fa-check"></i> IA Groq ilimitada',
                     '<i class="fas fa-check"></i> Todos los módulos comerciales',
                     '<i class="fas fa-check"></i> Facturación Electrónica SAR',
@@ -505,7 +505,7 @@
                     gtag('event', 'purchase', {
                         transaction_id: data.email + '-' + Date.now(),
                         currency: 'HNL',
-                        value: { starter: 499, business: 1499, enterprise: 4999 }[selectedPlan] || 1499,
+                        value: { starter: 0, business: 1499, enterprise: 4999 }[selectedPlan] || 1499,
                         plan_name: plan.name,
                         payment_method: metodo
                     });

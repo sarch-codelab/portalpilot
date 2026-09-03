@@ -7,7 +7,6 @@
 [![Express](https://img.shields.io/badge/Express-5.x-000000?style=for-the-badge&logo=express&logoColor=white)](https://expressjs.com)
 [![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)](https://supabase.com)
 [![Groq](https://img.shields.io/badge/Groq-API%20IA-FF6B35?style=for-the-badge&logo=groq&logoColor=white)](https://groq.com)
-[![NocoDB](https://img.shields.io/badge/NocoDB-Airtable%20Alternative-0078D4?style=for-the-badge&logo=nocodb&logoColor=white)](https://nocodb.com)
 [![License](https://img.shields.io/badge/License-Proprietary-FF6B35?style=for-the-badge)](LICENSE)
 [![Made in Honduras](https://img.shields.io/badge/Made%20in-Honduras%20🇭🇳-0051BA?style=for-the-badge)](https://portal-pilot.vercel.app)
 
@@ -31,21 +30,23 @@
 ## ✨ Características Principales
 
 ### 🤖 IA en la Nube — Groq API
-Asistentes virtuales integrados en **cada módulo** con latencia ultra-baja. Análisis inteligente, generación de reportes, automatización de tareas y respuestas contextuales en milisegundos. El proxy `/api/ai/groq` protege la API key — **nunca expuesta al cliente**.
+Asistentes virtuales integrados en **cada módulo** con latencia ultra-baja. Análisis inteligente, generación de reportes, automatización de tareas y respuestas contextuales en milisegundos. El proxy `/api/ai/chat` protege la API key — **nunca expuesta al cliente**.
 
-### 📦 7+ Módulos de Negocio Especializados
-| Módulo | Color | Descripción |
-|--------|-------|-------------|
-| **Facturación SAR** | `#10B981` | Facturación electrónica lista para SAR (Honduras), clientes, reportes |
-| **Inventario** | `#F59E0B` | Productos, bodegas, kardex, stock tiempo real, conexión POS |
-| **Contabilidad** | `#3B82F6` | Transacciones, estados financieros, trazabilidad contable |
-| **RRHH / Nómina** | `#EC4899` | Empleados, planilla, recibos, beneficios, asistencia |
-| **CRM** | `#06B6D4` | Clientes, ventas, seguimiento comercial, ciclo unificado |
-| **POS** | `#F97316` | Terminal cobro rápida, código barras, historial, cierre caja |
-| **Canal Tradicional** | `#F59E0B` | Pulperías y mercaditos: fiado, cobros, rutas de reparto |
-| **Canal Moderno** | `#10B981` | Supermercados y cadenas: multi-sucursal, transferencias, consolidado |
-| **Sector Retail** | `#06B6D4` | Precios por canal, promociones, inventario por tienda |
-| **Membresías** | `#8B5CF6` | Modelos club (tipo PriceSmart): socios, puntos, renovaciones |
+### 📦 10 Módulos de Negocio Especializados
+| Módulo | Color | Estado | Descripción |
+|--------|-------|--------|-------------|
+| **Facturación SAR** | `#10B981` | ✅ Completo | Facturación electrónica lista para SAR (Honduras), clientes, reportes |
+| **Inventario** | `#F59E0B` | ✅ Completo | Productos, bodegas, kardex, stock tiempo real, conexión POS |
+| **Contabilidad** | `#3B82F6` | 🔄 Frontend | Transacciones, estados financieros, trazabilidad contable |
+| **RRHH / Nómina** | `#EC4899` | 🔄 Frontend | Empleados, planilla, recibos, beneficios, asistencia |
+| **CRM** | `#06B6D4` | ✅ Completo | Clientes, ventas, seguimiento comercial, ciclo unificado |
+| **POS** | `#F97316` | ✅ Completo | Terminal cobro rápida, código barras, historial, cierre caja |
+| **Canal Tradicional** | `#F59E0B` | ✅ Completo | Pulperías y mercaditos: fiado, cobros, rutas de reparto |
+| **Canal Moderno** | `#10B981` | ✅ Completo | Supermercados y cadenas: multi-sucursal, transferencias, consolidado |
+| **Sector Retail** | `#06B6D4` | ✅ Completo | Precios por canal, promociones, inventario por tienda |
+| **Membresías** | `#8B5CF6` | ✅ Completo | Modelos club (tipo PriceSmart): socios, puntos, renovaciones |
+
+> **Nota**: Contabilidad y RRHH/Nómina tienen interfaz web completa pero sus endpoints backend están en desarrollo. Los demás módulos tienen API REST completa en `backend/server.js`.
 
 ### 🔐 Control de Acceso Enterprise
 - **3 Roles**: `Owner` (propietario completo), `Administrador` (gestión parcial), `Miembro` (acceso limitado)
@@ -71,7 +72,7 @@ Asistentes virtuales integrados en **cada módulo** con latencia ultra-baja. An�
 │  │ App Flutter   │  │                │  │ Vercel (Express/Node.js 5)    │  │
 │  │ (Windows)     │  │                │  │  • API REST /api/*            │  │
 │  │ 7 módulos     │  │                │  │  • Serverless /api/… (app)    │  │
-│  │ IA + RPA local│  │                │  │  • Proxy seguro /api/ai/groq  │  │
+│  │ IA + RPA local│  │                │  │  • Proxy seguro /api/ai/chat   │  │
 │  │ SQLite local  │  │                │  │  • JWT Auth + tenant          │  │
 │  └───────────────┘  │                │  └───────────────────────────────┘  │
 └─────────────────────┘                │  ┌───────────────────────────────┐  │
@@ -80,11 +81,7 @@ Asistentes virtuales integrados en **cada módulo** con latencia ultra-baja. An�
 │   Enterprise)       │                │  │    empresa_codigo             │  │
 │  • HTML/CSS/JS      │                │  │  • Políticas RLS por JWT      │  │
 │  • localStorage     │                │  └───────────────────────────────┘  │
-└─────────────────────┘                │  ┌───────────────────────────────┐  │
-                                       │  │ NocoDB                        │  │
-                                       │  │  • Usuarios & tenants portal  │  │
-                                       │  └───────────────────────────────┘  │
-                                       └─────────────────────────────────────┘
+└─────────────────────┘                └─────────────────────────────────────┘
 ```
 
 ---
@@ -97,10 +94,9 @@ Asistentes virtuales integrados en **cada módulo** con latencia ultra-baja. An�
 | **Runtime** | Node.js | 18+ | Serverless en Vercel |
 | **Framework** | Express | 5.x | API REST principal |
 | **Base de Datos** | Supabase (PostgreSQL) | 15+ | Datos multi-tenant con RLS |
-| **Directorio** | NocoDB | - | Usuarios y tenants del portal web |
 | **IA** | Groq API | - | LLM ultra-rápido (Llama 3, Mixtral) |
 | **Auth** | JWT + bcryptjs | - | Tokens firmados, hash contraseñas |
-| **Email** | Nodemailer | 8.x | SMTP transaccional |
+| **Email** | Nodemailer | 9.x | SMTP transaccional |
 | **Seguridad** | Helmet, CORS, Rate-limit | - | Headers, CORS, protección DDoS |
 
 ### Frontend (Web)
@@ -108,7 +104,7 @@ Asistentes virtuales integrados en **cada módulo** con latencia ultra-baja. An�
 |------------|-----|
 | **HTML5 / CSS3 / JS Vanilla** | Portal admin (`pp/`), Empresa (`empresa/`), Landing, Auth |
 | **CSS Variables** | Sistema de diseño (modo oscuro, paleta corporativa) |
-| **Inter / JetBrains Mono** | Tipografía principal y monoespaciada |
+| **Syne / DM Sans** | Tipografía principal (Syne headings, DM Sans body) |
 | **localStorage** | Persistencia de sesión (JWT, roles, tenant) |
 
 ### App de Escritorio
@@ -128,7 +124,6 @@ Asistentes virtuales integrados en **cada módulo** con latencia ultra-baja. An�
 - Cuenta en [Vercel](https://vercel.com)
 - Cuenta en [Supabase](https://supabase.com)
 - Cuenta en [Groq](https://console.groq.com) (API key)
-- Cuenta en [NocoDB](https://nocodb.com) (API token)
 
 ### 1. Clonar e Instalar
 ```bash
@@ -142,8 +137,6 @@ Crear `.env` en la raíz (basado en `.env.example`):
 ```env
 # Backend
 JWT_SECRET=tu_jwt_secreto_super_seguro_64_chars_minimo
-NOCODB_URL=https://app.nocodb.com
-NOCODB_API_TOKEN=tu_token_nocodb
 
 # Supabase
 SUPABASE_URL=https://tu-proyecto.supabase.co
@@ -167,10 +160,10 @@ FRONTEND_URL=https://portal-pilot.vercel.app
 ### 3. Base de Datos (Supabase)
 Ejecutar en **Supabase SQL Editor** en orden:
 ```sql
--- 1. Tablas de sincronización (app Flutter)
-\i supabase/migracion_sync.sql
+-- 1. Migración unificada completa
+\i supabase/migracion_unificada_completa.sql
 
--- 2. Tablas Enterprise (portal web)
+-- 2. Migración enterprise (RLS)
 \i supabase/migracion_enterprise.sql
 ```
 Verificar que las políticas **RLS** quedaron activas por `empresa_codigo`.
@@ -193,19 +186,14 @@ vercel deploy --prod
 
 ```
 portalpilot/
-├── api/                          # Endpoints serverless (app Flutter)
-│   ├── _lib/supabase.js         # Cliente Supabase + helper tenant
-│   ├── login.js                 # Login app (NocoDB + fallback)
-│   ├── clientes/                # CRUD clientes
-│   ├── productos/               # Upsert masivo productos/stock
-│   ├── facturas/                # CRUD + anulación facturas
-│   ├── transacciones/           # Movimientos contables
-│   ├── ventas/                  # Cierre POS: stock + factura
-│   └── ai/groq.js               # Proxy seguro Groq API
+├── api/                          # Endpoints serverless (2 archivos)
+│   ├── ping-search-engines.js   # Notificación a buscadores
+│   └── support-ticket.js        # Tickets de soporte
 │
 ├── backend/                      # Backend Express principal (Vercel)
-│   ├── server.js                # 2948 líneas - API completa
-│   └── supabaseClient.js        # Cliente Supabase (service role)
+│   ├── server.js                # 5690 líneas - API completa (/api/*)
+│   ├── supabaseClient.js        # Cliente Supabase (service role)
+│   └── package.json             # Dependencias backend
 │
 ├── pp/                          # Portal Admin (rol ROOT)
 │   ├── dashboard.html           # Dashboard principal
@@ -214,7 +202,13 @@ portalpilot/
 │   ├── billing_plans.html       # Planes y facturación
 │   ├── global_settings.html     # Configuración global
 │   ├── system_health.html       # Salud del sistema
-│   └── js/                      # Lógica portal admin
+│   ├── analytics.html           # Analíticas
+│   ├── auditoria.html           # Auditoría del sistema
+│   ├── bots_rpa.html            # Bots RPA
+│   ├── perfil.html              # Perfil admin
+│   ├── tenant_detail.html       # Detalle tenant
+│   ├── usuario_detail.html      # Detalle usuario
+│   └── welcome.html             # Bienvenida
 │
 ├── empresa/                      # Portal web avanzado por empresa
 │   ├── dashboard.html           # Dashboard por plan
@@ -222,24 +216,53 @@ portalpilot/
 │   ├── automation.html          # Automatizaciones RPA
 │   ├── team.html                # Equipo (usuarios tenant)
 │   ├── security.html            # Auditoría + API Keys
-│   └── js/                      # Lógica del portal de empresa
+│   ├── api_keys.html            # Gestión API Keys
+│   ├── inicio.html              # Inicio empresa
+│   ├── perfil.html              # Perfil empresa
+│   └── tenant_detail.html       # Detalle tenant
 │
-├── css/
-│   ├── index.css                # Estilos landing (76KB)
-│   └── variables.css            # Design tokens (paleta, spacing)
+├── index.css                    # Estilos landing (110KB)
+├── index.html                   # Landing page principal
+├── css/                         # Estilos por módulo (18 archivos)
+│   ├── login.css                # Autenticación
+│   ├── dashboard.css            # Dashboard
+│   ├── styles.css               # Compartidos
+│   └── ...                      # billing, tenants, perfil, etc.
 │
-├── js/                          # JS público compartido
+├── js/                          # JS por módulo (22 archivos)
 │   ├── login.js                 # Auth landing
 │   ├── plan-gate.js             # Gate por plan/rol
-│   └── sidebar-loader.js        # Navegación dinámica
+│   ├── sidebar-loader.js        # Navegación dinámica
+│   ├── dashboard.js             # Lógica dashboard
+│   ├── billing_plans.js         # Lógica planes
+│   └── ...                      # tenants, usuarios, perfil, etc.
 │
-├── supabase/
-│   ├── migracion_sync.sql       # Tablas app Flutter
-│   └── migracion_enterprise.sql # Tablas portal web (RLS)
+├── supabase/                     # Migraciones SQL (7 archivos)
+│   ├── migracion_enterprise.sql # Tablas portal web (RLS)
+│   ├── migracion_unificada_completa.sql
+│   └── ...                      # migraciones comerciales, seguridad, etc.
 │
-├── vercel.json                  # Configuración despliegue
-├── package.json
-└── DOCUMENTO_TECNICO_PORTAL_PILOT.md  # Documentación técnica completa
+├── scripts/
+│   └── post-deploy-ping.js      # Ping post-despliegue
+│
+├── EMAIL PORTAL PILOT/          # Plantillas de email transaccional
+├── img/                         # Imágenes del proyecto
+├── uploads/                     # Directorio de subidas
+│
+├── index.html                   # Landing page
+├── login.html                   # Login
+├── registrov2.html              # Registro
+├── pay_plan.html                # Selección de plan y pago
+├── documentacion.html           # Documentación de usuario
+├── 404.html                     # Página no encontrada
+├── cookies.html / privacidad.html / terminos.html / sla.html
+├── support.html / download.html / primer_acceso.html
+│
+├── vercel.json                  # Configuración despliegue y rutas
+├── package.json                 # Dependencias del proyecto
+├── .env.example                 # Variables de entorno (ejemplo)
+├── robots.txt / sitemap.xml
+└── DOCUMENTO_TECNICO_PORTAL_PILOT.md
 ```
 
 ---
@@ -278,16 +301,44 @@ portalpilot/
 | `GET/POST` | `/api/automation` | Automatizaciones RPA |
 | `PATCH` | `/api/automation/:id` | Actualiza automatización |
 
-### App Flutter (Serverless) — `portal_pilot_app/api/`
-| Endpoint | Tabla Supabase | Función |
-|----------|----------------|---------|
-| `/api/login.js` | NocoDB | Login app con fallback |
-| `/api/clientes` | `clientes` | CRUD clientes |
-| `/api/productos` | `productos` | Upsert masivo stock |
-| `/api/facturas` | `facturas` | CRUD + anulación |
-| `/api/transacciones` | `transacciones` | Movimientos contables |
-| `/api/ventas` | `productos` + `facturas` | Cierre POS |
-| `/api/ai/groq` | — | Proxy seguro Groq |
+### Negocio (todos los módulos) — `backend/server.js`
+Todos los endpoints son manejados por `backend/server.js` vía enrutamiento de `vercel.json` (`/api/* → server.js`).
+
+| Módulo | Endpoints | Función |
+|--------|-----------|---------|
+| **Usuarios** | `GET/POST /api/users`, `GET/PUT/DELETE /api/users/:id` | CRUD usuarios |
+| **2FA** | `POST /api/login/2fa`, `/api/security/2fa/setup`, `/2fa/confirm`, `/2fa/disable` | Autenticación dos factores |
+| **Productos** | `GET/POST /api/productos`, `PUT/DELETE /api/productos/:id` | CRUD productos |
+| **Kardex** | `GET /api/kardex` | Movimientos de inventario |
+| **Bodegas** | `GET/POST /api/bodegas` | Gestión de bodegas |
+| **Clientes** | `GET/POST /api/clientes`, `PUT/DELETE /api/clientes/:id` | CRUD clientes |
+| **Facturas** | `GET/POST /api/facturas`, `DELETE /api/facturas/:id` | Facturación SAR |
+| **POS** | `POST /api/pos/ventas` | Cierre de venta POS |
+| **Ventas Fiadas** | `GET/POST /api/ventas-fiadas` | Canal tradicional (fiado) |
+| **Abonos** | `GET/POST /api/abonos` | Pagos a cuentas fiadas |
+| **Sucursales** | `GET/POST /api/sucursales` | Multi-sucursal |
+| **Transferencias** | `GET/POST /api/transferencias` | Transferencias entre bodegas |
+| **Proveedores** | `GET/POST /api/proveedores` | Gestión de proveedores |
+| **Compras** | `GET/POST /api/compras` | Órdenes de compra |
+| **Listas de Precios** | `GET/POST /api/listas-precios` | Precios por canal |
+| **Promociones** | `GET/POST /api/promociones` | Promociones y descuentos |
+| **Rutas** | `GET/POST /api/rutas` | Rutas de reparto |
+| **Visitas** | `GET/POST /api/visitas` | Registro de visitas |
+| **Membresías** | `GET/POST /api/membresias/planes`, `/socios`, `/socios/:id/puntos` | Club de socios |
+| **Notificaciones** | `GET/POST /api/notificaciones` | Alertas del sistema |
+| **Pagos** | `POST /api/confirmar-pago`, `/api/tigo-money-reference` | Procesamiento de pagos |
+
+### IA (Groq API) — `backend/server.js`
+| Endpoint | Función |
+|----------|---------|
+| `POST /api/ai/chat` | Chat general (proxy seguro) |
+| `POST /api/ai/vision` | Análisis de imágenes |
+| `GET /api/ai/barcode/:code` | Lookup código de barras |
+| `POST /api/ai/dashboard` | Análisis de dashboard |
+| `POST /api/ai/pos/analyze` | Análisis de ventas POS |
+| `POST /api/ai/pos/upsell` | Sugerencias upsell |
+| `POST /api/ai/crm/customer` | Análisis de cliente |
+| `POST /api/ai/support` | Asistente de soporte |
 
 ---
 
@@ -296,7 +347,7 @@ portalpilot/
 ### Cero Llaves Expuestas
 - **Nunca** se incluyen claves de Supabase ni Groq en el cliente
 - Backend usa `process.env.SUPABASE_KEY`, `process.env.GROQ_API_KEY`
-- Proxy `/api/ai/groq` protege llamadas al LLM desde frontend
+- Proxy `/api/ai/chat` protege llamadas al LLM desde frontend
 - Verificado en binarios compilados: sin patrones `sk-`, `hf_`, JWT secrets
 
 ### Aislamiento Multi-Tenant (RLS)
@@ -336,17 +387,20 @@ $$ LANGUAGE SQL STABLE;
 
 ## 💰 Planes y Precios (HNL — Lempiras)
 
-| Característica | **Starter** L499/mes | **Business** L1,499/mes | **Enterprise** L4,999/mes |
-|----------------|----------------------|-------------------------|---------------------------|
-| Usuarios activos | 1 | Hasta 25 | Ilimitados |
-| IA Groq API | 50 consultas/mes | Ilimitada | Personalizada |
-| Módulos incluidos | 2 módulos | Todos los módulos | Todos + API |
+| Característica | **Prueba** Gratis 15 días | **Business** L1,499/mes | **Enterprise** L4,999/mes |
+|----------------|--------------------------|-------------------------|---------------------------|
+| Usuarios | Hasta 5 | Hasta 15 | Ilimitados |
+| Empresas | 1 | Hasta 3 | Ilimitadas |
 | Facturación SAR | ✅ | ✅ | ✅ |
-| Multi-empresa | — | Hasta 3 | Ilimitadas |
-| Soporte técnico | Comunidad | Email 24h | Prioritario 24/7 |
-| Almacenamiento | 100 MB | 5 GB | Ilimitado |
+| Inventario Multi-Almacén | ✅ | ✅ | ✅ |
+| Contabilidad | Básica | Completa | Completa + API |
+| Nómina Hondureña | — | ✅ | ✅ |
+| IA Portal Pilot | Uso básico | Uso generoso | Avanzada / personalizada |
+| Bots RPA | — | Automatizaciones estándar | Ilimitados |
+| Auditoría / Logs | ✅ | ✅ | ✅ |
+| Soporte | Email | Email prioritario | Prioritario 24/7 |
 
-> **Anual**: -20% en todos los planes. Precios en Lempiras (HNL).
+> Precios en Lempiras (HNL). Sin tarjeta de crédito para el plan Prueba.
 
 ---
 

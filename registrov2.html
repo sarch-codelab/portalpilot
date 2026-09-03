@@ -15,14 +15,14 @@
     <meta name="description" content="Portal Pilot: ERP comercial integral para pulperías, supermercados, distribuidoras y cadenas retail. Facturación electrónica SAR, inventario multi-bodega, POS y más con IA integrada.">
     <meta property="og:title" content="Portal Pilot — Gestión Empresarial Inteligente">
     <meta property="og:description" content="Portal Pilot: ERP comercial integral para pulperías, supermercados, distribuidoras y cadenas retail. Facturación electrónica SAR, inventario multi-bodega, POS y más con IA integrada.">
-    <meta property="og:image" content="https://portal-pilot.vercel.app/img/iconos/Portal%20Pilot.png">
+    <meta property="og:image" content="https://portal-pilot.vercel.app/img/iconos/robot_logo.png">
     <meta property="og:url" content="https://portal-pilot.vercel.app/registrov2.html">
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="Portal Pilot">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Portal Pilot — Gestión Empresarial Inteligente">
     <meta name="twitter:description" content="Portal Pilot: ERP comercial integral para pulperías, supermercados, distribuidoras y cadenas retail. Facturación electrónica SAR, inventario multi-bodega, POS y más con IA integrada.">
-    <meta name="twitter:image" content="https://portal-pilot.vercel.app/img/iconos/Portal%20Pilot.png">
+    <meta name="twitter:image" content="https://portal-pilot.vercel.app/img/iconos/robot_logo.png">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Portal Pilot — Registro Empresarial</title>
     <link
@@ -680,12 +680,12 @@
                     <!-- Startup -->
                     <div class="plan-card" onclick="selectPlan('starter', this)">
                         <div class="plan-badge">Gratis</div>
-                        <h3>Starter</h3>
+                        <h3>Prueba</h3>
                         <div class="plan-price">GRATIS <span>/15 días</span></div>
                         <ul class="plan-features">
                             <li><i class="fas fa-check"></i> Hasta 5 usuarios</li>
-                            <li><i class="fas fa-check"></i> 3 Bots RPA básicos</li>
-                            <li><i class="fas fa-check"></i> Soporte por comunidad</li>
+                            <li><i class="fas fa-check"></i> IA Portal Pilot — uso básico</li>
+                            <li><i class="fas fa-check"></i> Soporte por email</li>
                         </ul>
                     </div>
                     <!-- Business -->
@@ -693,7 +693,7 @@
                         <h3>Business</h3>
                         <div class="plan-price">L.1,499 <span>/mes</span></div>
                         <ul class="plan-features">
-                            <li><i class="fas fa-check"></i> Hasta 25 usuarios</li>
+                            <li><i class="fas fa-check"></i> Hasta 15 usuarios</li>
                             <li><i class="fas fa-check"></i> Bots RPA ilimitados</li>
                             <li><i class="fas fa-check"></i> Soporte prioritario 24/7</li>
                         </ul>
@@ -716,7 +716,7 @@
                     <i class="fas fa-gift"></i>
                     <div>
                         <strong>¡Excelente elección!</strong>
-                        <p>Tu plan Startup incluye una <strong>prueba gratuita de 15 días</strong> con acceso completo a todas las funciones. No se requiere tarjeta de crédito.</p>
+                        <p>Tu plan Prueba incluye una <strong>prueba gratuita de 15 días</strong> con acceso completo a todas las funciones. No se requiere tarjeta de crédito.</p>
                     </div>
                 </div>
 
@@ -1427,7 +1427,7 @@
                 const email = document.getElementById('regEmail').value.trim().toLowerCase();
                 const password = document.getElementById('regPass').value;
                 const plan = document.getElementById('selectedPlan').value || 'starter';
-                const planText = plan === 'starter' ? 'Starter (15 días gratis)' : (plan === 'business' ? 'Business' : 'Enterprise');
+                const planText = plan === 'starter' ? 'Prueba (15 días gratis)' : (plan === 'business' ? 'Business' : 'Enterprise');
                 const pais = document.getElementById('regCountry').value || '';
                 const zonaHoraria = document.getElementById('regTimezone').value || '';
 

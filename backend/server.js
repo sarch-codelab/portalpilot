@@ -516,6 +516,51 @@ function cargarPlantilla(rutasPosibles, fallbackHtml) {
   return fallbackHtml;
 }
 
+// 🔔 Envía notificación de prueba gratuita vencida
+async function enviarEmailTrialVencido({ email, nombre, empresaCodigo, empresaNombre }) {
+  try {
+    const rutasPlantilla = [
+      path.join(__dirname, '../EMAIL PORTAL PILOT/Trial Vencido.html'),
+      path.join(__dirname, '../empresa/EMAIL enterprise/Trial Vencido.html'),
+      path.join(__dirname, 'templates/Trial Vencido.html')
+    ];
+
+    const opciones = { day: 'numeric', month: 'long', year: 'numeric' };
+    const fechaVencimiento = new Intl.DateTimeFormat('es-HN', opciones).format(new Date());
+
+    const fallbackHtml = `<!DOCTYPE html><html><body>
+      <div style="font-family:sans-serif;max-width:600px;margin:0 auto;background:#0b0a15;color:#e2e8f0;padding:24px;border-radius:12px;">
+        <h2 style="color:#fbbf24;">Tu prueba gratuita ha vencido</h2>
+        <p>Hola ${nombre || ''}, tu prueba gratuita de 15 días de <strong>Portal Pilot</strong> ha finalizado.</p>
+        <p>Para seguir usando tus datos, elige el plan <strong>Business (L1,499/mes)</strong> o <strong>Enterprise (L4,999/mes)</strong>.</p>
+        <p style="text-align:center;margin:24px 0;"><a href="https://portal-pilot.vercel.app/pay_plan.html?plan=business" style="background:#8b5cf6;color:#fff;padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:700;">Elegir un Plan</a></p>
+      </div>
+      </body></html>`;
+
+    const htmlContent = cargarPlantilla(rutasPlantilla, fallbackHtml)
+      .replaceAll('{{USER_NAME}}', nombre || '')
+      .replaceAll('{{COMPANY_NAME}}', empresaNombre || empresaCodigo || 'tu empresa')
+      .replaceAll('{{COMPANY_CODE}}', empresaCodigo || '')
+      .replaceAll('{{EXPIRY_DATE}}', fechaVencimiento);
+
+    const destino = String(email || '').trim().toLowerCase();
+    if (!destino) return null;
+
+    await transporter.sendMail({
+      from: `"Portal Pilot" <${EMAIL_FROM}>`,
+      to: destino,
+      subject: '⏳ Tu prueba gratuita de Portal Pilot ha vencido',
+      html: htmlContent
+    });
+
+    console.log(`[TRIAL] Correo de prueba vencida enviado a ${destino}`);
+    return true;
+  } catch (error) {
+    console.error('[TRIAL] Error enviando correo de prueba vencida:', error.message);
+    return null;
+  }
+}
+
 async function enviarAlertaNuevoAcceso(emailDestinatario, req, success = true) {
   try {
     const ipRaw = req.headers['x-forwarded-for']?.split(',')[0].trim() || req.socket.remoteAddress || '127.0.0.1';
@@ -1199,6 +1244,13 @@ app.post('/api/login', loginLimiter, async (req, res) => {
       const created = new Date(tenantData.created_at).getTime();
       if (Number.isFinite(created) && Date.now() - created > 15 * 24 * 60 * 60 * 1000) {
         trialExpired = true;
+        // Notificar por correo que la prueba gratuita ha vencido
+        enviarEmailTrialVencido({
+          email: userRow.email,
+          nombre: userRow.nombre || userRow.apellido || '',
+          empresaCodigo: userRow.empresa_codigo,
+          empresaNombre: tenantData?.nombre_empresa || tenantData?.empresa_nombre || userRow.empresa_codigo
+        });
       }
     }
 

@@ -368,11 +368,24 @@ function executeSuspend() {
     showToast('Suspensión disponible desde Gestión de Usuarios.', 'warning');
 }
 
-function generateApiKey() {
+async function generateApiKey() {
     const name = document.getElementById('apiKeyName').value.trim();
     if (!name) { showToast('Ingresa un nombre para la clave', 'error'); return; }
 
-    const newKey = 'pk_live_' + Math.random().toString(36).substr(2, 20);
+    const token = localStorage.getItem('token');
+    if (!token) { showToast('Sesión no válida. Inicia sesión nuevamente.', 'error'); return; }
+
+    try {
+        const response = await fetch(`${API_ROOT}/api/tenant/apikeys`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({ nombre: name })
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.error || 'No se pudo crear la clave API');
+        const newKey = data.clave || data.key?.clave;
+        if (!newKey) throw new Error('El servidor no devolvió la clave API');
+
     closeModal('createApiKeyModal');
 
     const keyModal = document.createElement('div');
@@ -397,6 +410,9 @@ function generateApiKey() {
     document.getElementById('apiKeyName').value = '';
     document.getElementById('apiKeyPerms').selectedIndex = 2;
     document.getElementById('apiKeyExpiry').value = '';
+    } catch (error) {
+        showToast(error.message || 'No se pudo crear la clave API.', 'error');
+    }
 }
 
 function saveNote() {

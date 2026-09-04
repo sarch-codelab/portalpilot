@@ -1918,8 +1918,8 @@
         tbody.appendChild(row);
       });
     }
-    function addEnvVar() { showToast('📝 Funcionalidad: Modal para agregar nueva variable', 'info'); }
-    function editEnvVar(key) { showToast('✏️ Editando: ' + key, 'info'); }
+    function addEnvVar() { showToast('Las variables de entorno se administran en Vercel, no desde esta pantalla.', 'warning'); }
+    function editEnvVar(key) { showToast('La variable ' + key + ' se administra en Vercel.', 'warning'); }
     function confirmDeleteEnv(key) {
       document.getElementById('confirmMessage').textContent = '¿Eliminar la variable de entorno "' + key + '"? Esta acción puede afectar el funcionamiento de la plataforma.';
       document.getElementById('confirmBtn').onclick = function () {
@@ -1927,7 +1927,7 @@
       };
       document.getElementById('confirmDialog').classList.add('active');
     }
-    function syncEnvVars() { const btn = event.currentTarget, orig = btn.innerHTML; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sincronizando...'; btn.disabled = true; setTimeout(() => { btn.innerHTML = orig; btn.disabled = false; showToast('✓ Variables sincronizadas con el servidor', 'success'); }, 1500); }
+    function syncEnvVars() { showToast('La sincronización de variables no está disponible desde el panel.', 'warning'); }
 
     // ===== ADMIN MANAGEMENT =====
     const admins = [
@@ -1960,14 +1960,11 @@
         const name = document.getElementById('adminName').value, email = document.getElementById('adminEmail').value;
         const btn = form.closest('.modal').querySelector('.btn-acc'), orig = btn.innerHTML;
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creando...'; btn.disabled = true;
-        setTimeout(() => {
-          admins.push({ id: Date.now(), name: name, email: email, role: document.getElementById('adminRole').value, lastLogin: 'Ahora', status: 'active' });
-          renderAdmins(); closeModal('addAdminModal'); form.reset(); btn.innerHTML = orig; btn.disabled = false;
-          showToast('✓ Admin "' + name + '" creado exitosamente', 'success');
-        }, 1200);
+        btn.innerHTML = orig; btn.disabled = false;
+        showToast('La gestión de administradores aún no está conectada al backend.', 'warning');
       } else form.reportValidity();
     }
-    function editAdmin(id) { showToast('✏️ Editando admin ID: ' + id, 'info'); }
+    function editAdmin(id) { showToast('La edición de administradores aún no está conectada al backend.', 'warning'); }
     function confirmDeleteAdmin(id, name) {
       document.getElementById('confirmMessage').textContent = '¿Eliminar al administrador "' + name + '"? Perderá todo acceso a la plataforma. Esta acción no se puede deshacer.';
       document.getElementById('confirmBtn').onclick = function () {
@@ -1978,10 +1975,10 @@
     function closeConfirm() { document.getElementById('confirmDialog').classList.remove('active'); }
 
     // ===== UTILITIES =====
-    function saveFlags() { const btn = event.currentTarget, orig = btn.innerHTML; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...'; btn.disabled = true; setTimeout(() => { btn.innerHTML = orig; btn.disabled = false; showToast('✓ Feature flags actualizados', 'success'); }, 1000); }
+    function saveFlags() { showToast('Los feature flags se administran en el backend.', 'warning'); }
     function resetFlags() { if (confirm('¿Resetear todos los feature flags a valores por defecto?')) { showToast('✓ Flags reseteados', 'info'); } }
 
-    function saveAllSettings() { const btn = document.getElementById('saveAllBtn'), orig = btn.innerHTML; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...'; btn.disabled = true; setTimeout(() => { btn.innerHTML = orig; btn.disabled = false; btn.style.display = 'none'; showToast('✓ Todos los ajustes guardados y sincronizados', 'success'); }, 2000); }
+    function saveAllSettings() { showToast('Estos ajustes aún no están conectados al backend.', 'warning'); }
     function exportSettings() { showToast('✓ Exportando configuración a JSON...', 'info'); setTimeout(() => showToast('✓ "portalpilot_config_2026.json" descargado', 'success'), 1500); }
     function backupSettings() { showToast('🔄 Creando backup de configuración...', 'info'); setTimeout(() => showToast('✓ Backup creado: backup_2026-11-14_1432.enc', 'success'), 2000); }
     function viewAuditLog() { showToast('📋 Redirigiendo al log de auditoría completo...', 'info'); }

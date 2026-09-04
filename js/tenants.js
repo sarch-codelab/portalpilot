@@ -534,7 +534,7 @@ async function createTenant() {
     }
   } catch (err) {
     console.error('Error:', err);
-    alert('Error de conexión. Usando modo desarrollo.');
+    alert('Error de conexión. El tenant no fue creado.');
   } finally {
     btn.innerHTML = orig;
     btn.disabled = false;

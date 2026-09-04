@@ -1524,6 +1524,27 @@
             } catch (e) { console.warn('No se pudo preseleccionar plan:', e); }
         })();
 
+        // ─── PREFERENCIAS DESDE EL ONBOARDING DE ESCRITORIO ───
+        (function () {
+            try {
+                const params = new URLSearchParams(window.location.search);
+                const business = params.get('business_type') || '';
+                const customer = params.get('customer_type') || '';
+                const operation = params.get('operation_type') || '';
+                const normalizedBusiness = business.toLowerCase();
+                const areaByBusiness = normalizedBusiness.includes('supermer') || normalizedBusiness.includes('tienda')
+                    ? 'Sector Retail (Comercio al por Menor)'
+                    : normalizedBusiness.includes('pulper') || normalizedBusiness.includes('mercad')
+                        ? 'Canal Tradicional'
+                        : normalizedBusiness.includes('club') || normalizedBusiness.includes('membres')
+                            ? 'Comercio de Base Tecnológica o Membresía'
+                            : business ? 'Área Comercial' : '';
+                const area = document.getElementById('regArea');
+                if (areaByBusiness && area) area.value = areaByBusiness;
+                sessionStorage.setItem('portalpilot_onboarding', JSON.stringify({ business, customer, operation }));
+            } catch (e) { console.warn('No se pudieron cargar las preferencias del onboarding:', e); }
+        })();
+
         // ─── TIMEZONE POR PAÍS ───
         window.onCountryChange = function () {
             const sel = document.getElementById('regCountry');

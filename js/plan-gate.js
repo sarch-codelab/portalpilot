@@ -14,7 +14,8 @@
     const empresaCodigo = localStorage.getItem('empresaCodigo');
     const userRole = (localStorage.getItem('userRole') || '').toLowerCase();
     // Owner/Root always gets everything
-    if (!token || !empresaCodigo || empresaCodigo === 'ROOT' || userRole.includes('root') || userRole === 'owner') {
+    if (!token) return 'starter';
+    if (!empresaCodigo || empresaCodigo === 'ROOT' || userRole.includes('root') || userRole === 'owner') {
       return 'enterprise';
     }
     try {

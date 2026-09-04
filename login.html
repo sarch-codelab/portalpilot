@@ -1276,6 +1276,13 @@
                     showMessage('Error de conexión con el servidor.', 'error');
                 }
             };
+
+            const recoveryParams = new URLSearchParams(window.location.search);
+            if (recoveryParams.get('recovery') === '1') {
+                const email = recoveryParams.get('email') || '';
+                if (email) document.getElementById('loginEmail').value = email;
+                window.forgotPw({ preventDefault: () => {} });
+            }
         })();
     </script>
 </body>

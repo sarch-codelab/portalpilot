@@ -676,7 +676,7 @@ async function enviarAlertaActivacionCuenta(emailDestinatario, passwordTemporal,
   }
 }
 
-async function enviarOnboardingEmail(emailDestinatario) {
+async function enviarOnboardingEmail(emailDestinatario, datos = {}) {
   try {
     const rutasPlantilla = [
       path.join(__dirname, '../EMAIL PORTAL PILOT/Onboarding.html'),
@@ -691,6 +691,12 @@ async function enviarOnboardingEmail(emailDestinatario) {
       </div>
     `;
     let htmlContent = cargarPlantilla(rutasPlantilla, fallbackHtml);
+
+    htmlContent = htmlContent
+      .replaceAll('{{USER_NAME}}', datos.nombre || '')
+      .replaceAll('{{COMPANY_NAME}}', datos.empresaNombre || 'tu empresa')
+      .replaceAll('{{COMPANY_CODE}}', datos.empresaCodigo || '')
+      .replaceAll('{{PLAN_NAME}}', datos.planNombre || 'Prueba Gratuita');
 
     const mailOptions = {
       from: `"Soporte Portal Pilot" <${EMAIL_FROM}>`,
@@ -2348,7 +2354,7 @@ app.post('/api/users', authenticate, requireTenantAdmin, requirePlanFeature('web
   }
 });
 
-app.put('/api/users/:id', authenticate, async (req, res) => {
+app.put('/api/users/:id', authenticate, requireTenantAdmin, requirePlanFeature('web_admin'), async (req, res) => {
   if (!requireSupabase(res)) return;
   try {
     const { id } = req.params;

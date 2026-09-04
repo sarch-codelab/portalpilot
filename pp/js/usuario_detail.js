@@ -254,32 +254,6 @@ function toggleSectionEdit(section) {
 const profileUserId = new URLSearchParams(window.location.search).get('id');
 const profileSource = new URLSearchParams(window.location.search).get('source') || 'supabase';
 
-function getMockProfile(id) {
-    return {
-        id: id || 'unknown',
-        nombre: 'Usuario',
-        apellido: 'Desconocido',
-        email: 'N/A',
-        rol: 'user',
-        tenant: 'N/A',
-        registered: new Date().toISOString(),
-        lastActivity: null,
-        status: 'active',
-        plan: null,
-        verified: false,
-        twoFactor: false,
-        securityScore: 0,
-        department: '',
-        position: '',
-        location: '',
-        timezone: '',
-        phone: '',
-        extension: '',
-        responsibilities: '',
-        source: profileSource
-    };
-}
-
 async function fetchUserProfile(id) {
     try {
         const token = localStorage.getItem('token');
@@ -295,8 +269,9 @@ async function fetchUserProfile(id) {
         if (response.ok) return await response.json();
         throw new Error('No se pudo obtener usuario');
     } catch (err) {
-        console.warn('Perfil cargado en modo mock:', err);
-        return getMockProfile(id);
+        console.error('No se pudo cargar el perfil:', err);
+        showToast('No se pudo cargar el usuario desde el servidor.', 'error');
+        return null;
     }
 }
 
@@ -367,34 +342,23 @@ function renderProfile(user) {
 }
 
 async function initProfilePage() {
-    const user = profileUserId ? await fetchUserProfile(profileUserId) : getMockProfile();
-    renderProfile(user);
+    if (!profileUserId) {
+        showToast('Falta el identificador del usuario.', 'error');
+        return;
+    }
+    const user = await fetchUserProfile(profileUserId);
+    if (user) renderProfile(user);
 }
 
 initProfilePage();
 
 // ── Admin Actions ──────────────────────────────────
 function impersonateUser() {
-    const name = currentUserData ? `${currentUserData.nombre} ${currentUserData.apellido}` : 'el usuario';
-    if (confirm(`¿Suplantar a ${name}? Tendrás todos sus permisos temporalmente.`)) {
-        showToast('✓ Suplantación iniciada. Redirigiendo...', 'success');
-        setTimeout(() => {
-            alert('✅ Modo suplantación activado (mock)');
-        }, 1000);
-    }
+    showToast('La suplantación de usuarios no está habilitada.', 'warning');
 }
 
 function executeReset() {
-    const method = document.getElementById('resetMethod').value;
-    const force = document.getElementById('forceChange').checked;
-
-    setTimeout(() => {
-        closeModal('resetPasswordModal');
-        const email = currentUserData?.email || 'correo@dominio.com';
-        showToast(`✓ Contraseña reseteada. Email enviado a ${email}`, 'success');
-        document.getElementById('resetMethod').selectedIndex = 0;
-        document.getElementById('forceChange').checked = true;
-    }, 1200);
+    showToast('Usa Recuperar contraseña desde Login para cambiar credenciales.', 'warning');
 }
 
 // Suspend modal validation
@@ -407,24 +371,7 @@ if (suspendReason) {
 }
 
 function executeSuspend() {
-    const reason = document.getElementById('suspendReason').value;
-    const notes = document.getElementById('suspendNotes').value;
-
-    if (!reason) { showToast('Selecciona un motivo de suspensión', 'error'); return; }
-
-    setTimeout(() => {
-        closeModal('suspendModal');
-        showToast('✓ Cuenta suspendida exitosamente', 'success');
-        const statusBadge = document.querySelector('.user-avatar-container .status-badge');
-        if (statusBadge) {
-            statusBadge.className = 'status-badge offline';
-            statusBadge.textContent = '● Suspendido';
-        }
-        const badgesEl = document.getElementById('profileBadges');
-        if (badgesEl && !badgesEl.querySelector('.suspended')) {
-            badgesEl.innerHTML += '<span class="user-badge suspended"><i class="fas fa-ban"></i> Suspendido</span>';
-        }
-    }, 1000);
+    showToast('Suspensión disponible desde Gestión de Usuarios.', 'warning');
 }
 
 function generateApiKey() {

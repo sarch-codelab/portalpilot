@@ -2162,21 +2162,6 @@
                 </tr>`).join('');
         }
 
-        function getMockUsers() {
-            return [
-                { id: 'usr_a1b2c3', nombre: 'Ana', apellido: 'Martínez', email: 'ana@techcorp.io', rol: 'admin', tenant: 'TechCorp', status: 'active', registered: '2025-01-15', lastActivity: '2026-05-27T10:30:00', avatar: null },
-                { id: 'usr_d4e5f6', nombre: 'Juan', apellido: 'Rodríguez', email: 'juan@techcorp.io', rol: 'operator', tenant: 'TechCorp', status: 'active', registered: '2025-02-20', lastActivity: '2026-05-27T09:15:00', avatar: null },
-                { id: 'usr_g7h8i9', nombre: 'Laura', apellido: 'Sánchez', email: 'laura@innovalab.io', rol: 'viewer', tenant: 'InnovaLab', status: 'active', registered: '2025-03-10', lastActivity: '2026-05-26T16:45:00', avatar: null },
-                { id: 'usr_j0k1l2', nombre: 'Carlos', apellido: 'López', email: 'carlos@dataflow.mx', rol: 'admin', tenant: 'DataFlow', status: 'suspended', registered: '2024-11-05', lastActivity: '2026-05-20T14:20:00', avatar: null },
-                { id: 'usr_m3n4o5', nombre: 'María', apellido: 'García', email: 'maria@fintech.lat', rol: 'operator', tenant: 'FinTech', status: 'active', registered: '2025-04-18', lastActivity: '2026-05-27T11:00:00', avatar: null },
-                { id: 'usr_p6q7r8', nombre: 'Pedro', apellido: 'Ramírez', email: 'pedro@techcorp.io', rol: 'viewer', tenant: 'TechCorp', status: 'pending', registered: '2026-05-25', lastActivity: null, avatar: null },
-                { id: 'usr_s9t0u1', nombre: 'Sofía', apellido: 'Torres', email: 'sofia@innovalab.io', rol: 'operator', tenant: 'InnovaLab', status: 'active', registered: '2025-06-01', lastActivity: '2026-05-27T08:30:00', avatar: null },
-                { id: 'usr_v2w3x4', nombre: 'Diego', apellido: 'Mendoza', email: 'diego@dataflow.mx', rol: 'admin', tenant: 'DataFlow', status: 'active', registered: '2024-12-12', lastActivity: '2026-05-27T07:45:00', avatar: null },
-                { id: 'usr_y5z6a7', nombre: 'Valeria', apellido: 'Castro', email: 'valeria@fintech.lat', rol: 'viewer', tenant: 'FinTech', status: 'suspended', registered: '2025-01-30', lastActivity: '2026-05-15T10:00:00', avatar: null },
-                { id: 'usr_b8c9d0', nombre: 'Andrés', apellido: 'Flores', email: 'andres@techcorp.io', rol: 'operator', tenant: 'TechCorp', status: 'active', registered: '2025-05-05', lastActivity: '2026-05-27T10:50:00', avatar: null }
-            ];
-        }
-
         async function fetchTenants() {
             try {
                 const token = localStorage.getItem('token');
@@ -2421,8 +2406,27 @@
             }
         }
         function clearSelection() { selectedUsers.clear(); renderUsers(); updateBulkActions(); }
-        function bulkSuspend() { confirmAction('Suspender usuarios', `¿Suspender ${selectedUsers.size} usuario(s) seleccionado(s)?`, () => { selectedUsers.forEach(id => { const u = users.find(x => x.id === id); if (u) u.status = 'suspended'; }); filterUsers(); clearSelection(); showMessage('✓ Usuarios suspendidos', 'success'); }, '../img/navi/navi-suspender.png'); }
-        function bulkActivate() { confirmAction('Activar usuarios', `¿Activar ${selectedUsers.size} usuario(s) seleccionado(s)?`, () => { selectedUsers.forEach(id => { const u = users.find(x => x.id === id); if (u) u.status = 'active'; }); filterUsers(); clearSelection(); showMessage('✓ Usuarios activados', 'success'); }, '../img/navi/navi-advertencia.png'); }
+        function bulkSuspend() { bulkUpdateStatus('suspended', 'Suspender', 'navi-suspender.png'); }
+        function bulkActivate() { bulkUpdateStatus('active', 'Activar', 'navi-advertencia.png'); }
+        function bulkUpdateStatus(status, action, image) {
+            confirmAction(`${action} usuarios`, `¿${action} ${selectedUsers.size} usuario(s) seleccionado(s)?`, async () => {
+                const token = localStorage.getItem('token');
+                if (!token) { showMessage('No se encontró token de sesión.', 'error'); return; }
+                const ids = Array.from(selectedUsers);
+                const results = await Promise.all(ids.map(async id => {
+                    const response = await fetch(`/api/users/${encodeURIComponent(id)}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                        body: JSON.stringify({ status })
+                    });
+                    return response.ok;
+                }));
+                const updated = results.filter(Boolean).length;
+                clearSelection();
+                await fetchUsers();
+                showMessage(updated === ids.length ? `✓ ${updated} usuario(s) actualizados` : `Se actualizaron ${updated} de ${ids.length} usuario(s).`, updated === ids.length ? 'success' : 'warning');
+            }, `../img/navi/${image}`);
+        }
         function bulkDelete() {
             confirmAction('Eliminar usuarios', `¿Eliminar permanentemente ${selectedUsers.size} usuario(s)? Esta acción NO se puede deshacer.`, async () => {
                 const token = localStorage.getItem('token');
@@ -2519,7 +2523,7 @@
                 const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify(payload) });
                 if (res.ok) { showMessage(id ? '✓ Usuario actualizado' : '✓ Usuario creado', 'success'); closeModal('createUserModal'); await fetchUsers(); }
                 else { const err = await res.json().catch(() => ({})); showMessage('Error: ' + (err.error || 'No se pudo guardar'), 'error'); }
-            } catch (err) { console.error('Error:', err); users.push({ ...payload, id: `usr_${Date.now()}`, status: 'pending', registered: new Date().toISOString().slice(0, 10), lastActivity: null, avatar: null }); filterUsers(); closeModal('createUserModal'); showMessage('✓ Usuario guardado (modo desarrollo)', 'success'); }
+            } catch (err) { console.error('Error:', err); showMessage('No se pudo conectar con el servidor. El usuario no fue creado.', 'error'); }
             finally { btn.innerHTML = orig; btn.disabled = false; }
         }
 
@@ -2661,25 +2665,20 @@
           </div>
         </div>
         <div class="detail-stats">
-          <div class="detail-stat"><div class="detail-stat-value">${Math.floor(Math.random() * 150) + 10}</div><div class="detail-stat-label">Sesiones</div></div>
-          <div class="detail-stat"><div class="detail-stat-value">${Math.floor(Math.random() * 50) + 5}</div><div class="detail-stat-label">Bots Ejecutados</div></div>
-          <div class="detail-stat"><div class="detail-stat-value">${Math.floor(Math.random() * 1000) + 100}K</div><div class="detail-stat-label">Tokens IA</div></div>
+          <div class="detail-stat"><div class="detail-stat-value">-</div><div class="detail-stat-label">Sesiones</div></div>
+          <div class="detail-stat"><div class="detail-stat-value">-</div><div class="detail-stat-label">Bots Ejecutados</div></div>
+          <div class="detail-stat"><div class="detail-stat-value">-</div><div class="detail-stat-label">Tokens IA</div></div>
           <div class="detail-stat"><div class="detail-stat-value">${user.registered ? new Date(user.registered).toLocaleDateString('es-ES', { month: 'short', year: 'numeric' }) : '-'}</div><div class="detail-stat-label">Registro</div></div>
         </div>
         <div class="info-grid">
           <div class="info-item"><div class="info-label">Email</div><div class="info-value">${user.email}</div></div>
           <div class="info-item"><div class="info-label">Tenant</div><div class="info-value">${user.tenant}</div></div>
           <div class="info-item"><div class="info-label">Último Login</div><div class="info-value">${user.lastActivity ? formatRelativeTime(user.lastActivity) : 'Nunca'}</div></div>
-          <div class="info-item"><div class="info-label">IP Última</div><div class="info-value">189.203.45.12</div></div>
+          <div class="info-item"><div class="info-label">IP Última</div><div class="info-value">No disponible</div></div>
         </div>
         <div class="detail-section">
           <div class="detail-section-title"><i class="fas fa-history"></i> Actividad Reciente</div>
-          <div class="activity-list">
-            <div class="activity-item"><div class="activity-icon"><i class="fas fa-robot"></i></div><div class="activity-content"><div class="activity-text">Ejecutó bot RPA: "Procesar facturas"</div><div class="activity-time">Hace 2 horas</div></div></div>
-            <div class="activity-item"><div class="activity-icon"><i class="fas fa-sign-in-alt"></i></div><div class="activity-content"><div class="activity-text">Inicio de sesión exitoso</div><div class="activity-time">Hace 3 horas</div></div></div>
-            <div class="activity-item"><div class="activity-icon"><i class="fas fa-file-export"></i></div><div class="activity-content"><div class="activity-text">Exportó reporte de auditoría</div><div class="activity-time">Ayer, 16:30</div></div></div>
-            <div class="activity-item"><div class="activity-icon"><i class="fas fa-cog"></i></div><div class="activity-content"><div class="activity-text">Actualizó configuración de perfil</div><div class="activity-time">Hace 2 días</div></div></div>
-          </div>
+                    <div class="activity-list"><div class="empty-state">La actividad detallada no está disponible para este usuario.</div></div>
         </div>
         <div class="detail-actions">
           <button class="btn btn-ghost" onclick="editUser('${user.id}')"><i class="fas fa-edit"></i> Editar</button>

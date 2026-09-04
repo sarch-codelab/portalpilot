@@ -1041,7 +1041,11 @@
                 const company = document.getElementById('regCompany').value.trim();
                 const dominio = document.getElementById('regDominio').value.trim().toLowerCase();
                 if (!company || company.length < 3) { showMessage('Nombre de empresa inválido', 'error'); return false; }
-                if (!dominio || !/^[a-z0-9][a-z0-9-]{1,30}[a-z0-9]$/.test(dominio)) { showMessage('Dominio inválido', 'error'); return false; }
+                if (!dominio) { showMessage('Escribe un dominio para tu workspace, por ejemplo: mipulperia', 'error'); return false; }
+                if (!/^[a-z0-9][a-z0-9-]{1,30}[a-z0-9]$/.test(dominio)) {
+                    showMessage('El dominio debe tener 3-32 caracteres, sin espacios ni tildes.', 'error');
+                    return false;
+                }
                 return true;
             }
             if (step === 2) {

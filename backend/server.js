@@ -149,6 +149,122 @@ if (!JWT_SECRET && (IS_SERVERLESS || process.env.NODE_ENV === 'production')) {
 }
 const localJwtSecret = JWT_SECRET || crypto.randomBytes(48).toString('hex');
 
+// ─── COOKIE DE SESIÓN (protección server-side de pp/ y empresa/) ───
+const SESSION_COOKIE = 'pp_session';
+const SESSION_COOKIE_MAX_AGE = 30 * 24 * 60 * 60 * 1000;
+
+function getSessionCookieSecure() {
+  return IS_SERVERLESS || process.env.NODE_ENV === 'production';
+}
+
+function setSessionCookie(res, token) {
+  res.cookie(SESSION_COOKIE, token, {
+    httpOnly: true,
+    secure: getSessionCookieSecure(),
+    sameSite: 'lax',
+    maxAge: SESSION_COOKIE_MAX_AGE,
+    path: '/'
+  });
+}
+
+function clearSessionCookie(res) {
+  res.clearCookie(SESSION_COOKIE, {
+    httpOnly: true,
+    secure: getSessionCookieSecure(),
+    sameSite: 'lax',
+    path: '/'
+  });
+}
+
+function parseCookies(req) {
+  const cookies = {};
+  const header = req.headers.cookie || '';
+  header.split(';').forEach((pair) => {
+    const idx = pair.indexOf('=');
+    if (idx > -1) {
+      const name = pair.slice(0, idx).trim();
+      const value = pair.slice(idx + 1).trim();
+      try { cookies[name] = decodeURIComponent(value); } catch (e) { cookies[name] = value; }
+    }
+  });
+  return cookies;
+}
+
+function isProtectedAreaPath(path) {
+  return path === '/pp' || path.startsWith('/pp/')
+    || path === '/empresa' || path.startsWith('/empresa/')
+    || path === '/enterprise' || path.startsWith('/enterprise/');
+}
+
+// Middleware de ciberseguridad: NO entrega ningún archivo de pp/ (admin) ni
+// empresa/ (tenant) sin una sesión autenticada. Redirige de inmediato a
+// /login.html sin servir ni siquiera el HTML, para no exponer la estructura
+// ni ningún recurso del área protegida.
+function protectPortalArea(req, res, next) {
+  if (!isProtectedAreaPath(req.path)) return next();
+
+  const cookies = parseCookies(req);
+  let sessionUser = null;
+
+  // 1) Cookie httpOnly de sesión (navegación normal de páginas).
+  if (cookies[SESSION_COOKIE]) {
+    try {
+      sessionUser = jwt.verify(cookies[SESSION_COOKIE], localJwtSecret);
+    } catch (e) {
+      sessionUser = null;
+    }
+  }
+
+  // 2) Fallback header Authorization (requests programáticas/API).
+  if (!sessionUser) {
+    const authHeader = req.headers['authorization'];
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      try {
+        sessionUser = jwt.verify(authHeader.slice(7), localJwtSecret);
+      } catch (e) {
+        sessionUser = null;
+      }
+    }
+  }
+
+  if (!sessionUser) {
+    return res.redirect('/login.html');
+  }
+
+  req.user = sessionUser;
+  const rootCodes = ['ROOT', 'ROOT PP'];
+  const codigo = normalizeTenantCode(sessionUser.empresa_codigo);
+  const role = (sessionUser.rol || '').toString().trim().toLowerCase();
+  const isRoot = rootCodes.includes(codigo) || ['root', 'root pp', 'superadmin'].includes(role);
+  const isTenantUser = Boolean(codigo) && codigo !== 'ROOT' && codigo !== 'ROOT PP';
+
+  // /pp/* solo para administradores raíz; /empresa/* para usuarios de tenant o raíz.
+  const isAdminArea = req.path === '/pp' || req.path.startsWith('/pp/');
+  if (isAdminArea) {
+    if (!isRoot) return res.redirect('/login.html');
+  } else {
+    if (!isRoot && !isTenantUser) return res.redirect('/login.html');
+  }
+
+  next();
+}
+
+app.post('/api/session/sync', (req, res) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
+  if (!token) return res.status(401).json({ error: 'Token no provisto' });
+  jwt.verify(token, localJwtSecret, (err) => {
+    if (err) return res.status(403).json({ error: 'Token inválido' });
+    setSessionCookie(res, token);
+    return res.json({ ok: true });
+  });
+});
+
+app.post('/api/logout', (req, res) => {
+  clearSessionCookie(res);
+  return res.json({ ok: true });
+});
+
 function authenticate(req, res, next) {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
@@ -397,6 +513,10 @@ function isDeletedStatus(rawStatus) {
   return ['inactive', 'deleted'].includes(status);
 }
 
+// Protección por servidor de las áreas privadas (admin pp/ y empresa/).
+// Debe registrarse ANTES de express.static para que ningún recurso de esas
+// carpetas se sirva sin autenticación previa.
+app.use(protectPortalArea);
 app.use(express.static(path.join(__dirname, '..')));
 
 function generateSecurePassword() {
@@ -1244,6 +1364,9 @@ app.post('/api/login', loginLimiter, async (req, res) => {
     const userPlan = tenantData?.plan || 'starter';
     const activeModules = getModulesForAreaAndPlan(userArea, userPlan);
 
+    // Persistir sesión en cookie httpOnly para la protección server-side de pp/ y empresa/
+    setSessionCookie(res, accountToken);
+
     // Detectar trial vencido (plan starter > 15 días)
     let trialExpired = false;
     if (userPlan && ['starter', 'free', 'startup'].includes(normalizePlan(userPlan)) && tenantData?.created_at) {
@@ -1326,6 +1449,7 @@ app.post('/api/login/2fa', loginLimiter, async (req, res) => {
       empresa_codigo: userRow.empresa_codigo || 'ROOT'
     }, localJwtSecret, { expiresIn: '30d' });
     await supabase.from('usuarios').update({ ultimo_acceso: new Date().toISOString() }).eq('id', userRow.id);
+    setSessionCookie(res, token);
     return res.json({
       message: 'Login exitoso', token,
       user: {
@@ -1518,6 +1642,7 @@ app.post('/api/refresh', authenticate, (req, res) => {
       localJwtSecret,
       { expiresIn: '2h' }
     );
+    setSessionCookie(res, newToken);
     res.json({ token: newToken });
   } catch (error) {
     return handleServerError(res, error);

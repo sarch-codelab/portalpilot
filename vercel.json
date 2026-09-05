@@ -15,6 +15,7 @@
       "config": {
         "includeFiles": [
           "EMAIL PORTAL PILOT/**",
+          "pp/**",
           "empresa/**"
         ]
       }
@@ -68,6 +69,14 @@
     {
       "src": "/enterprise/(.*)",
       "dest": "/empresa/$1"
+    },
+    {
+      "src": "/pp(/.*)?",
+      "dest": "/backend/server.js"
+    },
+    {
+      "src": "/empresa(/.*)?",
+      "dest": "/backend/server.js"
     },
     {
       "src": "/robots.txt",

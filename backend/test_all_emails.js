@@ -1,4 +1,4 @@
-require('dotenv').config();
+require('dotenv').config({ path: require('path').join(__dirname, '../.env') });
 const path = require('path');
 const fs = require('fs');
 const nodemailer = require('nodemailer');
@@ -69,11 +69,16 @@ async function sendMail(opts) {
 
     // 4) Onboarding
     const onboardingTpl = fs.readFileSync(path.join(__dirname, '../EMAIL PORTAL PILOT/Onboarding.html'), 'utf8');
+    const htmlOnboarding = onboardingTpl
+      .replaceAll('{{USER_NAME}}', 'Joseph Sanchez')
+      .replaceAll('{{COMPANY_NAME}}', 'ITEE SA de CV')
+      .replaceAll('{{COMPANY_CODE}}', 'ITEE-2026-0001')
+      .replaceAll('{{PLAN_NAME}}', 'Business');
     await sendMail({
       from: `Soporte Portal Pilot <${process.env.EMAIL_USER}>`,
       to: TEST_TO,
       subject: 'Prueba: Onboarding',
-      html: onboardingTpl
+      html: htmlOnboarding
     });
 
     // 5) Recuperación de Cuenta
@@ -139,6 +144,25 @@ async function sendMail(opts) {
       to: TEST_TO,
       subject: 'Prueba: Alerta Intento No Autorizado',
       html: htmlBypass
+    });
+
+    // 8) Prueba gratuita vencida
+    const trialVencidoPath = fs.existsSync(path.join(__dirname, '../EMAIL PORTAL PILOT/Trial Vencido.html'))
+      ? path.join(__dirname, '../EMAIL PORTAL PILOT/Trial Vencido.html')
+      : path.join(__dirname, '../empresa/EMAIL enterprise/Trial Vencido.html');
+    let htmlTrialVencido = fs.readFileSync(trialVencidoPath, 'utf8');
+    const fechaTrial = new Intl.DateTimeFormat('es-HN', { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date());
+    htmlTrialVencido = htmlTrialVencido
+      .replaceAll('{{USER_NAME}}', 'Joseph Sanchez')
+      .replaceAll('{{COMPANY_NAME}}', 'ITEE SA de CV')
+      .replaceAll('{{COMPANY_CODE}}', 'ITEE-2026-0001')
+      .replaceAll('{{EXPIRY_DATE}}', fechaTrial);
+
+    await sendMail({
+      from: `Portal Pilot <${process.env.EMAIL_USER}>`,
+      to: TEST_TO,
+      subject: 'Prueba: Prueba Gratuita Vencida',
+      html: htmlTrialVencido
     });
 
     console.log('Todos los correos de prueba han sido enviados (o se intentaron). Revisa la bandeja de entrada y spam del destinatario:', TEST_TO);

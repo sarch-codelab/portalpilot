@@ -628,6 +628,10 @@ function renderAllEvents() {
 function createBarChart(containerId, data, gradient) {
   const container = document.getElementById(containerId);
   if (!container) return;
+  if (!data.length) {
+    container.innerHTML = '<div class="chart-empty">Sin datos registrados</div>';
+    return;
+  }
   container.innerHTML = '';
   const max = Math.max(...data.map(d => d.value));
   data.forEach((d, i) => {
@@ -641,16 +645,8 @@ function createBarChart(containerId, data, gradient) {
 }
 
 const chartDataSets = {
-  tenants: {
-    '7D': [{ label: 'Lun', value: 0 }, { label: 'Mar', value: 1 }, { label: 'Mié', value: 0 }, { label: 'Jue', value: 0 }, { label: 'Vie', value: 1 }, { label: 'Sáb', value: 0 }, { label: 'Dom', value: 0 }],
-    '30D': [{ label: 'S1', value: 1 }, { label: 'S2', value: 0 }, { label: 'S3', value: 2 }, { label: 'S4', value: 1 }],
-    '90D': [{ label: 'Jun', value: 0 }, { label: 'Jul', value: 2 }, { label: 'Ago', value: 3 }]
-  },
-  tokens: {
-    'input': [{ label: 'S1', value: 5 }, { label: 'S2', value: 8 }, { label: 'S3', value: 12 }, { label: 'S4', value: 6 }],
-    'total': [{ label: 'S1', value: 10 }, { label: 'S2', value: 15 }, { label: 'S3', value: 22 }, { label: 'S4', value: 14 }],
-    'output': [{ label: 'S1', value: 5 }, { label: 'S2', value: 7 }, { label: 'S3', value: 10 }, { label: 'S4', value: 8 }]
-  }
+  tenants: { '7D': [], '30D': [], '90D': [] },
+  tokens: { 'input': [], 'total': [], 'output': [] }
 };
 
 window.addEventListener('load', () => {
@@ -784,14 +780,15 @@ document.querySelectorAll('.chart-view-tab').forEach(tab => {
 });
 
 // ── Calendar ────
-const calendarEvents = [
+const calendarEvents = [];
+/*
   { date: '2026-08-20', title: 'Revisión plataforma Portal Pilot', priority: 'med', time: '10:00' },
   { date: '2026-08-25', title: 'Backup programado Supabase', priority: 'med', time: '02:00' },
   { date: '2026-08-30', title: 'Cierre mensual facturación SAR', priority: 'high', time: '23:59' },
   { date: '2026-09-01', title: 'Inicio nuevo período comercial', priority: 'med', time: '08:00' },
   { date: '2026-09-05', title: 'Auditoría interna de seguridad', priority: 'high', time: '09:00' },
   { date: '2026-09-15', title: 'Actualización app móvil Portal Pilot', priority: 'med', time: '14:00' },
-];
+]; */
 
 let currentCalDate = new Date();
 
@@ -896,8 +893,8 @@ function renderHeatmap() {
   for (let i = cells - 1; i >= 0; i--) {
     const date = new Date(today);
     date.setDate(date.getDate() - i);
-    const level = Math.floor(Math.random() * 6);
-    const requests = level === 0 ? 0 : Math.floor(Math.random() * 500 * level) + 50;
+    const level = 0;
+    const requests = 0;
     const dateStr = date.toISOString().split('T')[0];
     html += `<div class="heatmap-cell" data-level="${level}" data-tooltip="${dateStr}: ${requests} peticiones"></div>`;
   }
@@ -906,7 +903,7 @@ function renderHeatmap() {
 renderHeatmap();
 
 // ── Status Pulse ────
-document.querySelectorAll('.status-dot').forEach(d => d.style.animationDelay = Math.random() * 2 + 's');
+document.querySelectorAll('.status-dot').forEach(d => d.style.animationDelay = '0s');
 
 // ── Real KPI Fetching (Supabase) ────
 async function fetchRealKPIs() {

@@ -1802,22 +1802,7 @@
               todo</button>
           </div>
           <div style="display:flex;flex-direction:column;gap:12px;max-height:240px;overflow-y:auto">
-            <div style="display:flex;gap:12px;font-size:12px"><span
-                style="color:var(--gray);min-width:80px">14:32:18</span><span style="color:var(--text)"><strong
-                  style="color:var(--white)">admin@portalpilot.io</strong> actualizó variable <span
-                  class="env-key">API_RATE_LIMIT</span></span></div>
-            <div style="display:flex;gap:12px;font-size:12px"><span
-                style="color:var(--gray);min-width:80px">13:15:42</span><span style="color:var(--text)"><strong
-                  style="color:var(--white)">devops@portalpilot.io</strong> activó feature flag <span
-                  style="color:var(--cyan)">auto_scaling</span></span></div>
-            <div style="display:flex;gap:12px;font-size:12px"><span
-                style="color:var(--gray);min-width:80px">11:08:33</span><span style="color:var(--text)"><strong
-                  style="color:var(--white)">security@portalpilot.io</strong> eliminó admin <span
-                  style="color:var(--red)">ex-employee@company.com</span></span></div>
-            <div style="display:flex;gap:12px;font-size:12px"><span
-                style="color:var(--gray);min-width:80px">09:45:12</span><span style="color:var(--text)"><strong
-                  style="color:var(--white)">admin@portalpilot.io</strong> publicó banner global de mantenimiento</span>
-            </div>
+            <div style="color:var(--gray);font-size:12px">No hay cambios disponibles desde el backend.</div>
           </div>
         </div>
       </div>
@@ -1896,17 +1881,13 @@
     }
 
     // ===== ENV VARIABLES =====
-    const envVars = [
-      { key: 'API_BASE_URL', value: 'https://api.portalpilot.io/v1', env: 'production', sensitive: false },
-      { key: 'OLLAMA_ENDPOINT', value: 'http://localhost:11434', env: 'production', sensitive: false },
-      { key: 'BLOCKCHAIN_RPC', value: 'https://rpc.portalpilot.chain', env: 'production', sensitive: false },
-      { key: 'STRIPE_SECRET_KEY', value: 'sk_live_••••••••••••', env: 'production', sensitive: true },
-      { key: 'API_RATE_LIMIT', value: '1000', env: 'production', sensitive: false },
-      { key: 'DEBUG_MODE', value: 'false', env: 'production', sensitive: false },
-      { key: 'LOG_LEVEL', value: 'info', env: 'production', sensitive: false }
-    ];
+    const envVars = [];
     function renderEnvVars() {
       const tbody = document.getElementById('envTableBody'); tbody.innerHTML = '';
+      if (!envVars.length) {
+        tbody.innerHTML = '<tr><td colspan="4" style="color:var(--gray);text-align:center;padding:24px">Las variables se administran directamente en Vercel.</td></tr>';
+        return;
+      }
       envVars.forEach(v => {
         const row = document.createElement('tr');
         const masked = v.sensitive ? 'masked' : '';
@@ -1930,15 +1911,13 @@
     function syncEnvVars() { showToast('La sincronización de variables no está disponible desde el panel.', 'warning'); }
 
     // ===== ADMIN MANAGEMENT =====
-    const admins = [
-      { id: 1, name: 'Admin User', email: 'admin@portalpilot.io', role: 'superadmin', lastLogin: 'Hace 2 min', status: 'active' },
-      { id: 2, name: 'DevOps Team', email: 'devops@portalpilot.io', role: 'devops', lastLogin: 'Hace 1h', status: 'active' },
-      { id: 3, name: 'Security Lead', email: 'security@portalpilot.io', role: 'security', lastLogin: 'Hace 3h', status: 'active' },
-      { id: 4, name: 'María González', email: 'maria.g@portalpilot.io', role: 'developer', lastLogin: 'Hace 1d', status: 'active' },
-      { id: 5, name: 'Carlos Ruiz', email: 'carlos.r@portalpilot.io', role: 'developer', lastLogin: 'Hace 5d', status: 'inactive' }
-    ];
+    const admins = [];
     function renderAdmins() {
       const list = document.getElementById('adminsList'); list.innerHTML = '';
+      if (!admins.length) {
+        list.innerHTML = '<div style="color:var(--gray);font-size:12px;padding:20px 0">Los administradores se consultarán desde el backend cuando esta sección esté habilitada.</div>';
+        return;
+      }
       admins.forEach(a => {
         const initials = a.name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase();
         const role = a.role.charAt(0).toUpperCase() + a.role.slice(1);

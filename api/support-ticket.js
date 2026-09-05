@@ -48,47 +48,37 @@ module.exports = async function handler(req, res) {
 
   /* Sanitize */
   const ticket = {
-    name: escapeHtml(name).slice(0, 200),
+    nombre: escapeHtml(name).slice(0, 200),
     email: escapeHtml(email).slice(0, 200),
-    company: escapeHtml(company || '').slice(0, 200),
+    empresa: escapeHtml(company || '').slice(0, 200),
     plan: escapeHtml(plan || 'none').slice(0, 50),
-    category: escapeHtml(category).slice(0, 50),
-    priority: escapeHtml(priority || 'normal').slice(0, 20),
-    message: escapeHtml(message).slice(0, 5000),
-    status: 'open',
+    categoria: escapeHtml(category).slice(0, 50),
+    prioridad: escapeHtml(priority || 'normal').slice(0, 20),
+    mensaje: escapeHtml(message).slice(0, 5000),
+    estado: 'open',
     created_at: new Date().toISOString()
   };
 
   try {
-    /* Try to store in Supabase if configured */
-    if (process.env.SUPABASE_URL && (process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_SERVICE_KEY)) {
-      const { data, error } = await supabase
-        .from('support_tickets')
-        .insert([ticket])
-        .select()
-        .single();
-
-      if (error) {
-        /* If table doesn't exist, log and continue */
-        console.warn('Supabase insert failed (table may not exist):', error.message);
-      } else {
-        return res.status(201).json({
-          success: true,
-          ticketId: data.id,
-          message: 'Ticket creado exitosamente'
-        });
-      }
+    if (!process.env.SUPABASE_URL || !(process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_SERVICE_KEY)) {
+      return res.status(503).json({ error: 'El servicio de soporte no está configurado.' });
     }
 
-    /* Fallback: log to console and return success */
-    console.log('=== SUPPORT TICKET ===');
-    console.log(JSON.stringify(ticket, null, 2));
-    console.log('======================');
+    const { data, error } = await supabase
+      .from('support_tickets')
+      .insert([ticket])
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Supabase support ticket insert failed:', error.message);
+      return res.status(503).json({ error: 'No se pudo guardar el ticket en la nube.' });
+    }
 
     return res.status(201).json({
       success: true,
-      ticketId: 'LOG-' + Date.now(),
-      message: 'Ticket registrado. Responderemos a ' + email + ' en menos de 24 horas.'
+      ticketId: data.id,
+      message: 'Ticket creado exitosamente'
     });
 
   } catch (err) {

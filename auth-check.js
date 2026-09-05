@@ -50,7 +50,58 @@
   const loginPath = '/login.html';
   const apiRefreshPath = isSubDir ? '../api/refresh' : '/api/refresh';
   const apiAlertaPath = isSubDir ? '../api/alerta-no-autorizado' : '/api/alerta-no-autorizado';
+  const apiSyncPath = isSubDir ? '../api/session/sync' : '/api/session/sync';
+  const apiLogoutPath = isSubDir ? '../api/logout' : '/api/logout';
   const isEnterprisePage = isSubDir;
+  const isLoginPage = /(^|\/)login(\.html)?(\?.*)?$/i.test(window.location.pathname);
+
+  // Sincroniza el token (localStorage) con la cookie httpOnly que la protección
+  // server-side de /pp y /empresa (middleware del backend) requiere para servir
+  // el contenido. Silencioso y no bloqueante.
+  async function syncSessionCookie() {
+    const t = localStorage.getItem('token');
+    if (!t) return;
+    try {
+      await fetch(apiSyncPath, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${t}` }
+      });
+    } catch (e) { /* no crítico */ }
+  }
+
+  // Cierre de sesión completo: invalida la cookie de sesión en el servidor y
+  // limpia el estado local, luego redirige.
+  async function ppLogout(redirectUrl) {
+    try {
+      await fetch(apiLogoutPath, { method: 'POST' });
+    } catch (e) { /* no crítico */ }
+    localStorage.clear();
+    if (redirectUrl) window.location.href = redirectUrl;
+  }
+  window.ppLogout = ppLogout;
+
+  if (isLoginPage) {
+    // En la página de login no se aplican guards ni redirecciones de bloqueo.
+    // Si ya existe una sesión válida (token en localStorage), sincronizamos la
+    // cookie httpOnly y reincorporamos al usuario a su panel de inmediato.
+    // Si no hay sesión, simplemente se limpia cualquier cookie residual.
+    (async () => {
+      const t = localStorage.getItem('token');
+      if (t) {
+        await syncSessionCookie();
+        if (getTokenRemainingTime(t) > 0) {
+          const role = (localStorage.getItem('userRole') || '').toString().toLowerCase();
+          const codigo = (localStorage.getItem('empresaCodigo') || '').toString().trim().toUpperCase();
+          const isRoot = !codigo || codigo === 'ROOT' || ['root', 'root pp', 'superadmin'].includes(role);
+          const target = isRoot ? 'pp/welcome.html' : 'empresa/dashboard.html';
+          window.location.replace(target);
+          return;
+        }
+      }
+      try { await fetch(apiLogoutPath, { method: 'POST' }); } catch (e) { /* no crítico */ }
+    })();
+    return;
+  }
   // Disponible globalmente para otros scripts
   window.loginPath = loginPath;
   const isRootUser = !empresaCodigo || empresaCodigo.toUpperCase() === 'ROOT' || (userRole && userRole.toLowerCase().includes('root'));
@@ -138,7 +189,7 @@
     overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
   }
 
-  function switchToAccount(accountId) {
+  async function switchToAccount(accountId) {
     const account = linkedAccounts.find(acc => acc.id === accountId);
     if (!account) return;
     localStorage.setItem('token', account.token);
@@ -148,6 +199,7 @@
     localStorage.setItem('empresaCodigo', account.empresa_codigo || 'ROOT');
     localStorage.setItem('empresaNombre', account.empresa_nombre || (account.empresa_codigo === 'ROOT' ? 'Portal Pilot' : account.empresa_codigo));
     localStorage.setItem('currentAccountId', account.id);
+    await syncSessionCookie();
     const target = getSwitchTarget(account);
     window.location.href = target;
   }
@@ -173,7 +225,7 @@
       '<div style="font-size:40px;color:#f87171;margin-bottom:15px;"><i class="fas fa-shield-alt"></i></div>' +
       '<h3 style="margin:0 0 10px 0;font-size:18px;font-weight:700;">Acceso restringido</h3>' +
       '<p style="margin:0 0 20px 0;font-size:13px;color:#9ca3af;line-height:1.5;">Este panel es solo para administradores raíz.</p>' +
-      '<button onclick="localStorage.clear();window.location.href=\'' + loginPath + '\'" style="padding:10px 24px;border-radius:10px;background:#8b5cf6;color:#fff;font-size:13px;font-weight:600;cursor:pointer;border:none;">Ir al Login</button>' +
+      '<button onclick="window.ppLogout(\'' + loginPath + '\')" style="padding:10px 24px;border-radius:10px;background:#8b5cf6;color:#fff;font-size:13px;font-weight:600;cursor:pointer;border:none;">Ir al Login</button>' +
       '</div>';
     document.body.appendChild(overlay);
     return;
@@ -229,6 +281,9 @@
       })
     }).catch(() => {});
 
+    // Invalidar cualquier cookie de sesión residual y redirigir de inmediato al login
+    fetch(apiLogoutPath, { method: 'POST' }).catch(() => {});
+
     // Redirigir de inmediato al login - agregar pequeño delay para asegurar que otros scripts no se ejecuten
     console.warn('[AUTH-CHECK] No hay token de sesión. Redirigiendo a login...');
     window.location.replace(loginPath);
@@ -237,6 +292,9 @@
 
   // Marca global para indicar que la sesión fue validada
   window._SESSION_VALIDATED = true;
+
+  // Sincronizar la cookie httpOnly de sesión cuando hay token válido
+  syncSessionCookie();
 
   // Si el token está expirado desde el inicio
   const initialRemaining = getTokenRemainingTime(token);
@@ -423,8 +481,7 @@
       if (textEl) textEl.textContent = `Redirigiendo al login en ${count} segundos...`;
       if (count <= 0) {
         clearInterval(interval);
-        localStorage.clear();
-        window.location.href = loginPath;
+        ppLogout(loginPath);
       }
     }, 1000);
   }
@@ -485,8 +542,7 @@
         
         const confirmLogout = confirm('¿Deseas cerrar tu sesión en Portal Pilot?');
         if (confirmLogout) {
-          localStorage.clear();
-          window.location.href = loginPath;
+          ppLogout(loginPath);
         }
       });
     });

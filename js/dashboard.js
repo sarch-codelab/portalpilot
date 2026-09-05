@@ -212,12 +212,12 @@ function toggleUserStatus() {
   const text = document.getElementById('onlineUsers');
 
   if (isOnline) {
-    const online = Math.max(1, Math.floor(realUserCount * (0.3 + Math.random() * 0.4)));
+    const online = realUserCount;
     icon.innerHTML = '<i class="fas fa-circle" style="color:var(--green);font-size:6px;"></i>';
     text.textContent = `${online} online ahora`;
     text.style.color = '';
   } else {
-    const sleeping = Math.max(1, Math.floor(realUserCount * (0.6 + Math.random() * 0.2)));
+    const sleeping = 0;
     icon.innerHTML = '<i class="fas fa-moon" style="color:var(--accent);font-size:10px;"></i>';
     text.textContent = `${sleeping.toLocaleString()} durmiendo ahora`;
     text.style.color = 'var(--accent)';
@@ -541,34 +541,19 @@ function showWidgetDetails(widgetType) {
       title: 'Detalle de Tenants',
       icon: 'fa-building',
       html: `
-        <div class="detail-card"><div class="detail-icon"><i class="fas fa-building"></i></div><div class="detail-label">Total Tenants</div><div class="detail-value">24</div></div>
-        <div class="detail-card"><div class="detail-icon"><i class="fas fa-check-circle"></i></div><div class="detail-label">Activos</div><div class="detail-value">24</div></div>
-        <div class="detail-card full"><div class="detail-label">Top Tenants por uso</div>
-          <div class="detail-list">
-            <div class="detail-list-item"><span>TechCorp</span><span>4,521 req/día</span></div>
-            <div class="detail-list-item"><span>HealthSys</span><span>3,847 req/día</span></div>
-            <div class="detail-list-item"><span>RetailPlus</span><span>2,956 req/día</span></div>
-            <div class="detail-list-item"><span>FinanceLab</span><span>1,823 req/día</span></div>
-          </div>
-        </div>`
+        <div class="detail-card full"><div class="detail-icon"><i class="fas fa-building"></i></div><div class="detail-label">Detalle de tenants</div><div class="detail-value">-</div><p>Datos detallados no disponibles desde el backend.</p></div>`
     },
     'kpi-users': {
       title: 'Detalle de Usuarios',
       icon: 'fa-users',
       html: `
-        <div class="detail-card"><div class="detail-icon"><i class="fas fa-users"></i></div><div class="detail-label">Total</div><div class="detail-value">1,247</div></div>
-        <div class="detail-card"><div class="detail-icon"><i class="fas fa-circle"></i></div><div class="detail-label">Online</div><div class="detail-value" style="color:var(--green);">142</div></div>
-        <div class="detail-card"><div class="detail-icon"><i class="fas fa-user-plus"></i></div><div class="detail-label">Nuevos hoy</div><div class="detail-value">18</div></div>
-        <div class="detail-card"><div class="detail-icon"><i class="fas fa-user-shield"></i></div><div class="detail-label">Administradores</div><div class="detail-value">12</div></div>`
+        <div class="detail-card full"><div class="detail-icon"><i class="fas fa-users"></i></div><div class="detail-label">Detalle de usuarios</div><div class="detail-value">-</div><p>Consulta la gestión de usuarios para ver datos reales.</p></div>`
     },
     'kpi-health': {
       title: 'Panel de Base de Datos',
       icon: 'fa-database',
       html: `
-        <div class="detail-card"><div class="detail-icon"><i class="fas fa-database"></i></div><div class="detail-label">Capacidad Total</div><div class="detail-value">98.5%</div></div>
-        <div class="detail-card"><div class="detail-icon"><i class="fas fa-tachometer-alt"></i></div><div class="detail-label">Latencia</div><div class="detail-value">12ms</div></div>
-        <div class="detail-card"><div class="detail-icon"><i class="fas fa-hdd"></i></div><div class="detail-label">Almacenamiento</div><div class="detail-value">847 GB</div></div>
-        <div class="detail-card"><div class="detail-icon"><i class="fas fa-history"></i></div><div class="detail-label">Último Backup</div><div class="detail-value" style="font-size:14px;">Hace 2h</div></div>
+        <div class="detail-card full"><div class="detail-icon"><i class="fas fa-database"></i></div><div class="detail-label">Estado de infraestructura</div><div class="detail-value" style="font-size:14px;">Consulta no disponible</div></div>
         <div class="detail-card full"><div class="detail-label">Estado de componentes</div>
           <div class="detail-list">
             <div class="detail-list-item"><span>NocoDB Primary</span><span style="color:var(--green);">● Operativo</span></div>
@@ -596,10 +581,7 @@ function showWidgetDetails(widgetType) {
       title: 'Estadísticas de Actividad',
       icon: 'fa-fire',
       html: `
-        <div class="detail-card"><div class="detail-icon"><i class="fas fa-fire"></i></div><div class="detail-label">Total peticiones (año)</div><div class="detail-value">284,521</div></div>
-        <div class="detail-card"><div class="detail-icon"><i class="fas fa-calendar-day"></i></div><div class="detail-label">Día más activo</div><div class="detail-value" style="font-size:14px;">15 Mar</div></div>
-        <div class="detail-card"><div class="detail-icon"><i class="fas fa-chart-line"></i></div><div class="detail-label">Promedio diario</div><div class="detail-value">779</div></div>
-        <div class="detail-card"><div class="detail-icon"><i class="fas fa-bolt"></i></div><div class="detail-label">Pico máximo</div><div class="detail-value">2,847</div></div>`
+        <div class="detail-card full"><div class="detail-icon"><i class="fas fa-fire"></i></div><div class="detail-label">Actividad registrada</div><div class="detail-value" style="font-size:14px;">Sin datos disponibles</div></div>`
     }
   };
 
@@ -627,6 +609,10 @@ function renderAllEvents() {
 function createBarChart(containerId, data, gradient) {
   const container = document.getElementById(containerId);
   if (!container) return;
+  if (!data.length) {
+    container.innerHTML = '<div class="chart-empty">Sin datos registrados</div>';
+    return;
+  }
   container.innerHTML = '';
   const max = Math.max(...data.map(d => d.value));
   data.forEach((d, i) => {
@@ -640,16 +626,8 @@ function createBarChart(containerId, data, gradient) {
 }
 
 const chartDataSets = {
-  tenants: {
-    '7D': [{ label: 'Lun', value: 3 }, { label: 'Mar', value: 5 }, { label: 'Mié', value: 4 }, { label: 'Jue', value: 7 }, { label: 'Vie', value: 6 }, { label: 'Sáb', value: 2 }, { label: 'Dom', value: 1 }],
-    '30D': [{ label: 'S1', value: 12 }, { label: 'S2', value: 18 }, { label: 'S3', value: 15 }, { label: 'S4', value: 24 }, { label: 'S5', value: 31 }, { label: 'S6', value: 28 }, { label: 'S7', value: 35 }, { label: 'S8', value: 42 }],
-    '90D': [{ label: 'Ene', value: 85 }, { label: 'Feb', value: 92 }, { label: 'Mar', value: 78 }, { label: 'Abr', value: 105 }, { label: 'May', value: 112 }, { label: 'Jun', value: 98 }]
-  },
-  tokens: {
-    'input': [{ label: '1-7', value: 30 }, { label: '8-14', value: 45 }, { label: '15-21', value: 55 }, { label: '22-28', value: 65 }, { label: '29-30', value: 40 }],
-    'total': [{ label: '1-7', value: 45 }, { label: '8-14', value: 62 }, { label: '15-21', value: 78 }, { label: '22-28', value: 91 }, { label: '29-30', value: 54 }],
-    'output': [{ label: '1-7', value: 15 }, { label: '8-14', value: 17 }, { label: '15-21', value: 23 }, { label: '22-28', value: 26 }, { label: '29-30', value: 14 }]
-  }
+  tenants: { '7D': [], '30D': [], '90D': [] },
+  tokens: { 'input': [], 'total': [], 'output': [] }
 };
 
 window.addEventListener('load', () => {
@@ -765,7 +743,7 @@ function renderChartView(view, dataType, mainView, statsView) {
   }
 
   statsView.innerHTML = `
-    <div class="stat-card"><div class="stat-label">Total</div><div class="stat-value">${total}</div><div class="stat-trend up"><i class="fas fa-arrow-up"></i> +${(Math.random() * 20 + 5).toFixed(1)}%</div></div>
+    <div class="stat-card"><div class="stat-label">Total</div><div class="stat-value">${total}</div><div class="stat-trend">Sin comparación disponible</div></div>
     <div class="stat-card"><div class="stat-label">Promedio</div><div class="stat-value">${avg}</div></div>
     <div class="stat-card"><div class="stat-label">Máximo</div><div class="stat-value" style="color:var(--green);">${max}</div></div>
     <div class="stat-card"><div class="stat-label">Mínimo</div><div class="stat-value" style="color:var(--yellow);">${min}</div></div>`;
@@ -783,18 +761,7 @@ document.querySelectorAll('.chart-view-tab').forEach(tab => {
 });
 
 // ── Calendar ────
-const calendarEvents = [
-  { date: '2026-06-25', title: 'Renovación SSL TechCorp', priority: 'high', time: '16:00' },
-  { date: '2026-06-26', title: 'Backup NocoDB programado', priority: 'med', time: '02:00' },
-  { date: '2026-06-27', title: 'Actualización Gemma 3N v1.2.5', priority: 'med', time: '03:00' },
-  { date: '2026-06-28', title: 'Auditoría bloque #4829', priority: 'low', time: '10:00' },
-  { date: '2026-06-30', title: 'Vencimiento licencia HealthSys', priority: 'high', time: '23:59' },
-  { date: '2026-07-02', title: 'Despliegue bot RPA FinanceLab', priority: 'med', time: '14:00' },
-  { date: '2026-07-05', title: 'Mantenimiento programado', priority: 'high', time: '01:00' },
-  { date: '2026-07-10', title: 'Revisión trimestral RetailPlus', priority: 'low', time: '11:00' },
-  { date: '2026-07-15', title: 'Backup completo mensual', priority: 'med', time: '02:00' },
-  { date: '2026-07-20', title: 'Auditoría de seguridad', priority: 'high', time: '09:00' },
-];
+const calendarEvents = [];
 
 let currentCalDate = new Date(2026, 5, 1); // Junio 2026
 
@@ -899,8 +866,8 @@ function renderHeatmap() {
   for (let i = cells - 1; i >= 0; i--) {
     const date = new Date(today);
     date.setDate(date.getDate() - i);
-    const level = Math.floor(Math.random() * 6);
-    const requests = level === 0 ? 0 : Math.floor(Math.random() * 500 * level) + 50;
+    const level = 0;
+    const requests = 0;
     const dateStr = date.toISOString().split('T')[0];
     html += `<div class="heatmap-cell" data-level="${level}" data-tooltip="${dateStr}: ${requests} peticiones"></div>`;
   }
@@ -909,14 +876,14 @@ function renderHeatmap() {
 renderHeatmap();
 
 // ── Status Pulse ────
-document.querySelectorAll('.status-dot').forEach(d => d.style.animationDelay = Math.random() * 2 + 's');
+document.querySelectorAll('.status-dot').forEach(d => d.style.animationDelay = '0s');
 
 // ── KPI Simulation ────
 function updateKPIs() {
-  document.getElementById('kpiTenants').textContent = Math.floor(Math.random() * 10) + 20;
-  document.getElementById('kpiUsers').textContent = (Math.floor(Math.random() * 200) + 1100).toLocaleString();
-  document.getElementById('kpiRevenue').textContent = `$${Math.floor(Math.random() * 30) + 170}K`;
-  document.getElementById('kpiHealth').textContent = `${(Math.random() * 5 + 95).toFixed(1)}%`;
+  document.getElementById('kpiTenants').textContent = '—';
+  document.getElementById('kpiUsers').textContent = realUserCount.toLocaleString();
+  document.getElementById('kpiRevenue').textContent = '—';
+  document.getElementById('kpiHealth').textContent = '—';
 }
 setInterval(updateKPIs, 30000);
 

@@ -203,6 +203,13 @@ function isProtectedAreaPath(path) {
 function protectPortalArea(req, res, next) {
   if (!isProtectedAreaPath(req.path)) return next();
 
+  // Distinguir navegación de páginas (Accept: text/html) de sub-recursos
+  // (CSS/JS/img). A los recursos se les devuelve 403 sin redirección para que
+  // el navegador NO sustituya login.html como si fuera el CSS/JS (página sin
+  // estilos) y para evitar redirecciones cacheadas raras del CDN.
+  const isHtmlRequest = (req.headers.accept || '').includes('text/html');
+  const forbidden = () => res.status(403).json({ error: 'Sesión no autorizada para este recurso' });
+
   const cookies = parseCookies(req);
   let sessionUser = null;
 
@@ -228,7 +235,7 @@ function protectPortalArea(req, res, next) {
   }
 
   if (!sessionUser) {
-    return res.redirect('/login.html');
+    return isHtmlRequest ? res.redirect('/login.html') : forbidden();
   }
 
   req.user = sessionUser;
@@ -241,9 +248,9 @@ function protectPortalArea(req, res, next) {
   // /pp/* solo para administradores raíz; /empresa/* para usuarios de tenant o raíz.
   const isAdminArea = req.path === '/pp' || req.path.startsWith('/pp/');
   if (isAdminArea) {
-    if (!isRoot) return res.redirect('/login.html');
+    if (!isRoot) return isHtmlRequest ? res.redirect('/login.html') : forbidden();
   } else {
-    if (!isRoot && !isTenantUser) return res.redirect('/login.html');
+    if (!isRoot && !isTenantUser) return isHtmlRequest ? res.redirect('/login.html') : forbidden();
   }
 
   next();
@@ -958,7 +965,11 @@ async function enviarCorreoPortalPilot(emailDestinatario, asunto, titulo, subtit
 app.get('/api/health', async (req, res) => {
   res.json({
     status: 'ok',
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
+    supabase_configured: !!(process.env.SUPABASE_URL &&
+      (process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)),
+    jwt_configured: !!process.env.JWT_SECRET,
+    environment: IS_SERVERLESS ? 'serverless' : 'local'
   });
 });
 

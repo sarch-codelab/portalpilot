@@ -2524,13 +2524,13 @@ app.put('/api/users/:id', authenticate, async (req, res) => {
     // 1. Fetch current user
     const { data: usuarioActual, error: fetchErr } = await supabase
       .from('usuarios')
-      .select('id, empresa_id, nombre, apellido, email, rol_global, activo, empresas(codigo, nombre)')
+      .select('id, empresa_id, empresa_codigo, nombre, apellido, email, rol_global, activo')
       .eq('id', id)
       .single();
 
     if (fetchErr || !usuarioActual) return res.status(404).json({ error: 'Usuario no encontrado.' });
 
-    const codigo = usuarioActual.empresas?.codigo || '';
+    const codigo = normalizeTenantCode(usuarioActual.empresa_codigo || '');
     if (!isRootUser(req) && !assertTenantAccess(req, codigo)) {
       return res.status(403).json({ error: 'No tienes permiso para modificar este usuario.' });
     }

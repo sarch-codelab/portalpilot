@@ -1425,6 +1425,7 @@ app.post('/api/login', loginLimiter, async (req, res) => {
         status: userRow.estado || 'activo',
         trial_expired: trialExpired,
         foto_perfil_url: userRow.avatar_url || userRow.foto_perfil_url || null,
+        banner_perfil_url: userRow.banner_perfil_url || null,
         token: accountToken
       }
     });
@@ -2325,7 +2326,7 @@ app.get('/api/users/:id', authenticate, async (req, res) => {
 
     const { data: usuario, error } = await supabase
       .from('usuarios')
-      .select('id, empresa_id, nombre, apellido, email, rol_global, activo, created_at, updated_at, foto_perfil_url')
+      .select('id, empresa_id, nombre, apellido, email, rol_global, activo, created_at, updated_at, foto_perfil_url, banner_perfil_url')
       .eq('id', id)
       .single();
 
@@ -2354,6 +2355,7 @@ app.get('/api/users/:id', authenticate, async (req, res) => {
       registered: usuario.created_at || new Date().toISOString(),
       lastActivity: usuario.updated_at || null,
       avatar: usuario.foto_perfil_url || null,
+      banner: usuario.banner_perfil_url || null,
       notas: '',
       source: 'supabase'
     });
@@ -2504,11 +2506,20 @@ app.post('/api/users', authenticate, requireTenantAdmin, requirePlanFeature('web
   }
 });
 
-app.put('/api/users/:id', authenticate, requireTenantAdmin, requirePlanFeature('web_admin'), async (req, res) => {
+app.put('/api/users/:id', authenticate, async (req, res) => {
   if (!requireSupabase(res)) return;
   try {
     const { id } = req.params;
-    const { nombre, apellido, email, rol, tenant, notas, status, password, reason, modulos } = req.body;
+    const { nombre, apellido, email, rol, tenant, notas, status, password, reason, modulos, foto_perfil_url, banner_perfil_url } = req.body;
+
+    // Cualquier usuario puede editar su PROPIO perfil; los admins pueden editar a cualquiera de su tenant
+    const normalizedRole = String(req.user?.rol || '').trim().toLowerCase();
+    const isAdmin = isRootUser(req) || ['owner', 'administrador', 'admin'].includes(normalizedRole);
+    const isSelf = (req.user?.sub && String(req.params.id) === String(req.user.sub)) ||
+      (id.includes('@') && id.toLowerCase() === String(req.user?.email || '').toLowerCase());
+    if (!isAdmin && !isSelf) {
+      return res.status(403).json({ error: 'No tienes permiso para modificar este usuario.' });
+    }
 
     // 1. Fetch current user
     const { data: usuarioActual, error: fetchErr } = await supabase
@@ -2542,6 +2553,8 @@ app.put('/api/users/:id', authenticate, requireTenantAdmin, requirePlanFeature('
     if (typeof rol !== 'undefined') updateFields.rol_global = rol;
     if (typeof notas !== 'undefined') updateFields.notas = notas;
     if (typeof status !== 'undefined') updateFields.activo = normalizeStatus(status) === 'active';
+    if (typeof foto_perfil_url !== 'undefined') updateFields.foto_perfil_url = foto_perfil_url || null;
+    if (typeof banner_perfil_url !== 'undefined') updateFields.banner_perfil_url = banner_perfil_url || null;
 
     if (Object.keys(updateFields).length > 0) {
       const { error: updateErr } = await supabase
@@ -2614,35 +2627,66 @@ app.delete('/api/users/:id', authenticate, requireTenantAdmin, async (req, res) 
     const { id } = req.params;
     const userTenant = getTenantCode(req);
     const userIsRoot = isRootUser(req);
+    const isEmail = id.includes('@');
+    let targetTenant = '';
+    let targetUserId = null;
+
+    // Resolve target user and its tenant (always, so we can cascade the tenant later)
+    let targetUser = null;
+    if (supabase) {
+      const lookup = isEmail
+        ? await supabase.from('usuarios').select('id, empresa_codigo').eq('email', id.toLowerCase()).single()
+        : await supabase.from('usuarios').select('id, empresa_codigo').eq('id', id).single();
+      targetUser = lookup.data || null;
+      if (!targetUser) {
+        return res.status(404).json({ error: 'Usuario no encontrado.' });
+      }
+      targetUserId = targetUser.id || null;
+      targetTenant = normalizeTenantCode(targetUser.empresa_codigo || '');
+    }
 
     // Verify target user belongs to same tenant (unless ROOT)
-    if (supabase && !userIsRoot && userTenant) {
-      let targetUser = null;
-      if (id.includes('@')) {
-        const { data } = await supabase.from('usuarios').select('empresa_codigo').eq('email', id.toLowerCase()).single();
-        targetUser = data;
-      } else {
-        const { data } = await supabase.from('usuarios').select('empresa_codigo').eq('id', id).single();
-        targetUser = data;
-      }
-      if (targetUser && targetUser.empresa_codigo !== userTenant) {
-        return res.status(403).json({ error: 'No tienes permiso para eliminar usuarios de otra empresa.' });
-      }
+    if (!userIsRoot && userTenant && targetTenant && targetTenant !== normalizeTenantCode(userTenant)) {
+      return res.status(403).json({ error: 'No tienes permiso para eliminar usuarios de otra empresa.' });
     }
+
+    let tenantDeleted = false;
 
     if (supabase) {
       try {
-        await supabase.from('usuario_modulos').delete().eq('usuario_id', id);
-} catch (e) { console.warn('[USER_DELETE] Non-critical:', e.message); }
+        await supabase.from('usuario_modulos').delete().eq('usuario_id', isEmail ? id : targetUserId);
+      } catch (e) { console.warn('[USER_DELETE] Non-critical modulos:', e.message); }
 
-      if (id.includes('@')) {
+      if (isEmail) {
         await supabase.from('usuarios').delete().eq('email', id.toLowerCase());
       } else {
         await supabase.from('usuarios').delete().eq('id', id);
+        // Borrar también la identidad del usuario en Supabase Auth
+        if (targetUserId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(targetUserId)) {
+          try { await supabase.auth.admin.deleteUser(targetUserId); } catch (e) { console.warn('[USER_DELETE] Auth non-critical:', e.message); }
+        }
+      }
+
+      // CASCADE: si el tenant ya no tiene usuarios, eliminar el tenant y su empresa
+      if (targetTenant && targetTenant !== 'ROOT') {
+        try {
+          const { data: restantes } = await supabase.from('usuarios').select('id').eq('empresa_codigo', targetTenant);
+          if (!restantes || restantes.length === 0) {
+            try { await supabase.from('empresas').delete().eq('codigo', targetTenant); } catch (e) { console.warn('[USER_DELETE] Empresa non-critical:', e.message); }
+            try { await supabase.from('tenants').delete().eq('codigo', targetTenant); } catch (e) { console.warn('[USER_DELETE] Tenant non-critical:', e.message); }
+            tenantDeleted = true;
+          }
+        } catch (e) {
+          console.warn('[USER_DELETE] Cascade non-critical:', e.message);
+        }
       }
     }
 
-    return res.json({ success: true, message: 'Usuario eliminado exitosamente' });
+    return res.json({
+      success: true,
+      message: tenantDeleted ? 'Usuario eliminado y tenant eliminado (ya no tenía usuarios).' : 'Usuario eliminado exitosamente',
+      tenantDeleted
+    });
   } catch (error) {
     console.error('[DELETE USER] Error:', error.message);
     return res.status(500).json({ error: error.message || 'Error al eliminar usuario' });

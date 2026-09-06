@@ -203,6 +203,63 @@ function toggleEdit(section) {
     showToast('Modo edición activado', 'info');
 }
 
+// ── Cargar perfil desde la base de datos ────────────
+function getProfileInitials() {
+    const name = localStorage.getItem('userName') || '';
+    const apellido = localStorage.getItem('userApellido') || '';
+    const full = apellido ? `${name} ${apellido}` : name;
+    return (full.split(' ').filter(Boolean).map(w => w[0]).join('').substring(0, 2) || 'PP').toUpperCase();
+}
+
+async function loadProfile() {
+    const token = localStorage.getItem('token');
+    const userId = localStorage.getItem('currentAccountId');
+    if (!token || !userId) return;
+    try {
+        const res = await fetch(`${_API_ROOT}/api/users/${encodeURIComponent(userId)}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!res.ok) return;
+        const u = await res.json();
+        if (!u || (!u.nombre && !u.email)) return;
+
+        localStorage.setItem('userName', u.nombre || '');
+        localStorage.setItem('userApellido', u.apellido || '');
+        if (u.avatar) localStorage.setItem('userFoto', u.avatar); else localStorage.removeItem('userFoto');
+        if (u.banner) localStorage.setItem('userBanner', u.banner); else localStorage.removeItem('userBanner');
+
+        const fullName = `${u.nombre || ''} ${u.apellido || ''}`.trim() || 'Usuario';
+
+        const pName = document.getElementById('profileName');
+        const pEmail = document.getElementById('profileEmail');
+        const full = document.getElementById('fullName');
+        const email = document.getElementById('email');
+        if (pName) pName.textContent = fullName;
+        if (pEmail) pEmail.textContent = u.email || '';
+        if (full) full.value = fullName;
+        if (email) email.value = u.email || '';
+
+        const avatarLarge = document.querySelector('.user-avatar-large');
+        if (avatarLarge) {
+            if (u.avatar) {
+                avatarLarge.innerHTML = `<img src="${u.avatar}" alt="${fullName}" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;" onerror="this.style.display='none';this.parentElement.innerHTML='${getProfileInitials()}'">`;
+            } else {
+                avatarLarge.innerHTML = getProfileInitials();
+            }
+        }
+
+        const banner = document.getElementById('profileBanner');
+        if (banner) {
+            if (u.banner) banner.style.backgroundImage = `url('${u.banner}')`;
+            else banner.style.backgroundImage = "url('../img/banner_ud.jpg')";
+        }
+
+        if (window.refreshSidebarAvatar) window.refreshSidebarAvatar();
+    } catch (err) {
+        console.warn('[PERFIL] No se pudo cargar el perfil desde la BD:', err.message);
+    }
+}
+
 async function saveProfile() {
     if (!hasChanges) {
         showToast('No hay cambios para guardar', 'info');
@@ -248,6 +305,7 @@ async function saveProfile() {
 
         hasChanges = false;
         btn.style.display = 'none';
+        if (window.refreshSidebarAvatar) window.refreshSidebarAvatar();
         showToast('✓ Perfil actualizado exitosamente', 'success');
     } catch (err) {
         showToast(err.message || 'Error al guardar. Intenta de nuevo.', 'error');
@@ -336,25 +394,29 @@ function uploadAvatar() {
             if (!res.ok) throw new Error(data.error || 'Error al subir');
 
             const avatarUrl = data.url;
-            localStorage.setItem('userFoto', avatarUrl);
 
-            const avatarLarge = document.querySelector('.profile-avatar-large');
-            if (avatarLarge) {
-                avatarLarge.innerHTML = `<img src="${avatarUrl}" onerror="this.style.display='none';this.parentElement.innerHTML='AS'">`;
-            }
-
-            const sidebarAvatar = document.querySelector('.sidebar .avatar');
-            if (sidebarAvatar) {
-                if (sidebarAvatar.tagName === 'IMG') {
-                    sidebarAvatar.src = avatarUrl;
-                } else {
-                    sidebarAvatar.style.backgroundImage = `url(${avatarUrl})`;
-                    sidebarAvatar.style.backgroundSize = 'cover';
-                    sidebarAvatar.style.backgroundPosition = 'center';
-                    sidebarAvatar.style.color = 'transparent';
-                    sidebarAvatar.textContent = '';
+            // Persistir en base de datos
+            const userId = localStorage.getItem('currentAccountId');
+            if (token && userId) {
+                const saveRes = await fetch(`${_API_ROOT}/api/users/${encodeURIComponent(userId)}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ foto_perfil_url: avatarUrl })
+                });
+                if (!saveRes.ok) {
+                    const saveData = await saveRes.json().catch(() => ({}));
+                    throw new Error(saveData.error || 'Error al guardar foto en la base de datos');
                 }
             }
+
+            localStorage.setItem('userFoto', avatarUrl);
+
+            const avatarLarge = document.querySelector('.user-avatar-large');
+            if (avatarLarge) {
+                avatarLarge.innerHTML = `<img src="${avatarUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;" onerror="this.style.display='none';this.parentElement.innerHTML='${getProfileInitials()}'">`;
+            }
+
+            if (window.refreshSidebarAvatar) window.refreshSidebarAvatar();
 
             closeModal('uploadAvatarModal');
             showToast('✓ Foto de perfil actualizada', 'success');
@@ -405,6 +467,21 @@ function uploadBanner() {
             if (!res.ok) throw new Error(data.error || 'Error al subir');
 
             const bannerUrl = data.url;
+
+            // Persistir en base de datos
+            const userId = localStorage.getItem('currentAccountId');
+            if (token && userId) {
+                const saveRes = await fetch(`${_API_ROOT}/api/users/${encodeURIComponent(userId)}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ banner_perfil_url: bannerUrl })
+                });
+                if (!saveRes.ok) {
+                    const saveData = await saveRes.json().catch(() => ({}));
+                    throw new Error(saveData.error || 'Error al guardar banner en la base de datos');
+                }
+            }
+
             localStorage.setItem('userBanner', bannerUrl);
 
             const banner = document.getElementById('profileBanner');
@@ -646,13 +723,16 @@ function downloadData() {
 
 // ── Initialize ─────────────────────────────────────
 window.addEventListener('load', () => {
+    // Cargar perfil real desde la base de datos
+    loadProfile();
+
     setTimeout(() => {
         document.querySelectorAll('.reveal').forEach((el, i) => {
             setTimeout(() => el.classList.add('in'), i * 50);
         });
     }, 100);
 
-    // Disable all form fields by default
+    // Disable all form fields by default (tras cargar los datos reales)
     document.querySelectorAll('.field input, .field select, .field textarea').forEach(el => {
         el.disabled = true;
     });

@@ -2718,6 +2718,19 @@ async function resolverEmpresaSupabase(empresaCodigo) {
   }
 }
 
+// ── Búsqueda multi-columna sin depender de PostgREST .or() (compat APP/supabase-js) ──
+async function filtrarBusquedaEnMemoria({ query, columnas, termino, orderCol, limit, desc = false, max = 500 }) {
+  const { data, error } = await query.limit(max);
+  if (error) return { error };
+  const t = (termino || '').trim().toLowerCase();
+  let filas = (data || []).filter(r => columnas.some(c => String(r[c] || '').toLowerCase().includes(t)));
+  filas.sort((a, b) => {
+    const cmp = String(a[orderCol] || '').localeCompare(String(b[orderCol] || ''));
+    return desc ? -cmp : cmp;
+  });
+  return { data: filas.slice(0, limit) };
+}
+
 // ── API Keys por tenant ───────────────────────────────────────
 app.get('/api/tenant/apikeys', authenticate, requireTenantAdmin, requirePlanFeature('api_keys'), async (req, res) => {
   if (!requireSupabase(res)) return;
@@ -2975,14 +2988,19 @@ app.get('/api/ai/barcode/:code', authenticate, requirePlanFeature('ia'), async (
     if (!empresa) return res.status(404).json({ error: 'Empresa no encontrada' });
 
     const code = req.params.code;
-    const { data: products } = await supabase.from('productos')
+    const { data: products, error: productsError } = await supabase.from('productos')
       .select('id, codigo, nombre, descripcion, categoria, marca, presentacion, unidad_medida, precio_venta, stock_actual, imagen_url, barcode')
       .eq('empresa_id', empresa.id)
-      .or(`barcode.eq.${code},codigo.eq.${code}`)
-      .limit(5);
+      .limit(500);
+    if (productsError) {
+      console.error('[AI/BARCODE] Error:', productsError.message);
+      return res.status(500).json({ error: 'Error al buscar producto' });
+    }
+    const codeMin = (code || '').toLowerCase();
+    const coincidencias = (products || []).filter(p => (p.barcode || '').toLowerCase() === codeMin || (p.codigo || '').toLowerCase() === codeMin).slice(0, 5);
 
-    if (products && products.length > 0) {
-      return res.json({ found: true, products, source: 'database' });
+    if (coincidencias.length > 0) {
+      return res.json({ found: true, products: coincidencias, source: 'database' });
     }
     return res.json({ found: false, products: [], source: 'database', message: 'Producto no encontrado en catálogo' });
   } catch (err) {
@@ -4416,7 +4434,11 @@ app.get('/api/productos', authenticate, async (req, res) => {
     let query = supabase.from('productos').select('*').eq('empresa_id', empresa.id);
     if (req.query.categoria) query = query.eq('categoria', req.query.categoria);
     if (req.query.activo !== undefined) query = query.eq('activo', req.query.activo === 'true');
-    if (req.query.search) query = query.or(`nombre.ilike.%${req.query.search}%,codigo.ilike.%${req.query.search}%,barcode.ilike.%${req.query.search}%`);
+    if (req.query.search) {
+      const resultado = await filtrarBusquedaEnMemoria({ query, columnas: ['nombre', 'codigo', 'barcode'], termino: req.query.search, orderCol: 'nombre', limit: Math.min(Math.max(parseInt(req.query.limit, 10) || 100, 1), 500) });
+      if (resultado.error) return res.status(500).json({ error: resultado.error.message });
+      return res.json({ productos: resultado.data || [], total: resultado.data.length });
+    }
     if (req.query.barcode) query = query.eq('barcode', req.query.barcode);
     const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 100, 1), 500);
     const offset = Math.max(parseInt(req.query.offset, 10) || 0, 0);
@@ -4718,7 +4740,11 @@ app.get('/api/facturas', authenticate, async (req, res) => {
     let query = supabase.from('facturas').select('*').eq('empresa_id', empresa.id);
     if (req.query.estado) query = query.eq('estado', req.query.estado);
     if (req.query.tipo_documento) query = query.eq('tipo_documento', req.query.tipo_documento);
-    if (req.query.search) query = query.or(`correlativo.ilike.%${req.query.search}%,cliente_nombre.ilike.%${req.query.search}%`);
+    if (req.query.search) {
+      const resultado = await filtrarBusquedaEnMemoria({ query, columnas: ['correlativo', 'cliente_nombre'], termino: req.query.search, orderCol: 'created_at', limit: Math.min(Math.max(parseInt(req.query.limit, 10) || 50, 1), 200), desc: true });
+      if (resultado.error) return res.status(500).json({ error: resultado.error.message });
+      return res.json({ facturas: resultado.data || [] });
+    }
     const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 50, 1), 200);
     const { data, error } = await query.order('created_at', { ascending: false }).limit(limit);
     if (error) return res.status(500).json({ error: error.message });
@@ -4827,7 +4853,11 @@ app.get('/api/clientes', authenticate, async (req, res) => {
     const empresa = await resolverEmpresaSupabase(tenant);
     if (!empresa) return res.status(404).json({ error: 'Empresa no encontrada' });
     let query = supabase.from('clientes').select('*').eq('empresa_id', empresa.id);
-    if (req.query.search) query = query.or(`nombre.ilike.%${req.query.search}%,rtn.ilike.%${req.query.search}%,email.ilike.%${req.query.search}%`);
+    if (req.query.search) {
+      const resultado = await filtrarBusquedaEnMemoria({ query, columnas: ['nombre', 'rtn', 'email'], termino: req.query.search, orderCol: 'nombre', limit: Math.min(Math.max(parseInt(req.query.limit, 10) || 100, 1), 500) });
+      if (resultado.error) return res.status(500).json({ error: resultado.error.message });
+      return res.json({ clientes: resultado.data || [] });
+    }
     const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 100, 1), 500);
     const { data, error } = await query.order('nombre', { ascending: true }).limit(limit);
     if (error) return res.status(500).json({ error: error.message });
@@ -5728,8 +5758,9 @@ app.get('/api/membresias/socios', authenticate, requirePlanFeature('socios'), as
     if (req.query.estado) query = query.eq('estado', req.query.estado);
     if (req.query.plan_id) query = query.eq('plan_id', req.query.plan_id);
     if (req.query.search) {
-      const search = req.query.search.trim();
-      query = query.or('nombre.ilike.%' + search + '%,numero_socio.ilike.%' + search + '%,email.ilike.%' + search + '%');
+      const resultado = await filtrarBusquedaEnMemoria({ query, columnas: ['nombre', 'numero_socio', 'email'], termino: req.query.search, orderCol: 'created_at', limit: Math.min(Math.max(parseInt(req.query.limit, 10) || 50, 1), 200), desc: true });
+      if (resultado.error) return res.status(500).json({ error: resultado.error.message });
+      return res.json({ socios: resultado.data || [] });
     }
     const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 50, 1), 200);
     const { data, error } = await query.order('created_at', { ascending: false }).limit(limit);

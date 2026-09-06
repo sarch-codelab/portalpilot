@@ -1527,3 +1527,221 @@ body.light-mode .profile-banner-overlay {
   .form-input { font-size: 10px; padding: 5px; }
   .btn-primary { font-size: 10px; height: 32px; }
 }
+
+/* ==========================================================================
+   NUEVOS MODALES DE AVATAR/BANNER (glassmorphism, glass, neon)
+   ========================================================================== */
+
+/* Overlay específico para modal-perfil (usa el mismo .modal-overlay.active) */
+.modal-overlay .modal-perfil {
+  background: rgba(20, 18, 30, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 28px;
+  width: 100%;
+  max-width: 440px;
+  padding: 30px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  transform: translateY(20px) scale(0.98);
+  transition: transform 0.25s ease;
+}
+
+.modal-overlay.active .modal-perfil {
+  transform: translateY(0) scale(1);
+}
+
+.header-modal {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 28px;
+}
+
+.header-modal h2 {
+  color: #ffffff;
+  font-size: 20px;
+  margin: 0;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  font-family: 'Syne', sans-serif;
+}
+
+.btn-cerrar {
+  background-color: rgba(255, 255, 255, 0.05);
+  color: #a3a1ad;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 20px;
+  line-height: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: all 0.2s;
+}
+
+.btn-cerrar:hover {
+  background-color: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.2);
+  transform: rotate(90deg);
+}
+
+.preview-container {
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.avatar-preview {
+  width: 96px;
+  height: 96px;
+  background: linear-gradient(135deg, #2e2a47, #1c1930);
+  margin: 0 auto 14px;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 2px solid rgba(139, 92, 246, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+}
+
+.avatar-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.info-formatos {
+  color: #6c697c;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.seccion-input {
+  margin-bottom: 36px;
+}
+
+.seccion-input label {
+  display: block;
+  color: #9e9ba7;
+  font-size: 13px;
+  margin-bottom: 12px;
+  font-weight: 600;
+}
+
+.input-oculto {
+  display: none;
+}
+
+.input-falso-file {
+  background-color: rgba(10, 8, 16, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 8px 10px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.input-falso-file:hover {
+  border-color: rgba(139, 92, 246, 0.5);
+  background-color: rgba(10, 8, 16, 0.9);
+  box-shadow: 0 0 12px rgba(139, 92, 246, 0.1);
+}
+
+.btn-examinar {
+  background-color: #ffffff;
+  color: #0d0c16;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  pointer-events: none;
+}
+
+.input-falso-file:hover .btn-examinar {
+  background-color: #e2d9ff;
+}
+
+.texto-archivo {
+  color: #797687;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 230px;
+}
+
+.footer-botones {
+  display: flex;
+  justify-content: flex-end;
+  gap: 14px;
+}
+
+.btn-cancelar {
+  background-color: transparent;
+  color: #a3a1ad;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 12px 28px;
+  border-radius: 100px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-cancelar:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.btn-subir {
+  background: linear-gradient(135deg, #a855f7, #7c3aed);
+  color: #ffffff;
+  border: none;
+  padding: 12px 28px;
+  border-radius: 100px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(124, 58, 237, 0.35);
+  transition: all 0.2s;
+}
+
+.btn-subir:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(124, 58, 237, 0.5);
+  filter: brightness(1.1);
+}
+
+.btn-subir:active {
+  transform: translateY(0);
+}
+
+/* Responsive para modales nuevos */
+@media (max-width: 480px) {
+  .modal-overlay .modal-perfil {
+    max-width: 90vw;
+    padding: 24px 20px;
+    border-radius: 20px;
+  }
+  .avatar-preview {
+    width: 80px;
+    height: 80px;
+  }
+  .footer-botones {
+    flex-direction: column-reverse;
+  }
+  .btn-cancelar, .btn-subir {
+    width: 100%;
+  }
+}

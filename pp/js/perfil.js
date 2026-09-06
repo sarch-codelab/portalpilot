@@ -167,11 +167,27 @@ function openModal(id) {
         console.warn('[PERFIL] Modal no encontrado:', id);
     }
     if (id === 'apiKeysModal') loadApiKeys();
+    if (id === 'uploadAvatarModal' || id === 'uploadBannerModal') {
+        syncModalPreviews(id);
+    }
 }
 
 function closeModal(id) {
     const modal = document.getElementById(id);
     if (modal) modal.classList.remove('active');
+}
+
+function syncModalPreviews(modalId) {
+    const foto = localStorage.getItem('userFoto') || '';
+    const banner = localStorage.getItem('userBanner') || '';
+    if (modalId === 'uploadAvatarModal') {
+        const img = document.getElementById('img-avatar');
+        if (img && foto) img.src = foto;
+    }
+    if (modalId === 'uploadBannerModal') {
+        const img = document.getElementById('img-banner');
+        if (img && banner) img.src = banner;
+    }
 }
 
 document.querySelectorAll('.modal-overlay').forEach(overlayModal => {
@@ -366,8 +382,13 @@ function previewAvatar(input) {
     if (input.files && input.files[0]) {
         const reader = new FileReader();
         reader.onload = function (e) {
-            document.getElementById('previewImg').src = e.target.result;
-            document.getElementById('avatarPreview').style.display = 'block';
+            const img = document.getElementById('img-avatar');
+            if (img) img.src = e.target.result;
+            const nameEl = document.getElementById('avatarFileName');
+            if (nameEl) {
+                nameEl.textContent = input.files[0].name;
+                nameEl.style.color = '#ffffff';
+            }
         };
         reader.readAsDataURL(input.files[0]);
     }
@@ -427,7 +448,6 @@ function uploadAvatar() {
         } catch (err) {
             showToast(err.message || 'Error al subir imagen', 'error');
         } finally {
-            document.getElementById('avatarPreview').style.display = 'none';
             document.getElementById('avatarFile').value = '';
         }
     };
@@ -439,8 +459,13 @@ function previewBanner(input) {
     if (input.files && input.files[0]) {
         const reader = new FileReader();
         reader.onload = function (e) {
-            document.getElementById('bannerPreviewImg').src = e.target.result;
-            document.getElementById('bannerPreview').style.display = 'block';
+            const img = document.getElementById('img-banner');
+            if (img) img.src = e.target.result;
+            const nameEl = document.getElementById('bannerFileName');
+            if (nameEl) {
+                nameEl.textContent = input.files[0].name;
+                nameEl.style.color = '#ffffff';
+            }
         };
         reader.readAsDataURL(input.files[0]);
     }
@@ -498,7 +523,6 @@ function uploadBanner() {
         } catch (err) {
             showToast(err.message || 'Error al subir banner', 'error');
         } finally {
-            document.getElementById('bannerPreview').style.display = 'none';
             document.getElementById('bannerFile').value = '';
         }
     };

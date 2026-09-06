@@ -19,18 +19,27 @@ const helmet = require('helmet');
 const { supabase, requireSupabase } = require('./supabaseClient');
 console.log(`[STARTUP] Supabase client: ${supabase ? 'ACTIVO' : 'INACTIVO'}`);
 
-const SUPABASE_MGMT_TOKEN = process.env.SUPABASE_MGMT_TOKEN || '';
-const SUPABASE_PROJECT_ID = process.env.SUPABASE_PROJECT_ID || 'ugadesptdtbrzczxjtdx';
-async function updateUltimoAccesoViaMgmt(userId) {
-  if (!SUPABASE_MGMT_TOKEN) return;
+function getSupabaseRestUrl() {
+  return (process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || '').replace(/\/+$/, '');
+}
+function getSupabaseRestKey() {
+  return process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+}
+async function updateUltimoAccesoRest(userId) {
+  const urlBase = getSupabaseRestUrl();
+  const key = getSupabaseRestKey();
+  if (!urlBase || !key) return;
+  const restUrl = `${urlBase}/rest/v1/usuarios?id=eq.${userId}`;
+  const headers = {
+    apikey: key,
+    Authorization: `Bearer ${key}`,
+    'Content-Type': 'application/json',
+    Prefer: 'return=minimal'
+  };
   try {
-    await axios.post(
-      `https://api.supabase.com/v1/projects/${SUPABASE_PROJECT_ID}/database/query`,
-      { query: `UPDATE usuarios SET ultimo_acceso = now() WHERE id = '${userId}';` },
-      { headers: { apikey: SUPABASE_MGMT_TOKEN, Authorization: `Bearer ${SUPABASE_MGMT_TOKEN}`, 'Content-Type': 'application/json' } }
-    );
+    await axios.patch(restUrl, { ultimo_acceso: new Date().toISOString() }, { headers, timeout: 5000 });
   } catch (e) {
-    console.error('[UPDATE_ULTIMO_ACCESO_MGMT] Error:', e.message);
+    console.error('[UPDATE_ULTIMO_ACCESO_REST] Error:', e.message);
   }
 }
 
@@ -279,7 +288,7 @@ app.post('/api/session/sync', async (req, res) => {
   if (!token) return res.status(401).json({ error: 'Token no provisto' });
   try {
     const decoded = jwt.verify(token, localJwtSecret);
-    if (decoded.sub) await updateUltimoAccesoViaMgmt(decoded.sub);
+    if (decoded.sub) await updateUltimoAccesoRest(decoded.sub);
   } catch (e) {
     console.warn('[SESSION_SYNC] Error actualizando ultimo_acceso:', e.message);
   }
@@ -1492,7 +1501,7 @@ app.post('/api/login/2fa', loginLimiter, async (req, res) => {
       sub: userRow.id, email: userRow.email, rol: userRow.rol || userRow.rol_global || 'user',
       empresa_codigo: userRow.empresa_codigo || 'ROOT'
     }, localJwtSecret, { expiresIn: '30d' });
-    await updateUltimoAccesoViaMgmt(userRow.id);
+    await updateUltimoAccesoRest(userRow.id);
     setSessionCookie(res, token);
     return res.json({
       message: 'Login exitoso', token,

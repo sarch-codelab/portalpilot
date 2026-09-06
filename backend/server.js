@@ -266,9 +266,12 @@ app.post('/api/session/sync', async (req, res) => {
   if (!token) return res.status(401).json({ error: 'Token no provisto' });
   try {
     const decoded = jwt.verify(token, localJwtSecret);
-    if (decoded.sub) await supabase.from('usuarios').update({ updated_at: new Date().toISOString() }).eq('id', decoded.sub);
+    if (decoded.sub) {
+      const now = new Date().toISOString();
+      await supabase.from('usuarios').update({ updated_at: now, ultimo_acceso: now }).eq('id', decoded.sub);
+    }
   } catch (e) {
-    console.warn('[SESSION_SYNC] Error actualizando updated_at:', e.message);
+    console.warn('[SESSION_SYNC] Error actualizando ultimo_acceso:', e.message);
   }
   setSessionCookie(res, token);
   return res.json({ ok: true });
@@ -1479,7 +1482,8 @@ app.post('/api/login/2fa', loginLimiter, async (req, res) => {
       sub: userRow.id, email: userRow.email, rol: userRow.rol || userRow.rol_global || 'user',
       empresa_codigo: userRow.empresa_codigo || 'ROOT'
     }, localJwtSecret, { expiresIn: '30d' });
-    await supabase.from('usuarios').update({ updated_at: new Date().toISOString() }).eq('id', userRow.id);
+    const now = new Date().toISOString();
+    await supabase.from('usuarios').update({ updated_at: now, ultimo_acceso: now }).eq('id', userRow.id);
     setSessionCookie(res, token);
     return res.json({
       message: 'Login exitoso', token,

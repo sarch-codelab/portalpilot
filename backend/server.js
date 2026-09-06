@@ -1772,6 +1772,7 @@ app.get('/api/tenants', authenticate, async (req, res) => {
         query = query.eq('codigo', userTenantCode);
       }
       const { data: supaTenants, error } = await query;
+      console.log('[TENANTS DEBUG]', JSON.stringify({ userTenantCode, userIsRoot, count: supaTenants ? supaTenants.length : 0, error: error ? (error.message || JSON.stringify(error)) : null }));
       if (!error && supaTenants && supaTenants.length > 0) {
         tenantsFormat = supaTenants.map(t => ({
           id: t.id || t.codigo || 'ROOT',

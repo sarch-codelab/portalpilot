@@ -1948,6 +1948,7 @@
                         <tr>
                             <th><input type="checkbox" id="selectAll" onchange="toggleSelectAll()"></th>
                             <th class="sortable asc" data-sort="name">Usuario</th>
+                            <th class="sortable" data-sort="banner">Banner</th>
                             <th class="sortable" data-sort="role">Rol</th>
                             <th class="sortable" data-sort="tenant">Tenant</th>
                             <th class="sortable" data-sort="status">Estado</th>
@@ -2289,17 +2290,22 @@
                 const avatarHtml = avatarSrc
                   ? `<img src="${avatarSrc}" alt="${nombre}" onerror="this.parentElement.innerHTML='${initials}'">`
                   : initials;
-                const row = document.createElement('tr');
+const row = document.createElement('tr');
                 if (selectedUsers.has(u.id)) row.classList.add('selected');
                 row.onclick = (e) => { if (!e.target.closest('input') && !e.target.closest('.user-actions')) openDetailPanel(u); };
+                const bannerSrc = u.banner || '';
+                const bannerHtml = bannerSrc
+                  ? `<img src="${bannerSrc}" alt="Banner" style="width:80px;height:30px;object-fit:cover;border-radius:4px;border:1px solid var(--border);" onerror="this.style.display='none'">`
+                  : `<span style="color:var(--gray);font-size:12px;">Sin banner</span>`;
                 row.innerHTML = `
-          <td><input type="checkbox" class="user-checkbox" data-id="${u.id}" ${selectedUsers.has(u.id) ? 'checked' : ''} onclick="event.stopPropagation();toggleUserSelection('${u.id}')"></td>
-          <td><div class="user-info"><div class="user-avatar">${avatarHtml}<span class="online-dot ${isOnline ? 'online' : 'offline'}"></span></div><div><div class="user-name">${nombre} ${apellido}</div><div class="user-email">${u.email}</div></div></div></td>
-          <td><span class="role-badge ${u.rol}">${u.rol.charAt(0).toUpperCase() + u.rol.slice(1)}</span></td>
-          <td><span class="user-tenant">${u.tenant || u.tenant_code || 'N/A'}</span></td>
-          <td><span class="status-badge ${u.status}"><span class="status-dot"></span>${u.status.charAt(0).toUpperCase() + u.status.slice(1)}</span></td>
-          <td>${u.lastActivity ? formatRelativeTime(u.lastActivity) : '<span style="color:var(--gray)">Nunca</span>'}</td>
-          <td><div class="user-actions">
+            <td><input type="checkbox" class="user-checkbox" data-id="${u.id}" ${selectedUsers.has(u.id) ? 'checked' : ''} onclick="event.stopPropagation();toggleUserSelection('${u.id}')"></td>
+            <td><div class="user-info"><div class="user-avatar">${avatarHtml}<span class="online-dot ${isOnline ? 'online' : 'offline'}"></span></div><div><div class="user-name">${nombre} ${apellido}</div><div class="user-email">${u.email}</div></div></div></td>
+            <td>${bannerHtml}</td>
+            <td><span class="role-badge ${u.rol}">${u.rol.charAt(0).toUpperCase() + u.rol.slice(1)}</span></td>
+            <td><span class="user-tenant">${u.tenant || u.tenant_code || 'N/A'}</span></td>
+            <td><span class="status-badge ${u.status}"><span class="status-dot"></span>${u.status.charAt(0).toUpperCase() + u.status.slice(1)}</span></td>
+            <td>${u.lastActivity ? formatRelativeTime(u.lastActivity) : '<span style="color:var(--gray)">Nunca</span>'}</td>
+            <td><div class="user-actions">
             <button class="action-icon-btn" title="Ver detalle" onclick="event.stopPropagation();window.location.href='usuario_detail.html?id='+encodeURIComponent('${u.id}')"><i class="fas fa-eye"></i></button>
             <button class="action-icon-btn" title="Editar" onclick="event.stopPropagation();editUser('${u.id}','${u.source || ''}')"><i class="fas fa-edit"></i></button>
             <button class="action-icon-btn ${u.status === 'active' ? 'danger' : ''}" title="${u.status === 'active' ? 'Suspender' : 'Activar'}" onclick="event.stopPropagation();confirmAction('${u.status === 'active' ? 'Suspender' : 'Activar'} usuario','¿${u.status === 'active' ? 'Suspender' : 'Activar'} a ${nombre} ${apellido}?',()=>toggleUserStatus('${u.id}','${u.status}','${u.source || ''}'),'../img/navi/${u.status === 'active' ? 'navi-suspender.png' : 'navi-advertencia.png'}')"><i class="fas fa-${u.status === 'active' ? 'pause' : 'play'}-circle"></i></button>

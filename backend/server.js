@@ -2282,28 +2282,29 @@ app.get('/api/users', authenticate, async (req, res) => {
 
         if (supaErr) console.warn('[GET USERS] Supabase error:', supaErr.message);
 
-        (supaUsers || []).filter(u => u.activo !== false).forEach(u => {
-          const email = (u.email || '').toLowerCase();
-          if (email && !seenEmails.has(email)) {
-            seenEmails.add(email);
-            allUsers.push({
-              id: u.id,
-              displayId: u.id,
-              nombre: u.nombre || u.email.split('@')[0],
-              apellido: u.apellido || '',
-              email: email,
-              rol: u.rol || u.rol_global || 'Owner',
-              tenant_code: u.empresa_codigo || 'ROOT',
-              tenant: u.empresa_codigo || 'Portal Pilot',
-              status: 'active',
-              registered: u.created_at || new Date().toISOString(),
-              lastActivity: u.updated_at || null,
-              avatar: u.foto_perfil_url || null,
-              notas: '',
-              source: 'supabase'
-            });
-          }
-        });
+(supaUsers || []).filter(u => u.activo !== false).forEach(u => {
+            const email = (u.email || '').toLowerCase();
+            if (email && !seenEmails.has(email)) {
+              seenEmails.add(email);
+              allUsers.push({
+                id: u.id,
+                displayId: u.id,
+                nombre: u.nombre || u.email.split('@')[0],
+                apellido: u.apellido || '',
+                email: email,
+                rol: u.rol || u.rol_global || 'Owner',
+                tenant_code: u.empresa_codigo || 'ROOT',
+                tenant: u.empresa_codigo || 'Portal Pilot',
+                status: 'active',
+                registered: u.created_at || new Date().toISOString(),
+                lastActivity: u.ultimo_acceso || u.updated_at || null,
+                avatar: u.foto_perfil_url || null,
+                banner: u.banner_perfil_url || null,
+                notas: '',
+                source: 'supabase'
+              });
+            }
+          });
       } catch (err) {
         console.warn('[GET USERS] Error consultando usuarios:', err.message);
       }

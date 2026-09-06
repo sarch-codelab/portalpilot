@@ -64,7 +64,7 @@ app.use(helmet({
       "style-src-attr": ["'self'", "'unsafe-inline'"],
       "style-src-elem": ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://cdnjs.cloudflare.com"],
       "font-src": ["'self'", "https://fonts.gstatic.com", "https://cdnjs.cloudflare.com"],
-      "img-src": ["'self'", "data:", "blob:", "https://images.unsplash.com"],
+      "img-src": ["'self'", "data:", "blob:", "https://images.unsplash.com", "https://raw.githubusercontent.com"],
       "connect-src": [
         "'self'",
         "https://fonts.googleapis.com",
@@ -2693,17 +2693,13 @@ app.delete('/api/users/:id', authenticate, requireTenantAdmin, async (req, res) 
   }
 });
 
-// ═══ SUBIDA DE IMÁGENES (Supabase Storage) ═══
+// ═══ SUBIDA DE IMÁGENES (Supabase Storage o fallback data:URL) ═══
 const UPLOADS_BUCKET = 'uploads';
 
 app.post('/api/upload', authenticate, async (req, res) => {
   try {
     const { file, folder, filename } = req.body;
     if (!file) return res.status(400).json({ error: 'No se envió ningún archivo' });
-
-    if (!supabase || !supabase.storage) {
-      return res.status(503).json({ error: 'Supabase Storage no está configurado' });
-    }
 
     const match = file.match(/^data:image\/(\w+);base64,(.+)$/);
     if (!match) return res.status(400).json({ error: 'Formato de imagen inválido' });
@@ -2712,27 +2708,34 @@ app.post('/api/upload', authenticate, async (req, res) => {
     const base64Data = match[2];
     const buffer = Buffer.from(base64Data, 'base64');
 
-    if (buffer.length > 5 * 1024 * 1024) {
-      return res.status(400).json({ error: 'La imagen no debe superar 5MB' });
+    if (buffer.length > 10 * 1024 * 1024) {
+      return res.status(400).json({ error: 'La imagen no debe superar 10MB' });
     }
 
-    const tenantCode = getTenantCode(req) || 'default';
-    const subDir = folder || 'general';
-    const safeName = (filename || `img_${Date.now()}`).replace(/[^a-zA-Z0-9_-]/g, '_');
-    const fileName = `${safeName}_${Date.now()}.${ext}`;
-    const filePath = `${tenantCode}/${subDir}/${fileName}`;
+    // Si hay Supabase Storage real, úsalo
+    if (supabase && supabase.storage) {
+      const tenantCode = getTenantCode(req) || 'default';
+      const subDir = folder || 'general';
+      const safeName = (filename || `img_${Date.now()}`).replace(/[^a-zA-Z0-9_-]/g, '_');
+      const fileName = `${safeName}_${Date.now()}.${ext}`;
+      const filePath = `${tenantCode}/${subDir}/${fileName}`;
 
-    const contentType = `image/${ext === 'jpg' ? 'jpeg' : ext}`;
-    const { data, error } = await supabase.storage.upload(UPLOADS_BUCKET, filePath, buffer, contentType);
+      const contentType = `image/${ext === 'jpg' ? 'jpeg' : ext}`;
+      const { data, error } = await supabase.storage.upload(UPLOADS_BUCKET, filePath, buffer, contentType);
 
-    if (error) {
-      console.error('[UPLOAD] Supabase Storage error:', error.message);
-      return res.status(500).json({ error: 'Error al subir archivo a Storage' });
+      if (error) {
+        console.error('[UPLOAD] Supabase Storage error:', error.message);
+        return res.status(500).json({ error: 'Error al subir archivo a Storage' });
+      }
+
+      const fileUrl = supabase.storage.getPublicUrl(UPLOADS_BUCKET, filePath);
+      return res.json({ url: fileUrl, path: `/${filePath}`, size: buffer.length });
     }
 
-    const fileUrl = supabase.storage.getPublicUrl(UPLOADS_BUCKET, filePath);
+    // Fallback: devolver data:URL (funciona sin Storage, ideal para desarrollo/Vercel serverless)
+    const dataUrl = `data:image/${ext === 'jpg' ? 'jpeg' : ext};base64,${base64Data}`;
+    return res.json({ url: dataUrl, path: null, size: buffer.length, fallback: true });
 
-    res.json({ url: fileUrl, path: `/${filePath}`, size: buffer.length });
   } catch (error) {
     console.error('[UPLOAD] Error:', error.message);
     res.status(500).json({ error: 'Error al subir archivo' });

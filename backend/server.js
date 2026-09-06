@@ -4599,9 +4599,13 @@ app.delete('/api/productos/:id', authenticate, async (req, res) => {
     const tenant = normalizeTenantCode(getTenantCode(req));
     const empresa = await resolverEmpresaSupabase(tenant);
     if (!empresa) return res.status(404).json({ error: 'Empresa no encontrada' });
-    const { error } = await supabase
-      .from('productos').delete()
-      .eq('id', req.params.id).eq('empresa_id', empresa.id);
+    const objId = req.params.id;
+    const esUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(objId);
+    let deleteQuery = supabase.from('productos').delete();
+    deleteQuery = esUuid
+      ? deleteQuery.eq('id', objId)
+      : deleteQuery.eq('codigo', objId);
+    const { error } = await deleteQuery.eq('empresa_id', empresa.id);
     if (error) return res.status(500).json({ error: error.message });
     return res.json({ success: true });
   } catch (err) { return handleServerError(res, err); }

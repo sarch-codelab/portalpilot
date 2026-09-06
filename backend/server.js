@@ -5912,7 +5912,6 @@ app.post('/api/transacciones', authenticate, async (req, res) => {
     const { data, error } = await supabase.from('transacciones').insert([{
       empresa_id: empresa.id,
       empresa_codigo: tenant,
-      usuario_id: req.user?.sub || null,
       tipo: t.tipo.toString().slice(0, 30),
       categoria: (t.categoria || '').toString().slice(0, 100),
       descripcion: (t.descripcion || '').toString().slice(0, 1000),
@@ -6077,7 +6076,7 @@ app.post('/api/notas', authenticate, async (req, res) => {
 });
 
 const SYNC_SAFE_COLUMNS = Object.freeze({
-  transacciones: ['id', 'empresa_id', 'empresa_codigo', 'usuario_id', 'tipo', 'categoria', 'descripcion', 'monto', 'metodo_pago', 'referencia', 'fecha', 'created_at'],
+  transacciones: ['id', 'empresa_id', 'empresa_codigo', 'tipo', 'categoria', 'descripcion', 'monto', 'metodo_pago', 'referencia', 'fecha', 'created_at', 'updated_at', 'metadata', 'sucursal_id'],
   productos: ['id', 'empresa_id', 'empresa_codigo', 'codigo', 'nombre', 'descripcion', 'categoria', 'unidad_medida', 'imagen_url', 'precio_compra', 'precio_venta', 'stock_actual', 'stock_minimo', 'isv_rate', 'exento', 'bodega', 'activo', 'created_at', 'updated_at'],
   clientes: ['id', 'empresa_id', 'empresa_codigo', 'nombre', 'rtn', 'email', 'telefono', 'direccion', 'limite_credito', 'saldo_pendiente', 'notas', 'activo', 'created_at', 'updated_at'],
   facturas: ['id', 'empresa_id', 'empresa_codigo', 'usuario_id', 'correlativo', 'cliente_nombre', 'cliente_rtn', 'cliente_email', 'subtotal', 'isv', 'descuento', 'total', 'estado', 'tipo_documento', 'metodo_pago', 'notas', 'created_at', 'updated_at'],

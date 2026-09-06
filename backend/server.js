@@ -258,15 +258,20 @@ function protectPortalArea(req, res, next) {
   next();
 }
 
-app.post('/api/session/sync', (req, res) => {
+app.post('/api/session/sync', async (req, res) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
   if (!token) return res.status(401).json({ error: 'Token no provisto' });
-  jwt.verify(token, localJwtSecret, (err) => {
-    if (err) return res.status(403).json({ error: 'Token inválido' });
-    setSessionCookie(res, token);
-    return res.json({ ok: true });
-  });
+  try {
+    const decoded = jwt.verify(token, localJwtSecret);
+    if (supabase && decoded.sub) {
+      await supabase.from('usuarios').update({ ultimo_acceso: new Date().toISOString() }).eq('id', decoded.sub);
+    }
+  } catch (e) {
+    console.warn('[SESSION_SYNC] Error actualizando ultimo_acceso:', e.message);
+  }
+  setSessionCookie(res, token);
+  return res.json({ ok: true });
 });
 
 app.post('/api/logout', (req, res) => {
@@ -1474,7 +1479,11 @@ app.post('/api/login/2fa', loginLimiter, async (req, res) => {
       sub: userRow.id, email: userRow.email, rol: userRow.rol || userRow.rol_global || 'user',
       empresa_codigo: userRow.empresa_codigo || 'ROOT'
     }, localJwtSecret, { expiresIn: '30d' });
-    await supabase.from('usuarios').update({ ultimo_acceso: new Date().toISOString() }).eq('id', userRow.id);
+    try {
+      await supabase.from('usuarios').update({ ultimo_acceso: new Date().toISOString() }).eq('id', userRow.id);
+    } catch (e) {
+      console.error('[LOGIN] Error actualizando ultimo_acceso:', e.message);
+    }
     setSessionCookie(res, token);
     return res.json({
       message: 'Login exitoso', token,

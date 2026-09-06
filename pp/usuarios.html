@@ -777,10 +777,36 @@
             border-bottom: 1px solid var(--border);
             transition: background .2s;
             cursor: pointer;
+            position: relative;
+        }
+
+        .users-table tbody tr::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            opacity: 0;
+            transition: opacity .3s;
+            z-index: 0;
+            border-radius: inherit;
+        }
+
+        .users-table tbody tr.has-banner::before {
+            opacity: 1;
+            background-image: var(--banner-url, none);
+            background: linear-gradient(rgba(4,4,10,0.85), rgba(4,4,10,0.9)), var(--banner-url, none);
+            background-size: cover;
+            background-position: center;
         }
 
         .users-table tbody tr:hover {
             background: rgba(139, 92, 246, 0.06);
+        }
+
+        .users-table tbody tr:hover::before {
+            opacity: 1;
         }
 
         .users-table tbody tr:last-child {
@@ -796,6 +822,9 @@
             padding: 16px 20px;
             font-size: 13px;
             color: var(--text);
+            background: transparent;
+            position: relative;
+            z-index: 1;
         }
 
         /* User Info */
@@ -1948,7 +1977,6 @@
                         <tr>
                             <th><input type="checkbox" id="selectAll" onchange="toggleSelectAll()"></th>
                             <th class="sortable asc" data-sort="name">Usuario</th>
-                            <th class="sortable" data-sort="banner">Banner</th>
                             <th class="sortable" data-sort="role">Rol</th>
                             <th class="sortable" data-sort="tenant">Tenant</th>
                             <th class="sortable" data-sort="status">Estado</th>
@@ -2294,13 +2322,13 @@ const row = document.createElement('tr');
                 if (selectedUsers.has(u.id)) row.classList.add('selected');
                 row.onclick = (e) => { if (!e.target.closest('input') && !e.target.closest('.user-actions')) openDetailPanel(u); };
                 const bannerSrc = u.banner || '';
-                const bannerHtml = bannerSrc
-                  ? `<img src="${bannerSrc}" alt="Banner" style="width:80px;height:30px;object-fit:cover;border-radius:4px;border:1px solid var(--border);" onerror="this.style.display='none'">`
-                  : `<span style="color:var(--gray);font-size:12px;">Sin banner</span>`;
+                if (bannerSrc) {
+                    row.classList.add('has-banner');
+                    row.style.setProperty('--banner-url', `url('${bannerSrc}')`);
+                }
                 row.innerHTML = `
             <td><input type="checkbox" class="user-checkbox" data-id="${u.id}" ${selectedUsers.has(u.id) ? 'checked' : ''} onclick="event.stopPropagation();toggleUserSelection('${u.id}')"></td>
             <td><div class="user-info"><div class="user-avatar">${avatarHtml}<span class="online-dot ${isOnline ? 'online' : 'offline'}"></span></div><div><div class="user-name">${nombre} ${apellido}</div><div class="user-email">${u.email}</div></div></div></td>
-            <td>${bannerHtml}</td>
             <td><span class="role-badge ${u.rol}">${u.rol.charAt(0).toUpperCase() + u.rol.slice(1)}</span></td>
             <td><span class="user-tenant">${u.tenant || u.tenant_code || 'N/A'}</span></td>
             <td><span class="status-badge ${u.status}"><span class="status-dot"></span>${u.status.charAt(0).toUpperCase() + u.status.slice(1)}</span></td>

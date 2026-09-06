@@ -35,7 +35,9 @@ const allowedOrigins = [
   'http://localhost:3000',
   'http://127.0.0.1:3000',
   'https://portal-pilot.vercel.app',
-  'https://www.portal-pilot.vercel.app'
+  'https://www.portal-pilot.vercel.app',
+  'https://portalpilot-app.vercel.app',
+  'https://www.portalpilot-app.vercel.app'
 ];
 const corsOptions = {
   origin: (origin, callback) => {
@@ -46,7 +48,7 @@ const corsOptions = {
     }
     callback(new Error('Origen no permitido por CORS'));
   },
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true
 };

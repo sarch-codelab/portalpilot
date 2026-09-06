@@ -129,7 +129,7 @@ function from(table) {
           return resolve({ data: null, error: err.response?.data || { message: err.message } });
         }
       };
-      exec();
+      return exec();
     }
   };
 

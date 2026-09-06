@@ -19,30 +19,6 @@ const helmet = require('helmet');
 const { supabase, requireSupabase } = require('./supabaseClient');
 console.log(`[STARTUP] Supabase client: ${supabase ? 'ACTIVO' : 'INACTIVO'}`);
 
-function getSupabaseRestUrl() {
-  return (process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || '').replace(/\/+$/, '');
-}
-function getSupabaseRestKey() {
-  return process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-}
-async function updateUltimoAcceso(userId) {
-  const urlBase = getSupabaseRestUrl();
-  const key = getSupabaseRestKey();
-  if (!urlBase || !key) return;
-  const restUrl = `${urlBase}/rest/v1/usuarios?id=eq.${userId}`;
-  const headers = {
-    apikey: key,
-    Authorization: `Bearer ${key}`,
-    'Content-Type': 'application/json',
-    Prefer: 'return=minimal'
-  };
-  try {
-    await axios.patch(restUrl, { ultimo_acceso: new Date().toISOString() }, { headers });
-  } catch (e) {
-    console.error('[UPDATE_ULTIMO_ACCESO] Error:', e.message);
-  }
-}
-
 const app = express();
 
 // 🔧 FIX VERCEL: Detectar entorno serverless
@@ -288,7 +264,7 @@ app.post('/api/session/sync', async (req, res) => {
   if (!token) return res.status(401).json({ error: 'Token no provisto' });
   try {
     const decoded = jwt.verify(token, localJwtSecret);
-    if (decoded.sub) await updateUltimoAcceso(decoded.sub);
+    if (decoded.sub) await supabase.from('usuarios').update({ ultimo_acceso: new Date().toISOString() }).eq('id', decoded.sub);
   } catch (e) {
     console.warn('[SESSION_SYNC] Error actualizando ultimo_acceso:', e.message);
   }
@@ -1501,7 +1477,7 @@ app.post('/api/login/2fa', loginLimiter, async (req, res) => {
       sub: userRow.id, email: userRow.email, rol: userRow.rol || userRow.rol_global || 'user',
       empresa_codigo: userRow.empresa_codigo || 'ROOT'
     }, localJwtSecret, { expiresIn: '30d' });
-    await updateUltimoAcceso(userRow.id);
+    await supabase.from('usuarios').update({ ultimo_acceso: new Date().toISOString() }).eq('id', userRow.id);
     setSessionCookie(res, token);
     return res.json({
       message: 'Login exitoso', token,

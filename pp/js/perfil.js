@@ -161,7 +161,11 @@ if (logoutBtn && logoutModal) {
 // ── Modal Functions ────────────────────────────────
 function openModal(id) {
     const modal = document.getElementById(id);
-    if (modal) modal.classList.add('active');
+    if (modal) {
+        modal.classList.add('active');
+    } else {
+        console.warn('[PERFIL] Modal no encontrado:', id);
+    }
     if (id === 'apiKeysModal') loadApiKeys();
 }
 
@@ -735,6 +739,17 @@ window.addEventListener('load', () => {
     // Disable all form fields by default (tras cargar los datos reales)
     document.querySelectorAll('.field input, .field select, .field textarea').forEach(el => {
         el.disabled = true;
+    });
+
+    // Fallback: vincular botones de modales por si el onclick no dispara
+    document.querySelectorAll('[onclick^="openModal"]').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            const match = this.getAttribute('onclick').match(/openModal\(['"]([^'"]+)['"]\)/);
+            if (match && match[1]) {
+                e.preventDefault();
+                openModal(match[1]);
+            }
+        });
     });
 });
 

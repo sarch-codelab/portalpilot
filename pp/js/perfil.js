@@ -737,7 +737,7 @@ window.addEventListener('load', () => {
     }, 100);
 
     // Disable all form fields by default (tras cargar los datos reales)
-    document.querySelectorAll('.field input, .field select, .field textarea').forEach(el => {
+    document.querySelectorAll('.field input:not([type="file"]), .field select, .field textarea').forEach(el => {
         el.disabled = true;
     });
 

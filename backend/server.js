@@ -4420,7 +4420,11 @@ app.get('/api/productos', authenticate, async (req, res) => {
     if (req.query.barcode) query = query.eq('barcode', req.query.barcode);
     const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 100, 1), 500);
     const offset = Math.max(parseInt(req.query.offset, 10) || 0, 0);
-    const { data, error, count } = await query.order('nombre', { ascending: true }).range(offset, offset + limit - 1);
+    const orderedQuery = query.order('nombre', { ascending: true });
+    const result = typeof orderedQuery.range === 'function'
+      ? await orderedQuery.range(offset, offset + limit - 1)
+      : await orderedQuery.limit(limit);
+    const { data, error, count } = result;
     if (error) return res.status(500).json({ error: error.message });
     return res.json({ productos: data || [], total: count });
   } catch (err) { return handleServerError(res, err); }
@@ -4448,6 +4452,62 @@ app.post('/api/productos', authenticate, async (req, res) => {
     const empresa = await resolverEmpresaSupabase(tenant);
     if (!empresa) return res.status(404).json({ error: 'Empresa no encontrada' });
     const b = req.body || {};
+
+    // ── Formato APP (sync): { empresa_codigo, productos: [...], ... } ──
+    if (Array.isArray(b.productos)) {
+      let sincronizados = 0;
+      const errores = [];
+      for (const p of b.productos) {
+        try {
+          if (!p || (!p.nombre && !p.codigo)) {
+            errores.push({ error: 'Producto sin nombre ni código' });
+            continue;
+          }
+          const codigo = (p.codigo || '').toString().trim().slice(0, 100);
+          const nombre = (p.nombre || 'Producto ' + codigo).toString().slice(0, 200);
+          const campos = {
+            empresa_id: empresa.id,
+            empresa_codigo: tenant,
+            codigo,
+            nombre,
+            descripcion: (p.descripcion || '').toString().slice(0, 500),
+            categoria: (p.categoria || 'General').toString().slice(0, 100),
+            unidad_medida: (p.unidad_medida || 'Unidad').toString().slice(0, 50),
+            imagen_url: p.imagen_url || null,
+            precio_compra: parseFloat(p.precio_compra) || 0,
+            precio_venta: parseFloat(p.precio_venta) || 0,
+            stock_actual: parseInt(p.stock_actual, 10) || 0,
+            stock_minimo: parseInt(p.stock_minimo, 10) || 0,
+            isv_rate: parseFloat(p.isv_rate) || 15,
+            exento: !!p.exento,
+            bodega: (p.bodega || 'General').toString().slice(0, 100),
+            barcode: (p.barcode || '').toString().trim().slice(0, 100) || null,
+            marca: (p.marca || '').toString().slice(0, 100) || null,
+            presentacion: (p.presentacion || '').toString().slice(0, 100) || null,
+            activo: p.activo !== false,
+            updated_at: new Date().toISOString()
+          };
+          const { data: exist } = await supabase.from('productos')
+            .select('id').eq('empresa_id', empresa.id).eq('codigo', codigo).limit(1);
+          if (exist && exist.length > 0) {
+            const up = {};
+            const allowUp = ['nombre','descripcion','categoria','unidad_medida','imagen_url','precio_compra','precio_venta','stock_actual','stock_minimo','isv_rate','exento','bodega','barcode','marca','presentacion','sucursal_id','bodega_id','activo','updated_at'];
+            allowUp.forEach(k => { if (campos[k] !== undefined) up[k] = campos[k]; });
+            const { error: ue } = await supabase.from('productos').update(up).eq('id', exist[0].id);
+            if (ue) errores.push({ codigo, error: ue.message });
+            else sincronizados++;
+            continue;
+          }
+          const { error: ie } = await supabase.from('productos').insert([campos]);
+          if (ie) errores.push({ codigo, error: ie.message });
+          else sincronizados++;
+        } catch (e) {
+          errores.push({ error: e.message });
+        }
+      }
+      return res.status(200).json({ sincronizados, errores });
+    }
+
     if (!b.nombre) return res.status(400).json({ error: 'nombre es requerido' });
     const barcode = (b.barcode || '').toString().trim();
     if (barcode) {

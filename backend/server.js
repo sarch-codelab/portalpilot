@@ -311,6 +311,17 @@ function normalizeTenantCode(code) {
   return (code || '').toString().trim().toUpperCase();
 }
 
+function slugifyDominio(value) {
+  const slug = (value || '').toString()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 32);
+  return slug || 'empresa';
+}
+
 const PLAN_ENTITLEMENTS = Object.freeze({
   starter: {
     maxUsers: 5, maxCompanies: 1,
@@ -1185,6 +1196,7 @@ app.post('/api/registro', async (req, res) => {
       await supabase.from('tenants').upsert({
         codigo: empresaCodigo,
         nombre_empresa: empresaNombre || 'Portal Pilot',
+        dominio: (dominioWorkspace && dominioWorkspace.trim()) ? dominioWorkspace.trim() : null,
         plan: plan || 'starter',
         estado: 'activo'
       }, { onConflict: 'codigo' });
@@ -1777,7 +1789,7 @@ app.get('/api/tenants', authenticate, async (req, res) => {
           id: t.id || t.codigo || 'ROOT',
           codigo: t.codigo || t.id || 'ROOT',
           name: t.nombre_empresa || t.nombre || t.codigo || 'Empresa',
-          domain: t.dominio || `${(t.codigo || 'empresa').toLowerCase()}.portalpilot.app`,
+          domain: t.dominio || `${slugifyDominio(t.nombre_empresa || t.nombre || t.codigo || 'empresa')}.pp.ia`,
           plan: t.plan || 'enterprise',
           status: t.estado === 'activo' ? 'active' : t.estado === 'suspendido' ? 'suspended' : t.estado || 'active',
           users: 1,
@@ -1935,7 +1947,7 @@ app.get('/api/tenant/:id', authenticate, async (req, res) => {
     const preview = {
       id: tenant.codigo || tenantCode,
       name: tenant.nombre_empresa || tenant.nombre || tenant.Nombre,
-      domain: tenant.dominio || tenant.Dominio || tenant.email,
+      domain: tenant.dominio || tenant.Dominio || `${slugifyDominio(tenant.nombre_empresa || tenant.nombre || tenant.Nombre || tenant.codigo)}.pp.ia`,
       plan: tenant.plan || tenant.Plan,
       status: (tenant.estado || tenant.Estado || '').toString().toLowerCase() === 'activo' ? 'active' : (tenant.estado || tenant.Estado || '').toString().toLowerCase() === 'suspendido' ? 'suspended' : (tenant.estado || tenant.Estado),
       country: tenant.pais || tenant.Pais

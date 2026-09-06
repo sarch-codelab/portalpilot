@@ -5878,6 +5878,250 @@ app.post('/api/tenant/features', authenticate, requireTenantAdmin, async (req, r
   } catch (err) { return handleServerError(res, err); }
 });
 
+// ═══════════════════════════════════════════════════════════════════════════
+// COMPAT APP (Workspace) — transacciones, cotizaciones, órdenes de compra,
+// notas y sincronización. La app (Flutter) usa estos mismos endpoints.
+// ═══════════════════════════════════════════════════════════════════════════
+
+app.get('/api/transacciones', authenticate, async (req, res) => {
+  if (!requireSupabase(res)) return;
+  try {
+    const tenant = normalizeTenantCode(getTenantCode(req));
+    const empresa = await resolverEmpresaSupabase(tenant);
+    if (!empresa) return res.status(404).json({ error: 'Empresa no encontrada' });
+    let query = supabase.from('transacciones').select('*').eq('empresa_id', empresa.id);
+    if (req.query.tipo) query = query.eq('tipo', req.query.tipo);
+    if (req.query.categoria) query = query.eq('categoria', req.query.categoria);
+    if (req.query.fecha_desde) query = query.gte('fecha', req.query.fecha_desde);
+    if (req.query.fecha_hasta) query = query.lte('fecha', req.query.fecha_hasta);
+    const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 100, 1), 500);
+    const { data, error } = await query.order('fecha', { ascending: false }).limit(limit);
+    if (error) return res.status(500).json({ error: error.message });
+    return res.json({ transacciones: data || [] });
+  } catch (err) { return handleServerError(res, err); }
+});
+
+app.post('/api/transacciones', authenticate, async (req, res) => {
+  if (!requireSupabase(res)) return;
+  try {
+    const tenant = normalizeTenantCode(getTenantCode(req));
+    const empresa = await resolverEmpresaSupabase(tenant);
+    if (!empresa) return res.status(404).json({ error: 'Empresa no encontrada' });
+    const t = req.body?.transaccion || req.body || {};
+    if (!t.tipo) return res.status(400).json({ error: 'tipo es requerido' });
+    const { data, error } = await supabase.from('transacciones').insert([{
+      empresa_id: empresa.id,
+      empresa_codigo: tenant,
+      usuario_id: req.user?.sub || null,
+      tipo: t.tipo.toString().slice(0, 30),
+      categoria: (t.categoria || '').toString().slice(0, 100),
+      descripcion: (t.descripcion || '').toString().slice(0, 1000),
+      monto: parseFloat(t.monto) || 0,
+      metodo_pago: (t.metodo_pago || '').toString().slice(0, 50),
+      referencia: (t.referencia || '').toString().slice(0, 200),
+      fecha: t.fecha || new Date().toISOString(),
+      created_at: new Date().toISOString()
+    }]).select().maybeSingle();
+    if (error) return res.status(500).json({ error: error.message });
+    await registrarAuditoria(tenant, 'Transacción registrada', `Transacción "${t.tipo}" por ${t.monto}`, 'contabilidad', req.user?.nombre || '', req);
+    return res.status(201).json({ transaccion: data });
+  } catch (err) { return handleServerError(res, err); }
+});
+
+app.get('/api/cotizaciones', authenticate, async (req, res) => {
+  if (!requireSupabase(res)) return;
+  try {
+    const tenant = normalizeTenantCode(getTenantCode(req));
+    const empresa = await resolverEmpresaSupabase(tenant);
+    if (!empresa) return res.status(404).json({ error: 'Empresa no encontrada' });
+    let query = supabase.from('cotizaciones').select('*').eq('empresa_id', empresa.id);
+    if (req.query.estado) query = query.eq('estado', req.query.estado);
+    const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 100, 1), 500);
+    const { data, error } = await query.order('created_at', { ascending: false }).limit(limit);
+    if (error) return res.status(500).json({ error: error.message });
+    return res.json({ cotizaciones: data || [] });
+  } catch (err) { return handleServerError(res, err); }
+});
+
+app.post('/api/cotizaciones', authenticate, async (req, res) => {
+  if (!requireSupabase(res)) return;
+  try {
+    const tenant = normalizeTenantCode(getTenantCode(req));
+    const empresa = await resolverEmpresaSupabase(tenant);
+    if (!empresa) return res.status(404).json({ error: 'Empresa no encontrada' });
+    const c = req.body?.cotizacion || req.body || {};
+    if (!c.cliente_nombre) return res.status(400).json({ error: 'cliente_nombre es requerido' });
+    const subtotal = parseFloat(c.subtotal) || 0;
+    const isv = parseFloat(c.isv) || 0;
+    const descuento = parseFloat(c.descuento) || 0;
+    const total = parseFloat(c.total) || (subtotal + isv - descuento);
+    const { data, error } = await supabase.from('cotizaciones').insert([{
+      empresa_id: empresa.id,
+      empresa_codigo: tenant,
+      usuario_id: req.user?.sub || null,
+      correlativo: (c.correlativo || '').toString().slice(0, 50),
+      cliente_nombre: c.cliente_nombre.toString().slice(0, 200),
+      cliente_rtn: (c.cliente_rtn || '').toString().slice(0, 20),
+      items: c.items || [],
+      subtotal, isv, descuento, total,
+      estado: (c.estado || 'activa').toString().slice(0, 20),
+      notas: (c.notas || '').toString().slice(0, 500),
+      sucursal_id: c.sucursal_id || null,
+      creado_por: (c.creado_por || req.user?.nombre || '').toString().slice(0, 200),
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    }]).select().maybeSingle();
+    if (error) return res.status(500).json({ error: error.message });
+    await registrarAuditoria(tenant, 'Cotización creada', `Cotización para ${c.cliente_nombre}`, 'comercial', req.user?.nombre || '', req);
+    return res.status(201).json({ cotizacion: data });
+  } catch (err) { return handleServerError(res, err); }
+});
+
+app.get('/api/ordenes-compra', authenticate, async (req, res) => {
+  if (!requireSupabase(res)) return;
+  try {
+    const tenant = normalizeTenantCode(getTenantCode(req));
+    const empresa = await resolverEmpresaSupabase(tenant);
+    if (!empresa) return res.status(404).json({ error: 'Empresa no encontrada' });
+    let query = supabase.from('ordenes_compra').select('*').eq('empresa_id', empresa.id);
+    if (req.query.estado) query = query.eq('estado', req.query.estado);
+    const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 100, 1), 500);
+    const { data, error } = await query.order('created_at', { ascending: false }).limit(limit);
+    if (error) return res.status(500).json({ error: error.message });
+    return res.json({ ordenes: data || [] });
+  } catch (err) { return handleServerError(res, err); }
+});
+
+app.post('/api/ordenes-compra', authenticate, async (req, res) => {
+  if (!requireSupabase(res)) return;
+  try {
+    const tenant = normalizeTenantCode(getTenantCode(req));
+    const empresa = await resolverEmpresaSupabase(tenant);
+    if (!empresa) return res.status(404).json({ error: 'Empresa no encontrada' });
+    const o = req.body?.ordenCompra || req.body?.orden_compra || req.body || {};
+    if (!o.proveedor_nombre) return res.status(400).json({ error: 'proveedor_nombre es requerido' });
+    const subtotal = parseFloat(o.subtotal) || 0;
+    const isv = parseFloat(o.isv) || 0;
+    const descuento = parseFloat(o.descuento) || 0;
+    const total = parseFloat(o.total) || (subtotal + isv - descuento);
+    const { data, error } = await supabase.from('ordenes_compra').insert([{
+      empresa_id: empresa.id,
+      empresa_codigo: tenant,
+      usuario_id: req.user?.sub || null,
+      correlativo: (o.correlativo || '').toString().slice(0, 50),
+      proveedor_nombre: o.proveedor_nombre.toString().slice(0, 200),
+      proveedor_rtn: (o.proveedor_rtn || '').toString().slice(0, 20),
+      items: o.items || [],
+      subtotal, isv, descuento, total,
+      estado: (o.estado || 'pendiente').toString().slice(0, 20),
+      notas: (o.notas || '').toString().slice(0, 500),
+      bodega_id: o.bodega_id || null,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    }]).select().maybeSingle();
+    if (error) return res.status(500).json({ error: error.message });
+    await registrarAuditoria(tenant, 'Orden de compra creada', `Orden a ${o.proveedor_nombre}`, 'compras', req.user?.nombre || '', req);
+    return res.status(201).json({ orden_compra: data });
+  } catch (err) { return handleServerError(res, err); }
+});
+
+app.get('/api/notas', authenticate, async (req, res) => {
+  if (!requireSupabase(res)) return;
+  try {
+    const tenant = normalizeTenantCode(getTenantCode(req));
+    let query = supabase.from('notas').select('*').eq('empresa_codigo', tenant);
+    if (req.query.clave) query = query.eq('clave', req.query.clave);
+    const { data, error } = await query.order('updated_at', { ascending: false }).limit(500);
+    if (error) return res.status(500).json({ error: error.message });
+    return res.json({ notas: data || [] });
+  } catch (err) { return handleServerError(res, err); }
+});
+
+app.post('/api/notas', authenticate, async (req, res) => {
+  if (!requireSupabase(res)) return;
+  try {
+    const tenant = normalizeTenantCode(getTenantCode(req));
+    const empresa = await resolverEmpresaSupabase(tenant);
+    if (!empresa) return res.status(404).json({ error: 'Empresa no encontrada' });
+    const b = req.body || {};
+    const clave = (b.clave || '').toString().trim().slice(0, 200);
+    if (!clave) return res.status(400).json({ error: 'clave es requerido' });
+    const datos = b.datos !== undefined ? b.datos : {};
+    const { data: existing } = await supabase
+      .from('notas').select('id')
+      .eq('empresa_codigo', tenant)
+      .eq('clave', clave)
+      .maybeSingle();
+    let result;
+    if (existing) {
+      const { data, error } = await supabase.from('notas').update({
+        datos,
+        updated_at: new Date().toISOString()
+      }).eq('id', existing.id).select().maybeSingle();
+      if (error) return res.status(500).json({ error: error.message });
+      result = data;
+    } else {
+      const { data, error } = await supabase.from('notas').insert([{
+        empresa_id: empresa.id,
+        empresa_codigo: tenant,
+        clave,
+        datos,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }]).select().maybeSingle();
+      if (error) return res.status(500).json({ error: error.message });
+      result = data;
+    }
+    return res.json({ nota: result });
+  } catch (err) { return handleServerError(res, err); }
+});
+
+const SYNC_SAFE_COLUMNS = Object.freeze({
+  transacciones: ['id', 'empresa_id', 'empresa_codigo', 'usuario_id', 'tipo', 'categoria', 'descripcion', 'monto', 'metodo_pago', 'referencia', 'fecha', 'created_at'],
+  productos: ['id', 'empresa_id', 'empresa_codigo', 'codigo', 'nombre', 'descripcion', 'categoria', 'unidad_medida', 'imagen_url', 'precio_compra', 'precio_venta', 'stock_actual', 'stock_minimo', 'isv_rate', 'exento', 'bodega', 'activo', 'created_at', 'updated_at'],
+  clientes: ['id', 'empresa_id', 'empresa_codigo', 'nombre', 'rtn', 'email', 'telefono', 'direccion', 'limite_credito', 'saldo_pendiente', 'notas', 'activo', 'created_at', 'updated_at'],
+  facturas: ['id', 'empresa_id', 'empresa_codigo', 'usuario_id', 'correlativo', 'cliente_nombre', 'cliente_rtn', 'cliente_email', 'subtotal', 'isv', 'descuento', 'total', 'estado', 'tipo_documento', 'metodo_pago', 'notas', 'created_at', 'updated_at'],
+  cotizaciones: ['id', 'empresa_id', 'empresa_codigo', 'usuario_id', 'correlativo', 'cliente_nombre', 'cliente_rtn', 'items', 'subtotal', 'isv', 'descuento', 'total', 'estado', 'notas', 'sucursal_id', 'creado_por', 'created_at', 'updated_at'],
+  ordenes_compra: ['id', 'empresa_id', 'empresa_codigo', 'usuario_id', 'correlativo', 'proveedor_nombre', 'proveedor_rtn', 'items', 'subtotal', 'isv', 'descuento', 'total', 'estado', 'notas', 'bodega_id', 'created_at', 'updated_at'],
+  notas: ['id', 'empresa_id', 'empresa_codigo', 'clave', 'datos', 'created_at', 'updated_at']
+});
+
+app.post('/api/sync', authenticate, async (req, res) => {
+  if (!requireSupabase(res)) return;
+  try {
+    const tenant = normalizeTenantCode(getTenantCode(req));
+    const empresa = await resolverEmpresaSupabase(tenant);
+    if (!empresa) return res.status(404).json({ error: 'Empresa no encontrada' });
+    const b = req.body || {};
+    const tabla = (b.tabla || '').toString().trim();
+    const columns = SYNC_SAFE_COLUMNS[tabla];
+    if (!columns) return res.status(400).json({ error: `Tabla de sincronización no soportada: ${tabla}` });
+    const rows = Array.isArray(b.rows) ? b.rows : (b.row ? [b.row] : []);
+    if (!rows.length) return res.status(400).json({ error: 'rows es requerido' });
+    const ahora = new Date().toISOString();
+    const clean = rows.map(row => {
+      const out = { empresa_id: empresa.id, empresa_codigo: tenant };
+      columns.forEach(col => {
+        if (row && row[col] !== undefined && row[col] !== null) {
+          if (col === 'monto' || col === 'subtotal' || col === 'isv' || col === 'descuento' || col === 'total' || col === 'precio_compra' || col === 'precio_venta' || col === 'costo_promedio' || col === 'stock_actual' || col === 'stock_minimo' || col === 'limite_credito' || col === 'saldo_pendiente') {
+            out[col] = parseFloat(row[col]) || 0;
+          } else if (col === 'activo') {
+            out[col] = row[col] === true || row[col] === 'true' || row[col] === 1 || row[col] === '1';
+          } else {
+            out[col] = row[col];
+          }
+        }
+      });
+      return out;
+    });
+    const { data, error } = await supabase.from(tabla).upsert(clean, { onConflict: 'id' });
+    if (error) return res.status(500).json({ error: error.message, tabla });
+    const op = (b.operacion || 'upsert').toString().slice(0, 20);
+    await registrarAuditoria(tenant, 'Sincronización', `${op} de ${clean.length} fila(s) en ${tabla}`, 'sistema', req.user?.nombre || '', req);
+    return res.json({ sincronizadas: clean.length, tabla, data: data || [] });
+  } catch (err) { return handleServerError(res, err); }
+});
+
 // 🔧 FIX VERCEL: Exportación limpia para serverless
 let server;
 if (!IS_SERVERLESS) {

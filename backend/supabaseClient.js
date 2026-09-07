@@ -59,5 +59,7 @@ function requireSupabase(res) {
 
 module.exports = {
   get supabase() { return getSupabase(); },
-  requireSupabase
+  requireSupabase,
+  getSupabaseUrl,
+  getSupabaseKey
 };

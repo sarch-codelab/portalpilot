@@ -16,7 +16,7 @@ const crypto = require('crypto');
 const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
 
-const { supabase, requireSupabase } = require('./supabaseClient');
+const { supabase, requireSupabase, getSupabaseUrl, getSupabaseKey } = require('./supabaseClient');
 console.log(`[STARTUP] Supabase client: ${supabase ? 'ACTIVO' : 'INACTIVO'}`);
 
 
@@ -268,7 +268,15 @@ app.post('/api/session/sync', async (req, res) => {
     const decoded = jwt.verify(token, localJwtSecret);
     if (decoded.sub) {
       const now = new Date().toISOString();
-      const { error: updErr } = await supabase.from('usuarios').update({ updated_at: now, ultimo_acceso: now }).eq('id', decoded.sub);
+      const restUrl = `${getSupabaseUrl()}/rest/v1/usuarios?id=eq.${decoded.sub}`;
+      const key = getSupabaseKey();
+      const headers = {
+        apikey: key,
+        Authorization: `Bearer ${key}`,
+        'Content-Type': 'application/json',
+        Prefer: 'return=minimal'
+      };
+      const { error: updErr } = await axios.patch(restUrl, { updated_at: now, ultimo_acceso: now }, { headers, timeout: 8000 });
       if (updErr) console.warn('[SESSION_SYNC] UPDATE error:', updErr.message);
       else console.log('[SESSION_SYNC] UPDATE OK for', decoded.sub);
     }
@@ -1486,9 +1494,17 @@ app.post('/api/login/2fa', loginLimiter, async (req, res) => {
     }, localJwtSecret, { expiresIn: '30d' });
     const now = new Date().toISOString();
     try {
-      const { error: updErr } = await supabase.from('usuarios').update({ updated_at: now, ultimo_acceso: now }).eq('id', userRow.id);
-      if (updErr) console.error('[LOGIN] UPDATE ultimo_acceso error:', updErr.message);
-      else console.log('[LOGIN] UPDATE ultimo_acceso OK for', userRow.id);
+      const restUrl = `${getSupabaseUrl()}/rest/v1/usuarios?id=eq.${userRow.id}`;
+      const key = getSupabaseKey();
+      const headers = {
+        apikey: key,
+        Authorization: `Bearer ${key}`,
+        'Content-Type': 'application/json',
+        Prefer: 'return=minimal'
+      };
+      const { error: updErr } = await axios.patch(restUrl, { updated_at: now, ultimo_acceso: now }, { headers, timeout: 8000 });
+      if (updErr) console.error('[LOGIN] UPDATE error:', updErr.message);
+      else console.log('[LOGIN] UPDATE OK for', userRow.id);
     } catch (e) {
       console.error('[LOGIN] UPDATE exception:', e.message);
     }

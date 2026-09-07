@@ -268,10 +268,12 @@ app.post('/api/session/sync', async (req, res) => {
     const decoded = jwt.verify(token, localJwtSecret);
     if (decoded.sub) {
       const now = new Date().toISOString();
-      await supabase.from('usuarios').update({ updated_at: now, ultimo_acceso: now }).eq('id', decoded.sub);
+      const { error: updErr } = await supabase.from('usuarios').update({ updated_at: now, ultimo_acceso: now }).eq('id', decoded.sub);
+      if (updErr) console.warn('[SESSION_SYNC] UPDATE error:', updErr.message);
+      else console.log('[SESSION_SYNC] UPDATE OK for', decoded.sub);
     }
   } catch (e) {
-    console.warn('[SESSION_SYNC] Error actualizando ultimo_acceso:', e.message);
+    console.warn('[SESSION_SYNC] Exception:', e.message);
   }
   setSessionCookie(res, token);
   return res.json({ ok: true });
@@ -1483,7 +1485,13 @@ app.post('/api/login/2fa', loginLimiter, async (req, res) => {
       empresa_codigo: userRow.empresa_codigo || 'ROOT'
     }, localJwtSecret, { expiresIn: '30d' });
     const now = new Date().toISOString();
-    await supabase.from('usuarios').update({ updated_at: now, ultimo_acceso: now }).eq('id', userRow.id);
+    try {
+      const { error: updErr } = await supabase.from('usuarios').update({ updated_at: now, ultimo_acceso: now }).eq('id', userRow.id);
+      if (updErr) console.error('[LOGIN] UPDATE ultimo_acceso error:', updErr.message);
+      else console.log('[LOGIN] UPDATE ultimo_acceso OK for', userRow.id);
+    } catch (e) {
+      console.error('[LOGIN] UPDATE exception:', e.message);
+    }
     setSessionCookie(res, token);
     return res.json({
       message: 'Login exitoso', token,

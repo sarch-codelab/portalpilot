@@ -276,9 +276,7 @@ app.post('/api/session/sync', async (req, res) => {
         'Content-Type': 'application/json',
         Prefer: 'return=minimal'
       };
-      const { error: updErr } = await axios.patch(restUrl, { updated_at: now, ultimo_acceso: now }, { headers, timeout: 8000 });
-      if (updErr) console.warn('[SESSION_SYNC] UPDATE error:', updErr.message);
-      else console.log('[SESSION_SYNC] UPDATE OK for', decoded.sub);
+      await axios.patch(restUrl, { updated_at: now, ultimo_acceso: now }, { headers, timeout: 8000 });
     }
   } catch (e) {
     console.warn('[SESSION_SYNC] Exception:', e.message);
@@ -1493,22 +1491,15 @@ app.post('/api/login/2fa', loginLimiter, async (req, res) => {
       empresa_codigo: userRow.empresa_codigo || 'ROOT'
     }, localJwtSecret, { expiresIn: '30d' });
     const now = new Date().toISOString();
-    try {
-      const restUrl = `${getSupabaseUrl()}/rest/v1/usuarios?id=eq.${userRow.id}`;
-      const key = getSupabaseKey();
-      console.log('[LOGIN] UPDATE attempt:', { restUrl: restUrl.substring(0, 60), keyLen: key?.length, userId: userRow.id });
-      const headers = {
-        apikey: key,
-        Authorization: `Bearer ${key}`,
-        'Content-Type': 'application/json',
-        Prefer: 'return=minimal'
-      };
-      const { error: updErr } = await axios.patch(restUrl, { updated_at: now, ultimo_acceso: now }, { headers, timeout: 8000 });
-      if (updErr) console.error('[LOGIN] UPDATE error:', updErr.message);
-      else console.log('[LOGIN] UPDATE OK for', userRow.id);
-    } catch (e) {
-      console.error('[LOGIN] UPDATE exception:', e.message, e.code);
-    }
+    const restUrl = `${getSupabaseUrl()}/rest/v1/usuarios?id=eq.${userRow.id}`;
+    const key = getSupabaseKey();
+    const headers = {
+      apikey: key,
+      Authorization: `Bearer ${key}`,
+      'Content-Type': 'application/json',
+      Prefer: 'return=minimal'
+    };
+    await axios.patch(restUrl, { updated_at: now, ultimo_acceso: now }, { headers, timeout: 8000 });
     setSessionCookie(res, token);
     return res.json({
       message: 'Login exitoso', token,
@@ -1521,27 +1512,6 @@ app.post('/api/login/2fa', loginLimiter, async (req, res) => {
     });
   } catch (error) {
     return handleServerError(res, error);
-  }
-});
-
-app.get('/api/debug/update-test', async (req, res) => {
-  try {
-    const restUrl = `${getSupabaseUrl()}/rest/v1/usuarios?id=eq.a25ea0de-89fb-47ce-ba7e-ac8d7241c3a3`;
-    const key = getSupabaseKey();
-    console.log('[DEBUG] UPDATE test:', { restUrl: restUrl.substring(0, 60), keyLen: key?.length });
-    const headers = {
-      apikey: key,
-      Authorization: `Bearer ${key}`,
-      'Content-Type': 'application/json',
-      Prefer: 'return=representation'
-    };
-    const now = new Date().toISOString();
-    const { data, error } = await axios.patch(restUrl, { updated_at: now, ultimo_acceso: now }, { headers, timeout: 8000 });
-    if (error) throw error;
-    return res.json({ ok: true, data, restUrl: restUrl.substring(0, 60), keyLen: key?.length });
-  } catch (e) {
-    console.error('[DEBUG] UPDATE exception:', e.message, e.code, e.response?.data);
-    return res.status(500).json({ ok: false, error: e.message, code: e.code, response: e.response?.data });
   }
 });
 

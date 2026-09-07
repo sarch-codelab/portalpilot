@@ -1496,6 +1496,7 @@ app.post('/api/login/2fa', loginLimiter, async (req, res) => {
     try {
       const restUrl = `${getSupabaseUrl()}/rest/v1/usuarios?id=eq.${userRow.id}`;
       const key = getSupabaseKey();
+      console.log('[LOGIN] UPDATE attempt:', { restUrl: restUrl.substring(0, 60), keyLen: key?.length, userId: userRow.id });
       const headers = {
         apikey: key,
         Authorization: `Bearer ${key}`,
@@ -1506,7 +1507,7 @@ app.post('/api/login/2fa', loginLimiter, async (req, res) => {
       if (updErr) console.error('[LOGIN] UPDATE error:', updErr.message);
       else console.log('[LOGIN] UPDATE OK for', userRow.id);
     } catch (e) {
-      console.error('[LOGIN] UPDATE exception:', e.message);
+      console.error('[LOGIN] UPDATE exception:', e.message, e.code);
     }
     setSessionCookie(res, token);
     return res.json({

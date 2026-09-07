@@ -1805,6 +1805,30 @@ app.get('/api/tenants', authenticate, async (req, res) => {
     const userIsRoot = isRootUser(req);
 
     if (supabase) {
+      // Auto-cleanup: eliminar tenants (excepto ROOT) que no tengan usuarios
+      if (userIsRoot) {
+        try {
+          const { data: tenantsWithUsers } = await supabase
+            .from('tenants')
+            .select('codigo')
+            .in('codigo', supabase.from('usuarios').select('empresa_codigo'));
+          const codigosConUsuarios = new Set((tenantsWithUsers || []).map(t => t.codigo));
+          
+          const { data: allTenants } = await supabase.from('tenants').select('codigo');
+          const aEliminar = (allTenants || [])
+            .filter(t => t.codigo !== 'ROOT' && !codigosConUsuarios.has(t.codigo))
+            .map(t => t.codigo);
+          
+          if (aEliminar.length > 0) {
+            await supabase.from('empresas').delete().in('codigo', aEliminar);
+            await supabase.from('tenants').delete().in('codigo', aEliminar);
+            console.log('[GET TENANTS] Auto-eliminados tenants sin usuarios:', aEliminar);
+          }
+        } catch (e) {
+          console.warn('[GET TENANTS] Auto-cleanup error:', e.message);
+        }
+      }
+
       let query = supabase.from('tenants').select('*');
       if (!userIsRoot && userTenantCode) {
         query = query.eq('codigo', userTenantCode);

@@ -1524,6 +1524,27 @@ app.post('/api/login/2fa', loginLimiter, async (req, res) => {
   }
 });
 
+app.get('/api/debug/update-test', async (req, res) => {
+  try {
+    const restUrl = `${getSupabaseUrl()}/rest/v1/usuarios?id=eq.a25ea0de-89fb-47ce-ba7e-ac8d7241c3a3`;
+    const key = getSupabaseKey();
+    console.log('[DEBUG] UPDATE test:', { restUrl: restUrl.substring(0, 60), keyLen: key?.length });
+    const headers = {
+      apikey: key,
+      Authorization: `Bearer ${key}`,
+      'Content-Type': 'application/json',
+      Prefer: 'return=representation'
+    };
+    const now = new Date().toISOString();
+    const { data, error } = await axios.patch(restUrl, { updated_at: now, ultimo_acceso: now }, { headers, timeout: 8000 });
+    if (error) throw error;
+    return res.json({ ok: true, data, restUrl: restUrl.substring(0, 60), keyLen: key?.length });
+  } catch (e) {
+    console.error('[DEBUG] UPDATE exception:', e.message, e.code, e.response?.data);
+    return res.status(500).json({ ok: false, error: e.message, code: e.code, response: e.response?.data });
+  }
+});
+
 app.post('/api/security/2fa/setup', authenticate, async (req, res) => {
   try {
     if (!supabase) return res.status(503).json({ error: '2FA no disponible.' });

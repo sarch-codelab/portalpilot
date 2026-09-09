@@ -364,7 +364,7 @@
                 <div class="stat-card reveal">
                     <div class="stat-icon"><i class="fas fa-sign-in-alt"></i></div>
                     <div class="stat-content">
-                        <div class="stat-value">247</div>
+                        <div class="stat-value" id="statSesiones">—</div>
                         <div class="stat-label">Inicios de Sesión</div>
                         <div class="stat-trend up"><i class="fas fa-arrow-up"></i> +12% este mes</div>
                     </div>
@@ -372,7 +372,7 @@
                 <div class="stat-card reveal">
                     <div class="stat-icon"><i class="fas fa-robot"></i></div>
                     <div class="stat-content">
-                        <div class="stat-value">18</div>
+                        <div class="stat-value" id="statBots">—</div>
                         <div class="stat-label">Bots Ejecutados</div>
                         <div class="stat-trend up"><i class="fas fa-arrow-up"></i> +3 esta semana</div>
                     </div>
@@ -380,7 +380,7 @@
                 <div class="stat-card reveal">
                     <div class="stat-icon"><i class="fas fa-database"></i></div>
                     <div class="stat-content">
-                        <div class="stat-value">1.2M</div>
+                        <div class="stat-value" id="statTokens">—</div>
                         <div class="stat-label">Tokens IA Consumidos</div>
                         <div class="stat-trend down"><i class="fas fa-arrow-down"></i> -5% vs promedio</div>
                     </div>
@@ -388,7 +388,7 @@
                 <div class="stat-card reveal">
                     <div class="stat-icon"><i class="fas fa-shield-alt"></i></div>
                     <div class="stat-content">
-                        <div class="stat-value">99.8%</div>
+                        <div class="stat-value" id="statScore">—</div>
                         <div class="stat-label">Score de Seguridad</div>
                         <div class="stat-trend up"><i class="fas fa-check"></i> Sin incidentes</div>
                     </div>
@@ -416,36 +416,31 @@
                         <div class="info-grid" id="professionalInfo">
                             <div class="info-item">
                                 <span class="info-label">Departamento</span>
-                                <span class="info-value" data-field="department">División de Desarrollo Tecnológico
-                                    (NERV)</span>
+                                <span class="info-value" data-field="department">—</span>
                             </div>
                             <div class="info-item">
                                 <span class="info-label">Cargo</span>
-                                <span class="info-value" data-field="position">Jefe de Sincronización y
-                                    Automatización</span>
+                                <span class="info-value" data-field="position">—</span>
                             </div>
                             <div class="info-item">
                                 <span class="info-label">Ubicación</span>
-                                <span class="info-value" data-field="location">Base 2, Geofront, Tokio-3</span>
+                                <span class="info-value" data-field="location">—</span>
                             </div>
                             <div class="info-item">
                                 <span class="info-label">Zona Horaria</span>
-                                <span class="info-value" data-field="timezone">America/Mexico_City (GMT-6)</span>
+                                <span class="info-value" data-field="timezone">—</span>
                             </div>
                             <div class="info-item">
                                 <span class="info-label">Teléfono Corporativo</span>
-                                <span class="info-value" data-field="phone">+52 81 2345 6789</span>
+                                <span class="info-value" data-field="phone">—</span>
                             </div>
                             <div class="info-item">
                                 <span class="info-label">Extensión</span>
-                                <span class="info-value" data-field="extension">x4521</span>
+                                <span class="info-value" data-field="extension">—</span>
                             </div>
                             <div class="info-item" style="grid-column: 1/-1;">
                                 <span class="info-label">Responsabilidades</span>
-                                <span class="info-value" data-field="responsibilities">Liderazgo en la automatización de
-                                    protocolos de defensa, gestión de tasas de sincronización neuronal vía API,
-                                    supervisión de auditorías en la red MAGI y coordinación con equipos de seguridad
-                                    informática para la prevención de Impactos.</span>
+                                <span class="info-value" data-field="responsibilities">—</span>
                             </div>
                         </div>
                     </div>
@@ -462,7 +457,7 @@
                         <div style="margin-bottom:24px;">
                             <h3 style="font-size:14px;font-weight:600;color:var(--white);margin-bottom:12px;">Tenants
                                 Asignados</h3>
-                            <div class="tenant-list">
+                            <div class="tenant-list" id="tenantAssignList">
                                 <div class="tenant-item">
                                     <div class="tenant-info">
                                         <div class="tenant-icon"><i class="fas fa-building"></i></div>
@@ -632,15 +627,15 @@
                         <div class="security-panel">
                             <div class="security-row">
                                 <span class="security-label">Autenticación 2FA</span>
-                                <span class="security-value secure"><i class="fas fa-check-circle"></i> Activo</span>
+                                <span class="security-value" id="security2fa">—</span>
                             </div>
                             <div class="security-row">
                                 <span class="security-label">Último cambio de contraseña</span>
-                                <span class="security-value">45 días</span>
+                                <span class="security-value">Sin dato registrado</span>
                             </div>
                             <div class="security-row">
                                 <span class="security-label">Intentos fallidos (30d)</span>
-                                <span class="security-value warning"><i class="fas fa-exclamation"></i> 3</span>
+                                <span class="security-value" id="securityFails">—</span>
                             </div>
                             <div class="security-row">
                                 <span class="security-label">Dispositivos confiables</span>

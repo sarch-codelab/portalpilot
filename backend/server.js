@@ -1227,7 +1227,7 @@ app.post('/api/registro', async (req, res) => {
         email: emailNorm,
         password_hash: passwordHash,
         password: passwordHash,
-        nombre: `${usuarioNombre} ${usuarioApellido}`.trim(),
+        nombre: String(usuarioNombre || '').trim(),
         apellido: usuarioApellido || '',
         rol: 'admin',
         empresa_codigo: empresaCodigo,
@@ -1371,6 +1371,11 @@ app.post('/api/login', loginLimiter, async (req, res) => {
     }
 
     if (!isMatch) {
+      try {
+        if (userRow.empresa_codigo) {
+          await registrarAuditoria(userRow.empresa_codigo, 'login_fallido', 'Intento de inicio de sesión fallido', 'seguridad', normalizeDisplayName(userRow.nombre, userRow.apellido), req);
+        }
+      } catch (e) { console.warn('[LOGIN] No se pudo auditar intento fallido:', e.message); }
       return res.status(401).json({ error: 'Contraseña incorrecta. Por favor, verifica tus datos.' });
     }
 
@@ -1407,6 +1412,12 @@ app.post('/api/login', loginLimiter, async (req, res) => {
 
     // Persistir sesión en cookie httpOnly para la protección server-side de pp/ y empresa/
     setSessionCookie(res, accountToken);
+
+    try {
+      if (userRow.empresa_codigo) {
+        await registrarAuditoria(userRow.empresa_codigo, 'login_exitoso', 'Inicio de sesión exitoso', 'seguridad', normalizeDisplayName(userRow.nombre, userRow.apellido), req);
+      }
+    } catch (e) { console.warn('[LOGIN] No se pudo auditar el inicio de sesión:', e.message); }
 
     // Detectar trial vencido (plan starter > 15 días)
     let trialExpired = false;
@@ -1500,6 +1511,11 @@ app.post('/api/login/2fa', loginLimiter, async (req, res) => {
       Prefer: 'return=minimal'
     };
     await axios.patch(restUrl, { updated_at: now, ultimo_acceso: now }, { headers, timeout: 8000 });
+    try {
+      if (userRow.empresa_codigo) {
+        await registrarAuditoria(userRow.empresa_codigo, 'login_exitoso', 'Inicio de sesión exitoso (2FA)', 'seguridad', normalizeDisplayName(userRow.nombre, userRow.apellido), req);
+      }
+    } catch (e) { console.warn('[LOGIN] No se pudo auditar el inicio de sesión 2FA:', e.message); }
     setSessionCookie(res, token);
     return res.json({
       message: 'Login exitoso', token,
@@ -2376,41 +2392,114 @@ app.get('/api/users/:id', authenticate, async (req, res) => {
 
     const { data: usuario, error } = await supabase
       .from('usuarios')
-      .select('id, empresa_id, nombre, apellido, email, rol_global, activo, created_at, updated_at, foto_perfil_url, banner_perfil_url')
+      .select('id, empresa_id, empresa_codigo, nombre, apellido, email, rol_global, rol, activo, estado, two_factor_enabled, created_at, updated_at, foto_perfil_url, banner_perfil_url')
       .eq('id', id)
       .single();
 
     if (error || !usuario) return res.status(404).json({ error: 'Usuario no encontrado.' });
 
-    let codigo = '', empNombre = '';
+    let codigo = usuario.empresa_codigo || '', empNombre = '';
     if (usuario.empresa_id) {
-      const { data: emp } = await supabase.from('empresas').select('nombre, codigo').eq('id', usuario.empresa_id).single();
-      if (emp) { codigo = emp.codigo || ''; empNombre = emp.nombre || ''; }
+      try {
+        const { data: emp } = await supabase.from('empresas').select('nombre, codigo').eq('id', usuario.empresa_id).single();
+        if (emp) { codigo = emp.codigo || codigo; empNombre = emp.nombre || ''; }
+      } catch (e) { /* noop */ }
+    }
+    // Fallback a la tabla tenants (los registros /api/registro crean tenants, no empresas)
+    if (!empNombre && codigo) {
+      try {
+        const { data: ten } = await supabase.from('tenants').select('nombre_empresa').eq('codigo', normalizeTenantCode(codigo)).maybeSingle();
+        if (ten) empNombre = ten.nombre_empresa || '';
+      } catch (e) { /* noop */ }
     }
 
     if (!isRootUser(req) && !assertTenantAccess(req, codigo)) {
       return res.status(403).json({ error: 'No tienes permiso para ver este usuario.' });
     }
 
+    const nombreCompleto = normalizeDisplayName(usuario.nombre, usuario.apellido);
+    const stats = await computeUserStats(usuario.id, codigo, nombreCompleto, usuario);
+
     res.json({
       id: usuario.id,
       displayId: usuario.id,
-      nombre: usuario.nombre || '',
+      nombre: nombreCompleto,
+      nombre_completo: nombreCompleto,
       apellido: usuario.apellido || '',
       email: usuario.email || '',
-      rol: usuario.rol_global || 'user',
-      tenant_code: codigo,
+      rol: usuario.rol_global || usuario.rol || 'user',
+      tenant_code: codigo || 'ROOT',
       tenant: empNombre || codigo || 'N/A',
-      status: usuario.activo ? 'active' : 'inactive',
+      status: ['inactivo', 'suspendido', 'blocked'].includes(String(usuario.estado || '').toLowerCase())
+        ? 'inactive'
+        : (usuario.activo ? 'active' : 'inactive'),
+      verified: !!usuario.two_factor_enabled,
       registered: usuario.created_at || new Date().toISOString(),
       lastActivity: usuario.updated_at || null,
       avatar: usuario.foto_perfil_url || null,
       banner: usuario.banner_perfil_url || null,
       notas: '',
-      source: 'supabase'
+      source: 'supabase',
+      stats,
+      professional: {
+        departamento: null,
+        cargo: null,
+        ubicacion: null,
+        zonaHoraria: null,
+        telCorporativo: null,
+        extension: null,
+        responsabilidades: null
+      }
     });
   } catch (error) {
     return handleServerError(res, error);
+  }
+});
+
+// Suplantar usuario (solo admin ROOT) — emite un JWT válido con la sesión del usuario objetivo
+app.post('/api/users/:id/impersonate', authenticate, async (req, res) => {
+  if (!requireSupabase(res)) return;
+  try {
+    if (!isRootUser(req)) {
+      return res.status(403).json({ error: 'Solo el administrador ROOT puede suplantar usuarios.' });
+    }
+
+    const { data: usuario, error } = await supabase
+      .from('usuarios')
+      .select('id, email, rol_global, rol, empresa_codigo, nombre, apellido')
+      .eq('id', req.params.id)
+      .single();
+    if (error || !usuario) return res.status(404).json({ error: 'Usuario no encontrado.' });
+
+    const codigo = usuario.empresa_codigo || 'ROOT';
+    const token = jwt.sign(
+      {
+        sub: usuario.id,
+        email: usuario.email,
+        rol: usuario.rol_global || usuario.rol || 'admin',
+        empresa_codigo: codigo,
+        imp: true
+      },
+      localJwtSecret,
+      { expiresIn: '2h' }
+    );
+
+    const nombre = normalizeDisplayName(usuario.nombre, usuario.apellido);
+    return res.json({
+      success: true,
+      message: `Sesión iniciada como ${nombre}`,
+      token,
+      user: {
+        id: usuario.id,
+        nombre,
+        email: usuario.email,
+        rol: usuario.rol_global || usuario.rol || 'admin',
+        tenant: codigo,
+        empresa_codigo: codigo
+      }
+    });
+  } catch (err) {
+    return handleServerError(res, err);
   }
 });
 
@@ -2825,6 +2914,79 @@ async function resolverEmpresaSupabase(empresaCodigo) {
   } catch (err) {
     return null;
   }
+}
+
+// Evita el apellido duplicado (p.ej. "AMY FAJARDO FAJARDO") colapsando palabras idénticas consecutivas
+function normalizeDisplayName(nombre, apellido) {
+  const n = String(nombre || '').trim();
+  const a = String(apellido || '').trim();
+  const full = (a ? `${n} ${a}` : n).replace(/\s+/g, ' ').trim();
+  const out = [];
+  for (const word of full.split(' ')) {
+    if (word && out.length && out[out.length - 1].toLowerCase() === word.toLowerCase()) continue;
+    if (word) out.push(word);
+  }
+  return out.join(' ') || full;
+}
+
+// Estadísticas reales calculadas a partir de tablas del backend (nunca inventadas)
+async function computeUserStats(userId, codigo, nombreCompleto, usuario) {
+  const stats = { sesiones: null, bots: null, tokens: null, score: null, fallidos: null };
+  if (!supabase) return stats;
+  const t = codigo ? normalizeTenantCode(codigo) : '';
+  const nameMatch = String(nombreCompleto || '').trim();
+  const hace30dias = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+
+  // Inicios de sesión reales (registrados desde /api/login)
+  try {
+    let q = supabase.from('auditoria').select('id', { count: 'exact', head: true }).eq('accion', 'login_exitoso');
+    if (t) q = q.eq('empresa_codigo', t);
+    if (nameMatch) q = q.ilike('usuario', `%${nameMatch}%`);
+    const { count } = await q;
+    stats.sesiones = count || 0;
+  } catch (e) { /* noop */ }
+
+  // Bots ejecutados (automation_runs no guarda usuario; nivel tenant)
+  try {
+    if (t) {
+      const { count } = await supabase.from('automation_runs').select('id', { count: 'exact', head: true }).eq('empresa_codigo', t);
+      stats.bots = count || 0;
+    }
+  } catch (e) { /* noop */ }
+
+  // Tokens IA consumidos por el usuario
+  try {
+    const { data } = await supabase.from('ai_usage_log').select('tokens_total').eq('usuario_id', userId);
+    if (data && Array.isArray(data)) {
+      stats.tokens = data.reduce((s, r) => s + (Number(r.tokens_total) || 0), 0);
+    }
+  } catch (e) { /* noop */ }
+
+  // Intentos fallidos de sesión en los últimos 30 días
+  try {
+    if (t && nameMatch) {
+      const { count } = await supabase
+        .from('auditoria')
+        .select('id', { count: 'exact', head: true })
+        .eq('accion', 'login_fallido')
+        .eq('empresa_codigo', t)
+        .ilike('usuario', `%${nameMatch}%`)
+        .gte('created_at', hace30dias);
+      stats.fallidos = count || 0;
+    }
+  } catch (e) { /* noop */ }
+
+  // Score de seguridad a partir de señales reales (2FA, estado, intentos fallidos)
+  try {
+    let score = 40;
+    const estado = String(usuario?.estado || '').toLowerCase();
+    if (usuario?.activo && !['inactivo', 'suspendido', 'blocked'].includes(estado)) score += 20;
+    if (usuario?.two_factor_enabled) score += 25;
+    if (typeof stats.fallidos === 'number') score -= stats.fallidos * 5;
+    stats.score = Math.max(0, Math.min(100, Math.round(score)));
+  } catch (e) { /* noop */ }
+
+  return stats;
 }
 
 // ── Búsqueda multi-columna sin depender de PostgREST .or() (compat APP/supabase-js) ──

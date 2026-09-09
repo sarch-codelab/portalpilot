@@ -277,14 +277,14 @@ async function fetchUserProfile(id) {
 
 function renderProfile(user) {
     currentUserData = user;
-    const nombre = user.nombre || '?';
-    const apellido = user.apellido || '?';
-    const initials = `${nombre[0]}${apellido[0]}`.toUpperCase();
+    const full = user.nombre_completo || [user.nombre, user.apellido].filter(Boolean).join(' ') || '?';
+    const words = full.split(/\s+/).filter(Boolean);
+    const initials = `${(words[0] || '?')[0]}${words.length > 1 ? (words[words.length - 1][0] || '') : (words[0] ? words[0][1] || '' : '')}`.toUpperCase();
     const avatar = document.getElementById('profileAvatar');
 
     if (avatar) {
         if (user.avatar) {
-            avatar.innerHTML = `<img src="${user.avatar}" alt="${nombre}" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;" onerror="this.parentElement.innerHTML='${initials}'">`;
+            avatar.innerHTML = `<img src="${user.avatar}" alt="${full}" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;" onerror="this.parentElement.innerHTML='${initials}'">`;
         } else {
             avatar.innerHTML = initials;
         }
@@ -299,7 +299,7 @@ function renderProfile(user) {
     const nameEl = document.getElementById('profileName');
     if (nameEl) {
         const verifiedIcon = user.verified ? ' <i class="fas fa-check-circle verified" title="Verificado"></i>' : '';
-        nameEl.innerHTML = `${nombre} ${apellido}${verifiedIcon}`;
+        nameEl.innerHTML = `${full}${verifiedIcon}`;
     }
 
     const emailEl = document.getElementById('profileEmail');
@@ -327,18 +327,74 @@ function renderProfile(user) {
     const badgesEl = document.getElementById('profileBadges');
     if (badgesEl) {
         const badges = [];
-        const roleLabel = user.rol === 'Owner' ? 'Owner' : user.rol === 'Administrador' ? 'Admin de Tenant' : user.rol === 'Operador' ? 'Operador' : 'Usuario';
+        const roleMap = { owner: 'Owner', administrador: 'Admin de Tenant', admin: 'Admin de Tenant', operador: 'Operador', operator: 'Operador', user: 'Usuario' };
+        const roleLabel = roleMap[String(user.rol || '').toLowerCase()] || user.rol || 'Usuario';
         badges.push(`<span class="user-badge role"><i class="fas fa-id-badge"></i> ${roleLabel}</span>`);
         if (user.source) badges.push(`<span class="user-badge verified"><i class="fas fa-database"></i> ${user.source === 'nocodb' ? 'NocoDB' : 'Supabase'}</span>`);
+        if (user.verified) badges.push(`<span class="user-badge secure"><i class="fas fa-shield-alt"></i> 2FA Activo</span>`);
         badgesEl.innerHTML = badges.join('');
     }
 
+    // Stats reales
+    const stats = user.stats || {};
+    const setStat = (id, value) => {
+        const el = document.getElementById(id);
+        if (el) el.innerHTML = value;
+    };
+    setStat('statSesiones', typeof stats.sesiones === 'number' ? stats.sesiones.toLocaleString('es-ES') : '—');
+    setStat('statBots', typeof stats.bots === 'number' ? stats.bots.toLocaleString('es-ES') : '—');
+    let tokensText = '—';
+    if (typeof stats.tokens === 'number') {
+        tokensText = stats.tokens >= 1000000 ? `${(stats.tokens / 1000000).toFixed(2)}M` : stats.tokens >= 1000 ? `${(stats.tokens / 1000).toFixed(1)}K` : String(stats.tokens);
+    }
+    setStat('statTokens', tokensText);
+    setStat('statScore', typeof stats.score === 'number' ? `${stats.score}%` : '—');
+
+    // Professional Information (solo datos reales; si no existen, se queda en '—')
+    const prof = user.professional || {};
+    const profMap = {
+        department: prof.departamento,
+        position: prof.cargo,
+        location: prof.ubicacion,
+        timezone: prof.zonaHoraria,
+        phone: prof.telCorporativo,
+        extension: prof.extension,
+        responsibilities: prof.responsabilidades
+    };
+    document.querySelectorAll('#professionalInfo .info-value[data-field]').forEach(el => {
+        const field = el.getAttribute('data-field');
+        if (field in profMap && profMap[field] != null && String(profMap[field]).trim() !== '') {
+            el.textContent = profMap[field];
+        }
+    });
+
+    // Tenant asignado (real)
+    const tenantListEl = document.getElementById('tenantAssignList');
+    if (tenantListEl) {
+        const tenantName = (user.tenant && user.tenant !== 'N/A') ? user.tenant : ((user.tenant_code && user.tenant_code !== 'ROOT') ? user.tenant_code : null);
+        tenantListEl.innerHTML = tenantName
+            ? `<div class="tenant-item">
+                    <div class="tenant-info">
+                        <div class="tenant-icon"><i class="fas fa-building"></i></div>
+                        <div><div class="tenant-name">${tenantName}</div><div class="tenant-role">Tenant Principal</div></div>
+                    </div>
+                    <span class="tenant-access full"><i class="fas fa-check-circle"></i> Acceso Completo</span>
+                </div>`
+            : `<div class="tenant-item"><div class="tenant-info"><div><div class="tenant-name">Sin tenant asignado</div><div class="tenant-role">—</div></div></div></div>`;
+    }
+
+    // Security panel
+    setStat('security2fa', user.verified
+        ? '<i class="fas fa-check-circle"></i> Activo'
+        : '<i class="fas fa-times-circle"></i> Inactivo');
+    setStat('securityFails', typeof stats.fallidos === 'number' ? String(stats.fallidos) : '—');
+
     // Modals
     const resetUserNameEl = document.getElementById('resetUserName');
-    if (resetUserNameEl) resetUserNameEl.textContent = `${nombre} ${apellido}`;
+    if (resetUserNameEl) resetUserNameEl.textContent = full;
 
     const suspendUserNameEl = document.getElementById('suspendUserName');
-    if (suspendUserNameEl) suspendUserNameEl.textContent = `${nombre} ${apellido}`;
+    if (suspendUserNameEl) suspendUserNameEl.textContent = full;
 }
 
 async function initProfilePage() {
@@ -353,8 +409,47 @@ async function initProfilePage() {
 initProfilePage();
 
 // ── Admin Actions ──────────────────────────────────
-function impersonateUser() {
-    showToast('La suplantación de usuarios no está habilitada.', 'warning');
+async function impersonateUser() {
+    if (!profileUserId) {
+        showToast('No se identificó al usuario.', 'error');
+        return;
+    }
+    const token = localStorage.getItem('token');
+    if (!token) {
+        showToast('Sesión no válida. Vuelve a iniciar sesión.', 'warning');
+        return;
+    }
+    try {
+        const response = await fetch(`/api/users/${encodeURIComponent(profileUserId)}/impersonate`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+        const data = await response.json();
+        if (!response.ok || !data.token) {
+            showToast(data.error || 'No se pudo suplantar al usuario.', 'error');
+            return;
+        }
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('userRole', data.user.rol || 'admin');
+        localStorage.setItem('empresaCodigo', data.user.empresa_codigo || 'ROOT');
+        localStorage.setItem('empresaNombre', data.user.nombre || data.user.tenant || '');
+        localStorage.setItem('userName', data.user.nombre || '');
+        localStorage.setItem('userEmail', data.user.email || '');
+        showToast(`Sesión iniciada como ${data.user.nombre || data.user.email}`, 'success');
+        setTimeout(() => {
+            if (data.user.empresa_codigo && data.user.empresa_codigo !== 'ROOT') {
+                window.location.href = '/empresa/dashboard.html';
+            } else {
+                window.location.href = '/pp/welcome.html';
+            }
+        }, 1000);
+    } catch (err) {
+        console.error('[IMPRESIONAR] Error:', err);
+        showToast('Error al intentar suplantar al usuario.', 'error');
+    }
 }
 
 function executeReset() {

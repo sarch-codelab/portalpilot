@@ -1815,11 +1815,318 @@
         .notif-content { flex: 1; min-width: 0; }
         .notif-text { font-size: 12px; color: var(--text); line-height: 1.4; }
         .notif-time { font-size: 10px; color: var(--gray); margin-top: 2px; }
+
+        /* ─── CUSTOM CHECKBOXES ────────────────── */
+        .container {
+            display: inline-block;
+            position: relative;
+            cursor: pointer;
+            font-size: 18px;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .container input {
+            position: absolute;
+            opacity: 0;
+            cursor: pointer;
+            height: 0;
+            width: 0;
+        }
+
+        .checkmark {
+            position: relative;
+            display: block;
+            top: 0;
+            left: 0;
+            height: 1.6em;
+            width: 1.6em;
+            border-radius: 38%;
+            background: rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(16px) saturate(180%);
+            -webkit-backdrop-filter: blur(16px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            box-shadow:
+                0 8px 20px rgba(0, 0, 0, 0.12),
+                0 2px 6px rgba(0, 0, 0, 0.08),
+                inset 0 1px 2px rgba(255, 255, 255, 0.5),
+                inset 0 -1px 2px rgba(0, 0, 0, 0.1);
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .container:hover input:not(:checked) ~ .checkmark {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.4);
+            transform: translateY(-1px);
+            box-shadow:
+                0 12px 24px rgba(0, 0, 0, 0.15),
+                0 4px 8px rgba(0, 0, 0, 0.08),
+                inset 0 1.5px 3px rgba(255, 255, 255, 0.7);
+        }
+
+        .container input:checked ~ .checkmark {
+            transform: scale(1.22);
+            background: linear-gradient(145deg, #a855f7 0%, #8b5cf6 50%, #ec4899 100%);
+            border-color: rgba(255, 255, 255, 0.45);
+            box-shadow:
+                0 12px 28px rgba(168, 85, 247, 0.45),
+                0 4px 10px rgba(139, 92, 246, 0),
+                inset 0 2px 4px rgba(255, 255, 255, 0.6),
+                inset 0 -2px 6px rgba(255, 255, 255, 0.35);
+        }
+
+        .checkmark:after {
+            content: "";
+            position: absolute;
+            left: 0.53em;
+            top: 0.3em;
+            width: 0.32em;
+            height: 0.64em;
+            border: solid #ffffff;
+            border-width: 0 0.16em 0.16em 0;
+            border-radius: 2px;
+            transform: rotate(45deg) scale(0.3);
+            opacity: 0;
+            filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
+            transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .container input:checked ~ .checkmark:after {
+            opacity: 1;
+            transform: rotate(45deg) scale(1);
+        }
+
+        .container:active input ~ .checkmark {
+            transform: scale(0.92);
+            transition: transform 0.15s ease-out;
+        }
+
+        /* ─── PRELOADER (device loader) ──────────────── */
+        .preloader {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            display: grid;
+            place-items: center;
+            background: radial-gradient(circle at 50% 50%, #12121e 0%, #08080f 55%, #050509 100%);
+            font-size: 16px;
+            opacity: 1;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+        .preloader.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+        .preloader-inner {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 32px;
+        }
+        .preloader-logo {
+            font-family: 'Syne', sans-serif;
+            font-size: 13px;
+            font-weight: 800;
+            letter-spacing: 0.4em;
+            text-transform: uppercase;
+            color: rgba(216, 210, 240, 0.55);
+        }
+        .preloader-logo span {
+            color: #a78bfa;
+        }
+        .device {
+            position: relative;
+            width: 4em;
+            height: 4em;
+        }
+        .device__a,
+        .device__a-1,
+        .device__a-2,
+        .device__b,
+        .device__c,
+        .device__d,
+        .device__e,
+        .device__f,
+        .device__g {
+            animation: device-a 3s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+            position: absolute;
+            transition: background-color 0.3s, box-shadow 0.3s;
+        }
+        .device__a,
+        .device__d,
+        .device__e {
+            background-color: hsl(264, 12%, 26%);
+            box-shadow: 0 0 0 0.25em inset;
+        }
+        .device__a {
+            border-radius: 0.375em;
+            top: 0;
+            width: 4em;
+            height: 2.5em;
+            z-index: 1;
+        }
+        .device__a-1,
+        .device__a-2 {
+            visibility: hidden;
+        }
+        .device__a-1 {
+            animation-name: device-a-1;
+            top: 2.25em;
+            left: 1.5em;
+            width: 1em;
+            height: 0.25em;
+        }
+        .device__a-2 {
+            animation-name: device-a-2;
+            top: 0.625em;
+            right: 0;
+            width: 0.25em;
+            height: 0.75em;
+        }
+        .device__a-1,
+        .device__a-2,
+        .device__b,
+        .device__c,
+        .device__f,
+        .device__g {
+            background-color: #d8d2f0;
+            border-radius: 0.125em;
+        }
+        .device__b {
+            animation-name: device-b;
+            top: 2.25em;
+            left: 1.875em;
+            width: 0.25em;
+            height: 1em;
+        }
+        .device__c {
+            animation-name: device-c;
+            top: 3em;
+            left: 1em;
+            width: 2em;
+            height: 0.25em;
+        }
+        .device__d,
+        .device__e {
+            left: 1.25em;
+            width: 1.5em;
+            height: 0.875em;
+            visibility: hidden;
+        }
+        .device__d {
+            animation-name: device-d;
+            border-radius: 0.375em 0.375em 0 0;
+            top: 0.75em;
+        }
+        .device__e {
+            animation-name: device-e;
+            border-radius: 0 0 0.375em 0.375em;
+            top: 1.625em;
+        }
+        .device__f,
+        .device__g {
+            filter: blur(0.375em);
+            bottom: 0;
+            height: 0.25em;
+        }
+        .device__f {
+            animation-name: device-f;
+            opacity: 0.5;
+            left: 1em;
+            width: 2em;
+        }
+        .device__g {
+            animation-name: device-g;
+            opacity: 0;
+            left: 0;
+            width: 4em;
+        }
+        @keyframes device-a {
+            from, to { animation-timing-function: cubic-bezier(0.33, 0, 0.67, 0); left: 0; width: 4em; height: 2.5em; transform: translateY(0); }
+            12.5% { animation-timing-function: cubic-bezier(0.33, 1, 0.67, 1); left: 0; width: 4em; height: 2.5em; transform: translateY(1.5em); }
+            25% { animation-timing-function: cubic-bezier(0.33, 0, 0.67, 0); left: 0; width: 4em; height: 2.5em; transform: translateY(0.375em); }
+            37.5% { animation-timing-function: cubic-bezier(0.33, 1, 0.67, 1); left: 0; width: 4em; height: 2.5em; transform: translateY(1.5em); }
+            50% { animation-timing-function: cubic-bezier(0.33, 0, 0.67, 0); left: 1em; width: 2em; height: 3em; transform: translateY(0.125em); }
+            62.5% { animation-timing-function: cubic-bezier(0.33, 1, 0.67, 1); left: 1em; width: 2em; height: 3em; transform: translateY(1em); }
+            75% { animation-timing-function: cubic-bezier(0.33, 0, 0.67, 0); left: 1em; width: 2em; height: 2em; transform: translateY(0.625em); }
+            87.5% { animation-timing-function: cubic-bezier(0.33, 1, 0.67, 1); left: 1em; width: 2em; height: 2em; transform: translateY(1.375em); }
+        }
+        @keyframes device-a-1 {
+            from { animation-timing-function: steps(1, end); left: 1.5em; width: 1em; transform: translateY(0); visibility: hidden; }
+            12.5% { animation-timing-function: cubic-bezier(0.33, 1, 0.67, 1); left: 1.5em; width: 1em; transform: translateY(0); visibility: visible; }
+            25%, 37.5% { animation-timing-function: cubic-bezier(0.33, 1, 0.67, 1); left: 1.5em; width: 1em; transform: translateY(-0.5em); visibility: visible; }
+            50%, 62.5% { animation-timing-function: cubic-bezier(0.33, 1, 0.67, 1); left: 0.875em; width: 0.25em; transform: translateY(0); visibility: visible; }
+            75%, to { animation-timing-function: cubic-bezier(0.33, 1, 0.67, 1); left: 0.875em; width: 0.25em; transform: translateY(-0.5em); visibility: hidden; }
+        }
+        @keyframes device-a-2 {
+            from { animation-timing-function: steps(1, end); transform: translate(0, 0.375em); visibility: hidden; }
+            62.5% { animation-timing-function: cubic-bezier(0.33, 1, 0.67, 1); transform: translate(0, 0.375em); visibility: visible; }
+            75%, 87.5% { animation-timing-function: cubic-bezier(0.33, 1, 0.67, 1); transform: translate(0.375em, 0); visibility: visible; }
+            to { transform: translate(0, 0.25em); visibility: visible; }
+        }
+        @keyframes device-b {
+            from, to { animation-timing-function: cubic-bezier(0.33, 0, 0.67, 0); transform: translateY(0); visibility: visible; }
+            10%, 12.5% { animation-timing-function: steps(1, start); transform: translateY(0.75em); visibility: visible; }
+            25% { animation-timing-function: steps(1, start); top: 2.25em; left: 1.875em; transform: translateY(0.75em); visibility: hidden; }
+            87.5% { animation-timing-function: cubic-bezier(0.33, 1, 0.67, 1); transform: translateY(0.75em); visibility: hidden; }
+        }
+        @keyframes device-c {
+            from, to { animation-timing-function: cubic-bezier(0.33, 0, 0.67, 0); transform: translateY(0); visibility: visible; width: 2em; }
+            10%, 12.5% { animation-timing-function: steps(1, start); transform: translateY(0.75em); visibility: visible; width: 2em; }
+            25% { animation-timing-function: steps(1, start); top: 3em; left: 1em; width: 2em; transform: translateY(0.75em); visibility: hidden; }
+            87.5% { animation-timing-function: cubic-bezier(0.33, 1, 0.67, 1); left: 1.5em; transform: translateY(0.75em); visibility: hidden; width: 1em; }
+        }
+        @keyframes device-d {
+            from { animation-timing-function: steps(1, end); transform: translateY(0.25em); visibility: hidden; }
+            62.5% { animation-timing-function: cubic-bezier(0.33, 1, 0.67, 1); transform: translateY(0.25em); visibility: visible; }
+            75% { animation-timing-function: cubic-bezier(0.33, 0, 0.67, 0); transform: translateY(-0.75em); }
+            87.5% { animation-timing-function: cubic-bezier(0.33, 1, 0.67, 1); transform: translateY(0); }
+            to { transform: translateY(-0.75em); }
+        }
+        @keyframes device-e {
+            from { animation-timing-function: steps(1, end); transform: translateY(1.5em); visibility: hidden; }
+            62.5% { animation-timing-function: cubic-bezier(0.33, 1, 0.67, 1); transform: translateY(1.5em); visibility: visible; }
+            75% { animation-timing-function: cubic-bezier(0.33, 0, 0.67, 0); transform: translateY(0.75em); }
+            87.5% { animation-timing-function: cubic-bezier(0.33, 1, 0.67, 1); transform: translateY(1.5em); }
+            to { transform: translateY(0); }
+        }
+        @keyframes device-f {
+            from { animation-timing-function: cubic-bezier(0.33, 0, 0.67, 0); filter: blur(0.375em); }
+            12.5% { animation-timing-function: cubic-bezier(0.33, 1, 0.67, 1); filter: blur(0.1875em); opacity: 0.5; }
+            25%, to { filter: blur(0.375em); opacity: 0; }
+        }
+        @keyframes device-g {
+            from, 12.5% { animation-timing-function: cubic-bezier(0.33, 1, 0.67, 1); background-color: #d8d2f0; filter: blur(0.1875em); opacity: 0; }
+            25% { animation-timing-function: cubic-bezier(0.33, 0, 0.67, 0); background-color: #d8d2f0; filter: blur(0.375em); opacity: 0.5; }
+            37.5% { animation-timing-function: cubic-bezier(0.33, 1, 0.67, 1); filter: blur(0.1875em); opacity: 0.5; left: 0; width: 4em; }
+            50%, 75%, to { animation-timing-function: cubic-bezier(0.33, 0, 0.67, 0); filter: blur(0.375em); opacity: 0.5; left: 1em; width: 2em; }
+            62.5%, 87.5% { animation-timing-function: cubic-bezier(0.33, 1, 0.67, 1); filter: blur(0.1875em); opacity: 0.5; left: 1em; width: 2em; }
+        }
     </style>
     <link rel="stylesheet" href="../css/notifications.css">
 </head>
 
 <body>
+
+    <!-- PRELOADER -->
+    <div class="preloader" id="preloader">
+        <div class="preloader-inner">
+            <div class="device">
+                <div class="device__a">
+                    <div class="device__a-1"></div>
+                    <div class="device__a-2"></div>
+                </div>
+                <div class="device__b"></div>
+                <div class="device__c"></div>
+                <div class="device__d"></div>
+                <div class="device__e"></div>
+                <div class="device__f"></div>
+                <div class="device__g"></div>
+            </div>
+            <div class="preloader-logo">PORTAL <span>PILOT</span></div>
+        </div>
+    </div>
 
     <!-- PROGRESS & CURSOR -->
     <div id="progress">
@@ -1981,7 +2288,7 @@
                 <table class="users-table">
                     <thead>
                         <tr>
-                            <th><input type="checkbox" id="selectAll" onchange="toggleSelectAll()"></th>
+                            <th><label class="container"><input type="checkbox" id="selectAll" onchange="toggleSelectAll()"><div class="checkmark"></div></label></th>
                             <th class="sortable asc" data-sort="name">Usuario</th>
                             <th class="sortable" data-sort="role">Rol</th>
                             <th class="sortable" data-sort="tenant">Tenant</th>
@@ -2121,10 +2428,9 @@
         
         // ── Centrar fondo según el área del main-content ─────
         function updateBgPosition() {
-            const main = document.querySelector('.main-content');
-            if (!main) return;
-            const rect = main.getBoundingClientRect();
-            const delta = Math.round((rect.left + rect.width / 2) - window.innerWidth / 2);
+            if (isMobile) { document.body.style.backgroundPosition = 'center'; return; }
+            const sidebarWidth = sidebar.classList.contains('collapsed') ? parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sidebar-collapsed')) : parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sidebar-width'));
+            const delta = Math.round(sidebarWidth / 2);
             document.body.style.backgroundPosition = delta + 'px center';
         }
 
@@ -2254,6 +2560,7 @@
             }
         }
 
+        let networkRetries = 0;
         async function fetchUsers() {
             if (!validateSession()) return;
             
@@ -2291,19 +2598,26 @@
                     tenant_code: u.tenant_code != null ? String(u.tenant_code) : ''
                 }));
                 usersLoadError = false;
+                networkRetries = 0;
             } catch (error) {
                 console.error('Error al cargar usuarios:', error);
                 if (String(error).includes('Failed to fetch') || String(error).includes('NetworkError')) {
-                  showMessage('No se pudo conectar al servidor. Reintentando...', 'warning');
-                  setTimeout(() => fetchUsers(), 3000);
-                  return;
+                  if (networkRetries < 3) {
+                    networkRetries++;
+                    showMessage(`No se pudo conectar al servidor (intento ${networkRetries}/3). Reintentando...`, 'warning');
+                    setTimeout(() => fetchUsers(), 2500);
+                    return;
+                  }
+                  networkRetries = 0;
                 }
                 users = [];
                 usersLoadError = true;
-                showMessage('No se pudieron cargar los usuarios. Haz clic en Reintentar.', 'warning');
+                showMessage('No se pudieron cargar los usuarios. Revisa tu conexión y pulsa Reintentar.', 'warning');
             } finally {
                 isLoadingUsers = false;
+                setTimeout(() => { try { renderUsers(); updatePagination(); } catch (e) {} }, 0);
             }
+            if (usersLoadError) { renderUsers(); updatePagination(); return; }
             filteredUsers = [...users];
             renderUsers();
             updatePagination();
@@ -2344,7 +2658,7 @@ const row = document.createElement('tr');
                     row.style.setProperty('--banner-url', `url('${bannerSrc}')`);
                 }
                 row.innerHTML = `
-            <td><input type="checkbox" class="user-checkbox" data-id="${u.id}" ${selectedUsers.has(u.id) ? 'checked' : ''} onclick="event.stopPropagation();toggleUserSelection('${u.id}')"></td>
+            <td><label class="container"><input type="checkbox" class="user-checkbox" data-id="${u.id}" ${selectedUsers.has(u.id) ? 'checked' : ''} onclick="event.stopPropagation();toggleUserSelection('${u.id}')"><div class="checkmark"></div></label></td>
             <td><div class="user-info"><div class="user-avatar">${avatarHtml}<span class="online-dot ${isOnline ? 'online' : 'offline'}"></span></div><div><div class="user-name">${nombre} ${apellido}</div><div class="user-email">${u.email}</div></div></div></td>
             <td><span class="role-badge ${u.rol}">${u.rol.charAt(0).toUpperCase() + u.rol.slice(1)}</span></td>
             <td><span class="user-tenant">${u.tenant || u.tenant_code || 'N/A'}</span></td>
@@ -2779,7 +3093,17 @@ const row = document.createElement('tr');
 
 
         // ── Initialize ──────────────────────────
+        const preloaderEl = document.getElementById('preloader');
+        const preloaderStart = Date.now();
+        function hidePreloader() {
+            if (preloaderEl && !preloaderEl.classList.contains('hidden')) {
+                const elapsed = Date.now() - preloaderStart;
+                const delay = Math.max(0, 900 - elapsed);
+                setTimeout(() => preloaderEl.classList.add('hidden'), delay);
+            }
+        }
         window.addEventListener('load', async () => {
+            hidePreloader();
             console.log('[USUARIOS] Load iniciado');
             debugUserInfo();
             if (!validateSession()) {
@@ -2795,6 +3119,7 @@ const row = document.createElement('tr');
             }
             setTimeout(() => document.querySelectorAll('.reveal').forEach((el, i) => setTimeout(() => el.classList.add('in'), i * 50)), 100);
         });
+        setTimeout(hidePreloader, 3200);
         document.querySelectorAll('.modal-overlay').forEach(overlay => { overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('active'); }); });
         document.addEventListener('keydown', e => {
             if (e.key === 'Escape') { document.querySelectorAll('.modal-overlay.active').forEach(m => m.classList.remove('active')); closeDetailPanel(); }

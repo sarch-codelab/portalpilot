@@ -10,6 +10,7 @@
     "ping": "node scripts/post-deploy-ping.js"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.115.0",
     "axios": "^1.16.1",
     "bcryptjs": "^3.0.3",
     "cors": "^2.8.6",

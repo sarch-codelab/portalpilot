@@ -71,6 +71,22 @@
       "dest": "/empresa/$1"
     },
     {
+      "src": "/pp/(.*)\\.html",
+      "dest": "/pp/$1.html"
+    },
+    {
+      "src": "/pp/(.*)\\.css",
+      "dest": "/pp/$1.css"
+    },
+    {
+      "src": "/pp/(.*)\\.js",
+      "dest": "/pp/$1.js"
+    },
+    {
+      "src": "/pp/(.*)\\.(png|jpg|jpeg|svg|webp|ico)",
+      "dest": "/pp/$1.$2"
+    },
+    {
       "src": "/pp(/.*)?",
       "dest": "/backend/server.js"
     },

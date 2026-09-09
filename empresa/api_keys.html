@@ -158,28 +158,22 @@
 
         @media (max-width: 768px) { .dashboard { grid-template-columns: 1fr; } .sidebar { position: fixed; left: -260px; top: 0; height: 100vh; z-index: 999; transition: left 0.3s; } .sidebar.active { left: 0; } .main-content { margin-left: 0; } }
     </style>
+<link rel="stylesheet" href="../css/sidebar-empresa.css">
 </head>
 
 <body>
     <div class="dashboard" id="dashboard">
         <!-- Sidebar -->
         <aside class="sidebar" id="sidebar">
-            <div class="sidebar-header">
-                <div class="logo" style="display:flex;align-items:center;gap:24px">
-                    <img src="../img/iconos/robot_logo.png" height="32" alt="Portal Pilot">
-                    <span>Portal Pilot</span>
-                </div>
-                <div class="plan-badge"><i class="fas fa-chess-knight"></i> Enterprise</div>
+            <div class="sidebar-header"><h2 class="logo">PORTAL PILOT</h2></div>
+
+            <!-- Profile -->
+            <div class="profile-section">
+                <div id="sidebarAvatar" class="avatar" style="display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;color:#fff;background:linear-gradient(135deg,var(--accent),var(--cyan))">PP</div>
+                <div class="profile-info"><span class="name" id="sidebarName">Cargando...</span><span class="role" id="sidebarRole">Administrador</span></div>
             </div>
 
-            <div class="sidebar-user" onclick="window.location.href='perfil.html'">
-                <div id="sidebarAvatar" class="avatar">AS</div>
-                <div class="profile-info">
-                    <div class="name" id="sidebarName">Administrador</div>
-                    <div class="role" id="sidebarRole">Admin Empresa</div>
-                </div>
-            </div>
-
+            <!-- Nav -->
             <nav class="sidebar-nav">
                 <a href="dashboard.html" class="sidebar-link"><i class="fas fa-home"></i> <span>Dashboard</span></a>
                 <a href="team.html" class="sidebar-link" data-min-plan="business"><i class="fas fa-users"></i> <span>Equipo</span></a>
@@ -189,10 +183,15 @@
                 <a href="security.html" class="sidebar-link" data-min-plan="business"><i class="fas fa-shield-alt"></i> <span>Auditoría</span></a>
             </nav>
 
+            <!-- Footer -->
             <div class="sidebar-footer">
                 <a href="tenant_detail.html" class="footer-btn"><i class="fas fa-building"></i> <span>Configuración Empresa</span></a>
-                <a href="../login.html" class="footer-btn"><i class="fas fa-right-from-bracket"></i> <span>Cerrar Sesión</span></a>
+                <button class="footer-btn" id="darkModeToggle"><i class="fas fa-moon"></i> <span>Dark Mode</span></button>
+                <button class="footer-btn logout" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> <span>Cerrar Sesión</span></button>
             </div>
+
+            <!-- Toggle Button -->
+            <button class="toggle-btn" id="toggleSidebar" aria-label="Toggle Sidebar"><i class="fas fa-chevron-right"></i></button>
         </aside>
 
         <!-- Main Content -->
@@ -475,7 +474,8 @@
     </script>
     <script src="../js/notifications.js"></script>
     <script src="../js/plan-gate.js"></script>
-    <script src="../js/sidebar-loader.js"></script>
+    <script src="../js/sidebar-empresa.js"></script>
+<script src="../js/sidebar-loader.js"></script>
     <script src="../auth-check.js"></script>
 </body>
 

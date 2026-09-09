@@ -1,0 +1,232 @@
+/* EMPRESA — SIDEBAR ESTILO PORTAL (clon de pp/dashboard.css) */
+
+.dashboard.sidebar-collapsed {
+  grid-template-columns: 76px 1fr;
+}
+
+.sidebar {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  background: var(--bg2);
+  border-right: 1px solid var(--border);
+  padding: 20px 16px;
+  display: flex;
+  flex-direction: column;
+  z-index: 50;
+  overflow: visible;
+}
+
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.logo {
+  font-family: 'Syne', sans-serif;
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--white);
+  white-space: nowrap;
+}
+
+.toggle-btn {
+  position: absolute;
+  right: -16px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: var(--card);
+  border: 1px solid var(--border);
+  color: var(--white);
+  font-size: 12px;
+  padding: 8px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  z-index: 60;
+  cursor: pointer;
+  transition: background 0.25s;
+}
+
+.toggle-btn:hover {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.toggle-btn i {
+  transition: transform 0.3s ease;
+  display: block;
+}
+
+.sidebar.collapsed .toggle-btn i {
+  transform: rotate(180deg);
+}
+
+.profile-section {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  background: var(--card);
+  margin-bottom: 16px;
+}
+
+.sidebar.collapsed .profile-section {
+  justify-content: center;
+  padding: 8px;
+}
+
+.avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--accent);
+  flex-shrink: 0;
+}
+
+.profile-info {
+  display: flex;
+  flex-direction: column;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--white);
+}
+
+.role {
+  font-size: 10px;
+  color: var(--gray);
+}
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 14px;
+  border-radius: var(--radius);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--gray2);
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.sidebar-link:hover,
+.sidebar-link.active {
+  background: rgba(139, 92, 246, 0.1);
+  color: var(--white);
+}
+
+.sidebar-link.active {
+  border-left: 2px solid var(--accent);
+  padding-left: 12px;
+}
+
+.sidebar-link i {
+  width: 18px;
+  text-align: center;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.sidebar.collapsed .logo,
+.sidebar.collapsed .profile-info,
+.sidebar.collapsed .sidebar-link span,
+.sidebar.collapsed .footer-btn span {
+  display: none;
+}
+
+.sidebar.collapsed .sidebar-link {
+  justify-content: center;
+  padding: 11px;
+}
+
+.sidebar.collapsed .sidebar-link.active {
+  padding-left: 11px;
+  border-left: none;
+  border-bottom: 2px solid var(--accent);
+}
+
+.sidebar-footer {
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.footer-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 14px;
+  border-radius: var(--radius);
+  background: transparent;
+  border: none;
+  color: var(--gray2);
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.2s;
+  width: 100%;
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+  font-family: inherit;
+  text-decoration: none;
+}
+
+.footer-btn:hover {
+  background: rgba(139, 92, 246, 0.1);
+  color: var(--white);
+}
+
+.footer-btn.logout:hover {
+  color: var(--red);
+  background: rgba(248, 113, 113, 0.1);
+}
+
+.sidebar.collapsed .footer-btn {
+  justify-content: center;
+  padding: 11px;
+}
+
+.footer-btn i {
+  width: 18px;
+  text-align: center;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+/* Light mode global por variables (igual que pp) */
+body.light-mode {
+  --bg: #f8fafc;
+  --bg2: #ffffff;
+  --bg3: #f1f5f9;
+  --card: #ffffff;
+  --card2: #f8fafc;
+  --border: rgba(15, 23, 42, 0.1);
+  --border2: rgba(15, 23, 42, 0.2);
+  --text: #334155;
+  --gray: #64748b;
+  --gray2: #475569;
+  --white: #0f172a;
+}

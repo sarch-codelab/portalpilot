@@ -241,6 +241,7 @@ a{text-decoration:none;color:inherit}ul{list-style:none}img{max-width:100%;displ
 .plan-locked::after{content:'\f023';font-family:'Font Awesome 6 Free';font-weight:900;position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:11px;color:#fbbf24}
 </style>
 <link rel="stylesheet" href="../css/notifications.css">
+<link rel="stylesheet" href="../css/sidebar-empresa.css">
 </head>
 <body>
 
@@ -308,20 +309,32 @@ a{text-decoration:none;color:inherit}ul{list-style:none}img{max-width:100%;displ
 <!-- DASHBOARD -->
 <div class="dashboard">
   <aside class="sidebar" id="sidebar">
-    <div class="sidebar-logo"><div class="logo-icon"><img src="../img/iconos/robot_logo.png" alt="Portal Pilot"></div>PORTAL PILOT</div>
+    <div class="sidebar-header"><h2 class="logo">PORTAL PILOT</h2></div>
+
+    <!-- Profile -->
+    <div class="profile-section">
+      <div id="sidebarAvatar" class="avatar" style="display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;color:#fff;background:linear-gradient(135deg,var(--accent),var(--cyan))">PP</div>
+      <div class="profile-info"><span class="name" id="sidebarName">Cargando...</span><span class="role" id="sidebarRole">Administrador</span></div>
+    </div>
+
+    <!-- Nav -->
     <nav class="sidebar-nav">
       <a href="dashboard.html" class="sidebar-link"><i class="fas fa-home"></i> <span>Dashboard</span></a>
-                <a href="team.html" class="sidebar-link" data-min-plan="business"><i class="fas fa-users"></i> <span>Equipo</span></a>
-                <a href="fleet.html" class="sidebar-link" data-min-plan="enterprise"><i class="fas fa-truck"></i> <span>Flota</span></a>
-                <a href="automation.html" class="sidebar-link active" data-min-plan="enterprise"><i class="fas fa-robot"></i> <span>Bots RPA</span></a>
-                <a href="api_keys.html" class="sidebar-link" data-min-plan="enterprise"><i class="fas fa-key"></i> <span>API Keys</span></a>
-                <a href="security.html" class="sidebar-link" data-min-plan="business"><i class="fas fa-shield-alt"></i> <span>Auditoría</span></a>
+      <a href="team.html" class="sidebar-link" data-min-plan="business"><i class="fas fa-users"></i> <span>Equipo</span></a>
+      <a href="fleet.html" class="sidebar-link" data-min-plan="enterprise"><i class="fas fa-truck"></i> <span>Flota</span></a>
+      <a href="automation.html" class="sidebar-link active" data-min-plan="enterprise"><i class="fas fa-robot"></i> <span>Bots RPA</span></a>
+      <a href="api_keys.html" class="sidebar-link" data-min-plan="enterprise"><i class="fas fa-key"></i> <span>API Keys</span></a>
+      <a href="security.html" class="sidebar-link" data-min-plan="business"><i class="fas fa-shield-alt"></i> <span>Auditoría</span></a>
     </nav>
+
+    <!-- Footer -->
     <div class="sidebar-footer">
-      <a href="#" class="sidebar-link"><i class="fas fa-question-circle"></i> Ayuda</a>
-      <a href="#" class="sidebar-link"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</a>
-      <div class="sidebar-user"><div class="sidebar-avatar" id="sidebarAvatar">VT</div><div><div class="sidebar-username" id="sidebarName">Valeria Torres</div><div class="sidebar-role" id="sidebarRole">Admin Principal</div></div></div>
+      <button class="footer-btn" id="darkModeToggle"><i class="fas fa-moon"></i> <span>Dark Mode</span></button>
+      <button class="footer-btn logout" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> <span>Cerrar Sesión</span></button>
     </div>
+
+    <!-- Toggle Button -->
+    <button class="toggle-btn" id="toggleSidebar" aria-label="Toggle Sidebar"><i class="fas fa-chevron-right"></i></button>
   </aside>
 
   <main class="main-content">
@@ -745,6 +758,7 @@ document.addEventListener('keydown',e=>{
 </script>
 <script src="../js/notifications.js"></script>
 <script src="../js/plan-gate.js"></script>
+<script src="../js/sidebar-empresa.js"></script>
 <script src="../js/sidebar-loader.js"></script>
 <script src="../auth-check.js"></script>
 </body>

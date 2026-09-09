@@ -1423,6 +1423,7 @@
         }
     </style>
 <link rel="stylesheet" href="../css/notifications.css">
+<link rel="stylesheet" href="../css/sidebar-empresa.css">
 </head>
 
 <body>
@@ -1528,50 +1529,47 @@
 
         <!-- SIDEBAR -->
         <aside class="sidebar" id="sidebar">
-            <div class="sidebar-logo">
-                <div class="logo-icon"><img src="../img/iconos/robot_logo.png" alt="Portal Pilot"></div>
-                PORTAL PILOT
+            <div class="sidebar-header"><h2 class="logo">PORTAL PILOT</h2></div>
+
+            <!-- Profile -->
+            <div class="profile-section">
+                <div id="sidebarAvatar" class="avatar" style="display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;color:#fff;background:linear-gradient(135deg,var(--accent),var(--cyan))">PP</div>
+                <div class="profile-info"><span class="name" id="sidebarName">Cargando...</span><span class="role" id="sidebarRole">Administrador</span></div>
             </div>
 
+            <!-- Nav -->
             <nav class="sidebar-nav">
                 <a href="dashboard.html" class="sidebar-link">
-                    <i class="fas fa-home"></i> Dashboard
+                    <i class="fas fa-home"></i> <span>Dashboard</span>
                 </a>
                 <a href="../pp/tenants.html" class="sidebar-link">
-                    <i class="fas fa-building"></i> Tenants
+                    <i class="fas fa-building"></i> <span>Tenants</span>
                 </a>
                 <a href="../pp/usuarios.html" class="sidebar-link">
-                    <i class="fas fa-users"></i> Usuarios
+                    <i class="fas fa-users"></i> <span>Usuarios</span>
                 </a>
                 <a href="#" class="sidebar-link">
-                    <i class="fas fa-robot"></i> Bots RPA
+                    <i class="fas fa-robot"></i> <span>Bots RPA</span>
                 </a>
                 <a href="#" class="sidebar-link">
-                    <i class="fas fa-link"></i> Auditoría
+                    <i class="fas fa-link"></i> <span>Auditoría</span>
                 </a>
                 <a href="#" class="sidebar-link">
-                    <i class="fas fa-chart-line"></i> Analytics
+                    <i class="fas fa-chart-line"></i> <span>Analytics</span>
                 </a>
                 <a href="../pp/global_settings.html" class="sidebar-link">
-                    <i class="fas fa-cog"></i> Configuración Global
+                    <i class="fas fa-cog"></i> <span>Configuración Global</span>
                 </a>
             </nav>
 
+            <!-- Footer -->
             <div class="sidebar-footer">
-                <a href="#" class="sidebar-link">
-                    <i class="fas fa-question-circle"></i> Ayuda
-                </a>
-                <a href="#" class="sidebar-link">
-                    <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
-                </a>
-                <div class="sidebar-user">
-                    <div id="sidebarAvatar" class="sidebar-avatar">AD</div>
-                    <div>
-                        <div id="sidebarName" class="sidebar-username">Admin User</div>
-                        <div id="sidebarRole" class="sidebar-role">Super Admin</div>
-                    </div>
-                </div>
+                <button class="footer-btn" id="darkModeToggle"><i class="fas fa-moon"></i> <span>Dark Mode</span></button>
+                <button class="footer-btn logout" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> <span>Cerrar Sesión</span></button>
             </div>
+
+            <!-- Toggle Button -->
+            <button class="toggle-btn" id="toggleSidebar" aria-label="Toggle Sidebar"><i class="fas fa-chevron-right"></i></button>
         </aside>
 
         <!-- MAIN CONTENT -->
@@ -2670,6 +2668,7 @@
     </script>
 <script src="../js/notifications.js"></script>
 <script src="../js/plan-gate.js"></script>
+<script src="../js/sidebar-empresa.js"></script>
 <script src="../js/sidebar-loader.js"></script>
 <script src="../auth-check.js"></script>
 

@@ -2399,7 +2399,7 @@ app.get('/api/users/:id', authenticate, async (req, res) => {
 
     const { data: usuario, error } = await supabase
       .from('usuarios')
-      .select('id, empresa_id, empresa_codigo, nombre, apellido, email, rol_global, rol, activo, estado, two_factor_enabled, created_at, updated_at, foto_perfil_url, banner_perfil_url')
+      .select('id, empresa_id, empresa_codigo, nombre, apellido, email, rol_global, rol, activo, estado, two_factor_enabled, created_at, updated_at, ultimo_acceso, foto_perfil_url, banner_perfil_url')
       .eq('id', id)
       .single();
 
@@ -2445,7 +2445,7 @@ app.get('/api/users/:id', authenticate, async (req, res) => {
         : (usuario.activo ? 'active' : 'inactive'),
       verified: !!usuario.two_factor_enabled,
       registered: usuario.created_at || new Date().toISOString(),
-      lastActivity: usuario.updated_at || null,
+      lastActivity: usuario.ultimo_acceso || usuario.updated_at || null,
       avatar: usuario.foto_perfil_url || null,
       banner: usuario.banner_perfil_url || null,
       notas: '',

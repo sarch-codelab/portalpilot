@@ -231,6 +231,29 @@ function getProfileInitials() {
     return (full.split(' ').filter(Boolean).map(w => w[0]).join('').substring(0, 2) || 'PP').toUpperCase();
 }
 
+function fmtFs(iso) {
+    try { return new Date(iso).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' }); }
+    catch (e) { return '—'; }
+}
+
+function fmtRel(iso) {
+    if (!iso) return '—';
+    try {
+        const d = new Date(iso);
+        const now = new Date();
+        if (d.toDateString() === now.toDateString()) {
+            return 'Hoy, ' + d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+        }
+        const diff = Math.max(0, Date.now() - d.getTime());
+        const dias = Math.floor(diff / 86400000);
+        if (dias < 1) return 'Hoy';
+        if (dias < 30) return `Hace ${dias} días`;
+        return fmtFs(iso);
+    } catch (e) { return '—'; }
+}
+
+function awaitPreviewItem(t, d) { return { t, d }; }
+
 async function loadProfile() {
     const token = localStorage.getItem('token');
     const userId = localStorage.getItem('currentAccountId');
@@ -272,6 +295,45 @@ async function loadProfile() {
         if (banner) {
             if (u.banner) banner.style.backgroundImage = `url('${u.banner}')`;
             else banner.style.backgroundImage = "url('../img/banner_ud.jpg')";
+        }
+
+        // Sincronizar rol y email (para la sidebar y autenticación del portal)
+        if (u.rol) localStorage.setItem('userRole', u.rol);
+        if (u.email) localStorage.setItem('userEmail', u.email);
+        if (u.tenant_code) localStorage.setItem('empresaCodigo', u.tenant_code);
+
+        // ── Resumen de Cuenta (datos reales) ─────────────
+        const setEl = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+        setEl('accMemberSince', u.registered ? new Date(u.registered).toLocaleDateString('es-ES', { month: 'short', year: 'numeric' }) : '—');
+        if (u.lastActivity) {
+            const la = new Date(u.lastActivity);
+            const hoje = new Date();
+            setEl('accLastAccess', la.toDateString() === hoje.toDateString()
+                ? 'Hoy, ' + la.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })
+                : la.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' }));
+        } else {
+            setEl('accLastAccess', '—');
+        }
+        setEl('accTenant', u.tenant && u.tenant !== 'N/A' ? u.tenant : (u.tenant_code || '—'));
+        setEl('accRole', u.rol || '—');
+        const uidEl = document.getElementById('accUserId');
+        if (uidEl) uidEl.innerHTML = '<code>' + (u.id ? String(u.id).slice(0, 8) + '…' : '—') + '</code>';
+
+        // ── Actividad Reciente (datos reales) ────────────
+        const act = document.getElementById('activityPreviewList');
+        if (act) {
+            const items = [];
+            if (u.lastActivity) {
+                items.push(awaitPreviewItem('Último acceso', fmtRel(u.lastActivity)));
+            } else if (u.registered) {
+                items.push(awaitPreviewItem('Miembro desde', fmtFs(u.registered)));
+            }
+            if (u.registered) {
+                items.push(awaitPreviewItem('Cuenta creada', fmtFs(u.registered)));
+            }
+            act.innerHTML = items.length
+                ? items.map((it, i) => `<div style="font-size:12px;color:var(--gray);padding:8px 0;${i < items.length - 1 ? 'border-bottom:1px solid var(--border);' : ''}"><strong style="color:var(--white)">${it.t}</strong><br><span>${it.d}</span></div>`).join('')
+                : '<div style="font-size:12px;color:var(--gray);padding:8px 0;">Sin actividad registrada todavía.</div>';
         }
 
         if (window.refreshSidebarAvatar) window.refreshSidebarAvatar();

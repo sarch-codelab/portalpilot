@@ -376,23 +376,24 @@
                         <div class="form-grid" id="personalFields">
                             <div class="field">
                                 <label>NOMBRE COMPLETO</label>
-                                <input type="text" id="fullName" name="nombre" value="Asuka Langley Soryu" disabled
+                                <input type="text" id="fullName" name="nombre" value="" placeholder="No registrado" disabled
                                     onchange="trackChanges()">
                             </div>
                             <div class="field">
                                 <label>CORREO ELECTRÓNICO</label>
-                                <input type="email" id="email" name="email" value="asuka.langley@nerv.jp" disabled
+                                <input type="email" id="email" name="email" value="" placeholder="No registrado" disabled
                                     onchange="trackChanges()">
                                 <div class="field-hint">Para cambiar tu email, contacta a soporte</div>
                             </div>
                             <div class="field">
                                 <label>Teléfono</label>
-                                <input type="tel" id="phone" value="+52 81 0002 0999" disabled
+                                <input type="tel" id="phone" value="" placeholder="No registrado" disabled
                                     onchange="trackChanges()">
                             </div>
                             <div class="field">
                                 <label>Zona Horaria</label>
                                 <select id="timezone" disabled onchange="trackChanges()">
+                                    <option value="">Por defecto</option>
                                     <option>America/Mexico_City (GMT-6)</option>
                                     <option>America/New_York (GMT-5)</option>
                                     <option>Europe/Madrid (GMT+1)</option>
@@ -400,8 +401,8 @@
                             </div>
                             <div class="field" style="grid-column: 1/-1;">
                                 <label>Biografía</label>
-                                <textarea id="bio" rows="3" disabled
-                                    onchange="trackChanges()">Diseñador UI/UX especializado en interfaces enterprise. Apasionado por la experiencia de usuario y la accesibilidad digital.</textarea>
+                                <textarea id="bio" rows="3" placeholder="Cuéntanos sobre tu trabajo..." disabled
+                                    onchange="trackChanges()"></textarea>
                             </div>
                         </div>
                     </div>
@@ -509,23 +510,23 @@
                         <div class="info-list">
                             <div class="info-item">
                                 <span class="info-label">Miembro desde</span>
-                                <span class="info-value">Mar 2024</span>
+                                <span class="info-value" id="accMemberSince">—</span>
                             </div>
                             <div class="info-item">
                                 <span class="info-label">Último acceso</span>
-                                <span class="info-value">Hoy, 10:32 AM</span>
+                                <span class="info-value" id="accLastAccess">—</span>
                             </div>
                             <div class="info-item">
                                 <span class="info-label">Tenant principal</span>
-                                <span class="info-value">NERV Organization</span>
+                                <span class="info-value" id="accTenant">—</span>
                             </div>
                             <div class="info-item">
                                 <span class="info-label">Rol</span>
-                                <span class="info-value">Admin de Tenant</span>
+                                <span class="info-value" id="accRole">—</span>
                             </div>
                             <div class="info-item">
                                 <span class="info-label">ID de usuario</span>
-                                <span class="info-value"><code>alangley</code></span>
+                                <span class="info-value" id="accUserId"><code>—</code></span>
                             </div>
                         </div>
                     </div>
@@ -559,20 +560,10 @@
                     <!-- Activity Log Preview -->
                     <div class="card reveal">
                         <h2 class="card-title"><i class="fas fa-history"></i> Actividad Reciente</h2>
-                        <div style="display:flex;flex-direction:column;gap:12px;">
-                            <div
-                                style="font-size:12px;color:var(--gray);padding:8px 0;border-bottom:1px solid var(--border);">
-                                <strong style="color:var(--white)">Actualizó perfil</strong><br>
-                                <span>Hace 2 horas • Dashboard</span>
-                            </div>
-                            <div
-                                style="font-size:12px;color:var(--gray);padding:8px 0;border-bottom:1px solid var(--border);">
-                                <strong style="color:var(--white)">Cambio de contraseña</strong><br>
-                                <span>Hace 45 días • Seguridad</span>
-                            </div>
+                        <div id="activityPreviewList" style="display:flex;flex-direction:column;gap:12px;">
                             <div style="font-size:12px;color:var(--gray);padding:8px 0;">
-                                <strong style="color:var(--white)">Primer inicio de sesión</strong><br>
-                                <span>15 Mar 2024 • Registro</span>
+                                <strong style="color:var(--white)">Cargando actividad...</strong><br>
+                                <span>Por favor espera</span>
                             </div>
                         </div>
                         <button class="btn btn-ghost btn-sm" style="margin-top:12px;width:100%;justify-content:center;"

@@ -480,23 +480,23 @@
             <div class="info-list">
               <div class="info-item">
                 <span class="info-label">Miembro desde</span>
-                <span class="info-value">Mar 2024</span>
+                <span class="info-value" id="accMemberSince">—</span>
               </div>
               <div class="info-item">
                 <span class="info-label">Último acceso</span>
-                <span class="info-value">Hoy, 10:32 AM</span>
+                <span class="info-value" id="accLastAccess">—</span>
               </div>
               <div class="info-item">
                 <span class="info-label">Tenant principal</span>
-                <span class="info-value">TechCorp</span>
+                <span class="info-value" id="accTenant">—</span>
               </div>
               <div class="info-item">
                 <span class="info-label">Rol</span>
-                <span class="info-value">Admin</span>
+                <span class="info-value" id="accRole">—</span>
               </div>
               <div class="info-item">
                 <span class="info-label">ID de usuario</span>
-                <span class="info-value"><code>usr_a1b2c3d4</code></span>
+                <span class="info-value" id="accUserId"><code>—</code></span>
               </div>
             </div>
           </div>
@@ -523,18 +523,10 @@
           <!-- Activity Log Preview -->
           <div class="card reveal">
             <h2 class="card-title"><i class="fas fa-history"></i> Actividad Reciente</h2>
-            <div style="display:flex;flex-direction:column;gap:12px;">
-              <div style="font-size:12px;color:var(--gray);padding:8px 0;border-bottom:1px solid var(--border);">
-                <strong style="color:var(--white)">Actualizó perfil</strong><br>
-                <span>Hace 2 horas • Dashboard</span>
-              </div>
-              <div style="font-size:12px;color:var(--gray);padding:8px 0;border-bottom:1px solid var(--border);">
-                <strong style="color:var(--white)">Cambio de contraseña</strong><br>
-                <span>Hace 45 días • Seguridad</span>
-              </div>
+            <div id="activityPreviewList" style="display:flex;flex-direction:column;gap:12px;">
               <div style="font-size:12px;color:var(--gray);padding:8px 0;">
-                <strong style="color:var(--white)">Primer inicio de sesión</strong><br>
-                <span>15 Mar 2024 • Registro</span>
+                <strong style="color:var(--white)">Cargando actividad...</strong><br>
+                <span>Por favor espera</span>
               </div>
             </div>
             <button class="btn btn-ghost btn-sm" style="margin-top:12px;width:100%;justify-content:center;" onclick="openModal('activityModal')">
@@ -1137,6 +1129,58 @@
     if (s) s.style.display = 'none';
   }
 
+  function fmtFsDate(iso) {
+    try {
+      return new Date(iso).toLocaleDateString('es-ES', { month: 'short', year: 'numeric' });
+    } catch (e) { return '—'; }
+  }
+  function fmtLastAccess(iso) {
+    if (!iso) return '—';
+    try {
+      const d = new Date(iso);
+      const now = new Date();
+      if (d.toDateString() === now.toDateString()) {
+        return 'Hoy, ' + d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+      }
+      return d.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
+    } catch (e) { return '—'; }
+  }
+  function fillAccountSummary(u) {
+    const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+    set('accMemberSince', fmtFsDate(u.registered));
+    set('accLastAccess', fmtLastAccess(u.lastActivity));
+    set('accTenant', u.tenant && u.tenant !== 'N/A' ? u.tenant : (u.tenant_code || '—'));
+    set('accRole', u.rol || '—');
+    const uid = document.getElementById('accUserId');
+    if (uid) uid.innerHTML = '<code>' + (u.id ? u.id.slice(0, 8) + '…' : '—') + '</code>';
+  }
+  function fmtRelE(iso) {
+    if (!iso) return '—';
+    try {
+      const d = new Date(iso);
+      const now = new Date();
+      if (d.toDateString() === now.toDateString()) {
+        return 'Hoy, ' + d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+      }
+      const dias = Math.max(0, Math.floor((Date.now() - d.getTime()) / 86400000));
+      if (dias < 30) return 'Hace ' + dias + ' días';
+      return fmtFsDate(iso);
+    } catch (e) { return '—'; }
+  }
+  function fillActivityPreview(u) {
+    const act = document.getElementById('activityPreviewList');
+    if (!act) return;
+    const items = [];
+    if (u.lastActivity) items.push({ t: 'Último acceso', d: fmtRelE(u.lastActivity) });
+    if (u.registered) items.push({ t: 'Cuenta creada', d: fmtFsDate(u.registered) });
+    act.innerHTML = items.length
+      ? items.map((it, i) => '<div style="font-size:12px;color:var(--gray);padding:8px 0;' + (i < items.length - 1 ? 'border-bottom:1px solid var(--border);' : '') + '"><strong style="color:var(--white)">' + it.t + '</strong><br><span>' + it.d + '</span></div>').join('')
+      : '<div style="font-size:12px;color:var(--gray);padding:8px 0;">Sin actividad registrada todavía.</div>';
+  }
+  // Al cargar sin backend, deja el resumen visible con lo que haya en localStorage
+  const idTmp = localStorage.getItem('currentAccountId') || '';
+  if (idTmp) fillAccountSummary({ id: idTmp, rol: localStorage.getItem('userRole') || '—', tenant: localStorage.getItem('empresaNombre') || localStorage.getItem('empresaCodigo') || '—', tenant_code: localStorage.getItem('empresaCodigo') || '—' });
+
   // 1. Muestra inmediatamente lo que haya en localStorage (identidad base)
   applyProfileToDom({
     nombre: localStorage.getItem('userName') || 'Admin',
@@ -1162,6 +1206,8 @@
       const u = data.user || data || {};
       syncIdentityToLocal(u);
       applyProfileToDom(u);
+      fillAccountSummary(u);
+      fillActivityPreview(u);
     })
     .catch(err => console.warn('[perfil]', err.message))
     .finally(hideSkeleton);

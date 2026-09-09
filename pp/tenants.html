@@ -230,46 +230,6 @@
         62.5%, 87.5% { animation-timing-function: cubic-bezier(0.33, 1, 0.67, 1); filter: blur(0.1875em); opacity: 0.5; left: 1em; width: 2em; }
     }
 
-    /* ─── BANNER HERO TENANTS ───────── */
-    .pp-hero-banner {
-        position: relative;
-        overflow: hidden;
-        border-radius: var(--radius-lg, 18px);
-        min-height: 210px;
-        display: flex;
-        align-items: center;
-        background-size: cover;
-        background-position: center;
-        background-repeat: no-repeat;
-        margin: 0 clamp(12px, 3vw, 32px) 22px;
-        border: 1px solid var(--border, rgba(139, 92, 246, 0.1));
-        box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
-    }
-    .pp-hero-banner::after {
-        content: '';
-        position: absolute;
-        inset: 0;
-        background: linear-gradient(160deg, rgba(4, 4, 10, 0.2) 0%, rgba(12, 12, 26, 0.65) 55%, rgba(139, 92, 246, 0.4) 100%);
-        z-index: 1;
-    }
-    .pp-hero-banner-content {
-        position: relative;
-        z-index: 2;
-        padding: 26px 30px;
-        color: #fff;
-        width: 100%;
-    }
-    .pp-hero-banner-title {
-        font-family: 'Syne', sans-serif;
-        font-size: clamp(20px, 3vw, 30px);
-        font-weight: 800;
-        letter-spacing: 0.02em;
-    }
-    .pp-hero-banner-sub {
-        font-size: 13px;
-        color: rgba(255, 255, 255, 0.82);
-        margin-top: 5px;
-    }
   </style>
 </head>
 
@@ -377,18 +337,11 @@
           <button class="topbar-btn" title="Notificaciones"><i class="fas fa-bell"></i><span
               class="badge">2</span></button>
           <!--  Al hacer click aparece una pantalla emergente con la lista de notificaciones como alertas de error acceso denegado tenant creado exitosamente, etceterea. -->
+          <button class="btn btn-acc btn-sm" onclick="openModal('createUserModal')"><i class="fas fa-user-plus"></i> Nuevo Usuario</button>
           <button class="btn btn-acc btn-sm" onclick="openModal('createModal')"><i class="fas fa-plus"></i> Nuevo
             Tenant</button>
         </div>
       </header>
-
-      <!-- HERO BANNER -->
-      <div class="pp-hero-banner" style="background-image:url('../img/fondo-principal.jpg');">
-        <div class="pp-hero-banner-content">
-          <div class="pp-hero-banner-title">Gestión de <span style="color:#a78bfa;">Tenants</span></div>
-          <div class="pp-hero-banner-sub">Administra todas las empresas registradas en tu plataforma.</div>
-        </div>
-      </div>
 
       <!-- PAGE HEADER -->
       <div class="page-header">
@@ -536,6 +489,61 @@
       <div class="modal-footer">
         <button class="btn btn-ghost" onclick="closeModal('createModal')">Cancelar</button>
         <button class="btn btn-acc" onclick="createTenant()"><i class="fas fa-rocket"></i> Crear Tenant</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CREATE USER MODAL -->
+  <div class="modal-overlay" id="createUserModal">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title"><i class="fas fa-user-plus" style="margin-right:8px;color:var(--accent);"></i>Nuevo
+          Usuario</div>
+        <button class="modal-close" onclick="closeModal('createUserModal')"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="modal-body">
+        <form id="createUserForm">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Nombre *</label>
+              <input type="text" id="u-nombre" class="form-input" placeholder="Ej: Ana" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Apellido</label>
+              <input type="text" id="u-apellido" class="form-input" placeholder="Ej: López">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Email *</label>
+            <input type="email" id="u-email" class="form-input" placeholder="usuario@empresa.com" required>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Tenant *</label>
+              <select id="u-tenant" class="form-select" required>
+                <option value="">Cargando tenants...</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Rol</label>
+              <select id="u-rol" class="form-select">
+                <option value="user" selected>Usuario</option>
+                <option value="comercial">Comercial</option>
+                <option value="admin">Admin</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Contraseña temporal</label>
+            <input type="text" id="u-password" class="form-input" placeholder="Opcional — se generará automáticamente">
+            <div class="form-hint"><i class="fas fa-info-circle"></i> El usuario recibe correo de activación con su
+              contraseña.</div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="closeModal('createUserModal')">Cancelar</button>
+        <button class="btn btn-acc" onclick="createUser()"><i class="fas fa-user-plus"></i> Crear Usuario</button>
       </div>
     </div>
   </div>

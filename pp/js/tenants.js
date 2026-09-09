@@ -366,6 +366,7 @@ function renderTenants(data = filteredTenants) {
       </td>`;
     tbody.appendChild(row);
   });
+  populateTenantSelect();
 }
 
 // ── Sorting ──────────────────────
@@ -531,6 +532,78 @@ async function createTenant() {
   } catch (err) {
     console.error('Error:', err);
     alert('Error de conexión. El tenant no fue creado.');
+  } finally {
+    btn.innerHTML = orig;
+    btn.disabled = false;
+  }
+}
+
+// ── Create User Modal ──────────────
+function populateTenantSelect() {
+  const sel = document.getElementById('u-tenant');
+  if (!sel) return;
+  sel.innerHTML = '<option value="">Seleccionar tenant...</option>';
+  (tenants.length > 0 ? tenants : [{ id: 'ROOT', codigo: 'ROOT', name: 'Portal Pilot Honduras' }]).forEach(t => {
+    const opt = document.createElement('option');
+    opt.value = t.codigo || t.id;
+    opt.textContent = t.name || t.codigo || t.id;
+    sel.appendChild(opt);
+  });
+}
+
+async function createUser() {
+  const form = document.getElementById('createUserForm');
+  if (!form.checkValidity()) {
+    form.reportValidity();
+    return;
+  }
+
+  const payload = {
+    nombre: document.getElementById('u-nombre').value.trim(),
+    apellido: document.getElementById('u-apellido').value.trim(),
+    email: document.getElementById('u-email').value.trim(),
+    rol: document.getElementById('u-rol').value,
+    tenant: document.getElementById('u-tenant').value,
+    password: document.getElementById('u-password').value.trim() || undefined
+  };
+
+  if (!payload.tenant) {
+    alert('Selecciona el tenant al que pertenece el usuario.');
+    return;
+  }
+
+  const btn = form.closest('.modal').querySelector('.btn-acc');
+  const orig = btn.innerHTML;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creando...';
+  btn.disabled = true;
+
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      alert('No se encontró token de sesión. Por favor inicia sesión de nuevo.');
+      btn.innerHTML = orig;
+      btn.disabled = false;
+      return;
+    }
+
+    const res = await fetch('/api/users', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await res.json().catch(() => ({}));
+
+    if (res.ok) {
+      alert(`✓ Usuario ${payload.nombre} creado exitosamente. Se envió el correo de activación.`);
+      closeModal('createUserModal');
+      form.reset();
+    } else {
+      alert('Error: ' + (data.error || 'No se pudo crear el usuario'));
+    }
+  } catch (err) {
+    console.error('Error:', err);
+    alert('Error de conexión. El usuario no fue creado.');
   } finally {
     btn.innerHTML = orig;
     btn.disabled = false;

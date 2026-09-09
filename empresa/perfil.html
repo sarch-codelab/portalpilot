@@ -738,18 +738,62 @@
     const darkModeBtn = document.getElementById('darkModeToggle');
     darkModeBtn.addEventListener('click', () => { document.body.classList.toggle('light-mode'); const isLight = document.body.classList.contains('light-mode'); darkModeBtn.innerHTML = isLight ? '<i class="fas fa-sun"></i> <span>Light Mode</span>' : '<i class="fas fa-moon"></i> <span>Dark Mode</span>'; });
 
-    // ── Load Profile from localStorage ────
-    (function loadProfile() {
-      const name = localStorage.getItem('userName') || 'Admin';
-      const email = localStorage.getItem('userEmail') || '';
-      const role = localStorage.getItem('userRole') || 'Administrador';
-      const profileName = document.getElementById('profileName');
-      const profileEmail = document.getElementById('profileEmail');
-      const profileRole = document.getElementById('profileRole');
-      if(profileName) profileName.textContent = name;
-      if(profileEmail) profileEmail.textContent = email;
-      if(profileRole) profileRole.textContent = role;
-    })();
+    // ── Perfil: helpers (la carga real del backend se hace al final del documento) ────
+    function tokenSub() {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) return '';
+        const payload = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
+        return payload.sub || payload.user_id || payload.uid || payload.id || '';
+      } catch (e) { return ''; }
+    }
+    function currentUserId() {
+      return localStorage.getItem('currentAccountId') || tokenSub() || '';
+    }
+    function applyProfileToDom(u) {
+      const nombre = (u.nombre || '').trim();
+      const apellido = (u.apellido || '').trim();
+      const fullName = [nombre, apellido].filter(Boolean).join(' ') || 'Admin';
+      const email = u.email || '';
+      const role = u.rol_global || u.rol || 'Administrador';
+      const foto = u.foto_perfil_url || '';
+      const initials = fullName.split(' ').map(w => (w || '')[0] || '').join('').substring(0, 2).toUpperCase() || 'AS';
+      const pn = document.getElementById('profileName');
+      const pe = document.getElementById('profileEmail');
+      const pr = document.getElementById('profileRole');
+      const fn = document.getElementById('fullName');
+      const em = document.getElementById('email');
+      const rs = document.getElementById('role');
+      const ar = document.getElementById('area');
+      const pa = document.getElementById('profileAvatarLarge');
+      if (pn) pn.textContent = fullName;
+      if (pe) pe.textContent = email;
+      if (pr) pr.innerHTML = '<i class="fas fa-id-badge"></i> ' + role;
+      if (fn) fn.value = fullName;
+      if (em) em.value = email;
+      if (rs && !rs.disabled) {
+        const match = Array.from(rs.options).find(o => o.value === role);
+        if (match) rs.value = role;
+      }
+      if (ar && typeof u.area !== 'undefined' && !ar.disabled) ar.value = u.area || '';
+      if (pa) {
+        if (foto) pa.innerHTML = '<img src="' + foto + '" alt="Foto de perfil" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;">';
+        else pa.textContent = initials;
+      }
+      const vb = document.querySelector('.profile-badge.verified');
+      if (vb) vb.style.display = (u.two_factor_enabled || u.verified) ? '' : 'none';
+    }
+    function syncIdentityToLocal(u) {
+      const nombre = (u.nombre || '').trim();
+      const apellido = (u.apellido || '').trim();
+      const fullName = [nombre, apellido].filter(Boolean).join(' ') || 'Admin';
+      localStorage.setItem('userName', nombre || fullName);
+      localStorage.setItem('userApellido', apellido);
+      localStorage.setItem('userEmail', u.email || '');
+      localStorage.setItem('userRole', u.rol_global || u.rol || 'Administrador');
+      localStorage.setItem('userFoto', u.foto_perfil_url || '');
+      localStorage.setItem('userBanner', u.banner_perfil_url || '');
+    }
 
     // ── Logout Modal ─────────────────
     const logoutBtn = document.getElementById('logoutBtn'), logoutModal = document.getElementById('logoutModal'), modalCancel = document.getElementById('modalCancel'), modalConfirm = document.getElementById('modalConfirm');
@@ -788,8 +832,26 @@
       btn.disabled = true;
       
       try {
-        await new Promise(r => setTimeout(r, 1000));
-        // Mock API call: await fetch('/api/profile', { method:'PUT', body: JSON.stringify({...}) })
+        const id = currentUserId();
+        const fullName = (document.getElementById('fullName')?.value || '').trim();
+        const email = (document.getElementById('email')?.value || '').trim();
+        const roleSel = document.getElementById('role');
+        const rol = roleSel && !roleSel.disabled ? roleSel.value : '';
+        const parts = fullName.split(/\s+/).filter(Boolean);
+        const nombre = parts[0] || '';
+        const apellido = parts.slice(1).join(' ');
+        const body = { nombre, apellido };
+        if (email) body.email = email;
+        if (rol) body.rol = rol;
+
+        const res = await apiFetch('/api/users/' + encodeURIComponent(id), {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+        if (!res.ok) throw new Error((await res.json()).error || 'Error');
+        
+        syncIdentityToLocal({ nombre, apellido, email, rol_global: rol });
         
         document.querySelectorAll('.field input, .field select, .field textarea').forEach(el => {
           el.disabled = true;
@@ -800,7 +862,7 @@
         
         showMessage('✓ Perfil actualizado exitosamente', 'success');
       } catch(err) {
-        showMessage('Error al guardar. Intenta de nuevo.', 'error');
+        showMessage('Error al guardar: ' + err.message, 'error');
       } finally {
         btn.innerHTML = orig;
         btn.disabled = false;
@@ -819,14 +881,37 @@
       const file = document.getElementById('avatarFile').files[0];
       if(!file) { showMessage('Selecciona una imagen primero', 'error'); return; }
       if(file.size > 5*1024*1024) { showMessage('La imagen debe ser menor a 5MB', 'error'); return; }
-      
-      // Mock upload
-      setTimeout(() => {
-        closeModal('uploadAvatarModal');
-        showMessage('✓ Foto de perfil actualizada', 'success');
-        // Update avatar preview (mock)
-        document.querySelector('.profile-avatar-large').innerHTML = 'AS<span class="online-dot"></span>';
-      }, 800);
+      if(!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) { showMessage('Formato no permitido (JPG, PNG, WEBP)', 'error'); return; }
+      const reader = new FileReader();
+      reader.onload = async function() {
+        try {
+          const token = localStorage.getItem('token');
+          const up = await fetch('/api/upload-image', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+            body: JSON.stringify({ imageBase64: reader.result, filename: file.name, contentType: file.type })
+          }).then(r => r.json());
+          if (up.error) throw new Error(up.error);
+          if (!up.url) throw new Error('No se obtuvo la URL de la imagen');
+
+          const id = currentUserId();
+          const res = await apiFetch('/api/users/' + encodeURIComponent(id), {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ foto_perfil_url: up.url })
+          });
+          if (!res.ok) throw new Error((await res.json()).error || 'Error');
+
+          localStorage.setItem('userFoto', up.url);
+          const pa = document.getElementById('profileAvatarLarge');
+          if (pa) pa.innerHTML = '<img src="' + up.url + '" alt="Foto de perfil" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;">';
+          closeModal('uploadAvatarModal');
+          showMessage('✓ Foto de perfil actualizada', 'success');
+        } catch(err) {
+          showMessage('Error al subir imagen: ' + err.message, 'error');
+        }
+      };
+      reader.readAsDataURL(file);
     }
 
     // ── Password Strength & Match ──────────────
@@ -875,8 +960,14 @@
       btn.disabled = true;
       
       try {
-        await new Promise(r => setTimeout(r, 1200));
-        // Mock: await fetch('/api/password', { method:'PUT', body: JSON.stringify({ current, new }) })
+        const newPass = document.getElementById('newPass').value;
+        const id = currentUserId();
+        const res = await apiFetch('/api/users/' + encodeURIComponent(id), {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password: newPass })
+        });
+        if (!res.ok) throw new Error((await res.json()).error || 'Error');
         
         closeModal('changePasswordModal');
         showMessage('✓ Contraseña actualizada', 'success');
@@ -887,7 +978,7 @@
         document.getElementById('strengthFill').style.width = '0';
         document.getElementById('matchStatus').textContent = '';
       } catch(err) {
-        showMessage('Error al cambiar contraseña', 'error');
+        showMessage('Error al cambiar contraseña: ' + err.message, 'error');
       } finally {
         btn.innerHTML = 'Actualizar Contraseña';
         btn.disabled = false;
@@ -895,10 +986,36 @@
     }
 
     // ── 2FA Toggle ──────────────
-    function toggle2FA() {
-      const enabled = document.getElementById('toggle2fa').checked;
-      showMessage(enabled ? '✓ 2FA activado' : '2FA desactivado', enabled ? 'success' : 'info');
+    async function toggle2FA() {
+      const toggle = document.getElementById('toggle2fa');
+      const enabled = toggle.checked;
+      const token = localStorage.getItem('token');
+      try {
+        setBtnLoading(toggle);
+        if (enabled) {
+          const res = await fetch('/api/security/2fa/setup', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token }
+          }).then(r => r.json());
+          if (res.error) { toggle.checked = false; showMessage('Error: ' + res.error, 'error'); return; }
+          showMessage('2FA en espera de confirmación. Escanea este secreto en tu app autenticadora: ' + res.secret, 'info');
+        } else {
+          const code = prompt('Ingresa tu código 2FA actual para desactivar:');
+          if (!code) { toggle.checked = true; return; }
+          const res = await fetch('/api/security/2fa/disable', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+            body: JSON.stringify({ code })
+          }).then(r => r.json());
+          if (res.error) { toggle.checked = true; showMessage('Error: ' + res.error, 'error'); return; }
+          showMessage('2FA desactivado', 'info');
+        }
+      } catch (e) {
+        toggle.checked = !enabled;
+        showMessage('Error de conexión con el servidor', 'error');
+      }
     }
+    function setBtnLoading(btn) { try { btn.disabled = true; setTimeout(() => { btn.disabled = false; }, 900); } catch(e) {} }
 
     // ── Sessions ──────────────
     function endSession(btn) {
@@ -1013,34 +1130,39 @@
 <script src="../js/sidebar-loader.js"></script>
 <script>
 (function() {
-  var name = localStorage.getItem('userName') || 'Admin';
-  var apellido = localStorage.getItem('userApellido') || '';
-  var email = localStorage.getItem('userEmail') || '';
-  var role = localStorage.getItem('userRole') || 'Administrador';
-  var foto = localStorage.getItem('userFoto') || '';
-  var banner = localStorage.getItem('userBanner') || '';
-  var fullName = apellido ? name + ' ' + apellido : name;
-  var initials = fullName.split(' ').map(function(w){ return w[0]; }).join('').substring(0,2).toUpperCase();
-
-  var pn = document.getElementById('profileName');
-  var pe = document.getElementById('profileEmail');
-  var pr = document.getElementById('profileRole');
-  var fn = document.getElementById('fullName');
-  var em = document.getElementById('email');
-  var pa = document.getElementById('profileAvatarLarge');
-
-  if(pn) pn.textContent = fullName;
-  if(pe) pe.textContent = email;
-  if(pr) pr.innerHTML = '<i class="fas fa-id-badge"></i> ' + role;
-  if(fn) fn.value = fullName;
-  if(em) em.value = email;
-  if(pa) {
-    if(foto) {
-      pa.innerHTML = '<img src="' + foto + '" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;">';
-    } else {
-      pa.textContent = initials;
-    }
+  function hideSkeleton() {
+    const s = document.getElementById('profileSkeleton');
+    if (s) s.style.display = 'none';
   }
+
+  // 1. Muestra inmediatamente lo que haya en localStorage (identidad base)
+  applyProfileToDom({
+    nombre: localStorage.getItem('userName') || 'Admin',
+    apellido: localStorage.getItem('userApellido') || '',
+    email: localStorage.getItem('userEmail') || '',
+    rol_global: localStorage.getItem('userRole') || 'Administrador',
+    foto_perfil_url: localStorage.getItem('userFoto') || ''
+  });
+
+  // 2. Carga el perfil real desde el backend
+  const token = localStorage.getItem('token');
+  const id = currentUserId();
+  if (!token || !id) { hideSkeleton(); return; }
+
+  fetch('/api/users/' + encodeURIComponent(id), {
+    headers: { 'Authorization': 'Bearer ' + token }
+  })
+    .then(res => {
+      if (!res.ok) throw new Error('No se pudo cargar el perfil desde el servidor');
+      return res.json();
+    })
+    .then(data => {
+      const u = data.user || data || {};
+      syncIdentityToLocal(u);
+      applyProfileToDom(u);
+    })
+    .catch(err => console.warn('[perfil]', err.message))
+    .finally(hideSkeleton);
 })();
 </script>
 </body>

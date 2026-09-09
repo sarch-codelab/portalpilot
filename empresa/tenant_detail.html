@@ -2597,7 +2597,8 @@
 
             // 2. Lee el ID desde la URL: tenant_detail.html?id=PP-123456
             const params = new URLSearchParams(window.location.search);
-            const tenantId = params.get('id') || params.get('tenant');
+            // Sin ?id se usa el tenant del usuario logueado (empresaCodigo del localStorage)
+            const tenantId = params.get('id') || params.get('tenant') || localStorage.getItem('empresaCodigo') || '';
 
             if (!tenantId) {
                 document.getElementById('tenant-name').textContent = 'Falta el ?id= en la URL';

@@ -535,6 +535,8 @@ async function loadAgents() {
     return data;
   } catch (err) {
     showToast('No se pudieron cargar los agentes: ' + err.message, 'error');
+  } finally {
+    if (window.hideSkeletons) hideSkeletons();
   }
 }
 

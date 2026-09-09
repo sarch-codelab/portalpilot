@@ -1189,6 +1189,10 @@
 <script src="../js/notifications.js"></script>
 <script src="../js/plan-gate.js"></script>
 <script src="../js/sidebar-loader.js"></script>
+<script>
+// El contenido de inicio es est\u00e1tico: oculta los skeletons al terminar de cargar
+window.addEventListener('load', function() { if (window.hideSkeletons) hideSkeletons(); });
+</script>
 <script src="../auth-check.js"></script>
 </body>
 

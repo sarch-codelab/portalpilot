@@ -13,26 +13,257 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <link rel="stylesheet" href="css/dashboard.css">
   <link rel="stylesheet" href="../css/notifications.css">
-    <link rel="stylesheet" href="../css/global.css">
-  <style>
-    .robot-logo-backdrop {
+    <style>
+    /* ─── PRELOADER (device loader) ──────────────── */
+    .preloader {
         position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        z-index: 60;
-        pointer-events: none;
-        opacity: 0.55;
+        inset: 0;
+        z-index: 9999;
+        display: grid;
+        place-items: center;
+        background: radial-gradient(circle at 50% 50%, #12121e 0%, #08080f 55%, #050509 100%);
+        font-size: 16px;
+        opacity: 1;
+        transition: opacity 0.5s ease, visibility 0.5s ease;
     }
-    .robot-logo-backdrop img {
-        width: min(56vw, 420px);
+    .preloader.hidden {
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+    }
+    .preloader-inner {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 32px;
+    }
+    .preloader-logo {
+        font-family: 'Syne', sans-serif;
+        font-size: 13px;
+        font-weight: 800;
+        letter-spacing: 0.4em;
+        text-transform: uppercase;
+        color: rgba(216, 210, 240, 0.55);
+    }
+    .preloader-logo span {
+        color: #a78bfa;
+    }
+    .device {
+        position: relative;
+        width: 4em;
+        height: 4em;
+    }
+    .device__a,
+    .device__a-1,
+    .device__a-2,
+    .device__b,
+    .device__c,
+    .device__d,
+    .device__e,
+    .device__f,
+    .device__g {
+        animation: device-a 3s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+        position: absolute;
+        transition: background-color 0.3s, box-shadow 0.3s;
+    }
+    .device__a,
+    .device__d,
+    .device__e {
+        background-color: hsl(264, 12%, 26%);
+        box-shadow: 0 0 0 0.25em inset;
+    }
+    .device__a {
+        border-radius: 0.375em;
+        top: 0;
+        width: 4em;
+        height: 2.5em;
+        z-index: 1;
+    }
+    .device__a-1,
+    .device__a-2 {
+        visibility: hidden;
+    }
+    .device__a-1 {
+        animation-name: device-a-1;
+        top: 2.25em;
+        left: 1.5em;
+        width: 1em;
+        height: 0.25em;
+    }
+    .device__a-2 {
+        animation-name: device-a-2;
+        top: 0.625em;
+        right: 0;
+        width: 0.25em;
+        height: 0.75em;
+    }
+    .device__a-1,
+    .device__a-2,
+    .device__b,
+    .device__c,
+    .device__f,
+    .device__g {
+        background-color: #d8d2f0;
+        border-radius: 0.125em;
+    }
+    .device__b {
+        animation-name: device-b;
+        top: 2.25em;
+        left: 1.875em;
+        width: 0.25em;
+        height: 1em;
+    }
+    .device__c {
+        animation-name: device-c;
+        top: 3em;
+        left: 1em;
+        width: 2em;
+        height: 0.25em;
+    }
+    .device__d,
+    .device__e {
+        left: 1.25em;
+        width: 1.5em;
+        height: 0.875em;
+        visibility: hidden;
+    }
+    .device__d {
+        animation-name: device-d;
+        border-radius: 0.375em 0.375em 0 0;
+        top: 0.75em;
+    }
+    .device__e {
+        animation-name: device-e;
+        border-radius: 0 0 0.375em 0.375em;
+        top: 1.625em;
+    }
+    .device__f,
+    .device__g {
+        filter: blur(0.375em);
+        bottom: 0;
+        height: 0.25em;
+    }
+    .device__f {
+        animation-name: device-f;
+        opacity: 0.5;
+        left: 1em;
+        width: 2em;
+    }
+    .device__g {
+        animation-name: device-g;
+        opacity: 0;
+        left: 0;
+        width: 4em;
+    }
+    @keyframes device-a {
+        from, to { animation-timing-function: cubic-bezier(0.33, 0, 0.67, 0); left: 0; width: 4em; height: 2.5em; transform: translateY(0); }
+        12.5% { animation-timing-function: cubic-bezier(0.33, 1, 0.67, 1); left: 0; width: 4em; height: 2.5em; transform: translateY(1.5em); }
+        25% { animation-timing-function: cubic-bezier(0.33, 0, 0.67, 0); left: 0; width: 4em; height: 2.5em; transform: translateY(0.375em); }
+        37.5% { animation-timing-function: cubic-bezier(0.33, 1, 0.67, 1); left: 0; width: 4em; height: 2.5em; transform: translateY(1.5em); }
+        50% { animation-timing-function: cubic-bezier(0.33, 0, 0.67, 0); left: 1em; width: 2em; height: 3em; transform: translateY(0.125em); }
+        62.5% { animation-timing-function: cubic-bezier(0.33, 1, 0.67, 1); left: 1em; width: 2em; height: 3em; transform: translateY(1em); }
+        75% { animation-timing-function: cubic-bezier(0.33, 0, 0.67, 0); left: 1em; width: 2em; height: 2em; transform: translateY(0.625em); }
+        87.5% { animation-timing-function: cubic-bezier(0.33, 1, 0.67, 1); left: 1em; width: 2em; height: 2em; transform: translateY(1.375em); }
+    }
+    @keyframes device-a-1 {
+        from { animation-timing-function: steps(1, end); left: 1.5em; width: 1em; transform: translateY(0); visibility: hidden; }
+        12.5% { animation-timing-function: cubic-bezier(0.33, 1, 0.67, 1); left: 1.5em; width: 1em; transform: translateY(0); visibility: visible; }
+        25%, 37.5% { animation-timing-function: cubic-bezier(0.33, 1, 0.67, 1); left: 1.5em; width: 1em; transform: translateY(-0.5em); visibility: visible; }
+        50%, 62.5% { animation-timing-function: cubic-bezier(0.33, 1, 0.67, 1); left: 0.875em; width: 0.25em; transform: translateY(0); visibility: visible; }
+        75%, to { animation-timing-function: cubic-bezier(0.33, 1, 0.67, 1); left: 0.875em; width: 0.25em; transform: translateY(-0.5em); visibility: hidden; }
+    }
+    @keyframes device-a-2 {
+        from { animation-timing-function: steps(1, end); transform: translate(0, 0.375em); visibility: hidden; }
+        62.5% { animation-timing-function: cubic-bezier(0.33, 1, 0.67, 1); transform: translate(0, 0.375em); visibility: visible; }
+        75%, 87.5% { animation-timing-function: cubic-bezier(0.33, 1, 0.67, 1); transform: translate(0.375em, 0); visibility: visible; }
+        to { transform: translate(0, 0.25em); visibility: visible; }
+    }
+    @keyframes device-b {
+        from, to { animation-timing-function: cubic-bezier(0.33, 0, 0.67, 0); transform: translateY(0); visibility: visible; }
+        10%, 12.5% { animation-timing-function: steps(1, start); transform: translateY(0.75em); visibility: visible; }
+        25% { animation-timing-function: steps(1, start); top: 2.25em; left: 1.875em; transform: translateY(0.75em); visibility: hidden; }
+        87.5% { animation-timing-function: cubic-bezier(0.33, 1, 0.67, 1); transform: translateY(0.75em); visibility: hidden; }
+    }
+    @keyframes device-c {
+        from, to { animation-timing-function: cubic-bezier(0.33, 0, 0.67, 0); transform: translateY(0); visibility: visible; width: 2em; }
+        10%, 12.5% { animation-timing-function: steps(1, start); transform: translateY(0.75em); visibility: visible; width: 2em; }
+        25% { animation-timing-function: steps(1, start); top: 3em; left: 1em; width: 2em; transform: translateY(0.75em); visibility: hidden; }
+        87.5% { animation-timing-function: cubic-bezier(0.33, 1, 0.67, 1); left: 1.5em; transform: translateY(0.75em); visibility: hidden; width: 1em; }
+    }
+    @keyframes device-d {
+        from { animation-timing-function: steps(1, end); transform: translateY(0.25em); visibility: hidden; }
+        62.5% { animation-timing-function: cubic-bezier(0.33, 1, 0.67, 1); transform: translateY(0.25em); visibility: visible; }
+        75% { animation-timing-function: cubic-bezier(0.33, 0, 0.67, 0); transform: translateY(-0.75em); }
+        87.5% { animation-timing-function: cubic-bezier(0.33, 1, 0.67, 1); transform: translateY(0); }
+        to { transform: translateY(-0.75em); }
+    }
+    @keyframes device-e {
+        from { animation-timing-function: steps(1, end); transform: translateY(1.5em); visibility: hidden; }
+        62.5% { animation-timing-function: cubic-bezier(0.33, 1, 0.67, 1); transform: translateY(1.5em); visibility: visible; }
+        75% { animation-timing-function: cubic-bezier(0.33, 0, 0.67, 0); transform: translateY(0.75em); }
+        87.5% { animation-timing-function: cubic-bezier(0.33, 1, 0.67, 1); transform: translateY(1.5em); }
+        to { transform: translateY(0); }
+    }
+    @keyframes device-f {
+        from { animation-timing-function: cubic-bezier(0.33, 0, 0.67, 0); filter: blur(0.375em); }
+        12.5% { animation-timing-function: cubic-bezier(0.33, 1, 0.67, 1); filter: blur(0.1875em); opacity: 0.5; }
+        25%, to { filter: blur(0.375em); opacity: 0; }
+    }
+    @keyframes device-g {
+        from, 12.5% { animation-timing-function: cubic-bezier(0.33, 1, 0.67, 1); background-color: #d8d2f0; filter: blur(0.1875em); opacity: 0; }
+        25% { animation-timing-function: cubic-bezier(0.33, 0, 0.67, 0); background-color: #d8d2f0; filter: blur(0.375em); opacity: 0.5; }
+        37.5% { animation-timing-function: cubic-bezier(0.33, 1, 0.67, 1); filter: blur(0.1875em); opacity: 0.5; left: 0; width: 4em; }
+        50%, 75%, to { animation-timing-function: cubic-bezier(0.33, 0, 0.67, 0); filter: blur(0.375em); opacity: 0.5; left: 1em; width: 2em; }
+        62.5%, 87.5% { animation-timing-function: cubic-bezier(0.33, 1, 0.67, 1); filter: blur(0.1875em); opacity: 0.5; left: 1em; width: 2em; }
+    }
+
+    /* ─── ROBOT CENTRADO EN LA PÁGINA (scrollea con el contenido) ─── */
+    .main-content {
+        position: relative;
+    }
+    .robot-logo-page {
+        position: absolute;
+        top: 220px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 0;
+        pointer-events: none;
+        opacity: 0.5;
+    }
+    .robot-logo-page img {
+        width: min(52vw, 400px);
         height: auto;
         display: block;
         filter: drop-shadow(0 24px 70px rgba(139, 92, 246, 0.45));
     }
+    .dash-grid {
+        position: relative;
+        z-index: 1;
+    }
+    .dash-grid .kpi-card,
+    .dash-grid .chart-card,
+    .dash-grid .alerts-panel,
+    .dash-grid .services-panel,
+    .dash-grid .activity-panel,
+    .dash-grid .calendar-panel,
+    .dash-grid .heatmap-panel {
+        background: rgba(14, 14, 28, 0.45);
+        backdrop-filter: blur(14px) saturate(150%);
+        -webkit-backdrop-filter: blur(14px) saturate(150%);
+        border-color: rgba(139, 92, 246, 0.22);
+    }
+    body.light-mode .dash-grid .kpi-card,
+    body.light-mode .dash-grid .chart-card,
+    body.light-mode .dash-grid .alerts-panel,
+    body.light-mode .dash-grid .services-panel,
+    body.light-mode .dash-grid .activity-panel,
+    body.light-mode .dash-grid .calendar-panel,
+    body.light-mode .dash-grid .heatmap-panel {
+        background: rgba(255, 255, 255, 0.55);
+    }
     @media (max-width: 900px) {
-        .robot-logo-backdrop { opacity: 0.4; }
-        .robot-logo-backdrop img { width: min(70vw, 320px); }
+        .robot-logo-page { opacity: 0.4; }
+        .robot-logo-page img { width: min(70vw, 320px); }
     }
   </style>
 </head>
@@ -58,12 +289,7 @@
         </div>
     </div>
 
-    <!-- ROBOT LOGO CENTRAL -->
-    <div class="robot-logo-backdrop" aria-hidden="true">
-        <img src="../img/iconos/robot_logo.png" alt="">
-    </div>
-
-  <div id="progress">
+    <div id="progress">
     <div id="progress-fill"></div>
   </div>
   <div id="cursor-dot"></div>
@@ -312,6 +538,9 @@
 
     <!-- MAIN -->
     <main class="main-content">
+      <div class="robot-logo-page" aria-hidden="true">
+        <img src="../img/iconos/robot_logo.png" alt="">
+      </div>
       <header class="topbar">
         <div class="topbar-left">
           <button class="hamburger-toggle" id="hamburgerBtn" onclick="toggleSidebarMobile()"><span></span><span></span><span></span></button>
@@ -567,7 +796,21 @@
       });
     });
   </script>
-    <script src="../js/preloader.js"></script>
+    <script>
+    (function () {
+        var preloader = document.getElementById('preloader');
+        if (!preloader) return;
+        var start = Date.now();
+        function hide() {
+            if (preloader.classList.contains('hidden')) return;
+            var delay = Math.max(0, 900 - (Date.now() - start));
+            setTimeout(function () { preloader.classList.add('hidden'); }, delay);
+        }
+        if (document.readyState === 'complete') { hide(); }
+        window.addEventListener('load', hide);
+        setTimeout(hide, 3200);
+    })();
+    </script>
 </body>
 
 </html>

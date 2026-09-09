@@ -60,6 +60,7 @@
             background-position: center;
             background-attachment: fixed;
             background-repeat: no-repeat;
+            transition: background-position 0.3s ease;
             color: var(--text);
             overflow-x: hidden;
             line-height: 1.6;
@@ -2118,13 +2119,23 @@
             dashboard.classList.add('sidebar-collapsed');
         }
         
+        // ── Centrar fondo según el área del main-content ─────
+        function updateBgPosition() {
+            const main = document.querySelector('.main-content');
+            if (!main) return;
+            const rect = main.getBoundingClientRect();
+            const delta = Math.round((rect.left + rect.width / 2) - window.innerWidth / 2);
+            document.body.style.backgroundPosition = delta + 'px center';
+        }
+
         function updateLayout() {
             isMobile = window.innerWidth <= 900;
             if (isMobile) { sidebar.style.position = 'fixed'; sidebar.style.left = sidebar.classList.contains('active') ? '0' : '-260px'; dashboard.classList.remove('sidebar-collapsed'); }
             else { sidebar.style.position = 'sticky'; sidebar.style.left = 'auto'; sidebar.classList.remove('active'); overlay.classList.remove('active'); if (sidebar.classList.contains('collapsed')) { dashboard.classList.add('sidebar-collapsed'); } else { dashboard.classList.remove('sidebar-collapsed'); } }
         }
-        window.addEventListener('resize', () => { updateLayout(); setTimeout(() => { window.dispatchEvent(new Event('resize')); }, 300); });
+        window.addEventListener('resize', () => { updateLayout(); setTimeout(() => { updateBgPosition(); window.dispatchEvent(new Event('resize')); }, 300); });
         updateLayout();
+        updateBgPosition();
         toggleBtn.addEventListener('click', () => { 
             if (isMobile) { 
                 sidebar.classList.toggle('active'); 
@@ -2135,6 +2146,7 @@
                 localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
             } 
             updateLayout(); 
+            updateBgPosition();
         });
         overlay.addEventListener('click', () => { sidebar.classList.remove('active'); overlay.classList.remove('active'); });
 

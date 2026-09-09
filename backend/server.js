@@ -1388,23 +1388,23 @@ app.post('/api/login', loginLimiter, async (req, res) => {
       return res.status(202).json({ requiresTwoFactor: true, mfaToken });
     }
 
+    let tenantData = null;
+    if (supabase && userRow.empresa_codigo) {
+      const { data: t } = await supabase.from('tenants').select('*').eq('codigo', userRow.empresa_codigo).maybeSingle();
+      tenantData = t;
+    }
+
     const accountToken = jwt.sign(
       {
         sub: userRow.id,
         email: userRow.email,
-        rol: userRow.rol || 'admin',
+        rol: resolveDisplayRole(userRow, tenantData),
         empresa_codigo: userRow.empresa_codigo || 'ROOT'
       },
       localJwtSecret,
       { expiresIn: '30d' }
     );
 
-
-    let tenantData = null;
-    if (supabase && userRow.empresa_codigo) {
-      const { data: t } = await supabase.from('tenants').select('*').eq('codigo', userRow.empresa_codigo).maybeSingle();
-      tenantData = t;
-    }
 
     const userArea = tenantData?.area || userRow.area || 'Área Comercial';
     const userPlan = tenantData?.plan || 'starter';
@@ -1443,7 +1443,7 @@ app.post('/api/login', loginLimiter, async (req, res) => {
         nombre: userRow.nombre || '',
         apellido: userRow.apellido || '',
         email: userRow.email,
-        rol: userRow.rol || 'admin',
+        rol: resolveDisplayRole(userRow, tenantData),
         empresa_codigo: userRow.empresa_codigo || 'ROOT',
         tenant: userRow.empresa_codigo || 'ROOT',
         area: userArea,
@@ -1498,7 +1498,7 @@ app.post('/api/login/2fa', loginLimiter, async (req, res) => {
     const userArea = tenantData?.area || userRow.area || 'Área Comercial';
     const userPlan = normalizePlan(tenantData?.plan);
     const token = jwt.sign({
-      sub: userRow.id, email: userRow.email, rol: userRow.rol || userRow.rol_global || 'user',
+      sub: userRow.id, email: userRow.email, rol: resolveDisplayRole(userRow, tenantData),
       empresa_codigo: userRow.empresa_codigo || 'ROOT'
     }, localJwtSecret, { expiresIn: '30d' });
     const now = new Date().toISOString();
@@ -1521,7 +1521,7 @@ app.post('/api/login/2fa', loginLimiter, async (req, res) => {
       message: 'Login exitoso', token,
       user: {
         id: userRow.id, nombre: userRow.nombre || '', apellido: userRow.apellido || '', email: userRow.email,
-        rol: userRow.rol || userRow.rol_global || 'user', empresa_codigo: userRow.empresa_codigo || 'ROOT',
+        rol: resolveDisplayRole(userRow, tenantData), empresa_codigo: userRow.empresa_codigo || 'ROOT',
         tenant: userRow.empresa_codigo || 'ROOT', area: userArea, plan: userPlan,
         modulos_activos: getModulesForAreaAndPlan(userArea, userPlan), status: userRow.estado || 'activo', token
       }
@@ -2347,6 +2347,13 @@ app.get('/api/users', authenticate, async (req, res) => {
 
         if (supaErr) console.warn('[GET USERS] Supabase error:', supaErr.message);
 
+        // Emails dueños de tenant (para mostrar rol Owner en lugar de Admin)
+        const ownerEmails = new Set();
+        try {
+          const { data: tns } = await supabase.from('tenants').select('email');
+          (tns || []).forEach(t => { if (t && t.email) ownerEmails.add(String(t.email).toLowerCase().trim()); });
+        } catch (e) { /* noop */ }
+
 (supaUsers || []).filter(u => u.activo !== false).forEach(u => {
             const email = (u.email || '').toLowerCase();
             if (email && !seenEmails.has(email)) {
@@ -2357,7 +2364,7 @@ app.get('/api/users', authenticate, async (req, res) => {
                 nombre: u.nombre || u.email.split('@')[0],
                 apellido: u.apellido || '',
                 email: email,
-                rol: u.rol || u.rol_global || 'Owner',
+                rol: ownerEmails.has(email) ? 'Owner' : (u.rol || u.rol_global || 'Owner'),
                 tenant_code: u.empresa_codigo || 'ROOT',
                 tenant: u.empresa_codigo || 'Portal Pilot',
                 status: 'active',
@@ -2398,7 +2405,7 @@ app.get('/api/users/:id', authenticate, async (req, res) => {
 
     if (error || !usuario) return res.status(404).json({ error: 'Usuario no encontrado.' });
 
-    let codigo = usuario.empresa_codigo || '', empNombre = '';
+    let codigo = usuario.empresa_codigo || '', empNombre = '', tenantEmail = '';
     if (usuario.empresa_id) {
       try {
         const { data: emp } = await supabase.from('empresas').select('nombre, codigo').eq('id', usuario.empresa_id).single();
@@ -2406,10 +2413,13 @@ app.get('/api/users/:id', authenticate, async (req, res) => {
       } catch (e) { /* noop */ }
     }
     // Fallback a la tabla tenants (los registros /api/registro crean tenants, no empresas)
-    if (!empNombre && codigo) {
+    if (codigo) {
       try {
-        const { data: ten } = await supabase.from('tenants').select('nombre_empresa').eq('codigo', normalizeTenantCode(codigo)).maybeSingle();
-        if (ten) empNombre = ten.nombre_empresa || '';
+        const { data: ten } = await supabase.from('tenants').select('nombre_empresa, email').eq('codigo', normalizeTenantCode(codigo)).maybeSingle();
+        if (ten) {
+          empNombre = empNombre || ten.nombre_empresa || '';
+          tenantEmail = ten.email || '';
+        }
       } catch (e) { /* noop */ }
     }
 
@@ -2427,7 +2437,7 @@ app.get('/api/users/:id', authenticate, async (req, res) => {
       nombre_completo: nombreCompleto,
       apellido: usuario.apellido || '',
       email: usuario.email || '',
-      rol: usuario.rol_global || usuario.rol || 'user',
+      rol: resolveDisplayRole(usuario, { email: tenantEmail }),
       tenant_code: codigo || 'ROOT',
       tenant: empNombre || codigo || 'N/A',
       status: ['inactivo', 'suspendido', 'blocked'].includes(String(usuario.estado || '').toLowerCase())
@@ -2475,24 +2485,27 @@ app.post('/api/users/:id/impersonate', authenticate, async (req, res) => {
 
     // Resolver nombre visible del tenant/empresa para la barra lateral
     let empresaNombre = codigo === 'ROOT' ? 'Portal Pilot' : codigo;
+    let tenantEmail = '';
     try {
       if (codigo && codigo !== 'ROOT') {
         const tCode = normalizeTenantCode(codigo);
-        const { data: t } = await supabase.from('tenants').select('nombre_empresa').eq('codigo', tCode).maybeSingle();
+        const { data: t } = await supabase.from('tenants').select('nombre_empresa, email').eq('codigo', tCode).maybeSingle();
         if (t?.nombre_empresa) {
           empresaNombre = t.nombre_empresa;
         } else {
           const { data: e } = await supabase.from('empresas').select('nombre').eq('codigo', tCode).maybeSingle();
           if (e?.nombre) empresaNombre = e.nombre;
         }
+        if (t?.email) tenantEmail = t.email;
       }
     } catch (e) { /* noop */ }
 
+    const displayRole = resolveDisplayRole(usuario, { email: tenantEmail });
     const token = jwt.sign(
       {
         sub: usuario.id,
         email: usuario.email,
-        rol: usuario.rol_global || usuario.rol || 'admin',
+        rol: displayRole,
         empresa_codigo: codigo,
         imp: true
       },
@@ -2509,7 +2522,7 @@ app.post('/api/users/:id/impersonate', authenticate, async (req, res) => {
         id: usuario.id,
         nombre,
         email: usuario.email,
-        rol: usuario.rol_global || usuario.rol || 'admin',
+        rol: displayRole,
         tenant: codigo,
         empresa_codigo: codigo,
         empresa_nombre: empresaNombre,
@@ -2946,6 +2959,14 @@ function normalizeDisplayName(nombre, apellido) {
     if (word) out.push(word);
   }
   return out.join(' ') || full;
+}
+
+// Si el correo del usuario coincide con el correo registrado del tenant, es el Owner/dueño de la empresa
+function resolveDisplayRole(userRow, tenantRow) {
+  const userEmail = String(userRow && (userRow.email || '')).toLowerCase().trim();
+  const tenEmail = String(tenantRow && (tenantRow.email || tenantRow.correo || tenantRow.email_representante || tenantRow.correo_representante || '')).toLowerCase().trim();
+  if (userEmail && tenEmail && userEmail === tenEmail) return 'Owner';
+  return userRow.rol || userRow.rol_global || 'admin';
 }
 
 // Estadísticas reales calculadas a partir de tablas del backend (nunca inventadas)

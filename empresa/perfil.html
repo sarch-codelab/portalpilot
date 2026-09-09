@@ -379,19 +379,21 @@
               </div>
               <div class="field">
                 <label>Teléfono</label>
-                <input type="tel" id="phone" value="+52 55 1234 5678" disabled>
+                <input type="tel" id="phone" value="" placeholder="No registrado" disabled>
               </div>
               <div class="field">
                 <label>Zona Horaria</label>
                 <select id="timezone" disabled>
-                  <option>America/Mexico_City (GMT-6)</option>
+                  <option value="">Por defecto</option>
                   <option>America/New_York (GMT-5)</option>
+                  <option>America/Mexico_City (GMT-6)</option>
+                  <option>America/Tegucigalpa (GMT-6)</option>
                   <option>Europe/Madrid (GMT+1)</option>
                 </select>
               </div>
               <div class="field" style="grid-column: 1/-1;">
                 <label>Biografía</label>
-                <textarea id="bio" rows="3" disabled>Diseñador UI/UX especializado en interfaces enterprise. Apasionado por la experiencia de usuario y la accesibilidad digital.</textarea>
+                <textarea id="bio" rows="3" placeholder="Cuéntanos sobre tu trabajo..." disabled></textarea>
               </div>
             </div>
           </div>
@@ -1163,6 +1165,29 @@
     })
     .catch(err => console.warn('[perfil]', err.message))
     .finally(hideSkeleton);
+
+  // 3. Zona horaria real del tenant (fecha total desde la empresa registrada)
+  const tc = localStorage.getItem('empresaCodigo') || '';
+  if (token && tc && tc !== 'ROOT') {
+    fetch('/api/tenant/' + encodeURIComponent(tc), {
+      headers: { 'Authorization': 'Bearer ' + token }
+    })
+      .then(r => r.json())
+      .then(d => {
+        const tz = ((d && (d.detail ? d.detail.timezone : d.preview ? d.preview.zona_horaria : '')) || '').trim();
+        const sel = document.getElementById('timezone');
+        if (sel && tz) {
+          const match = Array.from(sel.options).find(o => o.value === tz);
+          if (match) sel.value = tz;
+          else if (!Array.from(sel.options).some(o => o.value === tz)) {
+            const opt = new Option(tz, tz);
+            sel.add(opt);
+            sel.value = tz;
+          }
+        }
+      })
+      .catch(() => { /* sin zona horaria disponible */ });
+  }
 })();
 </script>
 </body>

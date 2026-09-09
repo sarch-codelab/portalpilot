@@ -550,7 +550,7 @@ async function loadTeam() {
       firstName: u.nombre || '',
       lastName: u.apellido || '',
       email: u.email || '',
-      rol: u.rol || 'employee',
+      rol: (u.rol || 'employee').toLowerCase(),
       dept: 'it',
       status: u.status === 'active' ? 'active' : 'blocked',
       lastLogin: u.lastActivity ? timeAgo(u.lastActivity) : 'Nunca',

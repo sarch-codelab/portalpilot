@@ -433,11 +433,27 @@ async function impersonateUser() {
             return;
         }
         localStorage.setItem('token', data.token);
+        localStorage.setItem('currentAccountId', data.user.id);
         localStorage.setItem('userRole', data.user.rol || 'admin');
         localStorage.setItem('empresaCodigo', data.user.empresa_codigo || 'ROOT');
-        localStorage.setItem('empresaNombre', data.user.nombre || data.user.tenant || '');
+        localStorage.setItem('empresaNombre', data.user.empresa_nombre || ((data.user.empresa_codigo && data.user.empresa_codigo !== 'ROOT') ? data.user.empresa_codigo : 'Portal Pilot'));
         localStorage.setItem('userName', data.user.nombre || '');
         localStorage.setItem('userEmail', data.user.email || '');
+        localStorage.setItem('userApellido', '');
+        localStorage.setItem('userFoto', data.user.foto_perfil_url || '');
+        localStorage.setItem('userBanner', data.user.banner_perfil_url || '');
+        localStorage.setItem('empresaPlan', 'enterprise');
+        localStorage.setItem('trialExpired', 'false');
+        localStorage.removeItem('linkedAccounts');
+
+        // Sincronizar la cookie httpOnly con la nueva sesión para que /empresa/* se sirva de inmediato
+        try {
+            await fetch('/api/session/sync', {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${data.token}` }
+            });
+        } catch (e) { /* no crítico */ }
+
         showToast(`Sesión iniciada como ${data.user.nombre || data.user.email}`, 'success');
         setTimeout(() => {
             if (data.user.empresa_codigo && data.user.empresa_codigo !== 'ROOT') {

@@ -2466,12 +2466,28 @@ app.post('/api/users/:id/impersonate', authenticate, async (req, res) => {
 
     const { data: usuario, error } = await supabase
       .from('usuarios')
-      .select('id, email, rol_global, rol, empresa_codigo, nombre, apellido')
+      .select('id, email, rol_global, rol, empresa_codigo, nombre, apellido, foto_perfil_url, banner_perfil_url')
       .eq('id', req.params.id)
       .single();
     if (error || !usuario) return res.status(404).json({ error: 'Usuario no encontrado.' });
 
     const codigo = usuario.empresa_codigo || 'ROOT';
+
+    // Resolver nombre visible del tenant/empresa para la barra lateral
+    let empresaNombre = codigo === 'ROOT' ? 'Portal Pilot' : codigo;
+    try {
+      if (codigo && codigo !== 'ROOT') {
+        const tCode = normalizeTenantCode(codigo);
+        const { data: t } = await supabase.from('tenants').select('nombre_empresa').eq('codigo', tCode).maybeSingle();
+        if (t?.nombre_empresa) {
+          empresaNombre = t.nombre_empresa;
+        } else {
+          const { data: e } = await supabase.from('empresas').select('nombre').eq('codigo', tCode).maybeSingle();
+          if (e?.nombre) empresaNombre = e.nombre;
+        }
+      }
+    } catch (e) { /* noop */ }
+
     const token = jwt.sign(
       {
         sub: usuario.id,
@@ -2495,7 +2511,10 @@ app.post('/api/users/:id/impersonate', authenticate, async (req, res) => {
         email: usuario.email,
         rol: usuario.rol_global || usuario.rol || 'admin',
         tenant: codigo,
-        empresa_codigo: codigo
+        empresa_codigo: codigo,
+        empresa_nombre: empresaNombre,
+        foto_perfil_url: usuario.foto_perfil_url || null,
+        banner_perfil_url: usuario.banner_perfil_url || null
       }
     });
   } catch (err) {

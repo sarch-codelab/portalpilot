@@ -36,13 +36,10 @@
   }
 
   function lockSidebar(currentPlan) {
-    const level = getPlanLevel(currentPlan);
-    document.querySelectorAll('[data-min-plan]').forEach(el => {
-      const required = getPlanLevel(el.getAttribute('data-min-plan'));
-      if (level < required) {
-        el.classList.add('plan-locked');
-        el.setAttribute('title', 'Requiere plan ' + (required === 1 ? 'Business' : 'Enterprise'));
-      }
+    // Todos los módulos quedan habilitados: se eliminan los candados de plan.
+    document.querySelectorAll('[data-min-plan].plan-locked').forEach(el => {
+      el.classList.remove('plan-locked');
+      el.removeAttribute('title');
     });
   }
 
@@ -106,24 +103,9 @@
 
   // Init
   window.addEventListener('DOMContentLoaded', async () => {
-    // Si el trial de 15 días venció, bloquear todo y ofrecer upgrade
-    if (localStorage.getItem('trialExpired') === 'true') {
-      lockSidebar('starter');
-      showUpgradeModal('Portal Pilot', 'Tu período de prueba de 15 días ha vencido. Elige un plan (Business o Enterprise) para continuar usando todas las funciones.');
-      return;
-    }
     const plan = await fetchPlan();
     window._currentPlan = plan;
     lockSidebar(plan);
     showPlanBadge(plan);
-    document.addEventListener('click', e => {
-      const locked = e.target.closest('.plan-locked');
-      if (locked) {
-        e.preventDefault();
-        e.stopPropagation();
-        const feature = locked.textContent.trim();
-        showUpgradeModal(feature);
-      }
-    });
   });
 })();

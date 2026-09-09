@@ -2694,12 +2694,13 @@
                 const apellido = u.apellido || '?';
                 function cleanName(n) {
                   if (!n) return '?';
-                  // Split by spaces, filter empty, remove consecutive duplicates case-insensitive
                   const words = n.trim().split(/\s+/).filter(w => w.length > 0);
+                  const seen = new Set();
                   const deduped = [];
                   for (const w of words) {
-                    const last = deduped[deduped.length - 1];
-                    if (!last || last.toLowerCase() !== w.toLowerCase()) {
+                    const lw = w.toLowerCase();
+                    if (!seen.has(lw)) {
+                      seen.add(lw);
                       deduped.push(w);
                     }
                   }
@@ -2707,7 +2708,7 @@
                 }
                 const cleanNombre = cleanName(nombre);
                 const cleanApellido = cleanName(apellido);
-                const initials = `${(cleanNombre[0] || '').toUpperCase()}${((cleanApellido[0] || '').toUpperCase())}`;
+                const initials = `${(cleanNombre[0] || '').toUpperCase()}${((cleanApellido && cleanApellido !== '?' && cleanApellido[0]) ? cleanApellido[0].toUpperCase() : '')}`;
                 const isOnline = u.lastActivity && new Date(u.lastActivity) > new Date(Date.now() - 15 * 60 * 1000);
                 const avatarSrc = u.avatar || '';
                 const isDataUrl = avatarSrc.startsWith('data:');

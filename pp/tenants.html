@@ -16,9 +16,29 @@
   <!-- ✅ CSS específico de tenants -->
   <link rel="stylesheet" href="css/tenants.css">
   <link rel="stylesheet" href="../css/notifications.css">
+    <link rel="stylesheet" href="../css/global.css">
 </head>
 
 <body>
+
+    <!-- PRELOADER -->
+    <div class="preloader" id="preloader">
+        <div class="preloader-inner">
+            <div class="device">
+                <div class="device__a">
+                    <div class="device__a-1"></div>
+                    <div class="device__a-2"></div>
+                </div>
+                <div class="device__b"></div>
+                <div class="device__c"></div>
+                <div class="device__d"></div>
+                <div class="device__e"></div>
+                <div class="device__f"></div>
+                <div class="device__g"></div>
+            </div>
+            <div class="preloader-logo">PORTAL <span>PILOT</span></div>
+        </div>
+    </div>
 
   <!-- PROGRESS & CURSOR -->
   <div id="progress">
@@ -47,6 +67,7 @@
     <!-- SIDEBAR -->
     <aside class="sidebar" id="sidebar">
       <div class="sidebar-header">
+        <img src="../img/iconos/robot_logo.png" alt="Portal Pilot" style="width:34px;height:34px;object-fit:contain;flex-shrink:0;">
         <h2 class="logo">PORTAL PILOT</h2>
       </div>
 
@@ -107,6 +128,14 @@
             Tenant</button>
         </div>
       </header>
+
+      <!-- HERO BANNER -->
+      <div class="pp-hero-banner" style="background-image:url('../img/fondo-principal.jpg');">
+        <div class="pp-hero-banner-content">
+          <div class="pp-hero-banner-title">Portal <span style="color:#a78bfa;">Pilot</span></div>
+          <div class="pp-hero-banner-sub">Central de administración de empresas y tenants</div>
+        </div>
+      </div>
 
       <!-- PAGE HEADER -->
       <div class="page-header">
@@ -290,6 +319,7 @@
   <script src="js/tenants.js"></script>
   <script src="../js/notifications.js"></script>
   <script src="../js/sidebar-loader.js"></script>
+    <script src="../js/preloader.js"></script>
 </body>
 
 </html>

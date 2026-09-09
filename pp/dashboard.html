@@ -13,9 +13,55 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <link rel="stylesheet" href="css/dashboard.css">
   <link rel="stylesheet" href="../css/notifications.css">
+    <link rel="stylesheet" href="../css/global.css">
+  <style>
+    .robot-logo-backdrop {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 60;
+        pointer-events: none;
+        opacity: 0.55;
+    }
+    .robot-logo-backdrop img {
+        width: min(56vw, 420px);
+        height: auto;
+        display: block;
+        filter: drop-shadow(0 24px 70px rgba(139, 92, 246, 0.45));
+    }
+    @media (max-width: 900px) {
+        .robot-logo-backdrop { opacity: 0.4; }
+        .robot-logo-backdrop img { width: min(70vw, 320px); }
+    }
+  </style>
 </head>
 
 <body>
+
+    <!-- PRELOADER -->
+    <div class="preloader" id="preloader">
+        <div class="preloader-inner">
+            <div class="device">
+                <div class="device__a">
+                    <div class="device__a-1"></div>
+                    <div class="device__a-2"></div>
+                </div>
+                <div class="device__b"></div>
+                <div class="device__c"></div>
+                <div class="device__d"></div>
+                <div class="device__e"></div>
+                <div class="device__f"></div>
+                <div class="device__g"></div>
+            </div>
+            <div class="preloader-logo">PORTAL <span>PILOT</span></div>
+        </div>
+    </div>
+
+    <!-- ROBOT LOGO CENTRAL -->
+    <div class="robot-logo-backdrop" aria-hidden="true">
+        <img src="../img/iconos/robot_logo.png" alt="">
+    </div>
 
   <div id="progress">
     <div id="progress-fill"></div>
@@ -521,6 +567,7 @@
       });
     });
   </script>
+    <script src="../js/preloader.js"></script>
 </body>
 
 </html>

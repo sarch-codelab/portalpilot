@@ -1610,10 +1610,26 @@ app.post('/api/confirmar-pago', async (req, res) => {
 
     const emailNorm = String(email).trim().toLowerCase();
     const planNombre = plan ? String(plan).toUpperCase() : 'PRO';
+    const amountMap = { STARTER: 0, BUSINESS: 1499, ENTERPRISE: 4999 };
+    const paymentStatus = metodoPago === 'tigo' || metodoPago === 'transferencia' ? 'pending' : 'success';
 
     // Actualizar plan del tenant en Supabase si existe
     if (supabase && empresaCodigo && !empresaCodigo.includes('XXXX')) {
       await supabase.from('tenants').update({ plan: planNombre.toLowerCase(), estado: 'activo' }).eq('codigo', empresaCodigo);
+    }
+
+    if (supabase) {
+      const { error: paymentError } = await supabase.from('billing_payments').insert({
+        empresa_codigo: empresaCodigo || null,
+        email: emailNorm,
+        plan: planNombre.toLowerCase(),
+        amount: amountMap[planNombre] || 0,
+        currency: 'HNL',
+        payment_method: metodoPago || 'transferencia',
+        status: paymentStatus,
+        reference: req.body.tigoRef || req.body.bankRef || null
+      });
+      if (paymentError) console.warn('[BILLING] No se pudo guardar historial de pago:', paymentError.message);
     }
 
     // Enviar correo de confirmación de pago
@@ -1811,6 +1827,23 @@ app.post('/api/support-ticket', async (req, res) => {
   } catch (err) {
     console.error('[SOPORTE] Error:', err.message);
     return res.status(500).json({ error: 'Error al procesar el ticket. Intenta de nuevo o contacta a portalpilot.hn@gmail.com' });
+  }
+});
+
+app.get('/api/billing/payments', authenticate, requireRoot, async (req, res) => {
+  try {
+    if (!requireSupabase(res)) return;
+    const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 100, 1), 500);
+    let query = supabase.from('billing_payments').select('*').order('created_at', { ascending: false }).limit(limit);
+    if (req.query.status) query = query.eq('status', String(req.query.status));
+    if (req.query.plan) query = query.eq('plan', String(req.query.plan));
+    if (req.query.from) query = query.gte('created_at', String(req.query.from));
+    if (req.query.to) query = query.lte('created_at', `${String(req.query.to)}T23:59:59.999Z`);
+    const { data, error } = await query;
+    if (error) return res.status(500).json({ error: error.message });
+    return res.json({ payments: data || [] });
+  } catch (error) {
+    return handleServerError(res, error);
   }
 });
 
@@ -2549,6 +2582,117 @@ app.get('/api/users/:id/sessions', authenticate, async (req, res) => {
     }
 
     res.json({ sessions, total: sessions.length });
+  } catch (error) {
+    return handleServerError(res, error);
+  }
+});
+
+// Revocar todas las sesiones excepto la actual (incrementa token_version)
+app.post('/api/users/:id/revoke-sessions', authenticate, async (req, res) => {
+  if (!requireSupabase(res)) return;
+  try {
+    const { id } = req.params;
+    
+    // Verificar permisos: root, mismo usuario, o admin del tenant
+    const { data: usuario, error: userErr } = await supabase
+      .from('usuarios')
+      .select('id, empresa_codigo')
+      .eq('id', id)
+      .single();
+
+    if (userErr || !usuario) return res.status(404).json({ error: 'Usuario no encontrado.' });
+
+    if (!isRootUser(req) && req.user.sub !== id) {
+      if (!assertTenantAccess(req, usuario.empresa_codigo)) {
+        return res.status(403).json({ error: 'No tienes permiso para revocar sesiones de este usuario.' });
+      }
+    }
+
+    // Incrementar token_version para invalidar todos los tokens existentes
+    const { error: updateErr } = await supabase
+      .from('usuarios')
+      .update({ token_version: (usuario.token_version || 0) + 1 })
+      .eq('id', id);
+
+    if (updateErr) throw updateErr;
+
+    // Si es el usuario actual, también limpiar su cookie
+    if (req.user.sub === id) {
+      clearSessionCookie(res);
+    }
+
+    res.json({ message: 'Todas las sesiones han sido revocadas.' });
+  } catch (error) {
+    return handleServerError(res, error);
+  }
+});
+
+// Exportar datos del usuario (GDPR)
+app.get('/api/users/:id/export', authenticate, async (req, res) => {
+  if (!requireSupabase(res)) return;
+  try {
+    const { id } = req.params;
+
+    // Verificar permisos: root, mismo usuario, o admin del tenant
+    const { data: usuario, error: userErr } = await supabase
+      .from('usuarios')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (userErr || !usuario) return res.status(404).json({ error: 'Usuario no encontrado.' });
+
+    if (!isRootUser(req) && req.user.sub !== id) {
+      if (!assertTenantAccess(req, usuario.empresa_codigo)) {
+        return res.status(403).json({ error: 'No tienes permiso para exportar datos de este usuario.' });
+      }
+    }
+
+    // Obtener actividad, sesiones, API keys, etc.
+    const [actividad, sesiones, apiKeys] = await Promise.all([
+      supabase.from('auditoria').select('*').eq('usuario_id', id).order('created_at', { ascending: false }).limit(100),
+      supabase.from('auditoria').select('*').eq('usuario_id', id).eq('accion', 'login_exitoso').order('created_at', { ascending: false }).limit(20),
+      supabase.from('api_keys').select('*').eq('usuario_id', id)
+    ]);
+
+    const exportData = {
+      usuario: {
+        id: usuario.id,
+        nombre: usuario.nombre,
+        apellido: usuario.apellido,
+        email: usuario.email,
+        rol: usuario.rol_global || usuario.rol,
+        empresa_codigo: usuario.empresa_codigo,
+        created_at: usuario.created_at,
+        updated_at: usuario.updated_at,
+        ultimo_acceso: usuario.ultimo_acceso,
+        activo: usuario.activo,
+        two_factor_enabled: usuario.two_factor_enabled
+      },
+      actividad: (actividad.data || []).map(a => ({
+        accion: a.accion,
+        detalles: a.detalles,
+        ip: a.ip,
+        modulo: a.modulo,
+        resultado: a.resultado,
+        created_at: a.created_at
+      })),
+      sesiones: (sesiones.data || []).map(s => ({
+        accion: s.accion,
+        ip: s.ip,
+        created_at: s.created_at
+      })),
+      apiKeys: (apiKeys.data || []).map(k => ({
+        nombre: k.nombre,
+        created_at: k.created_at,
+        ultimo_uso: k.ultimo_uso
+      })),
+      exportado_en: new Date().toISOString()
+    };
+
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Content-Disposition', `attachment; filename="usuario-${id}-export-${Date.now()}.json"`);
+    res.json(exportData);
   } catch (error) {
     return handleServerError(res, error);
   }
@@ -3871,9 +4015,13 @@ Sé conciso, empático y profesional.`;
 app.get('/api/dashboard/summary', authenticate, async (req, res) => {
   if (!requireSupabase(res)) return;
   try {
-    const tenant = normalizeTenantCode(getTenantCode(req));
+    const requestedTenant = isRootUser(req) && req.query.tenant
+      ? normalizeTenantCode(req.query.tenant)
+      : normalizeTenantCode(getTenantCode(req));
+    const tenant = requestedTenant;
     const empresa = await resolverEmpresaSupabase(tenant);
     const empresaId = empresa?.id || null;
+    const periodDays = [1, 7, 30, 90].includes(Number(req.query.period)) ? Number(req.query.period) : 7;
 
     let users = [], facturas = [], transacciones = [], productos = [];
     if (empresaId) {
@@ -3910,11 +4058,11 @@ app.get('/api/dashboard/summary', authenticate, async (req, res) => {
 
     // Uso últimos 7 días
     const dias = [];
-    for (let i = 6; i >= 0; i--) {
+    for (let i = periodDays - 1; i >= 0; i--) {
       const d = new Date(ahora);
       d.setDate(d.getDate() - i);
       const key = d.toISOString().slice(0, 10);
-      dias.push({ fecha: key, label: ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'][d.getDay()], facturas: 0, transacciones: 0 });
+      dias.push({ fecha: key, label: ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'][d.getDay()], facturas: 0, transacciones: 0, usuarios: 0, ingresos: 0, gastos: 0 });
     }
     facturas.forEach(f => {
       const k = (f.created_at || '').slice(0, 10);
@@ -3924,7 +4072,15 @@ app.get('/api/dashboard/summary', authenticate, async (req, res) => {
     transacciones.forEach(t => {
       const k = (t.fecha || t.created_at || '').slice(0, 10);
       const slot = dias.find(d => d.fecha === k);
-      if (slot) slot.transacciones++;
+      if (slot) {
+        slot.transacciones++;
+        if (t.tipo === 'ingreso') slot.ingresos += Number(t.monto) || 0;
+        if (t.tipo === 'gasto') slot.gastos += Number(t.monto) || 0;
+      }
+    });
+    users.forEach(u => {
+      const slot = dias.find(d => d.fecha === (u.created_at || '').slice(0, 10));
+      if (slot) slot.usuarios++;
     });
 
     // Roles
@@ -3978,6 +4134,7 @@ app.get('/api/dashboard/summary', authenticate, async (req, res) => {
         transaccionesHoy
       },
       usage7d: dias,
+      periodDays,
       roles: Object.entries(rolesMap).map(([rol, count]) => ({ rol, count })),
       gastosCategoria: Object.entries(gastosCategoria).map(([categoria, monto]) => ({ categoria, monto })),
       actividadReciente,

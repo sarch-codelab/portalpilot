@@ -667,13 +667,46 @@ function checkMatch() {
 
 async function changePassword() {
     const btn = document.getElementById('btnChangePass');
+    const currentPass = document.getElementById('currentPass').value;
+    const newPass = document.getElementById('newPass').value;
+    const confirmPass = document.getElementById('confirmPass').value;
+
+    if (!currentPass || !newPass || !confirmPass) {
+        showToast('Completa todos los campos', 'error');
+        return;
+    }
+    if (newPass !== confirmPass) {
+        showToast('Las contraseñas no coinciden', 'error');
+        return;
+    }
+
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Actualizando...';
     btn.disabled = true;
 
     try {
-        await new Promise(r => setTimeout(r, 1200));
+        const token = localStorage.getItem('token');
+        const userId = localStorage.getItem('currentAccountId');
+        if (!token || !userId) throw new Error('Sesión no válida');
+
+        const response = await fetch(`${_API_ROOT}/api/users/${encodeURIComponent(userId)}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                password: newPass,
+                currentPassword: currentPass
+            })
+        });
+
+        if (!response.ok) {
+            const data = await response.json().catch(() => ({}));
+            throw new Error(data.error || 'Error al cambiar contraseña');
+        }
+
         closeModal('changePasswordModal');
-        showToast('✓ Contraseña actualizada', 'success');
+        showToast('✓ Contraseña actualizada correctamente', 'success');
 
         document.getElementById('currentPass').value = '';
         document.getElementById('newPass').value = '';
@@ -681,7 +714,7 @@ async function changePassword() {
         document.getElementById('strengthFill').style.width = '0';
         document.getElementById('matchStatus').textContent = '';
     } catch (err) {
-        showToast('Error al cambiar contraseña', 'error');
+        showToast(err.message || 'Error al cambiar contraseña', 'error');
     } finally {
         btn.innerHTML = 'Actualizar Contraseña';
         btn.disabled = false;
@@ -702,11 +735,35 @@ function endSession(btn) {
     }
 }
 
-function endAllSessions() {
-    if (confirm('¿Cerrar TODAS las sesiones excepto la actual?')) {
-        document.querySelectorAll('.session-item:not(.current)').forEach(el => el.remove());
+async function endAllSessions() {
+    if (!confirm('¿Cerrar TODAS las sesiones excepto la actual?')) return;
+
+    const token = localStorage.getItem('token');
+    const userId = localStorage.getItem('currentAccountId');
+    if (!token || !userId) return showToast('Sesión no válida', 'error');
+
+    try {
+        const response = await fetch(`${_API_ROOT}/api/users/${encodeURIComponent(userId)}/revoke-sessions`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!response.ok) {
+            const data = await response.json().catch(() => ({}));
+            throw new Error(data.error || 'Error al revocar sesiones');
+        }
+
+        // Limpiar cookie si el backend la limpió
+        document.cookie = 'pp_session=; Max-Age=0; path=/;';
+
         closeModal('sessionsModal');
-        showToast('✓ Todas las sesiones cerradas', 'success');
+        showToast('✓ Todas las sesiones revocadas. Volverás a iniciar sesión.', 'success');
+        
+        setTimeout(() => {
+            window.location.href = 'login.html';
+        }, 1500);
+    } catch (err) {
+        showToast(err.message || 'Error al revocar sesiones', 'error');
     }
 }
 
@@ -799,13 +856,43 @@ function checkDeleteConfirm() {
 }
 
 function deleteAccount() {
-    if (document.getElementById('deleteConfirm').value.trim().toUpperCase() === 'ELIMINAR') {
-        if (confirm('⚠️ ÚLTIMA CONFIRMACIÓN: ¿Estás 100% seguro de eliminar tu cuenta? Esta acción NO se puede deshacer.')) {
-            showToast('Cuenta eliminada. Gracias por usar Portal Pilot.', 'info');
-            setTimeout(() => {
-                window.location.href = 'login.html';
-            }, 2000);
+    if (document.getElementById('deleteConfirm').value.trim().toUpperCase() !== 'ELIMINAR') {
+        showToast('Escribe ELIMINAR para confirmar', 'error');
+        return;
+    }
+
+    if (!confirm('⚠️ ÚLTIMA CONFIRMACIÓN: ¿Estás 100% seguro de eliminar tu cuenta? Esta acción NO se puede deshacer.')) {
+        return;
+    }
+
+    const token = localStorage.getItem('token');
+    const userId = localStorage.getItem('currentAccountId');
+    if (!token || !userId) return showToast('Sesión no válida', 'error');
+
+    showToast('Eliminando cuenta...', 'info');
+
+    try {
+        const response = await fetch(`${_API_ROOT}/api/users/${encodeURIComponent(userId)}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!response.ok) {
+            const data = await response.json().catch(() => ({}));
+            throw new Error(data.error || 'Error al eliminar cuenta');
         }
+
+        // Limpiar todo
+        localStorage.clear();
+        document.cookie = 'pp_session=; Max-Age=0; path=/;';
+
+        showToast('Cuenta eliminada. Gracias por usar Portal Pilot.', 'info');
+        
+        setTimeout(() => {
+            window.location.href = 'login.html';
+        }, 1500);
+    } catch (err) {
+        showToast(err.message || 'Error al eliminar cuenta', 'error');
     }
 }
 
@@ -822,11 +909,37 @@ function exportProfile() {
     }, 2000);
 }
 
-function downloadData() {
+async function downloadData() {
+    const token = localStorage.getItem('token');
+    const userId = localStorage.getItem('currentAccountId');
+    if (!token || !userId) return showToast('Sesión no válida', 'error');
+
     showToast('Generando archivo con tus datos...', 'info');
-    setTimeout(() => {
-        showToast('✓ Descarga iniciada', 'success');
-    }, 1500);
+
+    try {
+        const response = await fetch(`${_API_ROOT}/api/users/${encodeURIComponent(userId)}/export`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!response.ok) {
+            const data = await response.json().catch(() => ({}));
+            throw new Error(data.error || 'Error al exportar datos');
+        }
+
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `usuario-${localStorage.getItem('userEmail') || 'datos'}-${Date.now()}.json`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+
+        showToast('✓ Descarga completada', 'success');
+    } catch (err) {
+        showToast(err.message || 'Error al exportar datos', 'error');
+    }
 }
 
 // ── Initialize ─────────────────────────────────────

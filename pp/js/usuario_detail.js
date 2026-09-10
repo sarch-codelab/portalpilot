@@ -413,6 +413,93 @@ async function loadUserSessions(userId) {
   return [];
 }
 
+async function loadUserActivity(userId) {
+  try {
+    const token = localStorage.getItem('token');
+    const response = await fetch(`/api/users/${encodeURIComponent(userId)}/activity?limit=10`, {
+      headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+    });
+    if (response.ok) {
+      const data = await response.json();
+      return data.activity || [];
+    }
+  } catch (e) {
+    console.warn('No se pudo cargar actividad:', e);
+  }
+  return [];
+}
+
+function renderSessions(sessions) {
+  const container = document.querySelector('.device-list');
+  if (!container) return;
+  if (!sessions || sessions.length === 0) {
+    container.innerHTML = '<div class="empty-state">Sin sesiones registradas</div>';
+    return;
+  }
+  container.innerHTML = sessions.map(s => `
+    <div class="device-item ${s.isCurrent ? 'current' : ''}">
+      <div class="device-info">
+        <div class="device-name"><i class="fas fa-${s.deviceType === 'mobile' ? 'mobile-alt' : 'desktop'}"></i> ${s.deviceName}</div>
+        <div class="device-meta">Última actividad: ${s.lastActivity ? new Date(s.lastActivity).toLocaleString('es-ES') : 'Desconocida'} ${s.isActive ? '• <span style="color:var(--green)">● Activa</span>' : ''}</div>
+        <div class="device-location"><i class="fas fa-map-marker-alt"></i> ${s.location || 'Desconocida'} • ${s.ip || 'Desconocida'}</div>
+      </div>
+      ${s.isCurrent ? '<span class="user-badge verified" style="font-size:10px;padding:2px 8px;">Actual</span>' : `<button class="btn btn-ghost btn-xs" onclick="endSession('${s.id}')">Cerrar</button>`}
+    </div>
+  `).join('');
+}
+
+function renderActivity(activity) {
+  const container = document.querySelector('.timeline');
+  if (!container) return;
+  if (!activity || activity.length === 0) {
+    container.innerHTML = '<div class="empty-state">Sin actividad registrada</div>';
+    return;
+  }
+  container.innerHTML = activity.map(a => {
+    const iconClass = a.result === 'failed' ? 'warning' : a.result === 'warning' ? 'warning' : 'success';
+    return `
+      <div class="timeline-item ${iconClass}">
+        <div class="timeline-time"><i class="fas fa-clock"></i> ${a.timestamp ? new Date(a.timestamp).toLocaleString('es-ES', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : 'Desconocida'}</div>
+        <div class="timeline-action">${a.action}</div>
+        <div class="timeline-details">${a.details || ''}${a.ip ? ` • IP: <code>${a.ip}</code>` : ''}${a.module ? ` • Módulo: ${a.module}` : ''}</div>
+        <div class="timeline-meta">${a.result !== 'success' ? `<span><i class="fas fa-exclamation-triangle"></i> ${a.result}</span>` : ''}${a.hash ? `<span><i class="fas fa-link"></i> Hash: ${a.hash}</span>` : ''}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+async function loadUserActivity(userId) {
+  try {
+    const token = localStorage.getItem('token');
+    const response = await fetch(`/api/users/${encodeURIComponent(userId)}/activity?limit=10`, {
+      headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+    });
+    if (response.ok) {
+      const data = await response.json();
+      return data.activity || [];
+    }
+  } catch (e) {
+    console.warn('No se pudo cargar actividad:', e);
+  }
+  return [];
+}
+
+async function loadUserSessions(userId) {
+  try {
+    const token = localStorage.getItem('token');
+    const response = await fetch(`/api/users/${encodeURIComponent(userId)}/sessions`, {
+      headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+    });
+    if (response.ok) {
+      const data = await response.json();
+      return data.sessions || [];
+    }
+  } catch (e) {
+    console.warn('No se pudieron cargar sesiones:', e);
+  }
+  return [];
+}
+
 function renderSessions(sessions) {
   const container = document.querySelector('.device-list');
   if (!container) return;
@@ -440,8 +527,12 @@ async function initProfilePage() {
     const user = await fetchUserProfile(profileUserId);
     if (user) {
       renderProfile(user);
-      const sessions = await loadUserSessions(profileUserId);
+      const [sessions, activity] = await Promise.all([
+        loadUserSessions(profileUserId),
+        loadUserActivity(profileUserId)
+      ]);
       renderSessions(sessions);
+      renderActivity(activity);
     }
 }
 

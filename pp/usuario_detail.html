@@ -537,59 +537,18 @@
                         </div>
                     </div>
 
-                    <!-- Activity Timeline -->
+<!-- Activity Timeline -->
                     <div class="card reveal">
                         <div class="card-header">
                             <div>
                                 <h2 class="card-title"><i class="fas fa-history"></i> Historial de Actividad</h2>
-                                <p class="card-subtitle">Últimas 10 acciones registradas en blockchain</p>
+                                <p class="card-subtitle">Últimas acciones registradas</p>
                             </div>
                             <button class="btn btn-ghost btn-xs" onclick="openModal('fullActivityModal')">Ver
                                 completo</button>
                         </div>
-                        <div class="timeline">
-                            <div class="timeline-item success">
-                                <div class="timeline-time"><i class="fas fa-clock"></i> Hoy, 10:32 AM</div>
-                                <div class="timeline-action">Inicio de sesión exitoso</div>
-                                <div class="timeline-details">IP: <code>187.210.34.89</code> • Chrome/Windows •
-                                    Monterrey, MX</div>
-                                <div class="timeline-meta"><span><i class="fas fa-fingerprint"></i> 2FA
-                                        verificado</span><span><i class="fas fa-link"></i> Hash: 8a3f...2e1</span></div>
-                            </div>
-                            <div class="timeline-item">
-                                <div class="timeline-time"><i class="fas fa-clock"></i> Ayer, 4:15 PM</div>
-                                <div class="timeline-action">Ejecutó bot RPA: "Procesar facturas Q2"</div>
-                                <div class="timeline-details">Tenant: <code>TechCorp</code> • 1,247 registros procesados
-                                </div>
-                                <div class="timeline-meta"><span><i class="fas fa-robot"></i> Bot ID:
-                                        bot_rpa_4521</span><span><i class="fas fa-check"></i> Completado</span></div>
-                            </div>
-                            <div class="timeline-item security">
-                                <div class="timeline-time"><i class="fas fa-clock"></i> 28 May, 11:20 PM</div>
-                                <div class="timeline-action">Intento de acceso denegado</div>
-                                <div class="timeline-details">IP no autorizada: <code>201.99.12.45</code> • Módulo:
-                                    Admin Panel</div>
-                                <div class="timeline-meta"><span><i class="fas fa-shield-alt"></i> Bloqueado por
-                                        Cyberyx</span><span><i class="fas fa-exclamation-triangle"></i> Alerta
-                                        generada</span></div>
-                            </div>
-                            <div class="timeline-item">
-                                <div class="timeline-time"><i class="fas fa-clock"></i> 25 May, 2:45 PM</div>
-                                <div class="timeline-action">Actualizó configuración de notificaciones</div>
-                                <div class="timeline-details">Cambios: Alertas de seguridad → Email + Push</div>
-                                <div class="timeline-meta"><span><i class="fas fa-cog"></i> Módulo:
-                                        Preferencias</span><span><i class="fas fa-link"></i> Hash: 4f1a...9b2</span>
-                                </div>
-                            </div>
-                            <div class="timeline-item warning">
-                                <div class="timeline-time"><i class="fas fa-clock"></i> 20 May, 9:10 AM</div>
-                                <div class="timeline-action">Contraseña temporal utilizada</div>
-                                <div class="timeline-details">Primer acceso post-reset • Cambio obligatorio completado
-                                </div>
-                                <div class="timeline-meta"><span><i class="fas fa-key"></i> Reset por
-                                        admin</span><span><i class="fas fa-check-circle"></i> Nueva contraseña
-                                        establecida</span></div>
-                            </div>
+                        <div class="timeline" id="activityTimeline">
+                          <div class="empty-state">Cargando actividad...</div>
                         </div>
                     </div>
 

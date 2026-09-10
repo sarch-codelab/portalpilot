@@ -1979,6 +1979,8 @@ app.post('/api/tenants', authenticate, requireRoot, async (req, res) => {
       </ul>`
     );
 
+    await registrarAuditoria(codigo, 'Tenant creado', `Se creó el tenant "${nombre}" y su administrador ${emailAdmin}`, 'tenants', req.user?.email || '', req);
+
     res.status(201).json({
       message: 'Tenant y Administrador creados exitosamente',
       tenant: { codigo, nombre, dominio, plan, pais },
@@ -2069,6 +2071,8 @@ app.put('/api/tenants/:id', authenticate, requireTenantAdmin, async (req, res) =
       </ul>`
     );
 
+    await registrarAuditoria(id, 'Tenant actualizado', `Se actualizaron los datos del tenant ${id}${plan ? `, plan: ${plan}` : ''}${estado ? `, estado: ${estado}` : ''}`, 'tenants', req.user?.email || '', req);
+
     res.json({ message: 'Tenant actualizado exitosamente' });
   } catch (error) {
     return handleServerError(res, error);
@@ -2119,6 +2123,8 @@ app.delete('/api/tenants/:id', authenticate, async (req, res) => {
         console.warn(`[DELETE TENANT SUPABASE] Error:`, err.message);
       }
     }
+
+    await registrarAuditoria(finalTenantCode, 'Tenant eliminado', `Se eliminó el tenant ${finalTenantCode} y ${deletedCount} usuario(s)`, 'tenants', req.user?.email || '', req);
 
     res.json({ message: 'Tenant y todos sus usuarios eliminados exitosamente', deletedUsers: deletedCount });
   } catch (error) {
@@ -2370,7 +2376,7 @@ app.get('/api/users', authenticate, async (req, res) => {
                 status: 'active',
                 registered: u.created_at || new Date().toISOString(),
                 lastActivity: u.ultimo_acceso || u.updated_at || null,
-                avatar: u.foto_perfil_url || null,
+                avatar: u.foto_perfil_url || u.avatar_url || null,
                 banner: u.banner_perfil_url || null,
                 notas: '',
                 source: 'supabase'
@@ -2543,6 +2549,61 @@ app.get('/api/users/:id/sessions', authenticate, async (req, res) => {
     }
 
     res.json({ sessions, total: sessions.length });
+  } catch (error) {
+    return handleServerError(res, error);
+  }
+});
+
+// Historial de actividad de un usuario (desde tabla auditoria)
+app.get('/api/users/:id/activity', authenticate, async (req, res) => {
+  if (!requireSupabase(res)) return;
+  try {
+    const { id } = req.params;
+    const limit = Math.min(parseInt(req.query.limit) || 10, 50);
+    const offset = parseInt(req.query.offset) || 0;
+
+    const { data: usuario, error: userErr } = await supabase
+      .from('usuarios')
+      .select('id, empresa_codigo')
+      .eq('id', id)
+      .single();
+
+    if (userErr || !usuario) return res.status(404).json({ error: 'Usuario no encontrado.' });
+
+    // Verificar permisos: root, mismo usuario, o admin del tenant
+    if (!isRootUser(req) && req.user.sub !== id) {
+      if (!assertTenantAccess(req, usuario.empresa_codigo)) {
+        return res.status(403).json({ error: 'No tienes permiso para ver esta actividad.' });
+      }
+    }
+
+    // Consultar auditoria
+    let query = supabase
+      .from('auditoria')
+      .select('id, accion, detalles, ip, created_at, modulo, resultado')
+      .eq('usuario_id', id)
+      .order('created_at', { ascending: false })
+      .range(offset, offset + limit - 1);
+
+    const { data: actividad, error: actErr } = await query;
+
+    if (actErr) {
+      console.warn('[GET USER ACTIVITY] Error:', actErr.message);
+      return res.json({ activity: [], total: 0 });
+    }
+
+    const formatted = (actividad || []).map(a => ({
+      id: a.id,
+      action: a.accion,
+      details: a.detalles || '',
+      ip: a.ip,
+      timestamp: a.created_at,
+      module: a.modulo || 'Sistema',
+      result: a.resultado || 'success',
+      hash: a.id ? a.id.slice(0, 8) : ''
+    }));
+
+    res.json({ activity: formatted, total: formatted.length });
   } catch (error) {
     return handleServerError(res, error);
   }
@@ -2745,6 +2806,8 @@ app.post('/api/users', authenticate, requireTenantAdmin, requirePlanFeature('web
       nombre, email, rol: rol || 'user', empresaCodigo
     }).catch((e) => { console.warn('[AUTOMATION_HOOK] Non-critical:', e.message); });
 
+    await registrarAuditoria(empresaCodigo, 'Usuario creado', `Se creó el usuario ${email} con rol ${rol || 'user'}`, 'usuarios', req.user?.email || '', req);
+
     res.status(201).json({
       message: 'Trabajador creado exitosamente',
       user: {
@@ -2869,6 +2932,8 @@ app.put('/api/users/:id', authenticate, async (req, res) => {
       </ul>`
     );
 
+    await registrarAuditoria(codigo, 'Usuario actualizado', `Se actualizaron los datos del usuario ${updatedEmail}`, 'usuarios', req.user?.email || '', req);
+
     res.json({ message: 'Trabajador actualizado exitosamente' });
   } catch (error) {
     return handleServerError(res, error);
@@ -2934,6 +2999,8 @@ app.delete('/api/users/:id', authenticate, requireTenantAdmin, async (req, res) 
         }
       }
     }
+
+    await registrarAuditoria(targetTenant || userTenant, 'Usuario eliminado', `Se eliminó el usuario ${id}`, 'usuarios', req.user?.email || '', req);
 
     return res.json({
       success: true,
@@ -3811,7 +3878,7 @@ app.get('/api/dashboard/summary', authenticate, async (req, res) => {
     let users = [], facturas = [], transacciones = [], productos = [];
     if (empresaId) {
       const [uRes, fRes, tRes, pRes] = await Promise.all([
-        supabase.from('usuarios').select('id, rol_global, activo, created_at').eq('empresa_id', empresaId),
+        supabase.from('usuarios').select('id, rol_global, activo, created_at, ultimo_acceso').eq('empresa_id', empresaId),
         supabase.from('facturas').select('id, total, estado, created_at').eq('empresa_id', empresaId),
         supabase.from('transacciones').select('id, tipo, categoria, monto, fecha').eq('empresa_id', empresaId),
         supabase.from('productos').select('id, stock_actual, stock_minimo').eq('empresa_id', empresaId)
@@ -3822,13 +3889,18 @@ app.get('/api/dashboard/summary', authenticate, async (req, res) => {
       productos = pRes.data || productos;
     }
 
+    const ahora = new Date();
+    const hoy = ahora.toISOString().slice(0, 10);
+    const usuariosTotal = users.length;
     const usuariosActivos = users.filter(u => u.activo !== false).length;
+    const usuariosActivosHoy = users.filter(u => {
+      const acceso = u.ultimo_acceso ? new Date(u.ultimo_acceso) : null;
+      return u.activo !== false && acceso && acceso.toISOString().slice(0, 10) === hoy;
+    }).length;
     const facturasCount = facturas.length;
     const facturasTotal = facturas.reduce((s, f) => s + (Number(f.total) || 0), 0);
     const facturasPendientes = facturas.filter(f => (f.estado || 'emitida') === 'pendiente').length;
 
-    const ahora = new Date();
-    const hoy = ahora.toISOString().slice(0, 10);
     const enMes = t => t && t.slice(0, 7) === hoy.slice(0, 7);
     const ingresoMes = transacciones.filter(t => t.tipo === 'ingreso' && enMes(t.fecha || t.created_at)).reduce((s, t) => s + (Number(t.monto) || 0), 0);
     const gastoMes = transacciones.filter(t => t.tipo === 'gasto' && enMes(t.fecha || t.created_at)).reduce((s, t) => s + (Number(t.monto) || 0), 0);
@@ -3871,8 +3943,8 @@ app.get('/api/dashboard/summary', authenticate, async (req, res) => {
 
     // Actividad reciente
     const eventos = [];
-    facturas.forEach(f => eventos.push({ tipo: 'factura', descripcion: `Factura ${f.correlativo || 's/n'} por $${Number(f.total).toFixed(2)}`, fecha: f.created_at, meta: 'Facturación' }));
-    transacciones.forEach(t => eventos.push({ tipo: t.tipo, descripcion: `${t.tipo === 'ingreso' ? 'Ingreso' : 'Gasto'} — ${t.categoria || ''} ${t.descripcion || ''} ($${Number(t.monto).toFixed(2)})`, fecha: t.fecha || t.created_at, meta: 'Contabilidad' }));
+    facturas.forEach(f => eventos.push({ tipo: 'factura', descripcion: `Factura ${f.correlativo || 's/n'} por L ${Number(f.total).toFixed(2)}`, fecha: f.created_at, meta: 'Facturación' }));
+    transacciones.forEach(t => eventos.push({ tipo: t.tipo, descripcion: `${t.tipo === 'ingreso' ? 'Ingreso' : 'Gasto'} — ${t.categoria || ''} ${t.descripcion || ''} (L ${Number(t.monto).toFixed(2)})`, fecha: t.fecha || t.created_at, meta: 'Contabilidad' }));
     users.forEach(u => eventos.push({ tipo: 'usuario', descripcion: `Usuario ${u.activo === false ? 'desactivado' : 'registrado'} (${u.rol_global || 'usuario'})`, fecha: u.created_at, meta: 'Usuarios' }));
     eventos.sort((a, b) => new Date(b.fecha || 0) - new Date(a.fecha || 0));
     const actividadReciente = eventos.slice(0, 8).map(e => ({
@@ -3892,7 +3964,9 @@ app.get('/api/dashboard/summary', authenticate, async (req, res) => {
       tenant,
       empresa: empresa || null,
       kpis: {
+        usuariosTotal,
         usuariosActivos,
+        usuariosActivosHoy,
         facturasCount,
         facturasTotal,
         facturasPendientes,

@@ -397,13 +397,52 @@ function renderProfile(user) {
     if (suspendUserNameEl) suspendUserNameEl.textContent = full;
 }
 
+async function loadUserSessions(userId) {
+  try {
+    const token = localStorage.getItem('token');
+    const response = await fetch(`/api/users/${encodeURIComponent(userId)}/sessions`, {
+      headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+    });
+    if (response.ok) {
+      const data = await response.json();
+      return data.sessions || [];
+    }
+  } catch (e) {
+    console.warn('No se pudieron cargar sesiones:', e);
+  }
+  return [];
+}
+
+function renderSessions(sessions) {
+  const container = document.querySelector('.device-list');
+  if (!container) return;
+  if (!sessions || sessions.length === 0) {
+    container.innerHTML = '<div class="empty-state">Sin sesiones registradas</div>';
+    return;
+  }
+  container.innerHTML = sessions.map(s => `
+    <div class="device-item ${s.isCurrent ? 'current' : ''}">
+      <div class="device-info">
+        <div class="device-name"><i class="fas fa-${s.deviceType === 'mobile' ? 'mobile-alt' : 'desktop'}"></i> ${s.deviceName}</div>
+        <div class="device-meta">Última actividad: ${s.lastActivity ? new Date(s.lastActivity).toLocaleString('es-ES') : 'Desconocida'} ${s.isActive ? '• <span style="color:var(--green)">● Activa</span>' : ''}</div>
+        <div class="device-location"><i class="fas fa-map-marker-alt"></i> ${s.location || 'Desconocida'} • ${s.ip || 'Desconocida'}</div>
+      </div>
+      ${s.isCurrent ? '<span class="user-badge verified" style="font-size:10px;padding:2px 8px;">Actual</span>' : `<button class="btn btn-ghost btn-xs" onclick="endSession('${s.id}')">Cerrar</button>`}
+    </div>
+  `).join('');
+}
+
 async function initProfilePage() {
     if (!profileUserId) {
         showToast('Falta el identificador del usuario.', 'error');
         return;
     }
     const user = await fetchUserProfile(profileUserId);
-    if (user) renderProfile(user);
+    if (user) {
+      renderProfile(user);
+      const sessions = await loadUserSessions(profileUserId);
+      renderSessions(sessions);
+    }
 }
 
 initProfilePage();

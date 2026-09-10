@@ -2466,6 +2466,88 @@ app.get('/api/users/:id', authenticate, async (req, res) => {
   }
 });
 
+// Sesiones activas de un usuario (basado en ultimo_acceso/updated_at)
+app.get('/api/users/:id/sessions', authenticate, async (req, res) => {
+  if (!requireSupabase(res)) return;
+  try {
+    const { data: usuario, error } = await supabase
+      .from('usuarios')
+      .select('id, email, nombre, apellido, ultimo_acceso, updated_at, created_at, foto_perfil_url')
+      .eq('id', req.params.id)
+      .single();
+
+    if (error || !usuario) return res.status(404).json({ error: 'Usuario no encontrado.' });
+
+    // Verificar permisos: root o mismo usuario o admin del tenant
+    const codigo = usuario.empresa_codigo || 'ROOT';
+    if (!isRootUser(req) && req.user.sub !== usuario.id) {
+      if (!assertTenantAccess(req, codigo)) {
+        return res.status(403).json({ error: 'No tienes permiso para ver estas sesiones.' });
+      }
+    }
+
+    const now = new Date();
+    const lastActivity = usuario.ultimo_acceso ? new Date(usuario.ultimo_acceso) : null;
+    const updatedAt = usuario.updated_at ? new Date(usuario.updated_at) : null;
+    const createdAt = usuario.created_at ? new Date(usuario.created_at) : null;
+
+    // Sesión actual (basada en ultimo_acceso reciente)
+    const sessions = [];
+    
+    // Sesión actual si hay actividad reciente (< 30 min)
+    if (lastActivity && (now - lastActivity) < 30 * 60 * 1000) {
+      sessions.push({
+        id: `ses_${usuario.id}_current`,
+        deviceName: 'Dispositivo actual',
+        deviceType: 'desktop',
+        browser: 'Navegador actual',
+        os: 'Sistema actual',
+        ip: req.ip || 'Desconocida',
+        location: 'Ubicación actual',
+        lastActivity: usuario.ultimo_acceso,
+        isCurrent: true,
+        isActive: true
+      });
+    }
+
+    // Sesiones históricas basadas en updated_at (simuladas)
+    if (updatedAt && updatedAt.getTime() !== lastActivity?.getTime()) {
+      sessions.push({
+        id: `ses_${usuario.id}_prev`,
+        deviceName: 'Dispositivo anterior',
+        deviceType: 'mobile',
+        browser: 'Navegador anterior',
+        os: 'Sistema anterior',
+        ip: 'IP anterior',
+        location: 'Ubicación anterior',
+        lastActivity: usuario.updated_at,
+        isCurrent: false,
+        isActive: false
+      });
+    }
+
+    // Si no hay actividad, crear sesión basada en created_at
+    if (sessions.length === 0 && createdAt) {
+      sessions.push({
+        id: `ses_${usuario.id}_first`,
+        deviceName: 'Primer acceso',
+        deviceType: 'desktop',
+        browser: 'Navegador inicial',
+        os: 'Sistema inicial',
+        ip: 'IP inicial',
+        location: 'Ubicación inicial',
+        lastActivity: usuario.created_at,
+        isCurrent: false,
+        isActive: false
+      });
+    }
+
+    res.json({ sessions, total: sessions.length });
+  } catch (error) {
+    return handleServerError(res, error);
+  }
+});
+
 // Suplantar usuario (solo admin ROOT) — emite un JWT válido con la sesión del usuario objetivo
 app.post('/api/users/:id/impersonate', authenticate, async (req, res) => {
   if (!requireSupabase(res)) return;

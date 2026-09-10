@@ -656,26 +656,8 @@
                     <!-- Active Sessions -->
                     <div class="card reveal">
                         <h2 class="card-title"><i class="fas fa-laptop"></i> Sesiones Activas</h2>
-                        <div class="device-list">
-                            <div class="device-item current">
-                                <div class="device-info">
-                                    <div class="device-name"><i class="fas fa-desktop"></i> Chrome • Windows 11</div>
-                                    <div class="device-meta">Última actividad: Ahora • <span
-                                            style="color:var(--green)">● Activa</span></div>
-                                    <div class="device-location"><i class="fas fa-map-marker-alt"></i> Monterrey, MX •
-                                        187.210.34.89</div>
-                                </div>
-                                <span class="user-badge verified" style="font-size:10px;padding:2px 8px;">Actual</span>
-                            </div>
-                            <div class="device-item">
-                                <div class="device-info">
-                                    <div class="device-name"><i class="fas fa-mobile-alt"></i> Safari • iOS 17</div>
-                                    <div class="device-meta">Última actividad: Hace 2 horas</div>
-                                    <div class="device-location"><i class="fas fa-map-marker-alt"></i> Guadalajara, MX •
-                                        189.203.45.12</div>
-                                </div>
-                                <button class="btn btn-ghost btn-xs" onclick="endSession('ses_ios_789')">Cerrar</button>
-                            </div>
+                        <div class="device-list" id="sessionsList">
+                          <div class="empty-state">Cargando sesiones...</div>
                         </div>
                         <button class="btn btn-danger btn-sm" style="width:100%;margin-top:12px;"
                             onclick="endAllSessions()"><i class="fas fa-sign-out-alt"></i> Cerrar Todas las

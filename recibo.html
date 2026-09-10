@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Recibo de Pago | Portal Pilot</title>
+
+<style>
+@page {
+  size: A4;
+  margin: 12mm;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: #eef1f5;
+  color: #172033;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 9px;
+}
+
+.document-toolbar {
+  width: min(210mm, calc(100% - 24px));
+  margin: 14px auto 0;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.document-toolbar button {
+  border: 1px solid #cbd2dc;
+  border-radius: 6px;
+  background: #151a2d;
+  color: #fff;
+  padding: 8px 12px;
+  font: inherit;
+  cursor: pointer;
+}
+
+.page {
+  width: 210mm;
+  min-height: 297mm;
+  margin: 20px auto;
+  padding: 13mm;
+  background: #fff;
+  box-shadow: 0 5px 30px rgba(0,0,0,.08);
+}
+
+/* HEADER */
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding-bottom: 15px;
+  border-bottom: 2px solid #151a2d;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+
+.logo {
+  width: 44px;
+  height: 44px;
+  background: #151a2d;
+  color: #fff;
+  border-radius: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.brand-name {
+  margin: 0;
+  font-size: 22px;
+  letter-spacing: -.8px;
+}
+
+.brand-subtitle {
+  margin-top: 3px;
+  color: #7b8493;
+  font-size: 8px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.document-box {
+  width: 220px;
+  border: 1px solid #dce1e8;
+  border-radius: 7px;
+  overflow: hidden;
+}
+
+.document-title {
+  background: #151a2d;
+  color: #fff;
+  padding: 8px;
+  font-size: 10px;
+  font-weight: bold;
+  text-align: right;
+  text-transform: uppercase;
+}
+
+.document-body {
+  padding: 8px 10px;
+}
+
+.document-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 3px 0;
+}
+
+.document-row span {
+  color: #788292;
+}
+
+/* RECEIPT HERO */
+
+.receipt-hero {
+  margin-top: 22px;
+  padding: 28px;
+  text-align: center;
+  border: 1px solid #dfe4eb;
+  border-radius: 9px;
+  background: #fafbfc;
+}
+
+.receipt-label {
+  color: #7b8493;
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 8px;
+}
+
+.receipt-title {
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: -1px;
+}
+
+.amount-label {
+  margin-top: 20px;
+  color: #7b8493;
+  font-size: 8px;
+  text-transform: uppercase;
+}
+
+.amount {
+  margin-top: 5px;
+  font-size: 32px;
+  font-weight: 800;
+  color: #151a2d;
+}
+
+.amount-words {
+  margin-top: 7px;
+  color: #596273;
+  font-size: 9px;
+}
+
+/* INFORMATION */
+
+.section {
+  margin-top: 14px;
+  border: 1px solid #dfe4eb;
+  border-radius: 7px;
+  overflow: hidden;
+}
+
+.section-header {
+  padding: 7px 9px;
+  background: #f4f6f9;
+  border-bottom: 1px solid #dfe4eb;
+  font-size: 8px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+}
+
+.section-body {
+  padding: 10px;
+}
+
+.two-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 25px;
+}
+
+.field {
+  margin-bottom: 8px;
+}
+
+.field:last-child {
+  margin-bottom: 0;
+}
+
+.field-label {
+  display: block;
+  color: #7a8494;
+  font-size: 7px;
+  text-transform: uppercase;
+  margin-bottom: 3px;
+}
+
+.field-value {
+  font-size: 9px;
+  font-weight: bold;
+}
+
+/* PAYMENT */
+
+.payment-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.payment-item {
+  padding: 9px;
+  background: #f8f9fb;
+  border: 1px solid #e2e6ec;
+  border-radius: 5px;
+}
+
+.payment-item label {
+  display: block;
+  color: #7a8494;
+  font-size: 7px;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+}
+
+.payment-item strong {
+  font-size: 8px;
+}
+
+/* BALANCE */
+
+.balance {
+  margin-top: 14px;
+  border: 1px solid #dfe4eb;
+  border-radius: 7px;
+  overflow: hidden;
+}
+
+.balance table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.balance td {
+  padding: 8px 10px;
+  border-bottom: 1px solid #edf0f3;
+}
+
+.balance td:last-child {
+  text-align: right;
+  font-weight: bold;
+}
+
+.balance .received {
+  background: #f5f7f9;
+}
+
+.balance .remaining td {
+  background: #151a2d;
+  color: #fff;
+  font-size: 10px;
+  border: none;
+}
+
+/* STATUS */
+
+.status-box {
+  margin-top: 16px;
+  padding: 15px;
+  border: 1px solid #dfe4eb;
+  border-radius: 7px;
+  text-align: center;
+}
+
+.status {
+  display: inline-block;
+  padding: 6px 15px;
+  border-radius: 20px;
+  background: #151a2d;
+  color: #fff;
+  font-weight: bold;
+  font-size: 8px;
+  text-transform: uppercase;
+}
+
+.status-text {
+  margin-top: 8px;
+  color: #70798a;
+  font-size: 8px;
+}
+
+/* FOOTER */
+
+.footer {
+  margin-top: 25px;
+  padding-top: 9px;
+  border-top: 1px solid #dfe4eb;
+  display: flex;
+  justify-content: space-between;
+  color: #7a8494;
+  font-size: 7px;
+}
+
+.footer strong {
+  color: #151a2d;
+}
+
+@media print {
+  body {
+    background: #fff;
+  }
+
+  .page {
+    margin: 0;
+    box-shadow: none;
+  }
+
+  .document-toolbar {
+    display: none;
+  }
+}
+
+@media (max-width: 800px) {
+  .page {
+    width: calc(100% - 24px);
+    min-height: auto;
+    margin: 12px auto;
+    padding: 18px;
+  }
+
+  .header,
+  .two-columns {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .document-box,
+  .payment-grid {
+    width: 100%;
+  }
+
+  .payment-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+</style>
+</head>
+
+<body>
+
+<div class="document-toolbar">
+  <button type="button" onclick="window.print()">Imprimir / Guardar PDF</button>
+</div>
+
+<div class="page">
+
+  <!-- HEADER -->
+
+  <header class="header">
+
+    <div class="brand">
+
+      <!-- Reemplazar por logo oficial de Portal Pilot -->
+      <div class="logo">PP</div>
+
+      <div>
+        <h1 class="brand-name">Portal Pilot</h1>
+        <div class="brand-subtitle">
+          Business Management Platform
+        </div>
+      </div>
+
+    </div>
+
+    <div class="document-box">
+
+      <div class="document-title">
+        Recibo de pago
+      </div>
+
+      <div class="document-body">
+
+        <div class="document-row">
+          <span>Número</span>
+          <strong>REC-000001</strong>
+        </div>
+
+        <div class="document-row">
+          <span>Fecha</span>
+          <strong>09/09/2026</strong>
+        </div>
+
+        <div class="document-row">
+          <span>Moneda</span>
+          <strong>HNL</strong>
+        </div>
+
+      </div>
+
+    </div>
+
+  </header>
+
+
+  <!-- HERO -->
+
+  <div class="receipt-hero">
+
+    <div class="receipt-label">
+      Comprobante de pago
+    </div>
+
+    <div class="receipt-title">
+      RECIBO DE PAGO
+    </div>
+
+    <div class="amount-label">
+      Monto recibido
+    </div>
+
+    <div class="amount">
+      L 2,875.00
+    </div>
+
+    <div class="amount-words">
+      DOS MIL OCHOCIENTOS SETENTA Y CINCO LEMPIRAS
+      EXACTOS
+    </div>
+
+  </div>
+
+
+  <!-- RECIBIDO DE -->
+
+  <div class="section">
+
+    <div class="section-header">
+      Recibimos de
+    </div>
+
+    <div class="section-body">
+
+      <div class="two-columns">
+
+        <div>
+
+          <div class="field">
+            <span class="field-label">Cliente / Empresa</span>
+            <span class="field-value">
+              EMPRESA CLIENTE S.A.
+            </span>
+          </div>
+
+          <div class="field">
+            <span class="field-label">RTN</span>
+            <span class="field-value">
+              00000000000000
+            </span>
+          </div>
+
+        </div>
+
+        <div>
+
+          <div class="field">
+            <span class="field-label">Dirección</span>
+            <span class="field-value">
+              Tegucigalpa, Honduras
+            </span>
+          </div>
+
+          <div class="field">
+            <span class="field-label">Contacto</span>
+            <span class="field-value">
+              cliente@empresa.hn
+            </span>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- CONCEPTO -->
+
+  <div class="section">
+
+    <div class="section-header">
+      Concepto del pago
+    </div>
+
+    <div class="section-body">
+
+      <div class="field">
+
+        <span class="field-label">
+          Descripción
+        </span>
+
+        <span class="field-value">
+          Pago correspondiente a factura FAC-000001
+        </span>
+
+      </div>
+
+      <div class="field">
+
+        <span class="field-label">
+          Factura relacionada
+        </span>
+
+        <span class="field-value">
+          FAC-000001
+        </span>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- PAGO -->
+
+  <div class="section">
+
+    <div class="section-header">
+      Información del pago
+    </div>
+
+    <div class="section-body">
+
+      <div class="payment-grid">
+
+        <div class="payment-item">
+          <label>Forma de pago</label>
+          <strong>Transferencia bancaria</strong>
+        </div>
+
+        <div class="payment-item">
+          <label>Referencia</label>
+          <strong>TRX-000001</strong>
+        </div>
+
+        <div class="payment-item">
+          <label>Fecha de pago</label>
+          <strong>09/09/2026</strong>
+        </div>
+
+        <div class="payment-item">
+          <label>Moneda</label>
+          <strong>HNL — Lempira</strong>
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- SALDO -->
+
+  <div class="balance">
+
+    <table>
+
+      <tr>
+        <td>Saldo anterior</td>
+        <td>L 2,875.00</td>
+      </tr>
+
+      <tr class="received">
+        <td>Pago recibido</td>
+        <td>L 2,875.00</td>
+      </tr>
+
+      <tr class="remaining">
+        <td>Saldo pendiente</td>
+        <td>L 0.00</td>
+      </tr>
+
+    </table>
+
+  </div>
+
+
+  <!-- STATUS -->
+
+  <div class="status-box">
+
+    <div class="status">
+      PAGADO
+    </div>
+
+    <div class="status-text">
+      Este documento acredita la recepción del pago indicado.
+      Conserve este recibo como comprobante de la operación.
+    </div>
+
+  </div>
+
+
+  <!-- FOOTER -->
+
+  <footer class="footer">
+
+    <div>
+      <strong>Portal Pilot</strong>
+      &nbsp; | &nbsp;
+      Plataforma empresarial
+    </div>
+
+    <div>
+      Recibo REC-000001
+    </div>
+
+    <div>
+      Página 1 de 1
+    </div>
+
+  </footer>
+
+</div>
+
+<script>
+  (async function loadReceipt() {
+    const id = new URLSearchParams(window.location.search).get('id');
+    const tenant = new URLSearchParams(window.location.search).get('tenant');
+    if (!id || !localStorage.getItem('token')) return;
+    const money = value => `L ${Number(value || 0).toLocaleString('es-HN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    const text = value => String(value ?? '');
+    const set = (selector, value) => { const el = document.querySelector(selector); if (el && value !== undefined && value !== null && value !== '') el.textContent = value; };
+    try {
+      const query = tenant ? `?tenant=${encodeURIComponent(tenant)}` : '';
+      const response = await fetch(`/api/recibos/${encodeURIComponent(id)}${query}`, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+      if (!response.ok) throw new Error('No se pudo cargar el recibo');
+      const { recibo, empresa } = await response.json();
+      const rows = document.querySelectorAll('.document-row strong');
+      set('.document-title', 'Recibo de pago');
+      set('.brand-subtitle', 'Sistema de gestión empresarial');
+      if (rows[0]) rows[0].textContent = recibo.correlativo || recibo.id;
+      if (rows[1]) rows[1].textContent = new Date(recibo.created_at).toLocaleDateString('es-HN');
+      set('.amount', money(recibo.monto));
+      set('.amount-words', `${money(recibo.monto)} recibidos`.toUpperCase());
+      const fields = document.querySelectorAll('.section .field-value');
+      [recibo.cliente_nombre, recibo.cliente_rtn || 'N/A', empresa?.direccion || 'Honduras', recibo.cliente_email || 'N/A', recibo.concepto, recibo.factura_id || 'N/A'].forEach((value, index) => { if (fields[index]) fields[index].textContent = text(value); });
+      const payment = document.querySelectorAll('.payment-item strong');
+      [recibo.metodo_pago || 'No especificado', recibo.referencia || 'N/A', new Date(recibo.created_at).toLocaleDateString('es-HN'), 'HNL — Lempira'].forEach((value, index) => { if (payment[index]) payment[index].textContent = text(value); });
+      const balance = document.querySelectorAll('.balance td:last-child');
+      [money(recibo.saldo_anterior), money(recibo.monto), money(recibo.saldo_pendiente)].forEach((value, index) => { if (balance[index]) balance[index].textContent = value; });
+      set('.status', String(recibo.estado || 'pagado').toUpperCase());
+    } catch (error) { console.error('[RECIBO] Error:', error); }
+  })();
+</script>
+
+</body>
+</html>

@@ -491,6 +491,8 @@
                 };
                 if (metodo === 'tigo') {
                     payload.tigoRef = document.getElementById('tigoRef').value.trim();
+                } else if (metodo === 'transferencia') {
+                    payload.bankRef = document.getElementById('bankRef').value.trim();
                 }
 
                 const res = await fetch(`${API_ROOT}/api/confirmar-pago`, {

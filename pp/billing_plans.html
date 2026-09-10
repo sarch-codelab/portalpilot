@@ -1845,7 +1845,7 @@
             <div class="plan-header">
               <span class="plan-badge free">Free</span>
               <div class="plan-name">Prueba</div>
-              <div class="plan-price">$0 <span>/mes</span></div>
+              <div class="plan-price">L 0 <span>/mes</span></div>
               <div class="plan-period">Para pruebas y pequeños proyectos</div>
             </div>
             <div class="plan-body">
@@ -1878,15 +1878,15 @@
           <div class="plan-card featured reveal" data-plan="pro" style="transition-delay:.1s;">
             <div class="plan-header">
               <span class="plan-badge pro">Popular</span>
-              <div class="plan-name">Professional</div>
-              <div class="plan-price">$299 <span>/mes</span></div>
+              <div class="plan-name">Business</div>
+              <div class="plan-price">L 1,499 <span>/mes</span></div>
               <div class="plan-period">Para equipos en crecimiento</div>
             </div>
             <div class="plan-body">
               <div class="plan-feature"><span class="plan-feature-label">Precio Mensual</span><input type="number"
-                  class="plan-feature-input" value="299" data-field="price"></div>
+                  class="plan-feature-input" value="1499" data-field="price"></div>
               <div class="plan-feature"><span class="plan-feature-label">Precio Anual</span><input type="number"
-                  class="plan-feature-input" value="2870" data-field="price_year"></div>
+                  class="plan-feature-input" value="15288" data-field="price_year"></div>
               <div class="plan-feature"><span class="plan-feature-label">Mensajes IA/mes</span><input type="number"
                   class="plan-feature-input" value="5000" data-field="ai_messages"></div>
               <div class="plan-feature"><span class="plan-feature-label">Bots RPA simultáneos</span><input type="number"
@@ -2182,7 +2182,7 @@
       document.querySelector(`.tab-btn[data-tab="${tabId}"]`).classList.add('active');
       document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
       document.getElementById(`tab-${tabId}`).classList.add('active');
-      if (tabId === 'payments') renderPayments(); if (tabId === 'promos') updatePromoStats();
+      if (tabId === 'payments') loadPayments(); if (tabId === 'promos') updatePromoStats();
     }
 
     // ── Plan Editor ──────────────────────────────────────
@@ -2207,38 +2207,65 @@
     }
 
     // ── Payments ─────────────────────────────────────────
-    const payments = [
-      { id: 'TXN-8472', date: '2026-11-14', tenant: 'TechCorp Solutions', plan: 'enterprise', amount: '$2,499', method: 'visa', status: 'success' },
-      { id: 'TXN-8471', date: '2026-11-14', tenant: 'HealthSys Medical', plan: 'pro', amount: '$299', method: 'mastercard', status: 'success' },
-      { id: 'TXN-8470', date: '2026-11-13', tenant: 'RetailPlus Chain', plan: 'pro', amount: '$299', method: 'paypal', status: 'failed' },
-      { id: 'TXN-8469', date: '2026-11-13', tenant: 'FinanceLab Analytics', plan: 'enterprise', amount: '$2,499', method: 'visa', status: 'success' },
-      { id: 'TXN-8468', date: '2026-11-12', tenant: 'LogiSoft Transport', plan: 'free', amount: '$0', method: 'visa', status: 'success' },
-      { id: 'TXN-8467', date: '2026-11-12', tenant: 'Infinihon Corp', plan: 'pro', amount: '$299', method: 'mastercard', status: 'pending' },
-      { id: 'TXN-8466', date: '2026-11-11', tenant: 'EduPlatform Global', plan: 'free', amount: '$0', method: 'paypal', status: 'success' },
-      { id: 'TXN-8465', date: '2026-11-11', tenant: 'ManufacturaFlex', plan: 'enterprise', amount: '$2,499', method: 'visa', status: 'refunded' },
-      { id: 'TXN-8464', date: '2026-11-10', tenant: 'AgroTech Innovations', plan: 'pro', amount: '$299', method: 'mastercard', status: 'success' },
-      { id: 'TXN-8463', date: '2026-11-10', tenant: 'CyberSecure Ltd', plan: 'enterprise', amount: '$2,499', method: 'visa', status: 'success' }
-    ];
+    let payments = [];
+    async function loadPayments() {
+      const params = new URLSearchParams({ limit: '200' });
+      const status = document.getElementById('filterStatus').value;
+      const plan = document.getElementById('filterPlan').value;
+      const from = document.getElementById('dateFrom').value;
+      const to = document.getElementById('dateTo').value;
+      if (status) params.set('status', status);
+      if (plan) params.set('plan', plan);
+      if (from) params.set('from', from);
+      if (to) params.set('to', to);
+      try {
+        const response = await fetch(`/api/billing/payments?${params}`, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+        if (!response.ok) throw new Error('No se pudo cargar el historial de pagos');
+        const data = await response.json();
+        payments = (data.payments || []).map(payment => ({
+          id: payment.id,
+          date: payment.created_at,
+          tenant: payment.empresa_codigo || payment.email,
+          plan: payment.plan === 'business' ? 'pro' : payment.plan,
+          amount: `L ${Number(payment.amount || 0).toLocaleString('es-HN')}`,
+          method: payment.payment_method || 'transferencia',
+          status: payment.status || 'pending'
+        }));
+        renderPayments();
+        updatePaymentCount();
+      } catch (error) {
+        payments = [];
+        renderPayments();
+        showToast(error.message, 'warning');
+      }
+    }
+
     function renderPayments(data = payments) {
       const tbody = document.getElementById('paymentsBody'); tbody.innerHTML = '';
+      if (!data.length) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:28px;color:var(--gray);">No hay pagos registrados.</td></tr>';
+        updatePaymentCount(0);
+        return;
+      }
       data.forEach(p => {
         const row = document.createElement('tr');
         row.innerHTML = `<td>${new Date(p.date).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
       <td><div class="payment-tenant"><div class="payment-avatar">${p.tenant.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()}</div><div><div class="payment-name">${p.tenant}</div><div class="payment-id">${p.id}</div></div></div></td>
       <td><span class="plan-badge ${p.plan}">${p.plan.charAt(0).toUpperCase() + p.plan.slice(1)}</span></td>
       <td style="font-weight:600;color:var(--white);">${p.amount}</td>
-      <td><div class="payment-method ${p.method}"><i class="fab fa-${p.method === 'visa' ? 'cc-visa' : p.method === 'mastercard' ? 'cc-mastercard' : 'paypal'}"></i><span style="text-transform:capitalize;">${p.method}</span></div></td>
+      <td><div class="payment-method ${p.method}"><i class="${p.method === 'visa' || p.method === 'mastercard' ? 'fab fa-cc-' + p.method : p.method === 'paypal' ? 'fab fa-paypal' : 'fas fa-building-columns'}"></i><span style="text-transform:capitalize;">${p.method}</span></div></td>
       <td><span class="status-pill ${p.status}"><span class="status-dot"></span>${p.status.charAt(0).toUpperCase() + p.status.slice(1)}</span></td>
       <td><button class="action-icon-btn" title="Ver detalle" onclick="viewPayment('${p.id}')"><i class="fas fa-eye"></i></button>${p.status === 'failed' ? '<button class="action-icon-btn" title="Reintentar" onclick="retryPayment(\'' + p.id + '\')"><i class="fas fa-redo"></i></button>' : ''}${p.status === 'success' ? '<button class="action-icon-btn" title="Reembolsar" onclick="refundPayment(\'' + p.id + '\')"><i class="fas fa-undo"></i></button>' : ''}</td>`;
         tbody.appendChild(row);
       });
+      updatePaymentCount(data.length);
     }
-    function filterPayments() {
-      const s = document.getElementById('filterStatus').value, pl = document.getElementById('filterPlan').value, f = document.getElementById('dateFrom').value, t = document.getElementById('dateTo').value;
-      let d = [...payments]; if (s) d = d.filter(p => p.status === s); if (pl) d = d.filter(p => p.plan === pl); if (f) d = d.filter(p => p.date >= f); if (t) d = d.filter(p => p.date <= t);
-      renderPayments(d);
+    function updatePaymentCount(count = payments.length) {
+      const info = document.querySelector('#tab-payments .pagination-info');
+      if (info) info.innerHTML = `Mostrando <strong>${count}</strong> registros reales`;
     }
-    function resetPaymentFilters() { document.getElementById('filterStatus').value = ''; document.getElementById('filterPlan').value = ''; document.getElementById('dateFrom').value = ''; document.getElementById('dateTo').value = ''; renderPayments(); }
+    function filterPayments() { loadPayments(); }
+    function resetPaymentFilters() { document.getElementById('filterStatus').value = ''; document.getElementById('filterPlan').value = ''; document.getElementById('dateFrom').value = ''; document.getElementById('dateTo').value = ''; loadPayments(); }
     function viewPayment(id) { showToast(`Detalle: ${id}`, 'info'); }
     function retryPayment(id) { if (confirm('¿Reintentar cobro?')) showToast('✓ Reintento programado', 'success'); }
     function refundPayment(id) { if (confirm('¿Procesar reembolso?')) showToast('✓ Reembolso procesado', 'success'); }
@@ -2288,8 +2315,8 @@
 
     // ── Init ─────────────────────────────────────────────
     window.addEventListener('load', () => {
-      renderPayments(); updatePromoStats();
-      document.getElementById('dateTo').value = new Date().toISOString().split('T')[0];
+      updatePromoStats();
+      loadPayments();
       setTimeout(() => { document.querySelectorAll('.reveal').forEach((el, i) => { setTimeout(() => el.classList.add('in'), i * 50); }); }, 100);
     });
     document.querySelectorAll('.modal-overlay').forEach(o => { o.addEventListener('click', e => { if (e.target === o) o.classList.remove('active'); }); });

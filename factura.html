@@ -1,0 +1,1089 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Factura Electrónica | Portal Pilot</title>
+
+  <style>
+    @page {
+      size: A4;
+      margin: 10mm;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background: #eef1f5;
+      color: #172033;
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 9px;
+    }
+
+    .invoice-toolbar {
+      width: min(210mm, calc(100% - 24px));
+      margin: 14px auto 0;
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .invoice-toolbar button {
+      border: 1px solid #cbd2dc;
+      border-radius: 6px;
+      background: #151a2d;
+      color: #fff;
+      padding: 8px 12px;
+      font: inherit;
+      cursor: pointer;
+    }
+
+    .invoice-message {
+      display: none;
+      width: min(210mm, calc(100% - 24px));
+      margin: 12px auto;
+      padding: 10px 12px;
+      border: 1px solid #f1c4c4;
+      border-radius: 6px;
+      background: #fff5f5;
+      color: #9b1c1c;
+      font-size: 12px;
+    }
+
+    .invoice-message.visible {
+      display: block;
+    }
+
+    .page {
+      width: 210mm;
+      min-height: 297mm;
+      margin: 20px auto;
+      padding: 12mm;
+      background: #ffffff;
+      box-shadow: 0 4px 25px rgba(0, 0, 0, 0.08);
+    }
+
+    /* =========================================================
+       HEADER
+    ========================================================= */
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      padding-bottom: 12px;
+      border-bottom: 2px solid #151a2d;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-mark {
+      width: 42px;
+      height: 42px;
+      border-radius: 11px;
+      background: #151a2d;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 800;
+      font-size: 16px;
+      letter-spacing: -1px;
+    }
+
+    .brand-name {
+      margin: 0;
+      font-size: 21px;
+      font-weight: 800;
+      letter-spacing: -0.8px;
+      color: #151a2d;
+    }
+
+    .brand-tagline {
+      margin-top: 2px;
+      font-size: 8px;
+      color: #697386;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .invoice-box {
+      width: 215px;
+      border: 1px solid #dce1e8;
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    .invoice-title {
+      padding: 7px 9px;
+      background: #151a2d;
+      color: white;
+      font-size: 10px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+    }
+
+    .invoice-data {
+      padding: 7px 9px;
+    }
+
+    .invoice-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 2px 0;
+    }
+
+    .invoice-row span:first-child {
+      color: #697386;
+    }
+
+    .invoice-row strong {
+      color: #151a2d;
+    }
+
+    /* =========================================================
+       COMPANY / CUSTOMER
+    ========================================================= */
+
+    .section-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .card {
+      border: 1px solid #dfe4eb;
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    .card-header {
+      padding: 6px 8px;
+      background: #f4f6f9;
+      border-bottom: 1px solid #dfe4eb;
+      font-weight: bold;
+      font-size: 8px;
+      color: #151a2d;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+    }
+
+    .card-body {
+      padding: 8px;
+      line-height: 1.5;
+    }
+
+    .company-name {
+      font-size: 11px;
+      font-weight: bold;
+      margin-bottom: 3px;
+    }
+
+    .muted {
+      color: #697386;
+    }
+
+    /* =========================================================
+       FISCAL DATA
+    ========================================================= */
+
+    .fiscal-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 7px;
+      margin-top: 10px;
+    }
+
+    .fiscal-item {
+      background: #f8f9fb;
+      border: 1px solid #e1e5eb;
+      border-radius: 5px;
+      padding: 6px;
+    }
+
+    .fiscal-label {
+      display: block;
+      color: #7a8494;
+      font-size: 7px;
+      text-transform: uppercase;
+      margin-bottom: 2px;
+    }
+
+    .fiscal-value {
+      font-weight: bold;
+      font-size: 8px;
+      color: #172033;
+    }
+
+    /* =========================================================
+       PRODUCTS
+    ========================================================= */
+
+    .products {
+      margin-top: 14px;
+    }
+
+    .products-title {
+      font-size: 10px;
+      font-weight: bold;
+      margin-bottom: 6px;
+      color: #151a2d;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .products-table th {
+      background: #151a2d;
+      color: white;
+      padding: 7px 6px;
+      font-size: 7.5px;
+      text-align: left;
+      font-weight: bold;
+    }
+
+    .products-table th:first-child {
+      border-radius: 4px 0 0 0;
+    }
+
+    .products-table th:last-child {
+      border-radius: 0 4px 0 0;
+    }
+
+    .products-table td {
+      padding: 8px 6px;
+      border-bottom: 1px solid #e4e7ec;
+      font-size: 8px;
+      vertical-align: top;
+    }
+
+    .products-table tbody tr:nth-child(even) {
+      background: #fafbfc;
+    }
+
+    .text-right {
+      text-align: right;
+    }
+
+    .text-center {
+      text-align: center;
+    }
+
+    .product-name {
+      font-weight: bold;
+      color: #172033;
+    }
+
+    .product-detail {
+      color: #7a8494;
+      font-size: 7px;
+      margin-top: 2px;
+    }
+
+    /* =========================================================
+       TOTALS
+    ========================================================= */
+
+    .bottom-grid {
+      display: grid;
+      grid-template-columns: 1fr 230px;
+      gap: 20px;
+      margin-top: 12px;
+    }
+
+    .amount-words {
+      border: 1px solid #dfe4eb;
+      border-radius: 6px;
+      padding: 9px;
+      min-height: 65px;
+    }
+
+    .amount-words-title {
+      font-size: 7px;
+      text-transform: uppercase;
+      color: #7a8494;
+      margin-bottom: 5px;
+    }
+
+    .amount-words-value {
+      font-weight: bold;
+      line-height: 1.4;
+    }
+
+    .totals {
+      width: 100%;
+    }
+
+    .totals td {
+      padding: 4px 6px;
+      border-bottom: 1px solid #edf0f3;
+    }
+
+    .totals td:first-child {
+      color: #697386;
+    }
+
+    .totals td:last-child {
+      text-align: right;
+      font-weight: bold;
+    }
+
+    .grand-total td {
+      background: #151a2d;
+      color: white !important;
+      font-size: 11px;
+      padding: 8px 6px;
+      border: none;
+    }
+
+    .grand-total td:first-child {
+      border-radius: 4px 0 0 4px;
+    }
+
+    .grand-total td:last-child {
+      border-radius: 0 4px 4px 0;
+    }
+
+    /* =========================================================
+       PAYMENT
+    ========================================================= */
+
+    .payment {
+      margin-top: 12px;
+      border: 1px solid #dfe4eb;
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    .payment-header {
+      padding: 6px 8px;
+      background: #f4f6f9;
+      font-weight: bold;
+      text-transform: uppercase;
+      font-size: 8px;
+    }
+
+    .payment-body {
+      padding: 8px;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+    }
+
+    .payment-item label {
+      display: block;
+      color: #7a8494;
+      font-size: 7px;
+      margin-bottom: 2px;
+    }
+
+    .payment-item strong {
+      font-size: 8px;
+    }
+
+    /* =========================================================
+       FISCAL / QR
+    ========================================================= */
+
+    .verification {
+      margin-top: 12px;
+      display: grid;
+      grid-template-columns: 75px 1fr;
+      gap: 12px;
+      padding: 9px;
+      border-radius: 6px;
+      background: #f7f8fa;
+      border: 1px solid #dfe4eb;
+    }
+
+    .qr {
+      width: 68px;
+      height: 68px;
+      background:
+        linear-gradient(90deg, #111 10%, transparent 10% 20%, #111 20% 30%, transparent 30% 40%, #111 40% 50%, transparent 50% 60%, #111 60% 70%, transparent 70% 80%, #111 80%),
+        linear-gradient(#111 10%, transparent 10% 20%, #111 20% 30%, transparent 30% 40%, #111 40% 50%, transparent 50% 60%, #111 60% 70%, transparent 70% 80%, #111 80%);
+      background-size: 11px 11px;
+      border: 5px solid white;
+    }
+
+    .qr.has-image {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #fff;
+    }
+
+    .verification-title {
+      font-size: 8px;
+      font-weight: bold;
+      margin-bottom: 4px;
+    }
+
+    .verification-text {
+      color: #697386;
+      font-size: 7px;
+      line-height: 1.45;
+    }
+
+    /* =========================================================
+       FOOTER
+    ========================================================= */
+
+    .footer {
+      margin-top: 15px;
+      padding-top: 8px;
+      border-top: 1px solid #dfe4eb;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: #7a8494;
+      font-size: 7px;
+    }
+
+    .footer-brand {
+      font-weight: bold;
+      color: #151a2d;
+    }
+
+    .status {
+      display: inline-block;
+      padding: 3px 7px;
+      border-radius: 20px;
+      background: #eef1f5;
+      color: #151a2d;
+      font-weight: bold;
+    }
+
+    /* =========================================================
+       PRINT
+    ========================================================= */
+
+    @media print {
+      body {
+        background: white;
+      }
+
+      .page {
+        margin: 0;
+        box-shadow: none;
+      }
+
+      .invoice-toolbar,
+      .invoice-message {
+        display: none !important;
+      }
+    }
+
+    @media (max-width: 800px) {
+      body {
+        font-size: 10px;
+      }
+
+      .page {
+        width: calc(100% - 24px);
+        min-height: auto;
+        margin: 12px auto;
+        padding: 18px;
+      }
+
+      .header,
+      .section-grid,
+      .bottom-grid {
+        grid-template-columns: 1fr;
+        display: grid;
+      }
+
+      .header {
+        gap: 14px;
+      }
+
+      .invoice-box,
+      .bottom-grid .totals {
+        width: 100%;
+      }
+
+      .fiscal-grid,
+      .payment-body {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .products {
+        overflow-x: auto;
+      }
+
+      .products-table {
+        min-width: 620px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="invoice-toolbar">
+  <button type="button" onclick="window.print()">Imprimir / Guardar PDF</button>
+</div>
+<div class="invoice-message" id="invoiceMessage" role="status"></div>
+
+<div class="page">
+
+  <!-- =======================================================
+       HEADER
+  ======================================================== -->
+
+  <header class="header">
+
+    <div class="brand">
+
+      <!-- Sustituir por el logo real de Portal Pilot -->
+      <div class="brand-mark">
+        PP
+      </div>
+
+      <div>
+        <h1 class="brand-name">Portal Pilot</h1>
+        <div class="brand-tagline">
+          Business Management Platform
+        </div>
+      </div>
+
+    </div>
+
+    <div class="invoice-box">
+
+      <div class="invoice-title">
+        Factura electrónica
+      </div>
+
+      <div class="invoice-data">
+
+        <div class="invoice-row">
+          <span>Número</span>
+          <strong id="invoiceNumber">FAC-000001</strong>
+        </div>
+
+        <div class="invoice-row">
+          <span>Fecha</span>
+          <strong id="invoiceDate">09/09/2026</strong>
+        </div>
+
+        <div class="invoice-row">
+          <span>Estado</span>
+          <strong id="invoiceStatus">Emitida</strong>
+        </div>
+
+      </div>
+
+    </div>
+
+  </header>
+
+
+  <!-- =======================================================
+       EMISOR / CLIENTE
+  ======================================================== -->
+
+  <div class="section-grid">
+
+    <div class="card">
+
+      <div class="card-header">
+        Emisor
+      </div>
+
+      <div class="card-body">
+
+        <div class="company-name" id="issuerName">
+          PORTAL PILOT S.A.
+        </div>
+
+        <div>
+          RTN: <strong id="issuerRtn">00000000000000</strong>
+        </div>
+
+        <div class="muted">
+          Tegucigalpa, Honduras
+        </div>
+
+        <div class="muted">
+          Dirección fiscal registrada
+        </div>
+
+        <div class="muted">
+          Tel. +504 0000-0000
+        </div>
+
+        <div class="muted">
+          correo@empresa.hn
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <div class="card">
+
+      <div class="card-header">
+        Cliente / Receptor
+      </div>
+
+      <div class="card-body">
+
+        <div class="company-name" id="customerName">
+          EMPRESA CLIENTE S.A.
+        </div>
+
+        <div>
+          RTN: <strong id="customerRtn">00000000000000</strong>
+        </div>
+
+        <div class="muted">
+          Tegucigalpa, Honduras
+        </div>
+
+        <div class="muted">
+          Dirección del cliente
+        </div>
+
+        <div class="muted">
+          Tel. +504 0000-0000
+        </div>
+
+        <div class="muted">
+          cliente@empresa.hn
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- =======================================================
+       DATOS FISCALES
+  ======================================================== -->
+
+  <div class="fiscal-grid">
+
+    <div class="fiscal-item">
+      <span class="fiscal-label">Tipo de documento</span>
+      <span class="fiscal-value" id="documentType">Factura</span>
+    </div>
+
+    <div class="fiscal-item">
+      <span class="fiscal-label">Punto de emisión</span>
+      <span class="fiscal-value" id="emissionPoint">001</span>
+    </div>
+
+    <div class="fiscal-item">
+      <span class="fiscal-label">CAI / Autorización</span>
+      <span class="fiscal-value" id="cai">0000-0000-0000</span>
+    </div>
+
+    <div class="fiscal-item">
+      <span class="fiscal-label">Moneda</span>
+      <span class="fiscal-value">HNL — Lempira</span>
+    </div>
+
+  </div>
+
+
+  <!-- =======================================================
+       PRODUCTOS
+  ======================================================== -->
+
+  <section class="products">
+
+    <div class="products-title">
+      Detalle de productos y servicios
+    </div>
+
+    <table class="products-table">
+
+      <thead>
+
+        <tr>
+          <th style="width: 7%;">Cant.</th>
+          <th style="width: 12%;">Código</th>
+          <th style="width: 34%;">Descripción</th>
+          <th style="width: 13%;">Precio unit.</th>
+          <th style="width: 12%;">Descuento</th>
+          <th style="width: 10%;">Impuesto</th>
+          <th style="width: 12%;" class="text-right">Importe</th>
+        </tr>
+
+      </thead>
+
+      <tbody id="invoiceItems">
+
+        <tr>
+
+          <td class="text-center">
+            1
+          </td>
+
+          <td>
+            PP-PRO-001
+          </td>
+
+          <td>
+
+            <div class="product-name">
+              Portal Pilot Business
+            </div>
+
+            <div class="product-detail">
+              Suscripción mensual a plataforma empresarial
+            </div>
+
+          </td>
+
+          <td>
+            L 1,500.00
+          </td>
+
+          <td>
+            L 0.00
+          </td>
+
+          <td>
+            15%
+          </td>
+
+          <td class="text-right">
+            L 1,500.00
+          </td>
+
+        </tr>
+
+
+        <tr>
+
+          <td class="text-center">
+            2
+          </td>
+
+          <td>
+            PP-POS-001
+          </td>
+
+          <td>
+
+            <div class="product-name">
+              Módulo POS
+            </div>
+
+            <div class="product-detail">
+              Gestión de ventas e inventario
+            </div>
+
+          </td>
+
+          <td>
+            L 500.00
+          </td>
+
+          <td>
+            L 0.00
+          </td>
+
+          <td>
+            15%
+          </td>
+
+          <td class="text-right">
+            L 1,000.00
+          </td>
+
+        </tr>
+
+      </tbody>
+
+    </table>
+
+  </section>
+
+
+  <!-- =======================================================
+       TOTALES
+  ======================================================== -->
+
+  <div class="bottom-grid">
+
+    <div class="amount-words">
+
+      <div class="amount-words-title">
+        Total en letras
+      </div>
+
+      <div class="amount-words-value" id="totalInWords">
+        DOS MIL OCHOCIENTOS SETENTA Y CINCO LEMPIRAS
+        EXACTOS.
+      </div>
+
+    </div>
+
+
+    <table class="totals">
+
+      <tr>
+        <td>Subtotal</td>
+        <td id="subtotal">L 2,500.00</td>
+      </tr>
+
+      <tr>
+        <td>Descuento</td>
+        <td id="discount">L 0.00</td>
+      </tr>
+
+      <tr>
+        <td>Impuesto sobre ventas</td>
+        <td id="tax">L 375.00</td>
+      </tr>
+
+      <tr class="grand-total">
+        <td>Total</td>
+        <td id="grandTotal">L 2,875.00</td>
+      </tr>
+
+    </table>
+
+  </div>
+
+
+  <!-- =======================================================
+       PAGO
+  ======================================================== -->
+
+  <div class="payment">
+
+    <div class="payment-header">
+      Información de pago
+    </div>
+
+    <div class="payment-body">
+
+      <div class="payment-item">
+        <label>Forma de pago</label>
+        <strong id="paymentMethod">Transferencia bancaria</strong>
+      </div>
+
+      <div class="payment-item">
+        <label>Método</label>
+        <strong id="paymentType">Pago único</strong>
+      </div>
+
+      <div class="payment-item">
+        <label>Condición</label>
+        <strong id="paymentCondition">Contado</strong>
+      </div>
+
+      <div class="payment-item">
+        <label>Estado</label>
+        <strong id="paymentStatus">Pagada</strong>
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- =======================================================
+       VERIFICACIÓN
+  ======================================================== -->
+
+  <div class="verification">
+
+    <div class="qr">
+      <img id="invoiceQr" alt="Código QR fiscal" style="display:none;width:58px;height:58px;object-fit:contain;">
+      <!--
+        Aquí debe generarse el QR fiscal real.
+        Sustituir este placeholder por:
+        <img src="..." />
+      -->
+    </div>
+
+    <div>
+
+      <div class="verification-title">
+        Verificación del documento electrónico
+      </div>
+
+      <div class="verification-text">
+
+        Este documento electrónico fue generado mediante
+        Portal Pilot. La información fiscal definitiva,
+        numeración, autorización, firma y mecanismos de
+        validación deberán ser proporcionados por el
+        servicio fiscal correspondiente.
+
+        <br><br>
+
+        <strong>Identificador:</strong>
+        00000000-0000-0000-0000-000000000000
+
+        <br>
+
+        <strong>Fecha de emisión:</strong>
+        09/09/2026 21:53
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- =======================================================
+       FOOTER
+  ======================================================== -->
+
+  <footer class="footer">
+
+    <div>
+      <span class="footer-brand">
+        Portal Pilot
+      </span>
+      &nbsp; | &nbsp;
+      Plataforma empresarial
+    </div>
+
+    <div>
+      <span class="status">
+        DOCUMENTO ELECTRÓNICO
+      </span>
+    </div>
+
+    <div>
+      Página 1 de 1
+    </div>
+
+  </footer>
+
+</div>
+
+<script>
+  (async function loadInvoice() {
+    const invoiceId = new URLSearchParams(window.location.search).get('id');
+    const tenant = new URLSearchParams(window.location.search).get('tenant');
+    if (!invoiceId) return;
+
+    const token = localStorage.getItem('token');
+    const message = document.getElementById('invoiceMessage');
+    const showMessage = text => {
+      if (message) {
+        message.textContent = text;
+        message.classList.add('visible');
+      }
+    };
+    if (!token) {
+      showMessage('Inicia sesión en Portal Pilot para consultar esta factura.');
+      return;
+    }
+
+    const money = value => `L ${Number(value || 0).toLocaleString('es-HN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
+    const setText = (id, value) => {
+      const element = document.getElementById(id);
+      if (element && value !== undefined && value !== null && value !== '') element.textContent = value;
+    };
+    const formatDate = value => value ? new Date(value).toLocaleDateString('es-HN') : '';
+    const numberToWords = amount => {
+      const units = ['cero', 'uno', 'dos', 'tres', 'cuatro', 'cinco', 'seis', 'siete', 'ocho', 'nueve'];
+      const tens = ['', '', 'veinte', 'treinta', 'cuarenta', 'cincuenta', 'sesenta', 'setenta', 'ochenta', 'noventa'];
+      const integer = Math.floor(Number(amount || 0));
+      if (integer < 10) return units[integer];
+      if (integer < 20) return ['diez', 'once', 'doce', 'trece', 'catorce', 'quince', 'dieciseis', 'diecisiete', 'dieciocho', 'diecinueve'][integer - 10];
+      if (integer < 100) return tens[Math.floor(integer / 10)] + (integer % 10 ? ` y ${units[integer % 10]}` : '');
+      if (integer < 1000) return `${units[Math.floor(integer / 100)]} cientos${integer % 100 ? ` ${numberToWords(integer % 100)}` : ''}`;
+      if (integer < 1000000) return `${numberToWords(Math.floor(integer / 1000))} mil${integer % 1000 ? ` ${numberToWords(integer % 1000)}` : ''}`;
+      return String(integer);
+    };
+
+    try {
+      const query = tenant ? `?tenant=${encodeURIComponent(tenant)}` : '';
+      const response = await fetch(`/api/facturas/${encodeURIComponent(invoiceId)}${query}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (!response.ok) throw new Error('No se pudo cargar la factura');
+      const { factura, empresa } = await response.json();
+      if (!factura) throw new Error('Factura no encontrada');
+
+      setText('invoiceNumber', factura.correlativo || factura.id);
+      setText('invoiceDate', formatDate(factura.created_at));
+      setText('invoiceStatus', factura.estado || 'Emitida');
+      setText('documentType', factura.tipo_documento || 'Factura');
+      setText('issuerName', empresa?.nombre || 'Portal Pilot');
+      setText('issuerRtn', empresa?.rtn || 'N/A');
+      setText('customerName', factura.cliente_nombre || 'Consumidor final');
+      setText('customerRtn', factura.cliente_rtn || 'N/A');
+      setText('customerEmail', factura.cliente_email || '');
+      setText('paymentMethod', factura.metodo_pago || 'No especificado');
+      setText('paymentStatus', factura.estado === 'pagada' ? 'Pagada' : factura.estado || 'Emitida');
+      setText('subtotal', money(factura.subtotal));
+      setText('discount', money(factura.descuento));
+      setText('tax', money(factura.isv || factura.isv_15 || 0));
+      setText('grandTotal', money(factura.total));
+      setText('totalInWords', factura.total_letras || `${numberToWords(factura.total)} lempiras exactos.`.toUpperCase());
+
+      const issuerBody = document.querySelector('.section-grid .card:first-child .card-body');
+      if (issuerBody && empresa) {
+        const fields = issuerBody.querySelectorAll('.muted');
+        if (fields[0]) fields[0].textContent = empresa.pais || 'Honduras';
+        if (fields[1]) fields[1].textContent = empresa.direccion || 'Dirección fiscal registrada';
+        if (fields[2]) fields[2].textContent = empresa.telefono ? `Tel. ${empresa.telefono}` : '';
+        if (fields[3]) fields[3].textContent = empresa.email || '';
+      }
+
+      const qrSource = factura.qr_url || factura.qr || factura.codigo_qr;
+      const qr = document.getElementById('invoiceQr');
+      if (qrSource && qr) {
+        qr.src = qrSource;
+        qr.style.display = 'block';
+        document.querySelector('.verification .qr')?.classList.add('has-image');
+      }
+
+      let items = factura.items || factura.detalle || [];
+      if (typeof items === 'string') {
+        try { items = JSON.parse(items); } catch (_) { items = []; }
+      }
+      if (Array.isArray(items) && items.length) {
+        const body = document.getElementById('invoiceItems');
+        body.innerHTML = items.map((item, index) => {
+          const quantity = Number(item.cantidad || item.quantity || 1);
+          const price = Number(item.precio || item.precio_unitario || item.unit_price || 0);
+          const amount = Number(item.importe || item.total || quantity * price);
+          return `<tr>
+            <td class="text-center">${quantity}</td>
+            <td>${escapeHtml(item.codigo || item.code || '')}</td>
+            <td><div class="product-name">${escapeHtml(item.descripcion || item.nombre || `Item ${index + 1}`)}</div></td>
+            <td>${money(price)}</td>
+            <td>${money(item.descuento || 0)}</td>
+            <td>${escapeHtml(item.impuesto || item.isv || '15%')}</td>
+            <td class="text-right">${money(amount)}</td>
+          </tr>`;
+        }).join('');
+      }
+    } catch (error) {
+      console.error('[FACTURA] Error:', error);
+      showMessage(error.message || 'No se pudo cargar la factura.');
+    }
+  })();
+</script>
+
+</body>
+</html>

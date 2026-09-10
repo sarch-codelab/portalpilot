@@ -1,6 +1,7 @@
 // ── Analytics — Data & Charts ─────────────────
 const API_BASE = '/api';
 let summaryData = null;
+let analyticsFilters = { period: '7', tenant: '', metric: 'usage' };
 
 function getToken() { return localStorage.getItem('token'); }
 function authHeaders() { return { 'Authorization': `Bearer ${getToken()}` }; }
@@ -8,7 +9,9 @@ function authHeaders() { return { 'Authorization': `Bearer ${getToken()}` }; }
 // ── Load Dashboard Summary ─────────────────
 async function loadAnalytics() {
   try {
-    const res = await fetch(`${API_BASE}/dashboard/summary`, { headers: authHeaders() });
+    const params = new URLSearchParams({ period: analyticsFilters.period });
+    if (analyticsFilters.tenant) params.set('tenant', analyticsFilters.tenant);
+    const res = await fetch(`${API_BASE}/dashboard/summary?${params}`, { headers: authHeaders() });
     if (!res.ok) throw new Error('Error al cargar');
     summaryData = await res.json();
     renderKPIs();
@@ -24,12 +27,14 @@ function renderKPIs() {
   if (!summaryData) return;
   const kpis = summaryData.kpis || {};
   const cards = document.querySelectorAll('.kpi-card');
-  if (cards.length >= 4) {
-    setKPI(cards[0], kpis.usuariosActivos || 0, 'Total Usuarios');
-    setKPI(cards[1], kpis.usuariosActivos || 0, 'Usuarios Activos (hoy)');
-    setKPI(cards[2], '$' + formatNum(kpis.facturasTotal || 0), 'Ingresos Mensuales');
-    const retention = kpis.facturasCount > 0 ? ((1 - (kpis.facturasPendientes || 0) / kpis.facturasCount) * 100).toFixed(1) + '%' : '—';
-    setKPI(cards[3], retention, 'Tasa de Retención');
+  if (cards.length >= 6) {
+    setKPI(cards[0], formatNum(kpis.usuariosTotal || 0), 'Total Usuarios');
+    setKPI(cards[1], formatNum(kpis.usuariosActivosHoy || 0), 'Usuarios Activos (hoy)');
+    setKPI(cards[2], 'L ' + formatNum(kpis.ingresoMes || 0), 'Ingresos del mes');
+    const paidRate = kpis.facturasCount > 0 ? ((1 - (kpis.facturasPendientes || 0) / kpis.facturasCount) * 100).toFixed(1) + '%' : '—';
+    setKPI(cards[3], paidRate, 'Facturas cobradas');
+    setKPI(cards[4], 'L ' + formatNum(kpis.balanceMes || 0), 'Balance del mes');
+    setKPI(cards[5], formatNum(kpis.lowStock || 0), 'Productos con stock bajo');
   }
 }
 
@@ -57,41 +62,50 @@ function renderGrowthChart() {
     container.innerHTML = '<div class="chart-placeholder"><i class="fas fa-chart-area"></i><p>Sin datos de actividad reciente</p></div>';
     return;
   }
-  const maxVal = Math.max(1, ...dias.map(d => (d.facturas || 0) + (d.transacciones || 0)));
-  const barWidth = Math.floor(100 / dias.length);
+  const series = analyticsFilters.metric === 'revenue'
+    ? [{ key: 'ingresos', label: 'Ingresos', color: 'var(--accent)' }, { key: 'gastos', label: 'Gastos', color: 'var(--red)' }]
+    : analyticsFilters.metric === 'growth'
+      ? [{ key: 'usuarios', label: 'Usuarios nuevos', color: 'var(--green)' }]
+      : [{ key: 'facturas', label: 'Facturas', color: 'var(--accent)' }, { key: 'transacciones', label: 'Transacciones', color: 'var(--green)' }];
+  const maxVal = Math.max(1, ...dias.map(d => series.reduce((sum, item) => sum + (Number(d[item.key]) || 0), 0)));
   container.innerHTML = `<div style="display:flex;align-items:flex-end;gap:2px;height:180px;padding:16px 0;">
     ${dias.map(d => {
-      const fv = ((d.facturas || 0) / maxVal) * 100;
-      const tv = ((d.transacciones || 0) / maxVal) * 100;
       return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;height:100%;justify-content:flex-end;">
         <div style="display:flex;flex-direction:column;width:100%;gap:1px;">
-          <div style="width:100%;height:${fv}px;background:var(--accent);border-radius:3px 3px 0 0;min-height:${fv > 0 ? '4px' : '0'};"></div>
-          <div style="width:100%;height:${tv}px;background:var(--green);border-radius:0 0 3px 3px;min-height:${tv > 0 ? '4px' : '0'};"></div>
+          ${series.map(item => {
+            const value = ((Number(d[item.key]) || 0) / maxVal) * 100;
+            return `<div style="width:100%;height:${value}px;background:${item.color};border-radius:3px;min-height:${value > 0 ? '4px' : '0'};"></div>`;
+          }).join('')}
         </div>
         <div style="font-size:10px;color:var(--gray);margin-top:4px;">${d.label || d.fecha?.slice(5) || ''}</div>
       </div>`;
     }).join('')}
   </div>
   <div style="display:flex;gap:16px;justify-content:center;margin-top:8px;">
-    <span style="font-size:11px;color:var(--gray);"><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--accent);margin-right:4px;"></span>Facturas</span>
-    <span style="font-size:11px;color:var(--gray);"><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--green);margin-right:4px;"></span>Transacciones</span>
+    ${series.map(item => `<span style="font-size:11px;color:var(--gray);"><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:${item.color};margin-right:4px;"></span>${item.label}</span>`).join('')}
   </div>`;
 }
 
 function renderActivityChart() {
   const container = document.getElementById('chartActivity');
   if (!container) return;
-  const roles = summaryData.roles || {};
-  const gastos = summaryData.gastosCategoria || {};
-  const rolesIsObj = roles && typeof roles === 'object' && !Array.isArray(roles);
-  const gastosIsObj = gastos && typeof gastos === 'object' && !Array.isArray(gastos);
-  const hasRoles = rolesIsObj && Object.keys(roles).length > 0;
-  const hasGastos = gastosIsObj && Object.keys(gastos).length > 0;
+  const roles = summaryData.roles || [];
+  const gastos = summaryData.gastosCategoria || [];
+  const rolesData = Array.isArray(roles)
+    ? Object.fromEntries(roles.map(item => [item.rol || 'Usuario', item.count || 0]))
+    : roles;
+  const gastosData = Array.isArray(gastos)
+    ? Object.fromEntries(gastos.map(item => [item.categoria || 'Otro', item.monto || 0]))
+    : gastos;
+  const rolesIsObj = rolesData && typeof rolesData === 'object' && Object.keys(rolesData).length > 0;
+  const gastosIsObj = gastosData && typeof gastosData === 'object' && Object.keys(gastosData).length > 0;
+  const hasRoles = rolesIsObj && Object.keys(rolesData).length > 0;
+  const hasGastos = gastosIsObj && Object.keys(gastosData).length > 0;
   if (!hasRoles && !hasGastos) {
     container.innerHTML = '<div class="chart-placeholder"><i class="fas fa-chart-bar"></i><p>Sin datos de distribución</p></div>';
     return;
   }
-  const data = hasRoles ? roles : gastos;
+  const data = hasRoles ? rolesData : gastosData;
   const total = Object.values(data).reduce((s, v) => s + v, 0) || 1;
   const colors = ['#8b5cf6', '#34d399', '#f59e0b', '#ef4444', '#06b6d4', '#ec4899'];
   container.innerHTML = `<div style="padding:16px 0;">
@@ -175,8 +189,35 @@ async function loadTenants() {
   } catch (_) {}
 }
 
+function applyAnalyticsFilters() {
+  analyticsFilters.period = document.getElementById('filterPeriod')?.value === 'today' ? '1' : (document.getElementById('filterPeriod')?.value || '7d').replace('d', '');
+  analyticsFilters.tenant = document.getElementById('filterTenant')?.value || '';
+  analyticsFilters.metric = document.getElementById('filterMetric')?.value || 'usage';
+  loadAnalytics();
+}
+
+function resetAnalyticsFilters() {
+  document.getElementById('filterPeriod').value = '7d';
+  document.getElementById('filterTenant').value = '';
+  document.getElementById('filterMetric').value = 'usage';
+  applyAnalyticsFilters();
+}
+
 // ── Init ─────────────────
 document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('filterPeriod')?.addEventListener('change', applyAnalyticsFilters);
+  document.getElementById('filterTenant')?.addEventListener('change', applyAnalyticsFilters);
+  document.getElementById('filterMetric')?.addEventListener('change', applyAnalyticsFilters);
+  document.querySelector('.filter-reset')?.addEventListener('click', resetAnalyticsFilters);
+  document.querySelector('.page-actions .btn-ghost')?.addEventListener('click', loadAnalytics);
+  document.querySelectorAll('.chart-actions button').forEach(button => {
+    button.addEventListener('click', () => {
+      document.querySelectorAll('.chart-actions button').forEach(item => item.classList.remove('active'));
+      button.classList.add('active');
+      document.getElementById('filterPeriod').value = button.dataset.period.toLowerCase();
+      applyAnalyticsFilters();
+    });
+  });
   loadAnalytics();
   loadTenants();
   initReveal();

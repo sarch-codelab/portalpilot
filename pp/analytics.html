@@ -337,7 +337,7 @@
           <p class="page-subtitle">Análisis detallado de uso, rendimiento y crecimiento de la plataforma Portal Pilot.</p>
         </div>
         <div class="page-actions">
-          <button class="btn btn-outline btn-sm"><i class="fas fa-file-pdf"></i> Exportar PDF</button>
+          <button class="btn btn-outline btn-sm" onclick="window.print()"><i class="fas fa-file-pdf"></i> Exportar PDF</button>
           <button class="btn btn-ghost btn-sm"><i class="fas fa-sync-alt"></i> Actualizar</button>
         </div>
       </div>
@@ -367,7 +367,7 @@
             <option value="growth">Crecimiento</option>
           </select>
         </div>
-        <button class="filter-reset"><i class="fas fa-undo"></i> Limpiar filtros</button>
+        <button class="filter-reset" type="button"><i class="fas fa-undo"></i> Limpiar filtros</button>
       </div>
 
       <!-- KPI CARDS -->
@@ -398,8 +398,8 @@
             <div class="kpi-icon"><i class="fas fa-dollar-sign"></i></div>
             <span class="kpi-trend up"><i class="fas fa-arrow-up"></i> +18.2%</span>
           </div>
-          <div class="kpi-value">$34,580</div>
-          <div class="kpi-label">Ingresos Mensuales</div>
+            <div class="kpi-value">L 0</div>
+          <div class="kpi-label">Ingresos del mes</div>
           <div class="kpi-footer"><i class="fas fa-circle" style="color:var(--green);font-size:6px;"></i> MRR actualizado</div>
         </div>
 
@@ -409,8 +409,26 @@
             <span class="kpi-trend up"><i class="fas fa-arrow-up"></i> +2.1%</span>
           </div>
           <div class="kpi-value">94.7%</div>
-          <div class="kpi-label">Tasa de Retención</div>
+          <div class="kpi-label">Facturas cobradas</div>
           <div class="kpi-footer"><i class="fas fa-circle" style="color:var(--green);font-size:6px;"></i> Últimos 30 días</div>
+        </div>
+
+        <div class="kpi-card reveal" style="transition-delay:.2s;">
+          <div class="kpi-header">
+            <div class="kpi-icon"><i class="fas fa-scale-balanced"></i></div>
+          </div>
+          <div class="kpi-value">L 0</div>
+          <div class="kpi-label">Balance del mes</div>
+          <div class="kpi-footer"><i class="fas fa-circle" style="color:var(--green);font-size:6px;"></i> Ingresos menos gastos</div>
+        </div>
+
+        <div class="kpi-card reveal" style="transition-delay:.25s;">
+          <div class="kpi-header">
+            <div class="kpi-icon"><i class="fas fa-box-open"></i></div>
+          </div>
+          <div class="kpi-value">0</div>
+          <div class="kpi-label">Productos con stock bajo</div>
+          <div class="kpi-footer"><i class="fas fa-circle" style="color:var(--yellow);font-size:6px;"></i> Requieren revisión</div>
         </div>
 
         <!-- CHART CARDS -->
@@ -433,7 +451,7 @@
 
         <div class="chart-card reveal" style="transition-delay:.1s;">
           <div class="chart-header">
-            <div class="chart-title">Actividad por Tenant</div>
+            <div class="chart-title">Distribución de usuarios</div>
             <div class="chart-actions">
               <button data-period="7D">7D</button>
               <button data-period="30D" class="active">30D</button>

@@ -2392,7 +2392,7 @@
                             <div class="notif-panel-header"><span>Notificaciones</span><button class="notif-clear" onclick="clearNotifications()">Limpiar todo</button></div>
                             <div class="notif-panel-body" id="notifList">
                                 <div class="notif-item unread"><div class="notif-icon" style="background:rgba(52,211,153,0.15);color:var(--green);"><i class="fas fa-user-plus"></i></div><div class="notif-content"><div class="notif-text">Nuevo usuario registrado</div><div class="notif-time">Hace 2 min</div></div></div>
-                                <div class="notif-item unread"><div class="notif-icon" style="background:rgba(248,113,113,0.15);color:var(--red);"><i class="fas fa-ban"></i></div><div class="notif-content"><div class="notif-text">Juan Pérez fue suspendido</div><div class="notif-time">Hace 15 min</div></div></div>
+                                <div class="notif-item unread"><div class="notif-icon" style="background:rgba(248,113,113,0.15);color:var(--red);"><i class="fas fa-ban"></i></div><div class="notif-content"><div class="notif-text">Un usuario fue suspendido</div><div class="notif-time">Hace 15 min</div></div></div>
                                 <div class="notif-item"><div class="notif-icon" style="background:rgba(139,92,246,0.15);color:var(--accent);"><i class="fas fa-cog"></i></div><div class="notif-content"><div class="notif-text">Configuración de usuarios actualizada</div><div class="notif-time">Hace 1 hora</div></div></div>
                                 <div class="notif-item"><div class="notif-icon" style="background:rgba(251,191,36,0.15);color:var(--yellow);"><i class="fas fa-exclamation-triangle"></i></div><div class="notif-content"><div class="notif-text">Límite de usuarios cercano al máximo</div><div class="notif-time">Hace 3 horas</div></div></div>
                             </div>
@@ -2527,10 +2527,6 @@
                         <div class="form-group"><label class="form-label">Tenant *</label><select id="u-tenant"
                                 class="form-select" required>
                                 <option value="">Seleccionar...</option>
-                                <option value="TechCorp">TechCorp Solutions</option>
-                                <option value="InnovaLab">InnovaLab</option>
-                                <option value="DataFlow">DataFlow MX</option>
-                                <option value="FinTech">FinTech Latam</option>
                             </select></div>
                     </div>
                     <div class="form-group" id="passwordGroup"><label class="form-label">Contraseña (opcional)</label><input
@@ -2576,6 +2572,7 @@
     </div>
 
     <script src="../auth-check.js"></script>
+<script src="js/tenant-select-loader.js"></script>
     <script src="js/portal-admin-guard.js"></script>
     <script>
         // ── Custom Cursor ─────────────────
@@ -2609,10 +2606,8 @@
         
         // ── Centrar fondo según el área del main-content ─────
         function updateBgPosition() {
-            if (isMobile) { document.body.style.backgroundPosition = 'center'; return; }
-            const sidebarWidth = sidebar.classList.contains('collapsed') ? parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sidebar-collapsed')) : parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sidebar-width'));
-            const delta = Math.round(sidebarWidth / 2);
-            document.body.style.backgroundPosition = delta + 'px center';
+            // Mantener el fondo centrado sin ajustes dinámicos que causan desalineación
+            document.body.style.backgroundPosition = 'center';
         }
 
         function updateLayout() {

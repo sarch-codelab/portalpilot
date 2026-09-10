@@ -183,6 +183,94 @@ document.querySelectorAll('.model-item').forEach(item => {
   });
 });
 
+// ── Dashboard Data Loading (Backend Integration) ────
+let dashboardData = null;
+
+async function fetchTenantsCount() {
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) return 0;
+    const isLocalhost = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+    const API_ROOT = isLocalhost ? 'https://portal-pilot.vercel.app' : '';
+    const res = await fetch(`${API_ROOT}/api/tenants`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (res.ok) {
+      const tenants = await res.json();
+      return Array.isArray(tenants) ? tenants.length : 0;
+    }
+  } catch (e) {
+    console.warn('[TENANTS] Error fetching count:', e.message);
+  }
+  return 0;
+}
+
+async function fetchDashboardData() {
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    const isLocalhost = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+    const API_ROOT = isLocalhost ? 'https://portal-pilot.vercel.app' : '';
+    const res = await fetch(`${API_ROOT}/api/dashboard/summary?period=30`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (res.ok) {
+      dashboardData = await res.json();
+      updateDashboardUI();
+    }
+  } catch (e) {
+    console.warn('[DASHBOARD] Error fetching data:', e.message);
+  }
+}
+
+function updateDashboardUI() {
+  if (!dashboardData) return;
+
+  // Update KPIs
+  const kpis = dashboardData.kpis || {};
+  
+  // Tenants - fetch from /api/tenants for root users
+  const kpiTenants = document.getElementById('kpiTenants');
+  if (kpiTenants) {
+    // Try to get tenant count separately
+    fetchTenantsCount().then(count => {
+      kpiTenants.textContent = count.toLocaleString();
+    });
+  }
+
+  // Users
+  const kpiUsers = document.getElementById('kpiUsers');
+  if (kpiUsers) {
+    kpiUsers.textContent = (kpis.usuariosTotal || 0).toLocaleString();
+  }
+
+  // Revenue
+  const kpiRevenue = document.getElementById('kpiRevenue');
+  if (kpiRevenue) {
+    kpiRevenue.textContent = `L ${(kpis.facturasTotal || 0).toLocaleString()}`;
+  }
+
+  // Health
+  const kpiHealth = document.getElementById('kpiHealth');
+  if (kpiHealth) {
+    kpiHealth.textContent = '100%';
+  }
+
+  // Update chart data
+  const usage7d = dashboardData.usage7d || [];
+  chartDataSets.tenants['7D'] = usage7d.slice(0, 7).map(d => ({ label: d.label, value: d.facturas }));
+  chartDataSets.tenants['30D'] = usage7d.map(d => ({ label: d.label, value: d.facturas }));
+  chartDataSets.tenants['90D'] = usage7d.map(d => ({ label: d.label, value: d.facturas }));
+  
+  chartDataSets.tokens['total'] = usage7d.map(d => ({ label: d.label, value: d.transacciones }));
+  chartDataSets.tokens['input'] = usage7d.map(d => ({ label: d.label, value: d.ingresos }));
+  chartDataSets.tokens['output'] = usage7d.map(d => ({ label: d.label, value: d.gastos }));
+
+  // Render charts
+  createBarChart('chartTenants', chartDataSets.tenants['30D'], 'linear-gradient(180deg,#8b5cf6,#a78bfa)');
+  createBarChart('chartTokens', chartDataSets.tokens['total'], 'linear-gradient(180deg,#a78bfa,#7c3aed)');
+}
+
 // ── Online/Offline Toggle (cada 30s) ────
 let isOnline = true;
 let realUserCount = 0;
@@ -204,6 +292,9 @@ async function fetchUserCount() {
     }
   } catch (e) { /* ignore */ }
 }
+
+// Load dashboard data on page load
+fetchDashboardData();
 fetchUserCount();
 
 function toggleUserStatus() {
@@ -541,8 +632,8 @@ function showWidgetDetails(widgetType) {
       title: 'Detalle de Empresas',
       icon: 'fa-building',
       html: `
-        <div class="detail-card"><div class="detail-icon"><i class="fas fa-building"></i></div><div class="detail-label">Empresas Registradas</div><div class="detail-value" id="detailTenantCount">—</div></div>
-        <div class="detail-card"><div class="detail-icon"><i class="fas fa-check-circle"></i></div><div class="detail-label">Estado</div><div class="detail-value" style="font-size:14px;color:var(--green);">Todas operativas</div></div>
+        <div class="detail-card"><div class="detail-icon"><i class="fas fa-building"></i></div><div class="detail-label">Empresas Registradas</div><div class="detail-value" id="detailTenantCount">Cargando...</div></div>
+        <div class="detail-card"><div class="detail-icon"><i class="fas fa-check-circle"></i></div><div class="detail-label">Estado</div><div class="detail-value" style="font-size:14px;color:var(--green);">Conectado a Supabase</div></div>
         <div class="detail-card full"><div class="detail-label">Áreas Comerciales Soportadas</div>
           <div class="detail-list">
             <div class="detail-list-item"><span>Área Comercial</span><span>General</span></div>
@@ -557,8 +648,8 @@ function showWidgetDetails(widgetType) {
       title: 'Detalle de Usuarios',
       icon: 'fa-users',
       html: `
-        <div class="detail-card"><div class="detail-icon"><i class="fas fa-users"></i></div><div class="detail-label">Total Registrados</div><div class="detail-value" id="detailUserCount">—</div></div>
-        <div class="detail-card"><div class="detail-icon"><i class="fas fa-circle"></i></div><div class="detail-label">Estado</div><div class="detail-value" style="color:var(--green);font-size:14px;">Activos en el sistema</div></div>
+        <div class="detail-card"><div class="detail-icon"><i class="fas fa-users"></i></div><div class="detail-label">Total Registrados</div><div class="detail-value" id="detailUserCount">Cargando...</div></div>
+        <div class="detail-card"><div class="detail-icon"><i class="fas fa-circle"></i></div><div class="detail-label">Estado</div><div class="detail-value" style="color:var(--green);font-size:14px;">Sistema Activo</div></div>
         <div class="detail-card"><div class="detail-icon"><i class="fas fa-user-plus"></i></div><div class="detail-label">Fuente de Datos</div><div class="detail-value" style="font-size:14px;">Supabase PostgreSQL</div></div>
         <div class="detail-card"><div class="detail-icon"><i class="fas fa-user-shield"></i></div><div class="detail-label">Roles Disponibles</div><div class="detail-value" style="font-size:14px;">Owner, Admin, User</div></div>`
     },
@@ -611,6 +702,18 @@ function showWidgetDetails(widgetType) {
   content.innerHTML = data.html;
   modal.classList.add('active');
 
+  // Populate real data
+  if (widgetType === 'kpi-tenants') {
+    fetchTenantsCount().then(count => {
+      const el = document.getElementById('detailTenantCount');
+      if (el) el.textContent = count.toLocaleString();
+    });
+  }
+  if (widgetType === 'kpi-users') {
+    const el = document.getElementById('detailUserCount');
+    if (el) el.textContent = realUserCount.toLocaleString();
+  }
+
   if (widgetType === 'calendar') renderAllEvents();
 }
 
@@ -651,8 +754,11 @@ const chartDataSets = {
 
 window.addEventListener('load', () => {
   setTimeout(() => {
-    createBarChart('chartTenants', chartDataSets.tenants['30D'], 'linear-gradient(180deg,#8b5cf6,#a78bfa)');
-    createBarChart('chartTokens', chartDataSets.tokens['total'], 'linear-gradient(180deg,#a78bfa,#7c3aed)');
+    // Load real data first, then render charts
+    fetchDashboardData().then(() => {
+      createBarChart('chartTenants', chartDataSets.tenants['30D'], 'linear-gradient(180deg,#8b5cf6,#a78bfa)');
+      createBarChart('chartTokens', chartDataSets.tokens['total'], 'linear-gradient(180deg,#a78bfa,#7c3aed)');
+    });
   }, 300);
 });
 

@@ -2714,7 +2714,14 @@
                 const cleanApellido = nameParts.slice(1).join(' ') || '?';
                 const initials = `${(cleanNombre[0] || '').toUpperCase()}${((cleanApellido && cleanApellido !== '?' && cleanApellido[0]) ? cleanApellido[0].toUpperCase() : '')}`;
                 const isOnline = u.lastActivity && new Date(u.lastActivity) > new Date(Date.now() - 15 * 60 * 1000);
-                const avatarSrc = u.avatar || '';
+                // Avatar fallback: if backend returns null, try localStorage for current user
+                let avatarSrc = u.avatar || '';
+                if (!avatarSrc && u.email) {
+                  const currentUserEmail = localStorage.getItem('userEmail');
+                  if (currentUserEmail && u.email.toLowerCase() === currentUserEmail.toLowerCase()) {
+                    avatarSrc = localStorage.getItem('userFoto') || '';
+                  }
+                }
                 const isDataUrl = avatarSrc.startsWith('data:');
                 const safeAvatarSrc = isDataUrl && avatarSrc.length > 5000 ? '' : avatarSrc;
                 const avatarHtml = safeAvatarSrc

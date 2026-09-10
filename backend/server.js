@@ -2085,21 +2085,21 @@ app.get('/api/tenant/:id/stats', authenticate, async (req, res) => {
     const roleLower = userRole.toLowerCase();
     const rootUserCheck = isRootUser(req);
     const isAdmin = rootUserCheck || roleLower === 'administrador' || roleLower.includes('ceo') || roleLower.includes('owner');
-    const declaredTenantCode = normalizeTenantCode(tenant.codigo || tenant.codigo || tenant.id);
-    const isOwner = currentTenantCode && normalizeTenantCode(tenant.codigo) && currentTenantCode === normalizeTenantCode(tenant.codigo);
+    const declaredTenantCode = normalizeTenantCode(tenantCode || tenantId);
+    const isOwner = currentTenantCode && declaredTenantCode && currentTenantCode === declaredTenantCode;
 
     if (!isAdmin && normalizeTenantCode(tenant.codigo) !== currentTenantCode) {
       return res.status(403).json({ error: 'Acceso no autorizado al tenant' });
     }
 
-    const tenantCode = tenant.codigo || tenant.id;
+    const finalTenantCode = tenant.codigo || tenant.id;
 
     // Obtener stats reales
     const [usuariosRes, botsRes, facturasRes, almacenamientoRes] = await Promise.all([
-      supabase.from('usuarios').select('id, activo').eq('empresa_codigo', tenant.codigo),
-      supabase.from('bots').select('id, estado').eq('empresa_codigo', tenant.codigo),
-      supabase.from('facturas').select('id').eq('empresa_codigo', tenant.codigo),
-      supabase.from('almacenamiento').select('bytes_usados').eq('empresa_codigo', tenant.codigo).maybeSingle()
+      supabase.from('usuarios').select('id, activo').eq('empresa_codigo', finalTenantCode),
+      supabase.from('bots').select('id, estado').eq('empresa_codigo', finalTenantCode),
+      supabase.from('facturas').select('id').eq('empresa_codigo', finalTenantCode),
+      supabase.from('almacenamiento').select('bytes_usados').eq('empresa_codigo', finalTenantCode).maybeSingle()
     ]);
 
     const usuarios = usuariosRes.data || [];

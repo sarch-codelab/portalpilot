@@ -336,6 +336,24 @@ async function loadProfile() {
                 : '<div style="font-size:12px;color:var(--gray);padding:8px 0;">Sin actividad registrada todavía.</div>';
         }
 
+        // ── Información Profesional (datos reales) ────────────
+        const prof = u.professional || {};
+        const profMap = {
+            department: prof.departamento,
+            position: prof.cargo,
+            location: prof.ubicacion,
+            timezone: prof.zonaHoraria,
+            phone: prof.telCorporativo,
+            extension: prof.extension,
+            responsibilities: prof.responsabilidades
+        };
+        document.querySelectorAll('#professionalInfo .info-value[data-field]').forEach(el => {
+            const field = el.getAttribute('data-field');
+            if (field in profMap && profMap[field] != null && String(profMap[field]).trim() !== '') {
+                el.textContent = profMap[field];
+            }
+        });
+
         if (window.refreshSidebarAvatar) window.refreshSidebarAvatar();
     } catch (err) {
         console.warn('[PERFIL] No se pudo cargar el perfil desde la BD:', err.message);

@@ -2070,6 +2070,100 @@ app.get('/api/tenant/:id', authenticate, async (req, res) => {
   }
 });
 
+// Información detallada del tenant con stats reales
+app.get('/api/tenant/:id/stats', authenticate, async (req, res) => {
+  try {
+    const tenantId = req.params.id;
+    const tenant = await findTenantByIdentifier(tenantId);
+
+    if (!tenant) return res.status(404).json({ error: 'Tenant no encontrado' });
+
+    const tenantCode = tenant.codigo || tenant.Codigo || tenant.code || tenant.Id || tenant.id;
+    const userRole = (req.user.rol || '').toString();
+    const userEmpresaCodigo = (req.user.empresa_codigo || '').toString().trim();
+    const currentTenantCode = normalizeTenantCode(userEmpresaCodigo);
+    const roleLower = userRole.toLowerCase();
+    const rootUserCheck = isRootUser(req);
+    const isAdmin = rootUserCheck || roleLower === 'administrador' || roleLower.includes('ceo') || roleLower.includes('owner');
+    const declaredTenantCode = normalizeTenantCode(tenant.codigo || tenant.codigo || tenant.id);
+    const isOwner = currentTenantCode && normalizeTenantCode(tenant.codigo) && currentTenantCode === normalizeTenantCode(tenant.codigo);
+
+    if (!isAdmin && normalizeTenantCode(tenant.codigo) !== currentTenantCode) {
+      return res.status(403).json({ error: 'Acceso no autorizado al tenant' });
+    }
+
+    const tenantCode = tenant.codigo || tenant.id;
+
+    // Obtener stats reales
+    const [usuariosRes, botsRes, facturasRes, almacenamientoRes] = await Promise.all([
+      supabase.from('usuarios').select('id, activo').eq('empresa_codigo', tenant.codigo),
+      supabase.from('bots').select('id, estado').eq('empresa_codigo', tenant.codigo),
+      supabase.from('facturas').select('id').eq('empresa_codigo', tenant.codigo),
+      supabase.from('almacenamiento').select('bytes_usados').eq('empresa_codigo', tenant.codigo).maybeSingle()
+    ]);
+
+    const usuarios = usuariosRes.data || [];
+    const bots = botsRes.data || [];
+    const facturas = facturasRes.data || [];
+    const almacenamiento = almacenamientoRes.data || { bytes_usados: 0 };
+
+    const totalUsuarios = usuarios.length;
+    const usuariosActivos = usuarios.filter(u => u.activo !== false).length;
+    const totalBots = bots.length;
+    const botsActivos = bots.filter(b => b.estado === 'activo' || b.estado === 'active').length;
+    const totalFacturas = facturas.length;
+    const bytesUsados = almacenamiento.bytes_usados || 0;
+    const gbUsados = (bytesUsados / (1024 * 1024 * 1024)).toFixed(2);
+
+    // Límites según plan
+    const planLimits = {
+      starter: { usuarios: 5, bots: 2, tokens: 100000, storage: 5, soporte: 'Email', sla: '99.0%' },
+      business: { usuarios: 50, bots: 15, tokens: 2000000, storage: 100, soporte: 'Priority 24/7', sla: '99.9%' },
+      enterprise: { usuarios: 200, bots: 50, tokens: 10000000, storage: 500, soporte: 'Dedicado 24/7', sla: '99.99%' },
+      custom: { usuarios: 9999, bots: 9999, tokens: 99999999, storage: 9999, soporte: 'Dedicado 24/7', sla: '99.99%' }
+    };
+
+    const plan = tenant.plan || 'business';
+    const limits = planLimits[plan.toLowerCase()] || planLimits.business;
+
+    const stats = {
+      plan: tenant.plan || 'business',
+      usuarios: {
+        total: totalUsuarios,
+        activos: usuariosActivos,
+        limite: limits.usuarios,
+        porcentaje: limits.usuarios > 0 ? Math.round((totalUsuarios / limits.usuarios) * 100) : 0
+      },
+      bots: {
+        total: totalBots,
+        activos: botsActivos,
+        limite: limits.bots,
+        porcentaje: limits.bots > 0 ? Math.round((totalBots / limits.bots) * 100) : 0
+      },
+      tokens: {
+        usados: 0,
+        limite: limits.tokens,
+        porcentaje: 0
+      },
+      almacenamiento: {
+        gbUsados: parseFloat(gbUsados),
+        limite: limits.storage,
+        porcentaje: limits.storage > 0 ? Math.round((parseFloat(gbUsados) / limits.storage) * 100) : 0
+      },
+      facturas: {
+        total: totalFacturas
+      },
+      soporte: limits.soporte,
+      sla: limits.sla,
+      planNombre: plan.charAt(0).toUpperCase() + plan.slice(1)
+    };
+
+    res.json({ stats, tenant: { codigo: tenant.codigo, nombre: tenant.nombre_empresa } });
+  } catch (error) {
+    return handleServerError(res, error);
+  }
+});
+
 app.put('/api/tenants/:id', authenticate, requireTenantAdmin, async (req, res) => {
   try {
     const { id } = req.params;
@@ -5359,10 +5453,159 @@ app.get('/api/pos/ventas/:id', authenticate, async (req, res) => {
 // FACTURAS CRUD
 // ═══════════════════════════════════════════════════════════════════════════
 
+async function getInvoiceIssuer(empresaId) {
+  const { data } = await supabase.from('empresas')
+    .select('id, codigo, nombre, rtn, email, telefono, direccion, pais')
+    .eq('id', empresaId)
+    .maybeSingle();
+  return data || null;
+}
+
+async function resolveDocumentTenant(req) {
+  return isRootUser(req) && req.query.tenant
+    ? normalizeTenantCode(req.query.tenant)
+    : normalizeTenantCode(getTenantCode(req));
+}
+
+app.get('/api/recibos', authenticate, async (req, res) => {
+  if (!requireSupabase(res)) return;
+  try {
+    const empresa = await resolverEmpresaSupabase(await resolveDocumentTenant(req));
+    if (!empresa) return res.status(404).json({ error: 'Empresa no encontrada' });
+    const { data, error } = await supabase.from('recibos').select('*')
+      .eq('empresa_id', empresa.id).order('created_at', { ascending: false }).limit(100);
+    if (error) return res.status(500).json({ error: error.message });
+    return res.json({ recibos: data || [] });
+  } catch (err) { return handleServerError(res, err); }
+});
+
+app.post('/api/recibos', authenticate, async (req, res) => {
+  if (!requireSupabase(res)) return;
+  try {
+    const tenant = await resolveDocumentTenant(req);
+    const empresa = await resolverEmpresaSupabase(tenant);
+    if (!empresa) return res.status(404).json({ error: 'Empresa no encontrada' });
+    const body = req.body || {};
+    if (!body.cliente_nombre || !body.concepto || !(Number(body.monto) > 0)) {
+      return res.status(400).json({ error: 'cliente_nombre, concepto y monto son requeridos' });
+    }
+    let invoice = null;
+    if (body.factura_id) {
+      const result = await supabase.from('facturas').select('id, total, cliente_nombre, cliente_rtn, cliente_email')
+        .eq('id', body.factura_id).eq('empresa_id', empresa.id).maybeSingle();
+      invoice = result.data;
+      if (!invoice) return res.status(404).json({ error: 'Factura relacionada no encontrada' });
+    }
+    const saldoAnterior = Number(body.saldo_anterior ?? invoice?.total ?? 0);
+    const monto = Number(body.monto);
+    const { data, error } = await supabase.from('recibos').insert({
+      empresa_id: empresa.id,
+      empresa_codigo: tenant,
+      factura_id: invoice?.id || body.factura_id || null,
+      correlativo: String(body.correlativo || `REC-${Date.now()}`).slice(0, 50),
+      cliente_nombre: String(body.cliente_nombre || invoice?.cliente_nombre).slice(0, 200),
+      cliente_rtn: String(body.cliente_rtn || invoice?.cliente_rtn || '').slice(0, 20),
+      cliente_email: String(body.cliente_email || invoice?.cliente_email || '').slice(0, 100),
+      concepto: String(body.concepto).slice(0, 500),
+      monto,
+      saldo_anterior: saldoAnterior,
+      saldo_pendiente: Math.max(0, saldoAnterior - monto),
+      metodo_pago: String(body.metodo_pago || '').slice(0, 50),
+      referencia: String(body.referencia || '').slice(0, 100),
+      estado: 'pagado'
+    }).select().maybeSingle();
+    if (error) return res.status(500).json({ error: error.message });
+    await registrarAuditoria(tenant, 'Recibo creado', `Se registró el recibo ${data.correlativo}`, 'facturacion', req.user?.email || '', req);
+    return res.status(201).json({ recibo: data });
+  } catch (err) { return handleServerError(res, err); }
+});
+
+app.get('/api/notas-credito', authenticate, async (req, res) => {
+  if (!requireSupabase(res)) return;
+  try {
+    const empresa = await resolverEmpresaSupabase(await resolveDocumentTenant(req));
+    if (!empresa) return res.status(404).json({ error: 'Empresa no encontrada' });
+    const { data, error } = await supabase.from('notas_credito').select('*')
+      .eq('empresa_id', empresa.id).order('created_at', { ascending: false }).limit(100);
+    if (error) return res.status(500).json({ error: error.message });
+    return res.json({ notas: data || [] });
+  } catch (err) { return handleServerError(res, err); }
+});
+
+app.post('/api/notas-credito', authenticate, async (req, res) => {
+  if (!requireSupabase(res)) return;
+  try {
+    const tenant = await resolveDocumentTenant(req);
+    const empresa = await resolverEmpresaSupabase(tenant);
+    if (!empresa) return res.status(404).json({ error: 'Empresa no encontrada' });
+    const body = req.body || {};
+    if (!body.factura_id || !body.motivo || !(Number(body.total) > 0)) {
+      return res.status(400).json({ error: 'factura_id, motivo y total son requeridos' });
+    }
+    const { data: invoice } = await supabase.from('facturas').select('id, total')
+      .eq('id', body.factura_id).eq('empresa_id', empresa.id).maybeSingle();
+    if (!invoice) return res.status(404).json({ error: 'Factura relacionada no encontrada' });
+    if (Number(body.total) > Number(invoice.total)) return res.status(400).json({ error: 'La nota no puede superar el total de la factura' });
+    const { data, error } = await supabase.from('notas_credito').insert({
+      empresa_id: empresa.id,
+      empresa_codigo: tenant,
+      factura_id: invoice.id,
+      correlativo: String(body.correlativo || `NC-${Date.now()}`).slice(0, 50),
+      motivo: String(body.motivo).slice(0, 500),
+      tipo_ajuste: String(body.tipo_ajuste || 'correccion').slice(0, 50),
+      items: Array.isArray(body.items) ? body.items : [],
+      subtotal: Number(body.subtotal) || 0,
+      isv: Number(body.isv) || 0,
+      descuento: Number(body.descuento) || 0,
+      total: Number(body.total),
+      estado: 'emitida'
+    }).select().maybeSingle();
+    if (error) return res.status(500).json({ error: error.message });
+    await registrarAuditoria(tenant, 'Nota de crédito creada', `Se registró la nota ${data.correlativo} para la factura ${invoice.id}`, 'facturacion', req.user?.email || '', req);
+    return res.status(201).json({ nota: data });
+  } catch (err) { return handleServerError(res, err); }
+});
+
+app.get('/api/recibos/:id', authenticate, async (req, res) => {
+  if (!requireSupabase(res)) return;
+  try {
+    const tenant = isRootUser(req) && req.query.tenant
+      ? normalizeTenantCode(req.query.tenant)
+      : normalizeTenantCode(getTenantCode(req));
+    const empresa = await resolverEmpresaSupabase(tenant);
+    if (!empresa) return res.status(404).json({ error: 'Empresa no encontrada' });
+    const { data, error } = await supabase.from('recibos').select('*')
+      .eq('id', req.params.id).eq('empresa_id', empresa.id).maybeSingle();
+    if (error) return res.status(500).json({ error: error.message });
+    if (!data) return res.status(404).json({ error: 'Recibo no encontrado' });
+    return res.json({ recibo: data, empresa: await getInvoiceIssuer(empresa.id) });
+  } catch (err) { return handleServerError(res, err); }
+});
+
+app.get('/api/notas-credito/:id', authenticate, async (req, res) => {
+  if (!requireSupabase(res)) return;
+  try {
+    const tenant = isRootUser(req) && req.query.tenant
+      ? normalizeTenantCode(req.query.tenant)
+      : normalizeTenantCode(getTenantCode(req));
+    const empresa = await resolverEmpresaSupabase(tenant);
+    if (!empresa) return res.status(404).json({ error: 'Empresa no encontrada' });
+    const { data, error } = await supabase.from('notas_credito').select('*')
+      .eq('id', req.params.id).eq('empresa_id', empresa.id).maybeSingle();
+    if (error) return res.status(500).json({ error: error.message });
+    if (!data) return res.status(404).json({ error: 'Nota de crédito no encontrada' });
+    const { data: factura } = await supabase.from('facturas').select('*')
+      .eq('id', data.factura_id).eq('empresa_id', empresa.id).maybeSingle();
+    return res.json({ nota: data, factura: factura || null, empresa: await getInvoiceIssuer(empresa.id) });
+  } catch (err) { return handleServerError(res, err); }
+});
+
 app.get('/api/facturas', authenticate, async (req, res) => {
   if (!requireSupabase(res)) return;
   try {
-    const tenant = normalizeTenantCode(getTenantCode(req));
+    const tenant = isRootUser(req) && req.query.tenant
+      ? normalizeTenantCode(req.query.tenant)
+      : normalizeTenantCode(getTenantCode(req));
     const empresa = await resolverEmpresaSupabase(tenant);
     if (!empresa) return res.status(404).json({ error: 'Empresa no encontrada' });
     let query = supabase.from('facturas').select('*').eq('empresa_id', empresa.id);
@@ -5403,7 +5646,9 @@ app.get('/api/facturas/resumen', authenticate, async (req, res) => {
 app.get('/api/facturas/:id', authenticate, async (req, res) => {
   if (!requireSupabase(res)) return;
   try {
-    const tenant = normalizeTenantCode(getTenantCode(req));
+    const tenant = isRootUser(req) && req.query.tenant
+      ? normalizeTenantCode(req.query.tenant)
+      : normalizeTenantCode(getTenantCode(req));
     const empresa = await resolverEmpresaSupabase(tenant);
     if (!empresa) return res.status(404).json({ error: 'Empresa no encontrada' });
     const { data, error } = await supabase
@@ -5411,7 +5656,12 @@ app.get('/api/facturas/:id', authenticate, async (req, res) => {
       .eq('id', req.params.id).eq('empresa_id', empresa.id).maybeSingle();
     if (error) return res.status(500).json({ error: error.message });
     if (!data) return res.status(404).json({ error: 'Factura no encontrada' });
-    return res.json({ factura: data });
+    const { data: emisor } = await supabase
+      .from('empresas')
+      .select('id, codigo, nombre, rtn, email, telefono, direccion, pais')
+      .eq('id', empresa.id)
+      .maybeSingle();
+    return res.json({ factura: data, empresa: emisor || empresa });
   } catch (err) { return handleServerError(res, err); }
 });
 
@@ -5436,6 +5686,7 @@ app.post('/api/facturas', authenticate, async (req, res) => {
       cliente_rtn: (b.cliente_rtn || '').toString().slice(0, 20),
       cliente_email: (b.cliente_email || '').toString().slice(0, 100),
       subtotal, isv, descuento, total,
+      items: Array.isArray(b.items) ? b.items : [],
       estado: 'emitida',
       tipo_documento: (b.tipo_documento || 'factura').toString().slice(0, 30),
       metodo_pago: (b.metodo_pago || '').toString().slice(0, 50),

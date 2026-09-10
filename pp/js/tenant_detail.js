@@ -690,9 +690,76 @@ function connectNewIntegration() {
 }
 
 // ── Billing ────────────────────────────────────────
-function downloadInvoice() {
-    showToast('Descargando factura...', 'info');
-    setTimeout(() => showToast('Factura descargada', 'success'), 1000);
+let currentBillingDocuments = { factura: null, recibo: null, nota: null, tenant: '' };
+
+function openCurrentDocument(template) {
+    const key = template.startsWith('factura') ? 'factura' : template.startsWith('recibo') ? 'recibo' : 'nota';
+    const document = currentBillingDocuments[key];
+    if (!document) {
+        showToast('Todavía no hay un documento generado para este tenant.', 'info');
+        return;
+    }
+    const query = new URLSearchParams({ id: document.id, tenant: currentBillingDocuments.tenant });
+    window.open(`../${template}?${query}`, '_blank', 'noopener');
+}
+
+async function loadBillingDocuments() {
+    const params = new URLSearchParams(window.location.search);
+    const tenant = params.get('id') || params.get('tenant');
+    const token = localStorage.getItem('token');
+    if (!tenant || !token) return;
+    currentBillingDocuments.tenant = tenant;
+    try {
+        const headers = { Authorization: `Bearer ${token}` };
+        const query = `?tenant=${encodeURIComponent(tenant)}`;
+        const [invoiceResponse, receiptResponse, noteResponse] = await Promise.all([
+            fetch(`/api/facturas${query}`, { headers }),
+            fetch(`/api/recibos${query}`, { headers }),
+            fetch(`/api/notas-credito${query}`, { headers })
+        ]);
+        const invoices = invoiceResponse.ok ? (await invoiceResponse.json()).facturas || [] : [];
+        const receipts = receiptResponse.ok ? (await receiptResponse.json()).recibos || [] : [];
+        const notes = noteResponse.ok ? (await noteResponse.json()).notas || [] : [];
+        currentBillingDocuments.factura = invoices[0] || null;
+        currentBillingDocuments.recibo = receipts[0] || null;
+        currentBillingDocuments.nota = notes[0] || null;
+
+        const invoice = currentBillingDocuments.factura;
+        const money = value => `L ${Number(value || 0).toLocaleString('es-HN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        const set = (id, value) => { const el = document.getElementById(id); if (el) el.textContent = value; };
+        set('currentInvoiceNumber', invoice?.correlativo || 'Sin factura');
+        set('currentInvoiceDate', invoice?.created_at ? new Date(invoice.created_at).toLocaleDateString('es-HN') : '—');
+        set('currentInvoiceStatus', invoice?.estado || '—');
+        set('currentInvoiceTotal', money(invoice?.total));
+        set('currentDocumentStatus', `${invoices.length} factura(s) · ${receipts.length} recibo(s) · ${notes.length} nota(s)`);
+        const history = document.getElementById('billingHistoryList');
+        if (history) {
+            history.innerHTML = invoices.length ? invoices.map(invoice => `
+                <div class="billing-history-item">
+                    <div>
+                        <div style="font-weight:600;color:var(--white);">Factura #${invoice.correlativo || invoice.id}</div>
+                        <div style="font-size:11px;color:var(--gray);">${invoice.created_at ? new Date(invoice.created_at).toLocaleDateString('es-HN') : 'Sin fecha'} · ${invoice.estado || 'emitida'}</div>
+                    </div>
+                    <div style="text-align:right;">
+                        <div style="font-weight:700;color:var(--accent);">${money(invoice.total)}</div>
+                        <div style="font-size:11px;color:var(--green);"><i class="fas fa-check"></i> ${invoice.estado || 'Emitida'}</div>
+                    </div>
+                    <button class="btn btn-ghost btn-xs" onclick="openDocumentById('factura.html', '${invoice.id}')"><i class="fas fa-file-invoice"></i></button>
+                </div>`).join('') : '<div style="padding:16px;color:var(--gray);">No hay facturas registradas para este tenant.</div>';
+        }
+        ['viewInvoiceBtn', 'viewReceiptBtn', 'viewCreditNoteBtn'].forEach((id, index) => {
+            const button = document.getElementById(id);
+            if (button) button.disabled = ![currentBillingDocuments.factura, currentBillingDocuments.recibo, currentBillingDocuments.nota][index];
+        });
+    } catch (error) {
+        console.error('[TENANT BILLING] Error:', error);
+        showToast('No se pudieron cargar los documentos del tenant.', 'warning');
+    }
+}
+
+function openDocumentById(template, id) {
+    const query = new URLSearchParams({ id, tenant: currentBillingDocuments.tenant });
+    window.open(`../${template}?${query}`, '_blank', 'noopener');
 }
 
 function updatePayment() {
@@ -796,6 +863,7 @@ window.addEventListener('load', () => {
 
 // ── Load Tenant Data from API ──────────────────────
 document.addEventListener('DOMContentLoaded', () => {
+    loadBillingDocuments();
     const token = localStorage.getItem('token');
     if (!token) {
         console.warn('⚠️ No se encontró token.');
@@ -853,6 +921,64 @@ document.addEventListener('DOMContentLoaded', () => {
         })
         .catch(err => {
             console.error('❌ Error:', err.message);
+        });
+
+    // Load tenant stats (real data from backend)
+    fetch(`/api/tenant/${encodeURIComponent(tenantId)}/stats`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+    })
+        .then(res => {
+            if (!res.ok) throw new Error('Error al cargar stats del tenant');
+            return res.json();
+        })
+        .then(data => {
+            const stats = data.stats;
+            if (!stats) return;
+
+            // Plan
+            const planEl = document.getElementById('tenant-plan');
+            if (planEl) planEl.textContent = stats.planNombre || 'Sin plan';
+
+            // Usuarios
+            const usersLimitEl = document.getElementById('users-limit');
+            const usersUsedEl = document.getElementById('users-used');
+            if (usersLimitEl && stats.usuarios) usersLimitEl.textContent = stats.usuarios.limite;
+            if (usersUsedEl && stats.usuarios) usersUsedEl.textContent = `${stats.usuarios.total} usados`;
+
+            // Bots
+            const botsLimitEl = document.getElementById('bots-limit');
+            const botsUsedEl = document.getElementById('bots-used');
+            if (botsLimitEl && stats.bots) botsLimitEl.textContent = stats.bots.limite;
+            if (botsUsedEl && stats.bots) botsUsedEl.textContent = `${stats.bots.activos} activos`;
+
+            // Tokens
+            const tokensLimitEl = document.getElementById('tokens-limit');
+            if (tokensLimitEl && stats.tokens) tokensLimitEl.textContent = stats.tokens.limite.toLocaleString('es-ES');
+
+            // Almacenamiento
+            const storageLimitEl = document.getElementById('storage-limit');
+            const storageUsedEl = document.getElementById('storage-used');
+            if (storageLimitEl && stats.almacenamiento) storageLimitEl.textContent = `${stats.almacenamiento.limite} GB`;
+            if (storageUsedEl && stats.almacenamiento) storageUsedEl.textContent = `${stats.almacenamiento.gbUsados} GB usados`;
+
+            // Soporte
+            const supportEl = document.getElementById('support-level');
+            if (supportEl && stats.soporte) supportEl.textContent = stats.soporte;
+
+            // SLA
+            const slaEl = document.getElementById('sla-uptime');
+            if (slaEl && stats.sla) slaEl.textContent = stats.sla;
+
+            // Facturas
+            const invoicesEl = document.getElementById('invoices-total');
+            if (invoicesEl && stats.facturas) invoicesEl.textContent = stats.facturas.total;
+
+            // Plan name
+            const planNameEl = document.getElementById('plan-name');
+            if (planNameEl && stats.planNombre) planNameEl.textContent = stats.planNombre;
+        })
+        .catch(err => {
+            console.error('❌ Error cargando stats:', err.message);
         });
 });
 

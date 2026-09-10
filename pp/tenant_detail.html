@@ -649,40 +649,8 @@
                         class="fas fa-times"></i></button>
             </div>
             <div class="modal-body">
-                <div class="billing-history-list">
-                    <div class="billing-history-item">
-                        <div>
-                            <div style="font-weight:600;color:var(--white);">Factura #INV-2026-003</div>
-                            <div style="font-size:11px;color:var(--gray);">15 Mar 2026 · Plan Business</div>
-                        </div>
-                        <div style="text-align:right;">
-                            <div style="font-weight:700;color:var(--accent);">$299.00</div>
-                            <div style="font-size:11px;color:var(--green);"><i class="fas fa-check"></i> Pagada</div>
-                        </div>
-                        <button class="btn btn-ghost btn-xs"><i class="fas fa-download"></i></button>
-                    </div>
-                    <div class="billing-history-item">
-                        <div>
-                            <div style="font-weight:600;color:var(--white);">Factura #INV-2026-002</div>
-                            <div style="font-size:11px;color:var(--gray);">15 Feb 2026 · Plan Business</div>
-                        </div>
-                        <div style="text-align:right;">
-                            <div style="font-weight:700;color:var(--accent);">$299.00</div>
-                            <div style="font-size:11px;color:var(--green);"><i class="fas fa-check"></i> Pagada</div>
-                        </div>
-                        <button class="btn btn-ghost btn-xs"><i class="fas fa-download"></i></button>
-                    </div>
-                    <div class="billing-history-item">
-                        <div>
-                            <div style="font-weight:600;color:var(--white);">Factura #INV-2026-001</div>
-                            <div style="font-size:11px;color:var(--gray);">15 Ene 2026 · Plan Startup</div>
-                        </div>
-                        <div style="text-align:right;">
-                            <div style="font-weight:700;color:var(--accent);">$99.00</div>
-                            <div style="font-size:11px;color:var(--green);"><i class="fas fa-check"></i> Pagada</div>
-                        </div>
-                        <button class="btn btn-ghost btn-xs"><i class="fas fa-download"></i></button>
-                    </div>
+                <div class="billing-history-list" id="billingHistoryList">
+                    <div style="padding:16px;color:var(--gray);">Cargando facturas reales...</div>
                 </div>
             </div>
         </div>
@@ -888,7 +856,7 @@
                 </div>
                 <div class="stat-card reveal">
                     <div class="stat-card-icon"><i class="fas fa-dollar-sign"></i></div>
-                    <div class="stat-card-value">$299</div>
+                    <div class="stat-card-value">L 1,499</div>
                     <div class="stat-card-label">Facturación Mensual</div>
                     <div class="stat-card-trend"><i class="fas fa-calendar"></i> Renueva: 15 Abr</div>
                 </div>
@@ -988,36 +956,42 @@
                             <div class="section-body" style="display:flex;flex-direction:column;gap:16px;">
                                 <div style="display:flex;justify-content:space-between;">
                                     <span style="color:var(--gray);">Plan Actual</span>
-                                    <strong style="color:var(--white);">Business <i class="fas fa-crown"
+                                    <strong style="color:var(--white);" id="plan-name">Business <i class="fas fa-crown"
                                             style="color:var(--yellow);margin-left:4px;"></i></strong>
                                 </div>
                                 <div style="display:flex;justify-content:space-between;">
                                     <span style="color:var(--gray);">Límite Usuarios</span>
-                                    <strong style="color:var(--white);">50 <span
-                                            style="color:var(--gray);font-weight:400;">(24 usados)</span></strong>
+                                    <strong style="color:var(--white);" id="users-limit">50 <span
+                                            id="users-used" style="color:var(--gray);font-weight:400;">(24 usados)</span></strong>
                                 </div>
                                 <div style="display:flex;justify-content:space-between;">
                                     <span style="color:var(--gray);">Tokens IA / mes</span>
-                                    <strong style="color:var(--white);">2,000,000</strong>
+                                    <strong style="color:var(--white);" id="tokens-limit">2,000,000</strong>
                                 </div>
                                 <div style="display:flex;justify-content:space-between;">
                                     <span style="color:var(--gray);">Bots RPA</span>
-                                    <strong style="color:var(--white);">15 <span
-                                            style="color:var(--gray);font-weight:400;">(8 activos)</span></strong>
+                                    <strong style="color:var(--white);" id="bots-limit">15 <span
+                                            id="bots-used" style="color:var(--gray);font-weight:400;">(8 activos)</span></strong>
                                 </div>
                                 <div style="display:flex;justify-content:space-between;">
                                     <span style="color:var(--gray);">Almacenamiento</span>
-                                    <strong style="color:var(--white);">100 GB</strong>
+                                    <strong style="color:var(--white);" id="storage-limit">100 GB <span
+                                            id="storage-used" style="color:var(--gray);font-weight:400;">(0 GB usados)</span></strong>
                                 </div>
                                 <hr style="border-color:var(--border);margin:8px 0;">
                                 <div style="display:flex;justify-content:space-between;">
                                     <span style="color:var(--gray);">Soporte</span>
-                                    <strong style="color:var(--green);"><i class="fas fa-headset"></i> Priority
+                                    <strong style="color:var(--green);" id="support-level"><i class="fas fa-headset"></i> Priority
                                         24/7</strong>
                                 </div>
                                 <div style="display:flex;justify-content:space-between;">
                                     <span style="color:var(--gray);">SLA Uptime</span>
-                                    <strong style="color:var(--white);">99.9%</strong>
+                                    <strong style="color:var(--white);" id="sla-uptime">99.9%</strong>
+                                </div>
+                                <hr style="border-color:var(--border);margin:8px 0;">
+                                <div style="display:flex;justify-content:space-between;">
+                                    <span style="color:var(--gray);">Facturas totales</span>
+                                    <strong style="color:var(--white);" id="invoices-total">0</strong>
                                 </div>
                             </div>
                         </div>
@@ -1293,39 +1267,43 @@
                     <div>
                         <div class="section-card reveal">
                             <div class="section-header">
-                                <div class="section-title"><i class="fas fa-file-invoice"></i>Factura Actual</div>
-                                <span class="plan-badge business">Business · $299/mes</span>
+                                <div class="section-title"><i class="fas fa-file-invoice"></i>Facturación y documentos</div>
+                                <span class="plan-badge business" id="billingPlanBadge">Business · L 1,499/mes</span>
                             </div>
                             <div class="section-body">
-                                <table class="billing-table">
+                                <table class="billing-table" id="currentInvoiceTable">
                                     <tr>
-                                        <td>Plan Business (mensual)</td>
-                                        <td>$299.00</td>
+                                        <td>Factura más reciente</td>
+                                        <td id="currentInvoiceNumber">Cargando...</td>
                                     </tr>
                                     <tr>
-                                        <td>Usuarios adicionales (4/50)</td>
-                                        <td>$0.00</td>
+                                        <td>Fecha de emisión</td>
+                                        <td id="currentInvoiceDate">—</td>
                                     </tr>
                                     <tr>
-                                        <td>Tokens IA excedentes</td>
-                                        <td>$0.00</td>
+                                        <td>Estado</td>
+                                        <td id="currentInvoiceStatus">—</td>
                                     </tr>
                                     <tr>
-                                        <td>Almacenamiento extra</td>
-                                        <td>$0.00</td>
+                                        <td>Total</td>
+                                        <td id="currentInvoiceTotal">L 0.00</td>
                                     </tr>
                                     <tr>
-                                        <td>Soporte Priority</td>
-                                        <td>Incluido</td>
+                                        <td>Documentos relacionados</td>
+                                        <td id="currentDocumentStatus">Disponibles</td>
                                     </tr>
                                     <tr class="billing-total">
-                                        <td><strong>Total</strong></td>
-                                        <td><strong>$299.00 USD</strong></td>
+                                        <td><strong>Acciones</strong></td>
+                                        <td><strong>HNL</strong></td>
                                     </tr>
                                 </table>
                                 <div style="margin-top:20px;display:flex;gap:12px;flex-wrap:wrap;">
-                                    <button class="btn btn-outline btn-sm" onclick="downloadInvoice()"><i
-                                            class="fas fa-download"></i> Descargar PDF</button>
+                                    <button class="btn btn-outline btn-sm" id="viewInvoiceBtn" onclick="openCurrentDocument('factura.html')" disabled><i
+                                            class="fas fa-file-invoice"></i> Ver factura</button>
+                                    <button class="btn btn-ghost btn-sm" id="viewReceiptBtn" onclick="openCurrentDocument('recibo.html')" disabled><i
+                                            class="fas fa-receipt"></i> Recibo</button>
+                                    <button class="btn btn-ghost btn-sm" id="viewCreditNoteBtn" onclick="openCurrentDocument('nota-credito.html')" disabled><i
+                                            class="fas fa-file-circle-minus"></i> Nota de crédito</button>
                                     <button class="btn btn-ghost btn-sm" onclick="openModal('billingHistoryModal')"><i
                                             class="fas fa-history"></i> Historial</button>
                                     <button class="btn btn-acc btn-sm" onclick="updatePayment()"><i
@@ -1343,17 +1321,17 @@
                             <div class="section-body" style="display:flex;flex-direction:column;gap:16px;">
                                 <div
                                     style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--card2);border-radius:var(--radius);">
-                                    <i class="fab fa-cc-visa" style="font-size:32px;color:#1A1F71;"></i>
+                                    <i class="fas fa-credit-card" style="font-size:32px;color:var(--gray2);"></i>
                                     <div>
-                                        <div style="font-weight:600;color:var(--white);">Visa •••• 4242</div>
-                                        <div style="font-size:12px;color:var(--gray);">Expira: 12/2027</div>
+                                        <div style="font-weight:600;color:var(--white);">Método no configurado</div>
+                                        <div style="font-size:12px;color:var(--gray);">La integración de cobro aún no está conectada</div>
                                     </div>
                                     <button class="btn btn-ghost btn-xs" style="margin-left:auto;"
                                         onclick="editPaymentMethod()"><i class="fas fa-edit"></i></button>
                                 </div>
                                 <div style="font-size:12px;color:var(--gray);">
                                     <i class="fas fa-calendar"></i> Próximo cobro: <strong
-                                        style="color:var(--white);">15 Abr 2026</strong>
+                                        style="color:var(--white);">No configurado</strong>
                                 </div>
                                 <button class="btn btn-outline btn-sm" style="width:100%;justify-content:center;"
                                     onclick="openModal('addPaymentModal')"><i class="fas fa-plus"></i> Agregar
@@ -1372,7 +1350,7 @@
                                 <div
                                     style="background:linear-gradient(135deg,var(--accent),var(--cyan));padding:16px;border-radius:var(--radius);margin-bottom:12px;">
                                     <div style="font-weight:700;color:#fff;font-size:16px;">Plan Enterprise</div>
-                                    <div style="color:rgba(255,255,255,0.9);font-size:13px;">Desde $799/mes</div>
+                                    <div style="color:rgba(255,255,255,0.9);font-size:13px;">L 4,999/mes</div>
                                 </div>
                                 <button class="btn btn-acc btn-sm" style="width:100%;justify-content:center;"
                                     onclick="viewPlans()">

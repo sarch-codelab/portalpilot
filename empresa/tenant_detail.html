@@ -1582,7 +1582,7 @@
                         onclick="window.location.href='../pp/tenants.html'">
                         <i class="fas fa-arrow-left"></i>
                     </button>
-                    <div class="topbar-title">Tenant: <span id="tenantNameDisplay">TechCorp Solutions</span></div>
+                    <div class="topbar-title">Tenant: <span id="tenantNameDisplay">Cargando...</span></div>
                 </div>
                 <div class="topbar-right">
                     <button class="topbar-btn" title="Notificaciones">
@@ -1590,7 +1590,7 @@
                         <span class="badge">3</span>
                     </button>
                     <button class="btn btn-outline btn-sm"
-                        onclick="window.open('https://techcorp.portalpilot.io','_blank')">
+                        onclick="openTenantPortal()">
                         <i class="fas fa-external-link-alt"></i> Abrir Portal
                     </button>
                 </div>
@@ -1600,7 +1600,7 @@
             <header class="tenant-header">
                 <div class="tenant-banner">
                     <div class="tenant-banner-top">
-                        <div class="tenant-logo">TC</div>
+                        <div class="tenant-logo" id="tenantLogo">&mdash;</div>
                         <div class="tenant-badges">
                             <span id="tenant-status" class="status-badge active"><span
                                     style="width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block;"></span>
@@ -1610,7 +1610,7 @@
                     </div>
                     <!-- Este es el título que se actualizará automáticamente -->
                     <h1 id="tenant-name" class="tenant-name">Cargando empresa...</h1>
-                    <span id="tenant-domain" class="tenant-domain">techcorp.portalpilot.io</span>
+                    <span id="tenant-domain" class="tenant-domain">cargando...</span>
                     <div class="tenant-meta">
                         <div class="tenant-meta-item"><i class="fas fa-calendar"></i> Registrado: <span id="tenant-registered">15 Mar 2025</span></div>
                         <div class="tenant-meta-item"><i class="fas fa-map-marker-alt"></i> <span id="tenant-country">México</span> (<span id="tenant-timezone">GMT-6</span>)</div>
@@ -1632,13 +1632,13 @@
             <div class="stats-grid">
                 <div class="stat-card reveal">
                     <div class="stat-card-icon"><i class="fas fa-users"></i></div>
-                    <div class="stat-card-value">24</div>
+                    <div class="stat-card-value" id="statUsers">&mdash;</div>
                     <div class="stat-card-label">Usuarios Activos</div>
                     <div class="stat-card-trend up"><i class="fas fa-arrow-up"></i> +12% este mes</div>
                 </div>
                 <div class="stat-card reveal">
                     <div class="stat-card-icon"><i class="fas fa-robot"></i></div>
-                    <div class="stat-card-value">8</div>
+                    <div class="stat-card-value" id="statBots">&mdash;</div>
                     <div class="stat-card-label">Bots RPA Activos</div>
                     <div class="stat-card-trend up"><i class="fas fa-arrow-up"></i> +2 nuevos</div>
                 </div>
@@ -1663,7 +1663,7 @@
                 </div>
                 <div class="stat-card reveal">
                     <div class="stat-card-icon"><i class="fas fa-bolt"></i></div>
-                    <div class="stat-card-value">12.4K</div>
+                    <div class="stat-card-value" id="statEjecuciones">&mdash;</div>
                     <div class="stat-card-label">Ejecuciones RPA</div>
                     <div class="stat-card-trend up"><i class="fas fa-arrow-up"></i> +18% esta semana</div>
                 </div>
@@ -1719,9 +1719,9 @@
                                     <div class="timeline-item">
                                         <div class="timeline-dot"></div>
                                         <div class="timeline-time">Hace 5 horas</div>
-                                        <div class="timeline-action"><strong>Nuevo usuario:</strong> carlos@techcorp.com
+                                        <div class="timeline-action"><strong>Nuevo usuario:</strong> carlos@empresa.portalpilot.io
                                         </div>
-                                        <div class="timeline-details">Rol: Operador · Invitado por ana@techcorp.com
+                                        <div class="timeline-details">Rol: Operador · Invitado por ana@empresa.portalpilot.io
                                         </div>
                                     </div>
                                     <div class="timeline-item">
@@ -1845,70 +1845,7 @@
                                     <th>Acciones</th>
                                 </tr>
                             </thead>
-                            <tbody>
-                                <tr>
-                                    <td>
-                                        <div class="user-info-cell">
-                                            <div class="user-avatar-sm">AM</div>
-                                            <div>
-                                                <div class="user-name-cell">Ana Martínez</div>
-                                                <div class="user-email-cell">ana@techcorp.portalpilot.io</div>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td><span class="role-badge admin">Admin</span></td>
-                                    <td><span style="color:var(--green);font-size:12px;"><i class="fas fa-circle"
-                                                style="width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block;margin-right:4px;"></i>Activo</span>
-                                    </td>
-                                    <td>Hoy, 09:24</td>
-                                    <td>
-                                        <button class="btn btn-ghost btn-xs"><i class="fas fa-edit"></i></button>
-                                        <button class="btn btn-danger btn-xs"><i class="fas fa-trash"></i></button>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <div class="user-info-cell">
-                                            <div class="user-avatar-sm">JR</div>
-                                            <div>
-                                                <div class="user-name-cell">Juan Rodríguez</div>
-                                                <div class="user-email-cell">juan@techcorp.portalpilot.io</div>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td><span class="role-badge operator">Operador</span></td>
-                                    <td><span style="color:var(--green);font-size:12px;"><i class="fas fa-circle"
-                                                style="width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block;margin-right:4px;"></i>Activo</span>
-                                    </td>
-                                    <td>Ayer, 16:45</td>
-                                    <td>
-                                        <button class="btn btn-ghost btn-xs"><i class="fas fa-edit"></i></button>
-                                        <button class="btn btn-danger btn-xs"><i class="fas fa-trash"></i></button>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <div class="user-info-cell">
-                                            <div class="user-avatar-sm">LS</div>
-                                            <div>
-                                                <div class="user-name-cell">Laura Sánchez</div>
-                                                <div class="user-email-cell">laura@techcorp.portalpilot.io</div>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td><span class="role-badge viewer">Viewer</span></td>
-                                    <td><span style="color:var(--yellow);font-size:12px;"><i class="fas fa-circle"
-                                                style="width:6px;height:6px;border-radius:50%;background:var(--yellow);display:inline-block;margin-right:4px;"></i>Inactivo</span>
-                                    </td>
-                                    <td>5 Mar, 11:20</td>
-                                    <td>
-                                        <button class="btn btn-ghost btn-xs"><i class="fas fa-edit"></i></button>
-                                        <button class="btn btn-danger btn-xs"><i class="fas fa-trash"></i></button>
-                                    </td>
-                                </tr>
-                                <!-- More rows... -->
-                            </tbody>
-                        </table>
+                            <tbody id="tenantUsersBody"><tr><td colspan="5" style="text-align:center;color:var(--gray);padding:24px;">Cargando miembros...</td></tr></tbody></table>
                     </div>
                 </div>
             </div>
@@ -1921,64 +1858,9 @@
                         <button class="btn btn-acc btn-sm"><i class="fas fa-plus"></i> Nuevo Bot</button>
                     </div>
                     <div class="section-body">
-                        <div class="bots-grid">
-                            <div class="bot-card">
-                                <div class="bot-card-header">
-                                    <div class="bot-icon"><i class="fas fa-file-invoice"></i></div>
-                                    <span class="bot-status running"><i class="fas fa-play"></i> Ejecutando</span>
-                                </div>
-                                <div class="bot-name">Procesar Facturas Proveedor</div>
-                                <div class="bot-desc">Extrae datos de PDFs de facturas y los registra en el ERP SAP.
-                                </div>
-                                <div class="bot-stats">
-                                    <span class="bot-stat"><strong>128</strong> ejecuciones hoy</span>
-                                    <span class="bot-stat"><strong>4.2m</strong> promedio</span>
-                                </div>
-                                <div style="display:flex;gap:8px;margin-top:auto;">
-                                    <button class="btn btn-ghost btn-xs" style="flex:1;justify-content:center;"><i
-                                            class="fas fa-cog"></i> Configurar</button>
-                                    <button class="btn btn-outline btn-xs" style="flex:1;justify-content:center;"><i
-                                            class="fas fa-chart-bar"></i> Logs</button>
-                                </div>
-                            </div>
-
-                            <div class="bot-card">
-                                <div class="bot-card-header">
-                                    <div class="bot-icon"><i class="fas fa-shopping-cart"></i></div>
-                                    <span class="bot-status idle"><i class="fas fa-pause"></i> En espera</span>
-                                </div>
-                                <div class="bot-name">Sincronizar Inventario</div>
-                                <div class="bot-desc">Conecta WooCommerce con sistema de inventario interno cada 4
-                                    horas.</div>
-                                <div class="bot-stats">
-                                    <span class="bot-stat"><strong>6</strong> ejecuciones hoy</span>
-                                    <span class="bot-stat"><strong>1.8m</strong> promedio</span>
-                                </div>
-                                <div style="display:flex;gap:8px;margin-top:auto;">
-                                    <button class="btn btn-ghost btn-xs" style="flex:1;justify-content:center;"><i
-                                            class="fas fa-cog"></i> Configurar</button>
-                                    <button class="btn btn-outline btn-xs" style="flex:1;justify-content:center;"><i
-                                            class="fas fa-play"></i> Ejecutar</button>
-                                </div>
-                            </div>
-
-                            <div class="bot-card">
-                                <div class="bot-card-header">
-                                    <div class="bot-icon"><i class="fas fa-envelope"></i></div>
-                                    <span class="bot-status running"><i class="fas fa-play"></i> Ejecutando</span>
-                                </div>
-                                <div class="bot-name">Respuestas Automáticas Email</div>
-                                <div class="bot-desc">Clasifica y responde emails de soporte usando IA generativa.</div>
-                                <div class="bot-stats">
-                                    <span class="bot-stat"><strong>342</strong> emails procesados</span>
-                                    <span class="bot-stat"><strong>94%</strong> satisfacción</span>
-                                </div>
-                                <div style="display:flex;gap:8px;margin-top:auto;">
-                                    <button class="btn btn-ghost btn-xs" style="flex:1;justify-content:center;"><i
-                                            class="fas fa-cog"></i> Configurar</button>
-                                    <button class="btn btn-outline btn-xs" style="flex:1;justify-content:center;"><i
-                                            class="fas fa-chart-bar"></i> Analytics</button>
-                                </div>
+                        <div class="bots-grid" id="tenantBotsGrid">
+                            <div style="grid-column:1/-1;text-align:center;color:var(--gray);padding:24px;">Cargando automatizaciones...</div>
+                        </div>
                             </div>
                         </div>
                     </div>
@@ -2178,7 +2060,7 @@
                                     <div>
                                         <div style="color:var(--white);font-weight:500;">Ejecución de bot: "Procesar
                                             facturas"</div>
-                                        <div style="font-size:12px;color:var(--gray);">Usuario: ana@techcorp.com · IP:
+                                        <div style="font-size:12px;color:var(--gray);">Usuario: ana@empresa.portalpilot.io · IP:
                                             187.141.23.45 · Resultado: ✅ Success</div>
                                     </div>
                                     <button class="btn btn-ghost btn-xs"><i class="fas fa-eye"></i></button>
@@ -2203,8 +2085,8 @@
                                     <span style="font-size:11px;color:var(--gray);">23 Mar 16:45</span>
                                     <div>
                                         <div style="color:var(--white);font-weight:500;">Nuevo usuario invitado</div>
-                                        <div style="font-size:12px;color:var(--gray);">carlos@techcorp.com · Rol:
-                                            Operador · Invitado por: ana@techcorp.com</div>
+                                        <div style="font-size:12px;color:var(--gray);">carlos@empresa.portalpilot.io · Rol:
+                                            Operador · Invitado por: ana@empresa.portalpilot.io</div>
                                     </div>
                                     <button class="btn btn-ghost btn-xs"><i class="fas fa-eye"></i></button>
                                 </div>
@@ -2251,12 +2133,12 @@
                         <form class="settings-form">
                             <div class="form-group">
                                 <label class="form-label"><i class="fas fa-building"></i>Nombre de la Empresa</label>
-                                <input type="text" class="form-input" value="TechCorp Solutions">
+                                <input type="text" id="settingsCompanyName" class="form-input" value="">
                             </div>
                             <div class="form-row">
                                 <div class="form-group">
                                     <label class="form-label"><i class="fas fa-globe"></i>Dominio Personalizado</label>
-                                    <input type="text" class="form-input" value="techcorp.portalpilot.io">
+                                    <input type="text" id="settingsDomain" class="form-input" value="">
                                     <div class="form-hint">Requiere configuración DNS</div>
                                 </div>
                                 <div class="form-group">
@@ -2666,6 +2548,7 @@
             window.open(url, '_blank');
         }
     </script>
+<script src="../js/tenant-detail.js"></script>
 <script src="../js/notifications.js"></script>
 <script src="../js/plan-gate.js"></script>
 <script src="../js/sidebar-empresa.js"></script>

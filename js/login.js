@@ -280,6 +280,64 @@ document.addEventListener('DOMContentLoaded', function () {
         return;
       }
 
+      if (data.requiresTwoFactor) {
+        window._pendingMfaToken = data.mfaToken;
+        const form = document.getElementById('loginForm');
+        form.innerHTML =
+          '<div class="field"><label>CÓDIGO 2FA</label>' +
+          '<div class="input-wrap"><i class="fas fa-shield-halved"></i>' +
+          '<input type="text" id="login2faCode" name="code" placeholder="000000" maxlength="6" ' +
+          'autocomplete="one-time-code" required style="font-size:24px;letter-spacing:8px;text-align:center;"></div></div>' +
+          '<div style="margin-top:14px;margin-bottom:24px;font-size:13px;color:var(--text-dim);">Ingresa el código de 6 dígitos de tu app de autenticación (o un código de respaldo).</div>' +
+          '<button type="submit" class="btn-submit"><i class="fas fa-check"></i> Verificar código</button>';
+        form.addEventListener('submit', async function (e2) {
+          e2.preventDefault();
+          const code = document.getElementById('login2faCode').value.trim();
+          const btn2 = form.querySelector('.btn-submit');
+          if (!code || code.length < 6) { showMessage('Ingresa el código de 6 dígitos', 'error'); return; }
+          btn2.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verificando...'; btn2.disabled = true;
+          try {
+            const res2 = await fetch(`${API_ROOT}/api/login/2fa`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ mfaToken: window._pendingMfaToken, code })
+            });
+            const data2 = await readJsonResponse(res2);
+            btn2.innerHTML = '<i class="fas fa-check"></i> Verificar código'; btn2.disabled = false;
+            if (!res2.ok) {
+              showMessage(data2.error || 'Código 2FA inválido.', 'error');
+              return;
+            }
+            const user2 = data2.user;
+            const norm2 = (user2.empresa_codigo || '').toString().trim().toUpperCase();
+            localStorage.setItem('token', data2.token);
+            localStorage.setItem('userRole', user2.rol || '');
+            localStorage.setItem('userName', user2.nombre || '');
+            localStorage.setItem('userApellido', user2.apellido || '');
+            localStorage.setItem('userEmail', user2.email || '');
+            localStorage.setItem('userFoto', user2.foto_perfil_url || '');
+            localStorage.setItem('userBanner', user2.banner_perfil_url || '');
+            localStorage.setItem('empresaCodigo', norm2);
+            localStorage.setItem('empresaNombre', norm2 === 'ROOT' ? 'Portal Pilot' : norm2);
+            localStorage.setItem('currentAccountId', user2.id || '');
+            localStorage.setItem('empresaPlan', user2.plan || 'starter');
+            localStorage.setItem('trialExpired', 'false');
+            localStorage.removeItem('linkedAccounts');
+            showMessage('Acceso concedido (2FA). Redirigiendo...', 'success');
+            setTimeout(() => { window.location.href = 'pp/welcome.html'; }, 1200);
+          } catch (err2) {
+            showMessage('Error al verificar 2FA.', 'error');
+            btn2.innerHTML = '<i class="fas fa-check"></i> Verificar código'; btn2.disabled = false;
+          }
+        });
+        const codeInput = document.getElementById('login2faCode');
+        if (codeInput) codeInput.focus();
+        showMessage('Se requiere verificación 2FA para esta cuenta.', 'info');
+        btn.innerHTML = 'Continuar <i class="fas fa-chevron-right" style="font-size:12px;"></i>';
+        btn.disabled = false;
+        return;
+      }
+
       // Guardar datos de sesión
       const user = data.user;
       const normalizedEmpresa = (user.empresa_codigo || '').toString().trim().toUpperCase();
@@ -501,27 +559,7 @@ async function doRegister() {
   }
 }
 
-function trigger2FA() {
-  const strip = document.querySelector('#panelLogin .biometric-row .bio-text');
-  const btn = document.querySelector('#panelLogin .btn-bio');
-  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-  setTimeout(() => {
-    btn.innerHTML = '<i class="fas fa-check"></i> Listo';
-    btn.style.background = 'rgba(48,209,88,0.15)'; btn.style.color = 'var(--green)'; btn.style.borderColor = 'rgba(48,209,88,0.3)';
-    strip.innerHTML = '<strong style="color:var(--green);">2FA VERIFICADO</strong>Redirigiendo...';
-    showMessage('Autenticación 2FA verificada correctamente', 'success');
-  }, 2200);
-}
-
-function toggle2FAEnroll(btn) {
-  if (btn.textContent.trim() === 'Activar') {
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-    setTimeout(() => {
-      btn.innerHTML = '<i class="fas fa-check"></i> Activo';
-      btn.style.background = 'rgba(48,209,88,0.15)'; btn.style.color = 'var(--green)'; btn.style.borderColor = 'rgba(48,209,88,0.3)';
-    }, 1500);
-  }
-}
+// ── 2FA enroll activado por backend (registrov2.html lo maneja en su paso 6) ──
 
 function ssoClick(p) {
   showMessage(`Redirigiendo a ${p}...`, 'info');

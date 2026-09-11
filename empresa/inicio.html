@@ -822,7 +822,7 @@
     <div class="welcome-section">
 
       <!-- Profile Circle -->
-      <div class="profile-circle-large" id="profileInitials">VT</div>
+      <div class="profile-circle-large" id="profileInitials">&mdash;</div>
 
       <!-- Greeting -->
       <h1 id="greeting">Cargando...</h1>
@@ -843,7 +843,7 @@
       </a>
 
       <!-- Módulos Section -->
-      <div id="areasSkeleton" data-skeleton>
+      <div id="areasSkeleton" style="display:none">
         <div style="text-align:center;margin:40px 0 20px"><div class="skeleton skeleton-text sm" style="width:200px;height:20px;margin:0 auto"></div></div>
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px">
           <div class="skeleton" style="height:120px;border-radius:16px"></div>
@@ -856,47 +856,7 @@
       </div>
       <div class="areas-section">
         <h2 class="areas-title">Módulos de Negocio</h2>
-        <div class="areas-grid">
-          <div class="area-card">
-            <div class="area-icon"><i class="fas fa-file-invoice-dollar"></i></div>
-            <h3>Facturación SAR</h3>
-            <button class="btn-acceder" onclick="window.location.href='dashboard.html'">
-              <i class="fas fa-arrow-right"></i> Acceder
-            </button>
-          </div>
-          <div class="area-card">
-            <div class="area-icon"><i class="fas fa-boxes-stacked"></i></div>
-            <h3>Inventario</h3>
-            <button class="btn-acceder" onclick="window.location.href='dashboard.html'">
-              <i class="fas fa-arrow-right"></i> Acceder
-            </button>
-          </div>
-          <div class="area-card">
-            <div class="area-icon"><i class="fas fa-calculator"></i></div>
-            <h3>Contabilidad</h3>
-            <button class="btn-acceder" onclick="window.location.href='dashboard.html'">
-              <i class="fas fa-arrow-right"></i> Acceder
-            </button>
-          </div>
-          <div class="area-card">
-            <div class="area-icon"><i class="fas fa-graduation-cap"></i></div>
-            <h3>Educación</h3>
-            <button class="btn-acceder" onclick="window.location.href='dashboard.html'">
-              <i class="fas fa-arrow-right"></i> Acceder
-            </button>
-          </div>
-          <div class="area-card">
-            <div class="area-icon"><i class="fas fa-users"></i></div>
-            <h3>RRHH</h3>
-            <button class="btn-acceder" onclick="window.location.href='dashboard.html'">
-              <i class="fas fa-arrow-right"></i> Acceder
-            </button>
-          </div>
-        </div>
-      </div>
-
-    </div>
-  </main>
+        <div class="areas-grid" id="modulosGrid"></div></div></div></main>
 
   <script>
     // ─── Load Profile from localStorage ────
@@ -1187,6 +1147,7 @@
 </div>
 
 <script src="../js/notifications.js"></script>
+<script src="../js/inicio-modulos.js"></script>
 <script src="../js/plan-gate.js"></script>
 <script src="../js/sidebar-loader.js"></script>
 <script>

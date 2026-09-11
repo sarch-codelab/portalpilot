@@ -1905,7 +1905,7 @@
         </div>
         <div class="topbar-right">
           <button class="topbar-btn" title="Notificaciones"><i class="fas fa-bell"></i><span
-              class="badge">1</span></button>
+              class="badge" data-notif-badge style="display:none;">0</span></button>
           <button class="btn btn-success btn-sm" id="saveAllBtn" onclick="saveAllSettings()" style="display:none"><i
               class="fas fa-save"></i> Guardar Todo</button>
         </div>
@@ -2013,11 +2013,11 @@
             <div class="settings-card-title"><i class="fas fa-toggle-on"></i> Feature Flags</div>
           </div>
           <div style="display:flex;flex-direction:column;gap:14px">
-            <div class="flag-row"><span>🧪 Modo Beta para nuevos features</span><label class="form-switch"><input type="checkbox" checked><span class="form-switch-slider"></span></label></div>
-            <div class="flag-row"><span>🔐 Requiere 2FA para todos los admins</span><label class="form-switch"><input type="checkbox" checked><span class="form-switch-slider"></span></label></div>
-            <div class="flag-row"><span>📊 Analytics detallados en dashboard</span><label class="form-switch"><input type="checkbox"><span class="form-switch-slider"></span></label></div>
-            <div class="flag-row"><span>🌍 Multi-región (CDN global)</span><label class="form-switch"><input type="checkbox"><span class="form-switch-slider"></span></label></div>
-            <div class="flag-row"><span>🤖 Auto-scaling de bots RPA</span><label class="form-switch"><input type="checkbox" checked><span class="form-switch-slider"></span></label></div>
+            <div class="flag-row"><span>🧪 Modo Beta para nuevos features</span><label class="form-switch"><input type="checkbox" id="flag-beta" checked><span class="form-switch-slider"></span></label></div>
+            <div class="flag-row"><span>🔐 Requiere 2FA para todos los admins</span><label class="form-switch"><input type="checkbox" id="flag-2fa-admins" checked><span class="form-switch-slider"></span></label></div>
+            <div class="flag-row"><span>📊 Analytics detallados en dashboard</span><label class="form-switch"><input type="checkbox" id="flag-dash-analytics"><span class="form-switch-slider"></span></label></div>
+            <div class="flag-row"><span>🌍 Multi-región (CDN global)</span><label class="form-switch"><input type="checkbox" id="flag-multiregion"><span class="form-switch-slider"></span></label></div>
+            <div class="flag-row"><span>🤖 Auto-scaling de bots RPA</span><label class="form-switch"><input type="checkbox" id="flag-autoscaling-bots" checked><span class="form-switch-slider"></span></label></div>
           </div>
           <div class="settings-actions">
             <button class="btn btn-outline btn-sm" onclick="resetFlags()"><i class="fas fa-undo"></i> Resetear</button>
@@ -2033,7 +2033,7 @@
               todo</button>
           </div>
           <div style="display:flex;flex-direction:column;gap:12px;max-height:240px;overflow-y:auto">
-            <div style="color:var(--gray);font-size:12px">No hay cambios disponibles desde el backend.</div>
+<div id="ultimosCambios" data-cambios=""><div style="color:var(--gray);font-size:12px">Cargando cambios...</div></div>
           </div>
         </div>
       </div>
@@ -2043,6 +2043,7 @@
   <!-- ===== JAVASCRIPT ===== -->
   <script src="../auth-check.js"></script>
   <script src="js/portal-admin-guard.js"></script>
+<script src="js/notif-badge.js"></script>
   <script>
     // ===== CUSTOM CURSOR (solo desktop) =====
     if (window.innerWidth > 1024) {
@@ -2213,6 +2214,7 @@
       if (e.key === 's' && e.ctrlKey) { e.preventDefault(); if (hasChanges) saveAllSettings(); }
     });
   </script>
+<script src="js/global_settings.js"></script>
   <script src="../js/notifications.js"></script>
   <script src="../js/sidebar-loader.js"></script>
     <script>

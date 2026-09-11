@@ -333,7 +333,7 @@
         </div>
         <div class="topbar-right">
           <button class="topbar-btn" title="Notificaciones"><i class="fas fa-bell"></i><span
-              class="badge">2</span></button>
+              class="badge" data-notif-badge style="display:none;">0</span></button>
           <button class="btn btn-ghost btn-sm" onclick="executeAutomation()" title="Ejecutar verificación de condiciones"><i class="fas fa-play-circle"></i> Ejecutar</button>
           <button class="btn btn-acc btn-sm" onclick="openModal('createModal')"><i class="fas fa-plus"></i> Nueva Regla</button>
         </div>
@@ -491,6 +491,7 @@
   <!-- ✅ Scripts -->
   <script src="../auth-check.js"></script>
   <script src="js/portal-admin-guard.js"></script>
+<script src="js/notif-badge.js"></script>
   <script src="../js/notifications.js"></script>
   <script src="../js/sidebar-loader.js"></script>
   <script src="js/bots_rpa.js"></script>

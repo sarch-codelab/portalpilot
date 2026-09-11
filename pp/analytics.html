@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 
 <head>
@@ -326,7 +326,7 @@
         </div>
         <div class="topbar-right">
           <button class="topbar-btn" title="Notificaciones"><i class="fas fa-bell"></i><span
-              class="badge">2</span></button>
+              class="badge" data-notif-badge style="display:none;">0</span></button>
         </div>
       </header>
 
@@ -376,9 +376,9 @@
         <div class="kpi-card reveal">
           <div class="kpi-header">
             <div class="kpi-icon"><i class="fas fa-users"></i></div>
-            <span class="kpi-trend up"><i class="fas fa-arrow-up"></i> +12.5%</span>
+            <span class="kpi-trend up">—</span>
           </div>
-          <div class="kpi-value">2,847</div>
+          <div class="kpi-value">—</div>
           <div class="kpi-label">Total Usuarios</div>
           <div class="kpi-footer"><i class="fas fa-circle" style="color:var(--green);font-size:6px;"></i> Registrados en la plataforma</div>
         </div>
@@ -386,9 +386,9 @@
         <div class="kpi-card reveal" style="transition-delay:.05s;">
           <div class="kpi-header">
             <div class="kpi-icon"><i class="fas fa-user-check"></i></div>
-            <span class="kpi-trend up"><i class="fas fa-arrow-up"></i> +8.3%</span>
+            <span class="kpi-trend up">—</span>
           </div>
-          <div class="kpi-value">1,204</div>
+          <div class="kpi-value">—</div>
           <div class="kpi-label">Usuarios Activos (hoy)</div>
           <div class="kpi-footer"><i class="fas fa-circle" style="color:var(--green);font-size:6px;"></i> Sesiones activas en curso</div>
         </div>
@@ -396,9 +396,9 @@
         <div class="kpi-card reveal" style="transition-delay:.1s;">
           <div class="kpi-header">
             <div class="kpi-icon"><i class="fas fa-dollar-sign"></i></div>
-            <span class="kpi-trend up"><i class="fas fa-arrow-up"></i> +18.2%</span>
+            <span class="kpi-trend up">—</span>
           </div>
-            <div class="kpi-value">L 0</div>
+            <div class="kpi-value">L —</div>
           <div class="kpi-label">Ingresos del mes</div>
           <div class="kpi-footer"><i class="fas fa-circle" style="color:var(--green);font-size:6px;"></i> MRR actualizado</div>
         </div>
@@ -406,9 +406,9 @@
         <div class="kpi-card reveal" style="transition-delay:.15s;">
           <div class="kpi-header">
             <div class="kpi-icon"><i class="fas fa-handshake"></i></div>
-            <span class="kpi-trend up"><i class="fas fa-arrow-up"></i> +2.1%</span>
+            <span class="kpi-trend up">—</span>
           </div>
-          <div class="kpi-value">94.7%</div>
+          <div class="kpi-value">—</div>
           <div class="kpi-label">Facturas cobradas</div>
           <div class="kpi-footer"><i class="fas fa-circle" style="color:var(--green);font-size:6px;"></i> Últimos 30 días</div>
         </div>
@@ -417,7 +417,7 @@
           <div class="kpi-header">
             <div class="kpi-icon"><i class="fas fa-scale-balanced"></i></div>
           </div>
-          <div class="kpi-value">L 0</div>
+          <div class="kpi-value">L —</div>
           <div class="kpi-label">Balance del mes</div>
           <div class="kpi-footer"><i class="fas fa-circle" style="color:var(--green);font-size:6px;"></i> Ingresos menos gastos</div>
         </div>
@@ -426,7 +426,7 @@
           <div class="kpi-header">
             <div class="kpi-icon"><i class="fas fa-box-open"></i></div>
           </div>
-          <div class="kpi-value">0</div>
+          <div class="kpi-value">—</div>
           <div class="kpi-label">Productos con stock bajo</div>
           <div class="kpi-footer"><i class="fas fa-circle" style="color:var(--yellow);font-size:6px;"></i> Requieren revisión</div>
         </div>
@@ -481,37 +481,8 @@
                   <th>Impacto</th>
                 </tr>
               </thead>
-              <tbody>
-                <tr>
-                  <td>18 Ago 2026, 14:32</td>
-                  <td>Nuevo tenant registrado</td>
-                  <td>admin@techcorp.io</td>
-                  <td><span class="impact-badge high">Alto</span></td>
-                </tr>
-                <tr>
-                  <td>18 Ago 2026, 12:15</td>
-                  <td>Bot RPA ejecutado</td>
-                  <td>sistema@portalpilot.io</td>
-                  <td><span class="impact-badge medium">Medio</span></td>
-                </tr>
-                <tr>
-                  <td>18 Ago 2026, 10:48</td>
-                  <td>Plan actualizado</td>
-                  <td>admin@logistics.hn</td>
-                  <td><span class="impact-badge high">Alto</span></td>
-                </tr>
-                <tr>
-                  <td>17 Ago 2026, 18:03</td>
-                  <td>Usuario desactivado</td>
-                  <td>admin@retail.mx</td>
-                  <td><span class="impact-badge low">Bajo</span></td>
-                </tr>
-                <tr>
-                  <td>17 Ago 2026, 15:27</td>
-                  <td>Facturación generada</td>
-                  <td>sistema@portalpilot.io</td>
-                  <td><span class="impact-badge medium">Medio</span></td>
-                </tr>
+              <tbody id="recentActivityBody">
+                <tr><td colspan="4" style="text-align:center;color:var(--gray);padding:24px;"><i class="fas fa-spinner fa-spin"></i> Cargando actividad...</td></tr>
               </tbody>
             </table>
           </div>
@@ -524,6 +495,7 @@
   <!-- Scripts -->
   <script src="../auth-check.js"></script>
   <script src="js/portal-admin-guard.js"></script>
+<script src="js/notif-badge.js"></script>
   <script src="../js/notifications.js"></script>
   <script src="../js/sidebar-loader.js"></script>
   <script src="js/analytics.js"></script>

@@ -2387,14 +2387,11 @@
                 <div class="topbar-right">
                     <div class="notif-wrapper" id="notifWrapper">
                         <button class="topbar-btn" title="Notificaciones" onclick="toggleNotifPanel()"><i class="fas fa-bell"></i><span
-                                class="badge" id="notifBadge">4</span></button>
+                                class="badge" id="notifBadge" style="display:none;">0</span></button>
                         <div class="notif-panel" id="notifPanel">
                             <div class="notif-panel-header"><span>Notificaciones</span><button class="notif-clear" onclick="clearNotifications()">Limpiar todo</button></div>
                             <div class="notif-panel-body" id="notifList">
-                                <div class="notif-item unread"><div class="notif-icon" style="background:rgba(52,211,153,0.15);color:var(--green);"><i class="fas fa-user-plus"></i></div><div class="notif-content"><div class="notif-text">Nuevo usuario registrado</div><div class="notif-time">Hace 2 min</div></div></div>
-                                <div class="notif-item unread"><div class="notif-icon" style="background:rgba(248,113,113,0.15);color:var(--red);"><i class="fas fa-ban"></i></div><div class="notif-content"><div class="notif-text">Un usuario fue suspendido</div><div class="notif-time">Hace 15 min</div></div></div>
-                                <div class="notif-item"><div class="notif-icon" style="background:rgba(139,92,246,0.15);color:var(--accent);"><i class="fas fa-cog"></i></div><div class="notif-content"><div class="notif-text">Configuración de usuarios actualizada</div><div class="notif-time">Hace 1 hora</div></div></div>
-                                <div class="notif-item"><div class="notif-icon" style="background:rgba(251,191,36,0.15);color:var(--yellow);"><i class="fas fa-exclamation-triangle"></i></div><div class="notif-content"><div class="notif-text">Límite de usuarios cercano al máximo</div><div class="notif-time">Hace 3 horas</div></div></div>
+                                <div style="text-align:center;padding:32px 16px;color:var(--gray);font-size:13px;"><i class="fas fa-spinner fa-spin"></i> Cargando notificaciones...</div>
                             </div>
                         </div>
                     </div>
@@ -3279,9 +3276,43 @@ const row = document.createElement('tr');
         }
 
         // ── Notifications Panel ─────────────────
+        async function loadNotifsPanel() {
+            const list = document.getElementById('notifList');
+            const badge = document.getElementById('notifBadge');
+            const token = localStorage.getItem('token');
+            if (!token) return;
+            try {
+                const res = await fetch('/api/notificaciones', { headers: { 'Authorization': `Bearer ${token}` } });
+                if (!res.ok) { list.innerHTML = '<div style="text-align:center;padding:32px 16px;color:var(--gray);font-size:13px;"><i class="fas fa-bell-slash"></i> Sin notificaciones</div>'; return; }
+                const data = await res.json();
+                const notifs = data.notificaciones || [];
+                const unread = data.unread_count != null ? data.unread_count : notifs.filter(n => !n.leida).length;
+                if (badge) { badge.textContent = unread; badge.style.display = unread > 0 ? 'flex' : 'none'; }
+                if (!notifs.length) { list.innerHTML = '<div style="text-align:center;padding:32px 16px;color:var(--gray);font-size:13px;"><i class="fas fa-bell-slash" style="font-size:24px;display:block;margin-bottom:8px;"></i>Sin notificaciones</div>'; return; }
+                const iconMap = { success: ['fas fa-check-circle', 'rgba(52,211,153,0.15)', 'var(--green)'], error: ['fas fa-times-circle', 'rgba(248,113,113,0.15)', 'var(--red)'], warning: ['fas fa-exclamation-triangle', 'rgba(251,191,36,0.15)', 'var(--yellow)'], info: ['fas fa-bell', 'rgba(139,92,246,0.15)', 'var(--accent)'] };
+                list.innerHTML = notifs.slice(0, 10).map(n => {
+                    const cfg = iconMap[n.tipo] || iconMap.info;
+                    return `<div class="notif-item ${!n.leida ? 'unread' : ''}" data-id="${n.id}">
+                        <div class="notif-icon" style="background:${cfg[1]};color:${cfg[2]};"><i class="${cfg[0]}"></i></div>
+                        <div class="notif-content"><div class="notif-text">${n.titulo || 'Notificación'}${n.mensaje ? ' — ' + n.mensaje : ''}</div><div class="notif-time">${n.created_at ? new Date(n.created_at).toLocaleString('es') : ''}</div></div>
+                    </div>`;
+                }).join('');
+                list.querySelectorAll('.notif-item.unread').forEach(item => {
+                    item.addEventListener('click', async () => {
+                        try { await fetch(`/api/notificaciones/${item.dataset.id}/read`, { method: 'PUT', headers: { 'Authorization': `Bearer ${token}` } }); } catch (e) {}
+                        item.classList.remove('unread');
+                        const rem = list.querySelectorAll('.notif-item.unread').length;
+                        if (badge) { badge.textContent = rem; badge.style.display = rem > 0 ? 'flex' : 'none'; }
+                    });
+                });
+            } catch (e) {
+                list.innerHTML = '<div style="text-align:center;padding:32px 16px;color:var(--gray);font-size:13px;"><i class="fas fa-bell-slash"></i> Error al cargar notificaciones</div>';
+            }
+        }
         function toggleNotifPanel() {
             const panel = document.getElementById('notifPanel');
             panel.classList.toggle('active');
+            if (panel.classList.contains('active')) loadNotifsPanel();
         }
         function clearNotifications() {
             document.getElementById('notifList').innerHTML = '<div style="text-align:center;padding:32px 16px;color:var(--gray);font-size:13px;"><i class="fas fa-bell-slash" style="font-size:24px;display:block;margin-bottom:8px;"></i>Sin notificaciones</div>';
@@ -3318,6 +3349,7 @@ const row = document.createElement('tr');
             try {
               await fetchTenants();
               await fetchUsers();
+              loadNotifsPanel();
             } catch (error) {
               console.error('[USUARIOS] Error en inicialización:', error);
               showMessage('Error al cargar datos. Por favor recarga la página.', 'error');

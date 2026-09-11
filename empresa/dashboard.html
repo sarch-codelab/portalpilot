@@ -174,7 +174,7 @@ a{text-decoration:none;color:inherit}ul{list-style:none}img{max-width:100%;displ
 
     <div class="page-header">
       <div>
-        <h1 class="page-title">Bienvenido, <span>Valeria</span> 👋</h1>
+        <h1 class="page-title">Bienvenido, <span id="usrBienvenida">&mdash;</span> 👋</h1>
         <p class="page-subtitle">Centro de mando empresarial en tiempo real. Monitorea métricas clave y toma decisiones informadas.</p>
       </div>
       <div class="page-actions">
@@ -321,7 +321,7 @@ function renderKPIs(data) {
   el('kpiPendientes').textContent = k.facturasPendientes || 0;
   el('kpiLowStock').textContent = k.lowStock || 0;
   const name = localStorage.getItem('userName') || 'Admin';
-  const qs = document.querySelector('.page-title span');
+  const qs = document.getElementById('usrBienvenida');
   if (qs) qs.textContent = name;
 }
 

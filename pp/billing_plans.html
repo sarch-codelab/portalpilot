@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 
 <head>
@@ -1808,7 +1808,7 @@
         </div>
         <div class="topbar-right">
           <button class="topbar-btn" title="Notificaciones"><i class="fas fa-bell"></i><span
-              class="badge">2</span></button>
+              class="badge" data-notif-badge style="display:none;">0</span></button>
           <button class="btn btn-acc btn-sm" onclick="openModal('createPromoModal')"><i class="fas fa-gift"></i> Nuevo
             Promo</button>
         </div>
@@ -2016,127 +2016,24 @@
         <div class="promo-header">
           <div class="promo-stats">
             <div class="promo-stat">
-              <div class="promo-stat-value" id="activePromos">12</div>
+              <div class="promo-stat-value" id="activePromos">—</div>
               <div class="promo-stat-label">Activos</div>
             </div>
             <div class="promo-stat">
-              <div class="promo-stat-value" id="usedPromos">847</div>
+              <div class="promo-stat-value" id="usedPromos">—</div>
               <div class="promo-stat-label">Usos Totales</div>
             </div>
             <div class="promo-stat">
-              <div class="promo-stat-value">$24.3K</div>
-              <div class="promo-stat-label">Descuentos Aplicados</div>
+              <div class="promo-stat-value" id="totalPromos">—</div>
+              <div class="promo-stat-label">Códigos Creados</div>
             </div>
           </div>
           <button class="btn btn-acc btn-sm" onclick="openModal('createPromoModal')"><i class="fas fa-plus"></i> Crear
             Código</button>
         </div>
-        <div class="promo-grid">
-          <!-- PROMO 1 -->
-          <div class="promo-card reveal">
-            <div style="display:flex;justify-content:space-between;align-items:start;">
-              <div><span class="plan-badge pro" style="margin-bottom:8px;">Activo</span>
-                <div class="promo-code-display"><span class="promo-code">WELCOME15</span><button class="promo-copy-btn"
-                    onclick="copyCode('WELCOME15')" title="Copiar"><i class="fas fa-copy"></i></button></div>
-              </div>
-              <div class="plan-feature-toggle active" onclick="togglePromoStatus(this)" style="margin:0;"></div>
-            </div>
-            <div class="promo-details">
-              <div class="promo-detail">
-                <div class="promo-detail-label">Tipo</div>
-                <div class="promo-detail-value">15% descuento</div>
-              </div>
-              <div class="promo-detail">
-                <div class="promo-detail-label">Usos</div>
-                <div class="promo-detail-value">234 / ∞</div>
-              </div>
-              <div class="promo-detail">
-                <div class="promo-detail-label">Plan</div>
-                <div class="promo-detail-value">Todos</div>
-              </div>
-              <div class="promo-detail">
-                <div class="promo-detail-label">Vence</div>
-                <div class="promo-detail-value">31 Dic 2026</div>
-              </div>
-            </div>
-            <div class="promo-actions">
-              <button class="btn btn-outline btn-sm" onclick="editPromo('WELCOME15')"><i class="fas fa-edit"></i>
-                Editar</button>
-              <button class="btn btn-danger btn-sm" onclick="invalidatePromo('WELCOME15')"><i class="fas fa-ban"></i>
-                Invalidar</button>
-            </div>
-          </div>
-          <!-- PROMO 2 -->
-          <div class="promo-card reveal" style="transition-delay:.1s;">
-            <div style="display:flex;justify-content:space-between;align-items:start;">
-              <div><span class="plan-badge"
-                  style="background:rgba(248,113,113,0.15);color:var(--red);margin-bottom:8px;">Inactivo</span>
-                <div class="promo-code-display"><span class="promo-code" style="opacity:.6;">BLACKFRI25</span><button
-                    class="promo-copy-btn" onclick="copyCode('BLACKFRI25')" title="Copiar" style="opacity:.6;"><i
-                      class="fas fa-copy"></i></button></div>
-              </div>
-              <div class="plan-feature-toggle" onclick="togglePromoStatus(this)" style="margin:0;"></div>
-            </div>
-            <div class="promo-details">
-              <div class="promo-detail">
-                <div class="promo-detail-label">Tipo</div>
-                <div class="promo-detail-value">$50 fijo</div>
-              </div>
-              <div class="promo-detail">
-                <div class="promo-detail-label">Usos</div>
-                <div class="promo-detail-value">500 / 500</div>
-              </div>
-              <div class="promo-detail">
-                <div class="promo-detail-label">Plan</div>
-                <div class="promo-detail-value">Pro, Enterprise</div>
-              </div>
-              <div class="promo-detail">
-                <div class="promo-detail-label">Vence</div>
-                <div class="promo-detail-value">30 Nov 2025</div>
-              </div>
-            </div>
-            <div class="promo-actions">
-              <button class="btn btn-outline btn-sm" onclick="editPromo('BLACKFRI25')"><i class="fas fa-edit"></i>
-                Editar</button>
-              <button class="btn btn-ghost btn-sm" onclick="deletePromo('BLACKFRI25')"><i class="fas fa-trash"></i>
-                Eliminar</button>
-            </div>
-          </div>
-          <!-- PROMO 3 -->
-          <div class="promo-card reveal" style="transition-delay:.2s;">
-            <div style="display:flex;justify-content:space-between;align-items:start;">
-              <div><span class="plan-badge pro" style="margin-bottom:8px;">Activo</span>
-                <div class="promo-code-display"><span class="promo-code">EARLYBIRD</span><button class="promo-copy-btn"
-                    onclick="copyCode('EARLYBIRD')" title="Copiar"><i class="fas fa-copy"></i></button></div>
-              </div>
-              <div class="plan-feature-toggle active" onclick="togglePromoStatus(this)" style="margin:0;"></div>
-            </div>
-            <div class="promo-details">
-              <div class="promo-detail">
-                <div class="promo-detail-label">Tipo</div>
-                <div class="promo-detail-value">15% descuento</div>
-              </div>
-              <div class="promo-detail">
-                <div class="promo-detail-label">Usos</div>
-                <div class="promo-detail-value">89 / 200</div>
-              </div>
-              <div class="promo-detail">
-                <div class="promo-detail-label">Plan</div>
-                <div class="promo-detail-value">Enterprise</div>
-              </div>
-              <div class="promo-detail">
-                <div class="promo-detail-label">Vence</div>
-                <div class="promo-detail-value">15 Mar 2027</div>
-              </div>
-            </div>
-            <div class="promo-actions">
-              <button class="btn btn-outline btn-sm" onclick="editPromo('EARLYBIRD')"><i class="fas fa-edit"></i>
-                Editar</button>
-              <button class="btn btn-danger btn-sm" onclick="invalidatePromo('EARLYBIRD')"><i class="fas fa-ban"></i>
-                Invalidar</button>
-            </div>
-          </div>
-          <!-- ADD NEW -->
+        <div class="promo-grid" id="promoGrid">
+          <div style="grid-column:1/-1;text-align:center;padding:24px;color:var(--gray);font-size:13px;"><i class="fas fa-spinner fa-spin"></i> Cargando códigos promo...</div>
+<!-- ADD NEW -->
           <div class="promo-card reveal"
             style="border-style:dashed;justify-content:center;align-items:center;min-height:280px;transition-delay:.3s;cursor:pointer;"
             onclick="openModal('createPromoModal')">
@@ -2152,8 +2049,9 @@
   </div>
 
   <script src="../auth-check.js"></script>
-  <script src="js/portal-admin-guard.js"></script>
-  <script>
+<script src="js/portal-admin-guard.js"></script>
+<script src="js/notif-badge.js"></script>
+<script>
     // ── Custom Cursor ────────────────────────────────────
     const dot = document.getElementById('cursor-dot'), ring = document.getElementById('cursor-ring'), glow = document.getElementById('cursor-glow');
     let mx = 0, my = 0, rx = 0, ry = 0;
@@ -2194,16 +2092,39 @@
       showToast(`Editando plan ${pid.toUpperCase()}`, 'info');
     }
     function toggleFeature(el) { if (el.closest('.plan-card').classList.contains('editing')) { el.classList.toggle('active'); editedPlans.add(el.closest('.plan-card').dataset.plan); document.getElementById('saveChangesBtn').style.display = 'inline-flex'; } }
-    function previewPlan(pid) { showToast(`Vista previa del plan ${pid.toUpperCase()}`, 'info'); }
+    function previewPlan(pid) {
+      const card = document.querySelector(`.plan-card[data-plan="${pid}"]`); if (!card) return;
+      const data = {}; card.querySelectorAll('.plan-feature-input').forEach(i => { data[i.dataset.field] = i.value; });
+      const features = []; card.querySelectorAll('.plan-feature-toggle').forEach(t => { if (t.classList.contains('active')) features.push(t.dataset.feature); });
+      showToast(`Vista previa del plan ${pid.toUpperCase()}`, 'info');
+      setTimeout(() => { showToast(`Precio ${data.price}/mes · IA: ${data.ai_messages} · Bots: ${data.rpa_bots} · ${features.length} funciones activas`, 'success'); }, 300);
+    }
     function saveAllChanges() {
       if (editedPlans.size === 0) return;
       const btn = document.getElementById('saveChangesBtn'), orig = btn.innerHTML;
       btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...'; btn.disabled = true;
-      setTimeout(() => {
-        document.querySelectorAll('.plan-card.editing').forEach(c => { c.classList.remove('editing'); c.querySelectorAll('.plan-feature-input').forEach(i => i.disabled = true); });
-        editedPlans.clear(); document.getElementById('saveChangesBtn').style.display = 'none'; btn.innerHTML = orig; btn.disabled = false;
-        showToast('✓ Cambios guardados', 'success');
-      }, 1500);
+      const token = localStorage.getItem('token'); if (!token) { showToast('Sesión no válida', 'error'); btn.innerHTML = orig; btn.disabled = false; return; }
+      const plans = {};
+      document.querySelectorAll('.plan-card').forEach(card => {
+        const plan = card.dataset.plan;
+        plans[plan] = { name: card.querySelector('.plan-name')?.textContent || plan };
+        card.querySelectorAll('.plan-feature-input').forEach(i => { plans[plan][i.dataset.field] = i.value; });
+        plans[plan].features = [];
+        card.querySelectorAll('.plan-feature-toggle').forEach(t => { if (t.classList.contains('active')) plans[plan].features.push(t.dataset.feature); });
+      });
+      fetch('/api/global/config', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ configuraciones: [{ clave: 'BILLING_PLANS', valor: JSON.stringify(plans), descripcion: 'Editor de planes - billing' }] })
+      })
+        .then(res => { if (!res.ok) return res.json().then(d => Promise.reject(new Error(d.error || 'Error al guardar'))); return res.json(); })
+        .then(() => {
+          document.querySelectorAll('.plan-card.editing').forEach(c => { c.classList.remove('editing'); c.querySelectorAll('.plan-feature-input').forEach(i => i.disabled = true); });
+          editedPlans.clear(); document.getElementById('saveChangesBtn').style.display = 'none';
+          showToast('Cambios guardados', 'success');
+        })
+        .catch(err => showToast('Error: ' + err.message, 'error'))
+        .finally(() => { btn.innerHTML = orig; btn.disabled = false; });
     }
 
     // ── Payments ─────────────────────────────────────────
@@ -2226,6 +2147,7 @@
           id: payment.id,
           date: payment.created_at,
           tenant: payment.empresa_codigo || payment.email,
+          empresa: payment.empresa_codigo,
           plan: payment.plan === 'business' ? 'pro' : payment.plan,
           amount: `L ${Number(payment.amount || 0).toLocaleString('es-HN')}`,
           method: payment.payment_method || 'transferencia',
@@ -2266,56 +2188,243 @@
     }
     function filterPayments() { loadPayments(); }
     function resetPaymentFilters() { document.getElementById('filterStatus').value = ''; document.getElementById('filterPlan').value = ''; document.getElementById('dateFrom').value = ''; document.getElementById('dateTo').value = ''; loadPayments(); }
-    function viewPayment(id) { showToast(`Detalle: ${id}`, 'info'); }
-    function retryPayment(id) { if (confirm('¿Reintentar cobro?')) showToast('✓ Reintento programado', 'success'); }
-    function refundPayment(id) { if (confirm('¿Procesar reembolso?')) showToast('✓ Reembolso procesado', 'success'); }
+    function viewPayment(id) {
+      const p = payments.find(x => x.id === id); if (!p) { showToast('Pago no encontrado', 'warning'); return; }
+      const modal = document.createElement('div'); modal.className = 'modal-overlay active';
+      modal.innerHTML = `
+        <div class="modal" style="max-width:460px;">
+          <div class="modal-header">
+            <div class="modal-title"><i class="fas fa-receipt" style="margin-right:8px;color:var(--accent);"></i>Detalle del Pago</div>
+            <button class="modal-close" onclick="this.closest('.modal-overlay').remove()"><i class="fas fa-times"></i></button>
+          </div>
+          <div class="modal-body">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;font-size:13px;">
+              <div><div style="color:var(--gray);font-size:11px;text-transform:uppercase;letter-spacing:.5px;">ID</div><div style="font-weight:600;margin-top:3px;">${p.id}</div></div>
+              <div><div style="color:var(--gray);font-size:11px;text-transform:uppercase;letter-spacing:.5px;">Fecha</div><div style="font-weight:600;margin-top:3px;">${new Date(p.date).toLocaleString('es-HN')}</div></div>
+              <div><div style="color:var(--gray);font-size:11px;text-transform:uppercase;letter-spacing:.5px;">Tenant</div><div style="font-weight:600;margin-top:3px;">${p.tenant}</div></div>
+              <div><div style="color:var(--gray);font-size:11px;text-transform:uppercase;letter-spacing:.5px;">Plan</div><div style="font-weight:600;margin-top:3px;text-transform:capitalize;">${p.plan}</div></div>
+              <div><div style="color:var(--gray);font-size:11px;text-transform:uppercase;letter-spacing:.5px;">Método</div><div style="font-weight:600;margin-top:3px;text-transform:capitalize;">${p.method}</div></div>
+              <div><div style="color:var(--gray);font-size:11px;text-transform:uppercase;letter-spacing:.5px;">Estado</div><div style="font-weight:600;margin-top:3px;text-transform:capitalize;">${p.status}</div></div>
+            </div>
+            <div style="margin-top:18px;padding-top:14px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
+              <span style="color:var(--gray);font-size:12px;">Total pagado</span>
+              <span style="font-size:20px;font-weight:700;color:var(--accent);">${p.amount}</span>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-ghost" onclick="this.closest('.modal-overlay').remove()">Cerrar</button>
+          </div>
+        </div>`;
+      document.body.appendChild(modal);
+      modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+    }
+    function notifPayment(id, accion, mensaje) {
+      const p = payments.find(x => x.id === id); if (!p) return Promise.resolve();
+      const token = localStorage.getItem('token'); if (!token) return Promise.reject(new Error('Sesión no válida'));
+      const body = { titulo: `${accion} de pago ${id}`, mensaje, tipo: 'pagos', prioridad: 'alta' };
+      if (p.empresa) body.empresa_codigo = p.empresa;
+      return fetch('/api/notificaciones', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify(body)
+      }).then(res => { if (!res.ok) return res.json().then(d => Promise.reject(new Error(d.error || 'Error'))); return res.json(); });
+    }
+    function retryPayment(id) {
+      const p = payments.find(x => x.id === id);
+      if (!confirm(`¿Reintentar el cobro del pago ${id}${p ? ' (' + p.tenant + ')' : ''}?`)) return;
+      notifPayment(id, 'Reintento', `Se está reintentando el cobro del pago ${id}.`)
+        .then(() => showToast('Reintento de cobro notificado', 'success'))
+        .catch(err => showToast('Error: ' + err.message, 'error'));
+    }
+    function refundPayment(id) {
+      const p = payments.find(x => x.id === id);
+      if (!confirm(`¿Procesar el reembolso del pago ${id}${p ? ' (' + p.tenant + ')' : ''}?`)) return;
+      notifPayment(id, 'Reembolso', `Se procesará el reembolso del pago ${id} por ${p ? p.amount : ''}.`)
+        .then(() => showToast('Reembolso procesado', 'success'))
+        .catch(err => showToast('Error: ' + err.message, 'error'));
+    }
 
     // ── Promo Codes ──────────────────────────────────────
-    const promoCodes = [
-      { code: 'WELCOME15', type: 'percent', value: 15, uses: 234, maxUses: Infinity, plan: 'all', active: true, endDate: '2026-12-31' },
-      { code: 'BLACKFRI25', type: 'fixed', value: 50, uses: 500, maxUses: 500, plan: 'pro,enterprise', active: false, endDate: '2025-11-30' },
-      { code: 'EARLYBIRD', type: 'percent', value: 15, uses: 89, maxUses: 200, plan: 'enterprise', active: true, endDate: '2027-03-15' }
-    ];
+    let promoCodes = [];
+    function loadPromos() {
+      const token = localStorage.getItem('token'); if (!token) { renderPromos(); return; }
+      fetch('/api/global/config', { headers: { 'Authorization': `Bearer ${token}` } })
+        .then(res => res.ok ? res.json() : Promise.reject(new Error('config error')))
+        .then(data => {
+          const row = (data.configuraciones || []).find(c => c.clave === 'BILLING_PROMOS');
+          if (row && row.valor) { try { promoCodes = JSON.parse(row.valor) || []; } catch (e) { promoCodes = []; } }
+          renderPromos();
+        })
+        .catch(() => renderPromos());
+    }
+    function savePromos() {
+      const token = localStorage.getItem('token'); if (!token) return Promise.resolve();
+      return fetch('/api/global/config', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ configuraciones: [{ clave: 'BILLING_PROMOS', valor: JSON.stringify(promoCodes), descripcion: 'Códigos promo - billing' }] })
+      }).then(res => { if (!res.ok) return res.json().then(d => Promise.reject(new Error(d.error || 'Error al guardar'))); return res.json(); });
+    }
+    function renderPromos() {
+      const grid = document.getElementById('promoGrid'); if (!grid) return;
+      if (!promoCodes.length) { grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:24px;color:var(--gray);font-size:13px;">Sin códigos promocionales. Crea el primero.</div>'; updatePromoStats(); return; }
+      grid.innerHTML = promoCodes.map(p => {
+        const typeLabel = p.type === 'fixed' ? `L ${p.value} fijo` : `${p.value}% descuento`;
+        const uses = p.maxUses === Infinity || !p.maxUses ? `${p.uses ?? 0} / ∞` : `${p.uses ?? 0} / ${p.maxUses}`;
+        const badgeStyle = p.active ? 'background:var(--accent);color:#fff;' : 'background:rgba(248,113,113,0.15);color:var(--red);';
+        return `<div class="promo-card reveal" data-code="${p.code}">
+            <div style="display:flex;justify-content:space-between;align-items:start;">
+              <div><span class="plan-badge ${p.active ? 'pro' : ''}" style="margin-bottom:8px;${badgeStyle}">${p.active ? 'Activo' : 'Inactivo'}</span>
+                <div class="promo-code-display"><span class="promo-code">${p.code}</span><button class="promo-copy-btn" onclick="copyCode('${p.code}')" title="Copiar"><i class="fas fa-copy"></i></button></div>
+              </div>
+              <div class="plan-feature-toggle ${p.active ? 'active' : ''}" onclick="togglePromoStatus(this)" style="margin:0;"></div>
+            </div>
+            <div class="promo-details">
+              <div class="promo-detail"><div class="promo-detail-label">Tipo</div><div class="promo-detail-value">${typeLabel}</div></div>
+              <div class="promo-detail"><div class="promo-detail-label">Usos</div><div class="promo-detail-value">${uses}</div></div>
+              <div class="promo-detail"><div class="promo-detail-label">Plan</div><div class="promo-detail-value">${p.plan === 'all' ? 'Todos' : (p.plan || 'Todos')}</div></div>
+              <div class="promo-detail"><div class="promo-detail-label">Vence</div><div class="promo-detail-value">${p.endDate ? new Date(p.endDate).toLocaleDateString('es') : '—'}</div></div>
+            </div>
+            <div class="promo-actions">
+              <button class="btn btn-outline btn-sm" onclick="editPromo('${p.code}')"><i class="fas fa-edit"></i> Editar</button>
+              ${p.active ? `<button class="btn btn-danger btn-sm" onclick="invalidatePromo('${p.code}')"><i class="fas fa-ban"></i> Invalidar</button>` : `<button class="btn btn-ghost btn-sm" onclick="deletePromo('${p.code}')"><i class="fas fa-trash"></i> Eliminar</button>`}
+            </div>
+          </div>`;
+      }).join('');
+      updatePromoStats();
+    }
     function updatePromoStats() {
-      document.getElementById('activePromos').textContent = promoCodes.filter(p => p.active).length;
-      document.getElementById('usedPromos').textContent = promoCodes.reduce((s, p) => s + p.uses, 0).toLocaleString();
+      const a = document.getElementById('activePromos'), u = document.getElementById('usedPromos'), t = document.getElementById('totalPromos');
+      if (a) a.textContent = promoCodes.filter(p => p.active).length;
+      if (u) u.textContent = promoCodes.reduce((s, p) => s + (p.uses || 0), 0).toLocaleString();
+      if (t) t.textContent = promoCodes.length;
     }
     function openModal(id) { document.getElementById(id).classList.add('active'); }
     function closeModal(id) { document.getElementById(id).classList.remove('active'); }
     function createPromoCode() {
       const form = document.getElementById('createPromoForm');
-      if (form.checkValidity()) {
-        const code = document.getElementById('promoCode').value.toUpperCase(), btn = form.closest('.modal').querySelector('.btn-acc'), orig = btn.innerHTML;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creando...'; btn.disabled = true;
-        setTimeout(() => {
-          promoCodes.push({ code: code, type: document.getElementById('promoType').value, value: parseInt(document.getElementById('promoValue').value), uses: 0, maxUses: document.getElementById('promoUses').value || Infinity, plan: document.getElementById('promoPlan').value, active: true, endDate: document.getElementById('promoEnd').value });
-          closeModal('createPromoModal'); form.reset(); btn.innerHTML = orig; btn.disabled = false; updatePromoStats(); showToast(`✓ Código ${code} creado`, 'success');
-        }, 1200);
-      } else form.reportValidity();
+      if (!form.checkValidity()) { form.reportValidity(); return; }
+      const code = document.getElementById('promoCode').value.toUpperCase();
+      const btn = form.closest('.modal').querySelector('.btn-acc'), orig = btn.innerHTML;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creando...'; btn.disabled = true;
+      const promo = { code, type: document.getElementById('promoType').value, value: parseInt(document.getElementById('promoValue').value, 10) || 0, uses: 0, maxUses: document.getElementById('promoUses').value ? parseInt(document.getElementById('promoUses').value, 10) : Infinity, plan: document.getElementById('promoPlan').value, active: true, endDate: document.getElementById('promoEnd').value };
+      promoCodes.push(promo);
+      savePromos()
+        .then(() => { closeModal('createPromoModal'); form.reset(); showToast(`Código ${code} creado`, 'success'); renderPromos(); })
+        .catch(err => { promoCodes = promoCodes.filter(p => p.code !== code); showToast('Error: ' + err.message, 'error'); renderPromos(); })
+        .finally(() => { btn.innerHTML = orig; btn.disabled = false; });
     }
-    function copyCode(code) { navigator.clipboard.writeText(code); showToast(`✓ "${code}" copiado`, 'success'); }
+    function copyCode(code) { navigator.clipboard.writeText(code); showToast(`"${code}" copiado`, 'success'); }
     function togglePromoStatus(el) {
       const card = el.closest('.promo-card'), code = card.querySelector('.promo-code').textContent, promo = promoCodes.find(p => p.code === code);
-      if (promo) {
-        promo.active = !promo.active; el.classList.toggle('active');
-        const badge = card.querySelector('.plan-badge');
-        badge.className = `plan-badge ${promo.active ? 'pro' : ''}`; badge.textContent = promo.active ? 'Activo' : 'Inactivo';
-        if (promo.active) { badge.style.background = 'var(--accent)'; badge.style.color = '#fff'; }
-        else { badge.style.background = 'rgba(248,113,113,0.15)'; badge.style.color = 'var(--red)'; }
-        showToast(`${promo.active ? '✓ Activado' : '○ Desactivado'}: ${code}`, promo.active ? 'success' : 'info'); updatePromoStats();
-      }
+      if (!promo) return;
+      promo.active = !promo.active;
+      savePromos()
+        .then(() => { renderPromos(); showToast(`${promo.active ? 'Activado' : 'Desactivado'}: ${code}`, promo.active ? 'success' : 'info'); })
+        .catch(err => showToast('Error: ' + err.message, 'error'));
     }
-    function editPromo(code) { showToast(`Editando: ${code}`, 'info'); }
-    function invalidatePromo(code) { if (confirm(`¿Invalidar "${code}"?`)) { const p = promoCodes.find(x => x.code === code); if (p) { p.active = false; showToast(`✓ "${code}" invalidado`, 'success'); updatePromoStats(); } } }
-    function deletePromo(code) { if (confirm(`¿Eliminar "${code}"?`)) { const i = promoCodes.findIndex(p => p.code === code); if (i !== -1) { promoCodes.splice(i, 1); showToast(`✓ "${code}" eliminado`, 'success'); updatePromoStats(); } } }
+    function editPromo(code) {
+      const promo = promoCodes.find(p => p.code === code); if (!promo) return;
+      const modal = document.createElement('div'); modal.className = 'modal-overlay active';
+      modal.innerHTML = `
+        <div class="modal" style="max-width:430px;">
+          <div class="modal-header">
+            <div class="modal-title"><i class="fas fa-edit" style="margin-right:8px;color:var(--accent);"></i>Editar ${code}</div>
+            <button class="modal-close" onclick="this.closest('.modal-overlay').remove()"><i class="fas fa-times"></i></button>
+          </div>
+          <div class="modal-body">
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Tipo de Descuento</label>
+                <select class="form-select" id="editPromoType">
+                  <option value="percent" ${promo.type === 'percent' ? 'selected' : ''}>Porcentaje (%)</option>
+                  <option value="fixed" ${promo.type === 'fixed' ? 'selected' : ''}>Monto Fijo</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Valor</label>
+                <input type="number" class="form-input" id="editPromoValue" value="${promo.value}" min="1">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Usos (vacío = ilimitado)</label>
+                <input type="number" class="form-input" id="editPromoUses" value="${promo.maxUses === Infinity ? '' : promo.maxUses}" min="1">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Plan Aplicable</label>
+                <select class="form-select" id="editPromoPlan">
+                  <option value="all" ${promo.plan === 'all' ? 'selected' : ''}>Todos</option>
+                  <option value="free" ${promo.plan === 'free' ? 'selected' : ''}>Free</option>
+                  <option value="pro" ${promo.plan === 'pro' ? 'selected' : ''}>Pro</option>
+                  <option value="enterprise" ${promo.plan === 'enterprise' ? 'selected' : ''}>Enterprise</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Fecha Fin</label>
+              <input type="date" class="form-input" id="editPromoEnd" value="${promo.endDate || ''}">
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-ghost" onclick="this.closest('.modal-overlay').remove()">Cancelar</button>
+            <button class="btn btn-acc" id="saveEditPromoBtn"><i class="fas fa-save"></i> Guardar</button>
+          </div>
+        </div>`;
+      document.body.appendChild(modal);
+      modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+      modal.querySelector('#saveEditPromoBtn').addEventListener('click', () => {
+        promo.type = modal.querySelector('#editPromoType').value;
+        promo.value = parseInt(modal.querySelector('#editPromoValue').value, 10) || 0;
+        promo.maxUses = modal.querySelector('#editPromoUses').value ? parseInt(modal.querySelector('#editPromoUses').value, 10) : Infinity;
+        promo.plan = modal.querySelector('#editPromoPlan').value;
+        promo.endDate = modal.querySelector('#editPromoEnd').value;
+        savePromos().then(() => { modal.remove(); renderPromos(); showToast(`Código ${code} actualizado`, 'success'); }).catch(err => showToast('Error: ' + err.message, 'error'));
+      });
+    }
+    function invalidatePromo(code) { if (confirm(`¿Invalidar "${code}"?`)) { const p = promoCodes.find(x => x.code === code); if (p) { p.active = false; savePromos().then(() => { renderPromos(); showToast(`"${code}" invalidado`, 'success'); }).catch(err => showToast('Error: ' + err.message, 'error')); } } }
+    function deletePromo(code) { if (confirm(`¿Eliminar "${code}"?`)) { promoCodes = promoCodes.filter(p => p.code !== code); savePromos().then(() => { renderPromos(); showToast(`"${code}" eliminado`, 'success'); }).catch(err => showToast('Error: ' + err.message, 'error')); } }
 
-    // ── Utilities ────────────────────────────────────────
+    function loadBillingConfig() {
+      const token = localStorage.getItem('token'); if (!token) return;
+      fetch('/api/global/config', { headers: { 'Authorization': `Bearer ${token}` } })
+        .then(res => res.ok ? res.json() : Promise.reject(new Error('config error')))
+        .then(data => {
+          const row = (data.configuraciones || []).find(c => c.clave === 'BILLING_PLANS');
+          if (!row || !row.valor) return;
+          let saved;
+          try { saved = JSON.parse(row.valor); } catch (e) { return; }
+          document.querySelectorAll('.plan-card').forEach(card => {
+            const plan = card.dataset.plan; const conf = saved[plan];
+            if (!conf) return;
+            card.querySelectorAll('.plan-feature-input').forEach(input => {
+              const v = conf[input.dataset.field];
+              if (v !== undefined && v !== null) input.value = v;
+            });
+          });
+        })
+        .catch(() => {});
+    }
 
-    function exportBilling() { showToast('✓ Generando reporte...', 'info'); setTimeout(() => showToast('✓ Reporte descargado', 'success'), 1500); }
+    function exportBilling() {
+      if (!payments.length) { showToast('No hay pagos para exportar', 'warning'); return; }
+      const esc = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
+      const header = ['ID', 'Fecha', 'Tenant', 'Plan', 'Monto', 'Método', 'Estado'];
+      const rows = payments.map(p => [p.id, new Date(p.date).toISOString(), p.tenant, p.plan, p.amount, p.method, p.status].map(esc).join(','));
+      const csv = [header.map(esc).join(','), ...rows].join('\n');
+      const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `billing_${new Date().toISOString().slice(0, 10)}.csv`;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+      showToast(`Reporte exportado (${rows.length} registros)`, 'success');
+    }
 
     // ── Init ─────────────────────────────────────────────
     window.addEventListener('load', () => {
-      updatePromoStats();
+      loadPromos();
+      loadBillingConfig();
       loadPayments();
       setTimeout(() => { document.querySelectorAll('.reveal').forEach((el, i) => { setTimeout(() => el.classList.add('in'), i * 50); }); }, 100);
     });

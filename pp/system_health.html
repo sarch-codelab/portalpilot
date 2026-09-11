@@ -316,7 +316,7 @@
           <div class="topbar-title">System <span>Health</span></div>
         </div>
         <div class="topbar-right">
-          <button class="topbar-btn" title="Notificaciones"><i class="fas fa-bell"></i><span class="badge">0</span></button>
+          <button class="topbar-btn" title="Notificaciones"><i class="fas fa-bell"></i><span class="badge" data-notif-badge style="display:none;">0</span></button>
           <button class="topbar-btn" id="refreshHealthBtn" title="Actualizar"><i class="fas fa-sync-alt"></i></button>
         </div>
       </header>
@@ -367,6 +367,7 @@
   <!-- ✅ Scripts -->
   <script src="../auth-check.js"></script>
   <script src="js/portal-admin-guard.js"></script>
+<script src="js/notif-badge.js"></script>
   <script src="../js/notifications.js"></script>
   <script src="../js/sidebar-loader.js"></script>
   <script>

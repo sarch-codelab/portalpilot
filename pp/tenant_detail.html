@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 
 <head>
@@ -324,7 +324,7 @@
                     <div class="edit-user-avatar" id="editUserAvatar">AM</div>
                     <div>
                         <div class="edit-user-name" id="editUserName">Ana Martínez</div>
-                        <div class="edit-user-email" id="editUserEmail">ana@techcorp.portalpilot.io</div>
+                        <div class="edit-user-email" id="editUserEmail"></div>
                     </div>
                 </div>
                 <form id="editUserForm">
@@ -514,31 +514,8 @@
                 <button class="modal-close" onclick="closeModal('botLogsModal')"><i class="fas fa-times"></i></button>
             </div>
             <div class="modal-body">
-                <div class="bot-logs-list">
-                    <div class="bot-log-item success">
-                        <div class="bot-log-status"><i class="fas fa-check-circle"></i></div>
-                        <div class="bot-log-info">
-                            <div class="bot-log-title">Ejecución completada</div>
-                            <div class="bot-log-meta">Hace 2 horas · 4m 32s · 128 documentos</div>
-                        </div>
-                        <button class="btn btn-ghost btn-xs"><i class="fas fa-eye"></i></button>
-                    </div>
-                    <div class="bot-log-item success">
-                        <div class="bot-log-status"><i class="fas fa-check-circle"></i></div>
-                        <div class="bot-log-info">
-                            <div class="bot-log-title">Ejecución completada</div>
-                            <div class="bot-log-meta">Hace 6 horas · 3m 18s · 94 documentos</div>
-                        </div>
-                        <button class="btn btn-ghost btn-xs"><i class="fas fa-eye"></i></button>
-                    </div>
-                    <div class="bot-log-item error">
-                        <div class="bot-log-status"><i class="fas fa-times-circle"></i></div>
-                        <div class="bot-log-info">
-                            <div class="bot-log-title">Error: Timeout excedido</div>
-                            <div class="bot-log-meta">Ayer, 14:20 · 5m 00s · Error en línea 42</div>
-                        </div>
-                        <button class="btn btn-ghost btn-xs"><i class="fas fa-eye"></i></button>
-                    </div>
+                <div class="bot-logs-list" id="botLogsList">
+                    <div style="text-align:center;padding:24px;color:var(--gray);font-size:13px;"><i class="fas fa-spinner fa-spin" style="margin-right:8px;"></i>Cargando logs...</div>
                 </div>
             </div>
         </div>
@@ -598,42 +575,7 @@
             </div>
             <div class="modal-body">
                 <div class="timeline" id="fullActivityTimeline">
-                    <div class="timeline-item">
-                        <div class="timeline-dot"></div>
-                        <div class="timeline-time">Hace 2 horas</div>
-                        <div class="timeline-action"><strong>Bot ejecutado:</strong> "Procesar facturas proveedor"</div>
-                        <div class="timeline-details">Completado en 4m 32s · 128 documentos</div>
-                    </div>
-                    <div class="timeline-item">
-                        <div class="timeline-dot"></div>
-                        <div class="timeline-time">Hace 5 horas</div>
-                        <div class="timeline-action"><strong>Nuevo usuario:</strong> carlos@techcorp.com</div>
-                        <div class="timeline-details">Rol: Operador · Invitado por ana@techcorp.com</div>
-                    </div>
-                    <div class="timeline-item">
-                        <div class="timeline-dot"></div>
-                        <div class="timeline-time">Ayer, 14:30</div>
-                        <div class="timeline-action"><strong>Actualización de plan:</strong> Business → Enterprise</div>
-                        <div class="timeline-details">Límite de tokens aumentado a 5M/mes</div>
-                    </div>
-                    <div class="timeline-item">
-                        <div class="timeline-dot"></div>
-                        <div class="timeline-time">Ayer, 09:15</div>
-                        <div class="timeline-action"><strong>API Key creada:</strong> "Producción - Backend"</div>
-                        <div class="timeline-details">Permisos: Lectura, Ejecución RPA</div>
-                    </div>
-                    <div class="timeline-item">
-                        <div class="timeline-dot"></div>
-                        <div class="timeline-time">Hace 2 días</div>
-                        <div class="timeline-action"><strong>Bot detenido:</strong> "Sincronizar Inventario"</div>
-                        <div class="timeline-details">Motivo: Error de conexión</div>
-                    </div>
-                    <div class="timeline-item">
-                        <div class="timeline-dot"></div>
-                        <div class="timeline-time">Hace 3 días</div>
-                        <div class="timeline-action"><strong>Configuración actualizada:</strong> Zona horaria</div>
-                        <div class="timeline-details">Cambiado de GMT-5 a GMT-6</div>
-                    </div>
+                    <div style="text-align:center;padding:24px;color:var(--gray);font-size:13px;"><i class="fas fa-spinner fa-spin"></i> Cargando historial...</div>
                 </div>
             </div>
         </div>
@@ -769,14 +711,12 @@
                     <div class="notif-wrapper" id="notifWrapper">
                         <button class="topbar-btn" title="Notificaciones" onclick="toggleNotifPanel()">
                             <i class="fas fa-bell"></i>
-                            <span class="badge" id="notifBadge">3</span>
+                            <span class="badge" id="notifBadge" style="display:none;">0</span>
                         </button>
                         <div class="notif-panel" id="notifPanel">
                             <div class="notif-panel-header"><span>Notificaciones</span><button class="notif-clear" onclick="clearNotifications()">Limpiar todo</button></div>
                             <div class="notif-panel-body" id="notifList">
-                                <div class="notif-item unread"><div class="notif-icon" style="background:rgba(52,211,153,0.15);color:var(--green);"><i class="fas fa-user-plus"></i></div><div class="notif-content"><div class="notif-text">Nuevo usuario agregado al tenant</div><div class="notif-time">Hace 5 min</div></div></div>
-                                <div class="notif-item unread"><div class="notif-icon" style="background:rgba(139,92,246,0.15);color:var(--accent);"><i class="fas fa-cog"></i></div><div class="notif-content"><div class="notif-text">Configuración del tenant actualizada</div><div class="notif-time">Hace 1 hora</div></div></div>
-                                <div class="notif-item"><div class="notif-icon" style="background:rgba(251,191,36,0.15);color:var(--yellow);"><i class="fas fa-exclamation-triangle"></i></div><div class="notif-content"><div class="notif-text">Uso de almacenamiento al 80%</div><div class="notif-time">Hace 3 horas</div></div></div>
+                                <div style="text-align:center;padding:32px 16px;color:var(--gray);font-size:13px;"><i class="fas fa-spinner fa-spin"></i> Cargando notificaciones...</div>
                             </div>
                         </div>
                     </div>
@@ -837,34 +777,34 @@
                 </div>
                 <div class="stat-card reveal">
                     <div class="stat-card-icon"><i class="fas fa-robot"></i></div>
-                    <div class="stat-card-value">8</div>
+                    <div class="stat-card-value" id="botsStatValue">—</div>
                     <div class="stat-card-label">Bots RPA Activos</div>
-                    <div class="stat-card-trend up"><i class="fas fa-arrow-up"></i> +2 nuevos</div>
+                    <div class="stat-card-trend up" id="botsStatTrend"><i class="fas fa-arrow-up"></i> En vivo</div>
                 </div>
                 <div class="stat-card reveal">
                     <div class="stat-card-icon"><i class="fas fa-brain"></i></div>
-                    <div class="stat-card-value">1.2M</div>
+                    <div class="stat-card-value" id="tokensStatValue">—</div>
                     <div class="stat-card-label">Tokens IA este mes</div>
-                    <div class="stat-card-trend up"><i class="fas fa-arrow-up"></i> +34%</div>
+                    <div class="stat-card-trend up" id="tokensStatTrend"><i class="fas fa-arrow-up"></i> En vivo</div>
                 </div>
                 <div class="stat-card reveal">
                     <div class="stat-card-icon"><i class="fas fa-server"></i></div>
-                    <div class="stat-card-value">99.98%</div>
+                    <div class="stat-card-value" id="slaStatValue">—</div>
                     <div class="stat-card-label">Uptime SLA</div>
                     <div class="stat-card-trend"><i class="fas fa-check" style="color:var(--green)"></i> Dentro de SLA
                     </div>
                 </div>
                 <div class="stat-card reveal">
                     <div class="stat-card-icon"><i class="fas fa-dollar-sign"></i></div>
-                    <div class="stat-card-value">L 1,499</div>
+                    <div class="stat-card-value" id="invoiceStatValue">—</div>
                     <div class="stat-card-label">Facturación Mensual</div>
-                    <div class="stat-card-trend"><i class="fas fa-calendar"></i> Renueva: 15 Abr</div>
+                    <div class="stat-card-trend" id="invoiceStatTrend"><i class="fas fa-calendar"></i> En vivo</div>
                 </div>
                 <div class="stat-card reveal">
                     <div class="stat-card-icon"><i class="fas fa-bolt"></i></div>
-                    <div class="stat-card-value">12.4K</div>
+                    <div class="stat-card-value" id="rpaExecStatValue">—</div>
                     <div class="stat-card-label">Ejecuciones RPA</div>
-                    <div class="stat-card-trend up"><i class="fas fa-arrow-up"></i> +18%</div>
+                    <div class="stat-card-trend up" id="rpaExecStatTrend"><i class="fas fa-arrow-up"></i> En vivo</div>
                 </div>
             </div>
 
@@ -922,26 +862,12 @@
                         <div class="section-card reveal">
                             <div class="section-header">
                                 <div class="section-title"><i class="fas fa-tasks"></i>Actividad Reciente</div>
-                                <button class="btn btn-ghost btn-xs" onclick="openModal('activityHistoryModal')"><i
+                                <button class="btn btn-ghost btn-xs" onclick="openFullActivityModal()"><i
                                         class="fas fa-history"></i> Ver Historial</button>
                             </div>
                             <div class="section-body">
                                 <div class="timeline" id="recentActivityTimeline">
-                                    <div class="timeline-item">
-                                        <div class="timeline-dot"></div>
-                                        <div class="timeline-time">Hace 2 horas</div>
-                                        <div class="timeline-action"><strong>Bot ejecutado:</strong> "Procesar facturas
-                                            proveedor"</div>
-                                        <div class="timeline-details">Completado en 4m 32s · 128 documentos</div>
-                                    </div>
-                                    <div class="timeline-item">
-                                        <div class="timeline-dot"></div>
-                                        <div class="timeline-time">Hace 5 horas</div>
-                                        <div class="timeline-action"><strong>Nuevo usuario:</strong> carlos@techcorp.com
-                                        </div>
-                                        <div class="timeline-details">Rol: Operador · Invitado por ana@techcorp.com
-                                        </div>
-                                    </div>
+                                    <div style="text-align:center;padding:16px;color:var(--gray);font-size:13px;"><i class="fas fa-spinner fa-spin"></i> Cargando actividad...</div>
                                 </div>
                             </div>
                         </div>
@@ -1025,72 +951,7 @@
                                 </tr>
                             </thead>
                             <tbody id="usersTableBody">
-                                <tr data-user-name="Ana Martínez" data-user-email="ana@techcorp.portalpilot.io"
-                                    data-user-role="Administrador" data-user-status="Activo">
-                                    <td>
-                                        <div class="user-info-cell">
-                                            <div class="user-avatar-sm">AM</div>
-                                            <div>
-                                                <div class="user-name-cell">Ana Martínez</div>
-                                                <div class="user-email-cell">ana@techcorp.portalpilot.io</div>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td><span class="role-badge admin">Admin</span></td>
-                                    <td><span style="color:var(--green);font-size:12px;"><span class="status-dot"
-                                                style="background:var(--green);"></span>Activo</span></td>
-                                    <td>Hoy, 09:24</td>
-                                    <td>
-                                        <button class="btn btn-ghost btn-xs" onclick="editUser(this)"><i
-                                                class="fas fa-edit"></i></button>
-                                        <button class="btn btn-danger btn-xs" onclick="deleteUser(this)"><i
-                                                class="fas fa-trash"></i></button>
-                                    </td>
-                                </tr>
-                                <tr data-user-name="Juan Rodríguez" data-user-email="juan@techcorp.portalpilot.io"
-                                    data-user-role="Operador" data-user-status="Activo">
-                                    <td>
-                                        <div class="user-info-cell">
-                                            <div class="user-avatar-sm">JR</div>
-                                            <div>
-                                                <div class="user-name-cell">Juan Rodríguez</div>
-                                                <div class="user-email-cell">juan@techcorp.portalpilot.io</div>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td><span class="role-badge operator">Operador</span></td>
-                                    <td><span style="color:var(--green);font-size:12px;"><span class="status-dot"
-                                                style="background:var(--green);"></span>Activo</span></td>
-                                    <td>Ayer, 16:45</td>
-                                    <td>
-                                        <button class="btn btn-ghost btn-xs" onclick="editUser(this)"><i
-                                                class="fas fa-edit"></i></button>
-                                        <button class="btn btn-danger btn-xs" onclick="deleteUser(this)"><i
-                                                class="fas fa-trash"></i></button>
-                                    </td>
-                                </tr>
-                                <tr data-user-name="Laura Sánchez" data-user-email="laura@techcorp.portalpilot.io"
-                                    data-user-role="Visualizador" data-user-status="Inactivo">
-                                    <td>
-                                        <div class="user-info-cell">
-                                            <div class="user-avatar-sm">LS</div>
-                                            <div>
-                                                <div class="user-name-cell">Laura Sánchez</div>
-                                                <div class="user-email-cell">laura@techcorp.portalpilot.io</div>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td><span class="role-badge viewer">Viewer</span></td>
-                                    <td><span style="color:var(--yellow);font-size:12px;"><span class="status-dot"
-                                                style="background:var(--yellow);"></span>Inactivo</span></td>
-                                    <td>5 Mar, 11:20</td>
-                                    <td>
-                                        <button class="btn btn-ghost btn-xs" onclick="editUser(this)"><i
-                                                class="fas fa-edit"></i></button>
-                                        <button class="btn btn-danger btn-xs" onclick="deleteUser(this)"><i
-                                                class="fas fa-trash"></i></button>
-                                    </td>
-                                </tr>
+                                <tr><td colspan="5" style="text-align:center;color:var(--gray);padding:24px;">Cargando miembros...</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -1123,7 +984,7 @@
                                         onclick="openModal('botConfigModal')"><i class="fas fa-cog"></i>
                                         Configurar</button>
                                     <button class="btn btn-outline btn-xs" style="flex:1;justify-content:center;"
-                                        onclick="openModal('botLogsModal')"><i class="fas fa-chart-bar"></i>
+                                        onclick="openBotLogsModal()"><i class="fas fa-chart-bar"></i>
                                         Logs</button>
                                 </div>
                             </div>
@@ -1164,7 +1025,7 @@
                                         onclick="openModal('botConfigModal')"><i class="fas fa-cog"></i>
                                         Configurar</button>
                                     <button class="btn btn-outline btn-xs" style="flex:1;justify-content:center;"
-                                        onclick="openModal('botLogsModal')"><i class="fas fa-chart-bar"></i>
+                                        onclick="openBotLogsModal()"><i class="fas fa-chart-bar"></i>
                                         Analytics</button>
                                 </div>
                             </div>
@@ -1182,38 +1043,7 @@
                                 class="fas fa-plus"></i> Nueva Key</button>
                     </div>
                     <div class="section-body" id="apiKeysContainer">
-                        <div class="api-key-item">
-                            <div>
-                                <div class="api-key-name">Producción - Backend</div>
-                                <div class="api-key-value">pk_live_8x9k••••••2m4p</div>
-                                <div class="api-key-meta">Creada: 12 Mar 2026 · Última usada: Hoy, 09:24</div>
-                            </div>
-                            <div class="api-key-actions">
-                                <button class="btn btn-ghost btn-xs"
-                                    onclick="copyApiKey(this, 'pk_live_8x9k_full_key_2m4p')"><i class="fas fa-copy"></i>
-                                    Copiar</button>
-                                <button class="btn btn-outline btn-xs" onclick="editApiKey(this)"><i
-                                        class="fas fa-edit"></i> Editar</button>
-                                <button class="btn btn-danger btn-xs" onclick="deleteApiKey(this)"><i
-                                        class="fas fa-trash"></i></button>
-                            </div>
-                        </div>
-                        <div class="api-key-item">
-                            <div>
-                                <div class="api-key-name">Desarrollo - Testing</div>
-                                <div class="api-key-value">pk_test_3a7b••••••9k1m</div>
-                                <div class="api-key-meta">Creada: 28 Feb 2026 · Última usada: Ayer, 14:30</div>
-                            </div>
-                            <div class="api-key-actions">
-                                <button class="btn btn-ghost btn-xs"
-                                    onclick="copyApiKey(this, 'pk_test_3a7b_full_key_9k1m')"><i class="fas fa-copy"></i>
-                                    Copiar</button>
-                                <button class="btn btn-outline btn-xs" onclick="editApiKey(this)"><i
-                                        class="fas fa-edit"></i> Editar</button>
-                                <button class="btn btn-danger btn-xs" onclick="deleteApiKey(this)"><i
-                                        class="fas fa-trash"></i></button>
-                            </div>
-                        </div>
+                        <div style="text-align:center;padding:16px;color:var(--gray);font-size:13px;"><i class="fas fa-spinner fa-spin"></i> Cargando claves API...</div>
                     </div>
                 </div>
 
@@ -1382,79 +1212,7 @@
                     </div>
                     <div class="section-body" style="max-height:500px;overflow-y:auto;">
                         <div class="timeline" style="padding-left:0;" id="logsTimeline">
-                            <div class="timeline-item log-item" data-type="rpa"
-                                style="padding-left:0;border-left:none;">
-                                <div
-                                    style="display:grid;grid-template-columns:100px 1fr auto;gap:16px;align-items:start;">
-                                    <span style="font-size:11px;color:var(--gray);">24 Mar 09:24</span>
-                                    <div>
-                                        <div style="color:var(--white);font-weight:500;">Ejecución de bot: "Procesar
-                                            facturas"</div>
-                                        <div style="font-size:12px;color:var(--gray);">Usuario: ana@techcorp.com · IP:
-                                            187.141.23.45 · ✅ Success</div>
-                                    </div>
-                                    <button class="btn btn-ghost btn-xs" onclick="openModal('logDetailModal')"><i
-                                            class="fas fa-eye"></i></button>
-                                </div>
-                            </div>
-                            <div class="timeline-item log-item" data-type="api"
-                                style="padding-left:0;border-left:none;">
-                                <div
-                                    style="display:grid;grid-template-columns:100px 1fr auto;gap:16px;align-items:start;">
-                                    <span style="font-size:11px;color:var(--gray);">24 Mar 08:15</span>
-                                    <div>
-                                        <div style="color:var(--white);font-weight:500;">API Call: POST /v1/rpa/execute
-                                        </div>
-                                        <div style="font-size:12px;color:var(--gray);">Key: pk_live_8x9k•••• · Status:
-                                            200</div>
-                                    </div>
-                                    <button class="btn btn-ghost btn-xs" onclick="openModal('logDetailModal')"><i
-                                            class="fas fa-eye"></i></button>
-                                </div>
-                            </div>
-                            <div class="timeline-item log-item" data-type="access"
-                                style="padding-left:0;border-left:none;">
-                                <div
-                                    style="display:grid;grid-template-columns:100px 1fr auto;gap:16px;align-items:start;">
-                                    <span style="font-size:11px;color:var(--gray);">23 Mar 16:45</span>
-                                    <div>
-                                        <div style="color:var(--white);font-weight:500;">Nuevo usuario invitado</div>
-                                        <div style="font-size:12px;color:var(--gray);">carlos@techcorp.com · Rol:
-                                            Operador</div>
-                                    </div>
-                                    <button class="btn btn-ghost btn-xs" onclick="openModal('logDetailModal')"><i
-                                            class="fas fa-eye"></i></button>
-                                </div>
-                            </div>
-                            <div class="timeline-item log-item" data-type="access"
-                                style="padding-left:0;border-left:none;">
-                                <div
-                                    style="display:grid;grid-template-columns:100px 1fr auto;gap:16px;align-items:start;">
-                                    <span style="font-size:11px;color:var(--gray);">23 Mar 11:20</span>
-                                    <div>
-                                        <div style="color:var(--white);font-weight:500;">Intento de acceso bloqueado
-                                        </div>
-                                        <div style="font-size:12px;color:var(--red);">IP: 191.203.45.128 · Motivo:
-                                            Geobloqueo</div>
-                                    </div>
-                                    <button class="btn btn-ghost btn-xs" onclick="openModal('logDetailModal')"><i
-                                            class="fas fa-eye"></i></button>
-                                </div>
-                            </div>
-                            <div class="timeline-item log-item" data-type="config"
-                                style="padding-left:0;border-left:none;">
-                                <div
-                                    style="display:grid;grid-template-columns:100px 1fr auto;gap:16px;align-items:start;">
-                                    <span style="font-size:11px;color:var(--gray);">22 Mar 15:30</span>
-                                    <div>
-                                        <div style="color:var(--white);font-weight:500;">Configuración actualizada</div>
-                                        <div style="font-size:12px;color:var(--gray);">Zona horaria cambiada a GMT-6
-                                        </div>
-                                    </div>
-                                    <button class="btn btn-ghost btn-xs" onclick="openModal('logDetailModal')"><i
-                                            class="fas fa-eye"></i></button>
-                                </div>
-                            </div>
+                            <div style="text-align:center;padding:24px;color:var(--gray);font-size:13px;"><i class="fas fa-spinner fa-spin"></i> Cargando logs...</div>
                         </div>
                     </div>
                 </div>
@@ -1477,13 +1235,13 @@
                             </h3>
                             <div class="form-group">
                                 <label class="form-label"><i class="fas fa-building"></i>Nombre de la Empresa</label>
-                                <input type="text" class="form-input" id="settName" value="TechCorp Solutions">
+                                <input type="text" class="form-input" id="settName" value="">
                             </div>
                             <div class="form-row">
                                 <div class="form-group">
                                     <label class="form-label"><i class="fas fa-globe"></i>Dominio Personalizado</label>
                                     <input type="text" class="form-input" id="settDomain"
-                                        value="techcorp.portalpilot.io">
+                                        value="">
                                     <div class="form-hint">Requiere configuración DNS</div>
                                 </div>
                                 <div class="form-group">
@@ -1863,6 +1621,7 @@
 
     <script src="../auth-check.js"></script>
     <script src="js/portal-admin-guard.js"></script>
+<script src="js/tenant-users-loader.js"></script>
     <script src="js/tenant_detail.js"></script>
     <script src="../js/notifications.js"></script>
     <script src="../js/sidebar-loader.js"></script>

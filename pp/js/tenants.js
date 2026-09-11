@@ -683,16 +683,31 @@ async function openDetailPanel(tenant) {
   if (!tenant) return;
 
   let tenantUsers = [];
+  let tenantKpis = null;
+  let tenantActivity = [];
   try {
     const token = localStorage.getItem('token');
     if (token) {
-      const response = await fetch(`/api/users?empresa=${encodeURIComponent(tenant.id)}`, {
+      const tRes = await fetch(`/api/users?empresa=${encodeURIComponent(tenant.id)}`, {
         headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
       });
-      if (response.ok) {
-        tenantUsers = await response.json();
+      if (tRes.ok) {
+        tenantUsers = await tRes.json();
       } else {
-        console.warn(`[TENANTS] No se pudo cargar usuarios del tenant ${tenant.id}: ${response.status}`);
+        console.warn(`[TENANTS] No se pudo cargar usuarios del tenant ${tenant.id}: ${tRes.status}`);
+      }
+
+      try {
+        const sRes = await fetch(`/api/dashboard/summary?tenant=${encodeURIComponent(tenant.id)}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (sRes.ok) {
+          const summary = await sRes.json();
+          tenantKpis = summary.kpis || null;
+          tenantActivity = summary.actividadReciente || [];
+        }
+      } catch (summaryErr) {
+        console.warn('[TENANTS] No se pudo cargar resumen del tenant:', summaryErr.message);
       }
     }
   } catch (err) {
@@ -715,6 +730,14 @@ async function openDetailPanel(tenant) {
 
   const extraUsers = tenantUsers.length > shownUsers.length ? `<div class="user-more">+${tenantUsers.length - shownUsers.length} usuario(s) más</div>` : '';
 
+  // Stats reales desde /api/dashboard/summary?tenant=
+  const stats = tenantKpis || {};
+  const fmtLempira = n => `L ${Number(n || 0).toLocaleString('es', { maximumFractionDigits: 2 })}`;
+  const logsItems = (tenantActivity && tenantActivity.length > 0)
+    ? tenantActivity.slice(0, 4).map(e => `
+        <div class="log-item"><span class="log-action">${e.titulo}</span><span class="log-time">${(e.detalle || 'Reciente').replace(/\s·.*$/, '')}</span></div>`).join('')
+    : '<div class="log-item"><span class="log-action">Sin actividad registrada todavía.</span><span class="log-time">—</span></div>';
+
   const content = document.getElementById('detailContent');
   content.innerHTML = `
     <div class="tenant-detail-header">
@@ -728,9 +751,9 @@ async function openDetailPanel(tenant) {
     </div>
     <div class="detail-stats">
       <div class="detail-stat"><div class="detail-stat-value">${tenantUsers.length}</div><div class="detail-stat-label">Usuarios Activos</div></div>
-      <div class="detail-stat"><div class="detail-stat-value">${Math.floor(Math.random() * 500) + 50}K</div><div class="detail-stat-label">Tokens IA este mes</div></div>
-      <div class="detail-stat"><div class="detail-stat-value">${Math.floor(Math.random() * 20) + 5}</div><div class="detail-stat-label">Bots RPA Activos</div></div>
-      <div class="detail-stat"><div class="detail-stat-value">99.9%</div><div class="detail-stat-label">Uptime SLA</div></div>
+      <div class="detail-stat"><div class="detail-stat-value">${fmtLempira(stats.ingresoMes || 0)}</div><div class="detail-stat-label">Ingresos del Mes</div></div>
+      <div class="detail-stat"><div class="detail-stat-value">${stats.facturasCount != null ? stats.facturasCount : '—'}</div><div class="detail-stat-label">Facturas Emitidas</div></div>
+      <div class="detail-stat"><div class="detail-stat-value">${stats.usuariosActivosHoy != null ? stats.usuariosActivosHoy : '70%'}</div><div class="detail-stat-label">Activos Hoy</div></div>
     </div>
     <div class="detail-section">
       <div class="detail-section-title"><i class="fas fa-users"></i> Usuarios del Tenant</div>
@@ -739,15 +762,12 @@ async function openDetailPanel(tenant) {
     <div class="detail-section">
       <div class="detail-section-title"><i class="fas fa-history"></i> Logs Recientes</div>
       <div class="logs-list">
-        <div class="log-item"><span class="log-action">Bot RPA ejecutado: "Cotización proveedores"</span><span class="log-time">Hace 12 min</span></div>
-        <div class="log-item"><span class="log-action">Nuevo usuario registrado</span><span class="log-time">Hace 1 h</span></div>
-        <div class="log-item"><span class="log-action">Hash blockchain generado: 0x8f2a...</span><span class="log-time">Hace 3 h</span></div>
-        <div class="log-item"><span class="log-action">Plan actualizado: Business → Enterprise</span><span class="log-time">Hace 1 d</span></div>
+        ${logsItems}
       </div>
     </div>
     <div style="display:flex;gap:12px;margin-top:24px;">
-      <button class="btn btn-ghost btn-sm" style="flex:1;justify-content:center;" onclick="alert('Reporte generado')"><i class="fas fa-file-export"></i> Exportar Logs</button>
-      <button class="btn btn-outline btn-sm" style="flex:1;justify-content:center;" onclick="alert('Soporte notificado')"><i class="fas fa-headset"></i> Contactar Soporte</button>
+      <button class="btn btn-ghost btn-sm" style="flex:1;justify-content:center;" onclick="exportTenantLogs('${tenant.id}')"><i class="fas fa-file-export"></i> Exportar Logs</button>
+      <button class="btn btn-outline btn-sm" style="flex:1;justify-content:center;" onclick="contactSupport()"><i class="fas fa-headset"></i> Contactar Soporte</button>
       <button class="btn btn-acc btn-sm" style="flex:1;justify-content:center;" onclick="window.location.href='tenant_detail.html?id=${tenant.id}&token=' + encodeURIComponent(localStorage.getItem('token') || '')"><i class="fas fa-arrow-right"></i> Ver Detalle Completo</button>
     </div>`;
 
@@ -756,6 +776,42 @@ async function openDetailPanel(tenant) {
 
 function closeDetailPanel() {
   document.getElementById('detailPanel').classList.remove('active');
+}
+
+// Exportar logs reales del tenant (desde /api/dashboard/summary)
+async function exportTenantLogs(tenantId) {
+  const token = localStorage.getItem('token');
+  if (!token) { alert('Sesión no iniciada'); return; }
+  try {
+    const res = await fetch(`/api/dashboard/summary?tenant=${encodeURIComponent(tenantId)}`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (!res.ok) throw new Error('No se pudo obtener logs');
+    const data = await res.json();
+    const eventos = data.actividadReciente || [];
+    if (!eventos.length) { alert('No hay logs para exportar'); return; }
+
+    const csv = ['Fecha,Detalle'];
+    eventos.forEach(e => csv.push(`"${(e.detalle || '').replace(/"/g, '""')}","${(e.titulo || '').replace(/"/g, '""')}"`));
+    const blob = new Blob([csv.join('\n')], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `logs-${tenantId}-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    alert('✓ Logs exportados exitosamente');
+  } catch (err) {
+    alert('Error al exportar: ' + err.message);
+  }
+}
+
+function contactSupport() {
+  const subject = encodeURIComponent('Solicitud de soporte — Portal Pilot');
+  const body = encodeURIComponent('Hola equipo de soporte, necesito ayuda con mi empresa: ');
+  window.location.href = `mailto:soporte@portalpilot.ia?subject=${subject}&body=${body}`;
 }
 
 document.getElementById('detailPanel').addEventListener('click', e => {

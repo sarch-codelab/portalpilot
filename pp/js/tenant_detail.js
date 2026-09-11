@@ -249,43 +249,348 @@ document.addEventListener('keydown', e => {
 
 // ── User Stats Toggle (cada 12 segundos) ───────────
 let usersStatActive = true;
-const usersStatData = {
-    activos: { value: 24, trend: '+12% este mes', trendClass: 'up', icon: 'fa-arrow-up' },
-    inactivos: { value: 8, trend: '-5% este mes', trendClass: 'down', icon: 'fa-arrow-down' }
-};
+let tenantRealStats = { usuarios: { total: 0, activos: 0 }, bots: { activos: 0 } };
+
+async function loadTenantRealStats() {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    const params = new URLSearchParams(window.location.search);
+    const tenantId = params.get('id') || params.get('tenant');
+    if (!tenantId) return;
+    try {
+        const res = await fetch(`/api/tenant/${encodeURIComponent(tenantId)}/stats`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!res.ok) throw new Error('stats error');
+        const data = await res.json();
+        if (data.stats) {
+            tenantRealStats = data.stats;
+            updateUsersStatCard();
+            updateOverviewStatCards();
+        }
+    } catch (e) {
+        console.warn('[TENANT] No se pudo cargar stats reales:', e.message);
+    }
+}
+
+// ── Poblar tarjetas de overview con stats reales ────
+function updateOverviewStatCards() {
+    const s = tenantRealStats || {};
+
+    const botsValue = document.getElementById('botsStatValue');
+    if (botsValue && s.bots) {
+        botsValue.textContent = s.bots.activos != null ? s.bots.activos : '—';
+    }
+
+    const tokensValue = document.getElementById('tokensStatValue');
+    if (tokensValue && s.tokens) {
+        const t = s.tokens.usados || 0;
+        tokensValue.textContent = t >= 1000 ? `${(t / 1000).toFixed(1).replace('.', ',')}K` : t;
+    }
+
+    const slaValue = document.getElementById('slaStatValue');
+    if (slaValue && s.sla) slaValue.textContent = s.sla;
+
+    const invoiceValue = document.getElementById('invoiceStatValue');
+    if (invoiceValue && s.facturas) {
+        invoiceValue.textContent = s.facturas.total != null ? String(s.facturas.total) : '—';
+    }
+
+    const rpaValue = document.getElementById('rpaExecStatValue');
+    if (rpaValue && s.bots) {
+        rpaValue.textContent = s.bots.total != null ? s.bots.total : '—';
+    }
+}
+
+// ── Historial completo (modal) ───────────────────────
+async function openFullActivityModal() {
+    const container = document.getElementById('fullActivityTimeline');
+    if (!container) return;
+    const token = localStorage.getItem('token');
+    const params = new URLSearchParams(window.location.search);
+    const tenantId = params.get('id') || params.get('tenant');
+    openModal('activityHistoryModal');
+    try {
+        const res = await fetch(`/api/dashboard/summary?tenant=${encodeURIComponent(tenantId)}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!res.ok) throw new Error('activity error');
+        const data = await res.json();
+        const eventos = data.actividadReciente || [];
+        if (!eventos.length) {
+            container.innerHTML = '<div style="text-align:center;padding:24px;color:var(--gray);font-size:13px;">Sin actividad registrada.</div>';
+            return;
+        }
+        container.innerHTML = eventos.slice(0, 15).map(e => {
+            const time = e.fecha ? new Date(e.fecha).toLocaleString('es', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : 'Reciente';
+            const type = e.tipo;
+            return `
+                <div class="timeline-item" data-type="${type}">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-time">${time}</div>
+                    <div class="timeline-action"><strong>${e.titulo}</strong></div>
+                    <div class="timeline-details">${e.detalle || ''}</div>
+                </div>`;
+        }).join('');
+    } catch (e) {
+        container.innerHTML = '<div style="text-align:center;padding:24px;color:var(--gray);font-size:13px;">No se pudo cargar el historial.</div>';
+    }
+}
+
+// ── Notificaciones del panel (reales) ───────────────
+async function loadTenantNotifications() {
+    const list = document.getElementById('notifList');
+    const badge = document.getElementById('notifBadge');
+    if (!list) return;
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    try {
+        const res = await fetch(`/api/notificaciones`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!res.ok) throw new Error('notif error');
+        const data = await res.json();
+        const notifs = data.notificaciones || [];
+        const unread = data.unread_count != null ? data.unread_count : notifs.filter(n => !n.leida).length;
+
+        if (badge) {
+            if (unread > 0) {
+                badge.textContent = unread > 99 ? '99+' : unread;
+                badge.style.display = '';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+
+        if (!notifs.length) {
+            list.innerHTML = '<div style="text-align:center;padding:32px 16px;color:var(--gray);font-size:13px;"><i class="fas fa-bell-slash" style="font-size:24px;display:block;margin-bottom:8px;"></i>Sin notificaciones</div>';
+            return;
+        }
+
+        const iconMap = { success: ['fa-check-circle', 'var(--green)', 'rgba(52,211,153,0.15)'], error: ['fa-exclamation-circle', 'var(--red)', 'rgba(248,113,113,0.15)'], warning: ['fa-exclamation-triangle', 'var(--yellow)', 'rgba(251,191,36,0.15)'], info: ['fa-info-circle', 'var(--accent)', 'rgba(139,92,246,0.15)'] };
+        const fmtTime = iso => {
+            if (!iso) return 'Recién';
+            const d = new Date(iso);
+            const diff = Date.now() - d.getTime();
+            if (diff < 60000) return 'Justo ahora';
+            if (diff < 3600000) return `Hace ${Math.max(1, Math.floor(diff / 60000))} min`;
+            if (diff < 86400000) return `Hace ${Math.floor(diff / 3600000)} h`;
+            return d.toLocaleDateString('es', { day: '2-digit', month: 'short' });
+        };
+
+        list.innerHTML = notifs.slice(0, 10).map(n => {
+            const [icon, color, bg] = iconMap[n.tipo] || iconMap.info;
+            return `<div class="notif-item ${!n.leida ? 'unread' : ''}" data-id="${n.id}">
+                <div class="notif-icon" style="background:${bg};color:${color};"><i class="fas ${icon}"></i></div>
+                <div class="notif-content"><div class="notif-text">${n.titulo || 'Notificación'}${n.mensaje ? ' — ' + n.mensaje : ''}</div><div class="notif-time">${fmtTime(n.created_at)}</div></div>
+            </div>`;
+        }).join('');
+
+        list.querySelectorAll('.notif-item.unread').forEach(item => {
+            item.addEventListener('click', async () => {
+                item.classList.remove('unread');
+                try {
+                    await fetch(`/api/notificaciones/${item.dataset.id}/read`, { method: 'PUT', headers: { 'Authorization': `Bearer ${token}` } });
+                    loadTenantNotifications();
+                } catch (e) { /* no crítico */ }
+            });
+        });
+    } catch (e) {
+        console.warn('[TENANT] Error notificaciones:', e.message);
+        list.innerHTML = '<div style="text-align:center;padding:32px 16px;color:var(--gray);font-size:13px;"><i class="fas fa-bell-slash"></i> Sin notificaciones</div>';
+    }
+}
+
+// ── Actividad reciente (reales) ─────────────────────
+async function loadTenantActivity() {
+    const container = document.getElementById('recentActivityTimeline');
+    if (!container) return;
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    const params = new URLSearchParams(window.location.search);
+    const tenantId = params.get('id') || params.get('tenant');
+    try {
+        const res = await fetch(`/api/dashboard/summary?tenant=${encodeURIComponent(tenantId)}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!res.ok) throw new Error('activity error');
+        const data = await res.json();
+        const eventos = data.actividadReciente || [];
+
+        if (!eventos.length) {
+            container.innerHTML = '<div style="text-align:center;padding:16px;color:var(--gray);font-size:13px;">Sin actividad registrada.</div>';
+            return;
+        }
+
+        container.innerHTML = eventos.slice(0, 4).map(e => `
+            <div class="timeline-item">
+                <div class="timeline-dot"></div>
+                <div class="timeline-time">${(e.detalle || 'Reciente').replace(/^.*·\s*/, '')}</div>
+                <div class="timeline-action"><strong>${e.titulo}</strong></div>
+                <div class="timeline-details">${(e.detalle || '').replace(/\[[^\]]*\]/g, '')}</div>
+            </div>`).join('');
+    } catch (e) {
+        console.warn('[TENANT] Error actividad:', e.message);
+        container.innerHTML = '<div style="text-align:center;padding:16px;color:var(--gray);font-size:13px;">No se pudo cargar la actividad.</div>';
+    }
+}
+
+// ── Logs de auditoría (reales) ─────────────────────
+let tenantAuditLogs = [];
+
+async function loadTenantLogs() {
+    const container = document.getElementById('logsTimeline');
+    if (!container) return;
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    const params = new URLSearchParams(window.location.search);
+    const tenantId = params.get('id') || params.get('tenant');
+    try {
+        const res = await fetch(`/api/dashboard/summary?tenant=${encodeURIComponent(tenantId)}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!res.ok) throw new Error('logs error');
+        const data = await res.json();
+        const eventos = data.actividadReciente || [];
+
+        tenantAuditLogs = eventos.map((e, i) => {
+            const tipo = e.tipo === 'factura' ? 'rpa' : e.tipo === 'ingreso' || e.tipo === 'gasto' ? 'api' : e.tipo === 'usuario' ? 'access' : 'config';
+            const fecha = e.fecha ? new Date(e.fecha) : new Date(Date.now() - i * 3600000);
+            const time = fecha.toLocaleDateString('es', { day: '2-digit', month: 'short' }) + ' ' + fecha.toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' });
+            return { tipo, time, texto: e.titulo || 'Evento', detalle: e.detalle || '' };
+        });
+
+        renderTenantLogs();
+    } catch (e) {
+        console.warn('[TENANT] Error logs:', e.message);
+        container.innerHTML = '<div style="text-align:center;padding:24px;color:var(--gray);font-size:13px;">No se pudieron cargar los logs.</div>';
+    }
+}
+
+function renderTenantLogs() {
+    const container = document.getElementById('logsTimeline');
+    if (!container) return;
+    if (!tenantAuditLogs.length) {
+        container.innerHTML = '<div style="text-align:center;padding:24px;color:var(--gray);font-size:13px;">Sin eventos registrados.</div>';
+        return;
+    }
+    container.innerHTML = tenantAuditLogs.map(l => `
+        <div class="timeline-item log-item" data-type="${l.tipo}" style="padding-left:0;border-left:none;">
+            <div style="display:grid;grid-template-columns:100px 1fr auto;gap:16px;align-items:start;">
+                <span style="font-size:11px;color:var(--gray);">${l.time}</span>
+                <div>
+                    <div style="color:var(--white);font-weight:500;">${l.texto}</div>
+                    <div style="font-size:12px;color:var(--gray);">${l.detalle}</div>
+                </div>
+                <button class="btn btn-ghost btn-xs" onclick="openModal('logDetailModal')"><i class="fas fa-eye"></i></button>
+            </div>
+        </div>`).join('');
+}
+
+function exportLogs() {
+    if (!tenantAuditLogs.length) {
+        showToast('No hay logs para exportar', 'warning');
+        return;
+    }
+    const csv = ['Fecha,Tipo,Evento'];
+    tenantAuditLogs.forEach(l => csv.push(`${l.time},${l.tipo},"${l.texto}"`));
+    const blob = new Blob([csv.join('\n')], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `logs_${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    showToast('Logs exportados', 'success');
+}
+
+// ── Logs del Bot (modal) ───────────────────────────
+function openBotLogsModal() {
+    loadBotLogs();
+    openModal('botLogsModal');
+}
+
+async function loadBotLogs() {
+    const list = document.getElementById('botLogsList');
+    if (!list) return;
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    const params = new URLSearchParams(window.location.search);
+    const tenantId = params.get('id') || params.get('tenant');
+    try {
+        const res = await fetch(`/api/dashboard/summary?tenant=${encodeURIComponent(tenantId)}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!res.ok) throw new Error('bots logs error');
+        const data = await res.json();
+        const eventos = data.actividadReciente || [];
+
+        if (!eventos.length) {
+            list.innerHTML = '<div style="text-align:center;padding:24px;color:var(--gray);font-size:13px;">Sin ejecuciones registradas.</div>';
+            return;
+        }
+
+        list.innerHTML = eventos.slice(0, 8).map((e, i) => {
+            const ok = e.tipo !== 'gasto';
+            const fecha = e.fecha ? new Date(e.fecha) : new Date(Date.now() - i * 3600000);
+            const time = fecha.toLocaleString('es', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+            return `
+                <div class="bot-log-item ${ok ? 'success' : 'error'}">
+                    <div class="bot-log-status"><i class="fas ${ok ? 'fa-check-circle' : 'fa-times-circle'}"></i></div>
+                    <div class="bot-log-info">
+                        <div class="bot-log-title">${e.titulo}</div>
+                        <div class="bot-log-meta">${time} · ${e.detalle || ''}</div>
+                    </div>
+                    <button class="btn btn-ghost btn-xs" onclick="openModal('logDetailModal')"><i class="fas fa-eye"></i></button>
+                </div>`;
+        }).join('');
+    } catch (e) {
+        console.warn('[TENANT] Error bot logs:', e.message);
+        list.innerHTML = '<div style="text-align:center;padding:24px;color:var(--gray);font-size:13px;">No se pudieron cargar los logs del bot.</div>';
+    }
+}
+
+function updateUsersStatCard() {
+    const valueEl = document.getElementById('usersStatValue');
+    const labelEl = document.getElementById('usersStatLabel');
+    const trendEl = document.getElementById('usersStatTrend');
+    const iconEl = document.querySelector('#usersStatCard .stat-card-icon');
+    if (!valueEl) return;
+
+    const total = tenantRealStats.usuarios ? tenantRealStats.usuarios.total : 0;
+    const activos = tenantRealStats.usuarios ? tenantRealStats.usuarios.activos : 0;
+    const inactivos = Math.max(0, total - activos);
+
+    const data = usersStatActive
+        ? { value: activos, label: 'Usuarios Activos', icon: 'fa-users', color: 'var(--green)', bg: 'rgba(52, 211, 153, 0.15)', trend: `${total} registrados`, trendClass: 'up', trendIcon: 'fa-arrow-up' }
+        : { value: inactivos, label: 'Usuarios Inactivos', icon: 'fa-user-clock', color: 'var(--yellow)', bg: 'rgba(251, 191, 36, 0.15)', trend: `${total} registrados`, trendClass: 'down', trendIcon: 'fa-arrow-down' };
+
+    valueEl.textContent = data.value;
+    labelEl.textContent = data.label;
+    trendEl.className = `stat-card-trend ${data.trendClass}`;
+    trendEl.innerHTML = `<i class="fas ${data.trendIcon}"></i> ${data.trend}`;
+    if (iconEl) {
+        iconEl.style.background = data.bg;
+        iconEl.style.color = data.color;
+        iconEl.innerHTML = `<i class="fas ${data.icon}"></i>`;
+    }
+}
 
 function toggleUsersStat() {
     const valueEl = document.getElementById('usersStatValue');
     const labelEl = document.getElementById('usersStatLabel');
     const trendEl = document.getElementById('usersStatTrend');
-    const iconEl = document.querySelector('#usersStatCard .stat-card-icon');
-
     if (!valueEl) return;
 
     usersStatActive = !usersStatActive;
-    const data = usersStatActive ? usersStatData.activos : usersStatData.inactivos;
-
     valueEl.classList.add('changing');
-
+    valueEl.classList.add('toggled');
     setTimeout(() => {
-        valueEl.textContent = data.value;
-        labelEl.textContent = usersStatActive ? 'Usuarios Activos' : 'Usuarios Inactivos';
-        trendEl.className = `stat-card-trend ${data.trendClass}`;
-        trendEl.innerHTML = `<i class="fas ${data.icon}"></i> ${data.trend}`;
-
-        if (iconEl) {
-            if (usersStatActive) {
-                iconEl.style.background = 'rgba(52, 211, 153, 0.15)';
-                iconEl.style.color = 'var(--green)';
-                iconEl.innerHTML = '<i class="fas fa-users"></i>';
-            } else {
-                iconEl.style.background = 'rgba(251, 191, 36, 0.15)';
-                iconEl.style.color = 'var(--yellow)';
-                iconEl.innerHTML = '<i class="fas fa-user-clock"></i>';
-            }
-        }
-
+        updateUsersStatCard();
         valueEl.classList.remove('changing');
+        setTimeout(() => valueEl.classList.remove('toggled'), 400);
     }, 250);
 }
 
@@ -294,6 +599,35 @@ setInterval(toggleUsersStat, 12000);
 // ── Charts (Chart.js OPTIMIZADO) ───────────────────
 let tokensChart = null;
 let rpaChart = null;
+let chartUsageData = [];
+
+async function loadChartsData() {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    const params = new URLSearchParams(window.location.search);
+    const tenantId = params.get('id') || params.get('tenant');
+    if (!tenantId) return;
+    try {
+        const res = await fetch(`/api/dashboard/summary?tenant=${encodeURIComponent(tenantId)}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        chartUsageData = data.usage7d || [];
+        const stats = tenantRealStats.usuarios ? tenantRealStats : (await (async () => {
+            try {
+                const r = await fetch(`/api/tenant/${encodeURIComponent(tenantId)}/stats`, { headers: { 'Authorization': `Bearer ${token}` } });
+                if (r.ok) return (await r.json()).stats || {};
+                return {};
+            } catch { return {}; }
+        })());
+        if (stats.usuarios) tenantRealStats = stats;
+        renderCharts();
+    } catch (e) {
+        console.warn('[TENANT] No se pudieron cargar datos de charts:', e.message);
+        renderCharts();
+    }
+}
 
 function renderCharts() {
     const tokensCtx = document.getElementById('tokensChart');
@@ -354,14 +688,28 @@ function renderCharts() {
         }
     };
 
+    // Datos reales: agregar por día de la semana y por periodo
+    const usage = chartUsageData.length ? chartUsageData : [];
+    const semana = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+    const porDia = [0, 0, 0, 0, 0, 0, 0];
+    usage.forEach(d => { if (d.fecha) porDia[new Date(d.fecha).getDay()] += (d.transacciones || 0) + (d.facturas || 0); });
+    const totalUso = usage.reduce((s, d) => s + (d.transacciones || 0) + (d.facturas || 0), 0);
+
+    // Período (7D/30D/90D) según selector
+    const periodo = document.getElementById('chartPeriodSelect');
+    const rawPeriod = periodo ? periodo.value : '30';
+    const periodLabel = /7/.test(rawPeriod) ? '7D' : /90/.test(rawPeriod) ? '90D' : '30D';
+    const datosTokens = usage.slice(Math.max(0, usage.length - (periodLabel === '7D' ? 7 : periodLabel === '90D' ? 90 : 30)))
+        .map(d => (d.transacciones || 0) + (d.facturas || 0));
+
     // Tokens IA Chart (línea)
     tokensChart = new Chart(tokensCtx, {
         type: 'line',
         data: {
-            labels: ['Sem 1', 'Sem 2', 'Sem 3', 'Sem 4'],
+            labels: usage.length ? usage.slice(-datosTokens.length).map(d => d.label || d.fecha.slice(5)) : ['Sin datos'],
             datasets: [{
-                label: 'Tokens IA',
-                data: [320000, 480000, 650000, 820000],
+                label: 'Actividad',
+                data: datosTokens.length ? datosTokens : [0],
                 borderColor: '#8b5cf6',
                 backgroundColor: 'rgba(139, 92, 246, 0.15)',
                 borderWidth: 2,
@@ -370,21 +718,21 @@ function renderCharts() {
                 pointBackgroundColor: '#8b5cf6',
                 pointBorderColor: '#fff',
                 pointBorderWidth: 2,
-                pointRadius: 4,
+                pointRadius: datosTokens.length > 20 ? 0 : 4,
                 pointHoverRadius: 6
             }]
         },
         options: commonOptions
     });
 
-    // RPA Chart (barras)
+    // RPA Chart (barras) con actividad real por día de la semana
     rpaChart = new Chart(rpaCtx, {
         type: 'bar',
         data: {
-            labels: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'],
+            labels: semana,
             datasets: [{
                 label: 'Ejecuciones',
-                data: [1240, 1580, 1890, 1420, 2100, 980, 760],
+                data: totalUso > 0 ? porDia : [0],
                 backgroundColor: 'rgba(167, 139, 250, 0.7)',
                 borderColor: '#a78bfa',
                 borderWidth: 1,
@@ -411,12 +759,16 @@ function renderCharts() {
 
 function refreshCharts() {
     showToast('Gráficos actualizados', 'info');
-    renderCharts();
+    loadChartsData();
+    updateUsersStatCard();
 }
 
-// Render charts al cargar
+// Render charts al cargar (con datos reales)
 window.addEventListener('load', () => {
-    setTimeout(renderCharts, 300);
+    setTimeout(() => {
+        loadTenantRealStats();
+        loadChartsData();
+    }, 300);
 });
 
 // Actualizar charts al cambiar periodo
@@ -424,7 +776,7 @@ const chartPeriodSelect = document.getElementById('chartPeriodSelect');
 if (chartPeriodSelect) {
     chartPeriodSelect.addEventListener('change', function () {
         showToast(`Periodo: ${this.value}`, 'info');
-        renderCharts();
+        loadChartsData();
     });
 }
 
@@ -633,16 +985,66 @@ function editApiKey(btn) {
 }
 
 function deleteApiKey(btn) {
-    if (!confirm('¿Eliminar esta API Key?')) return;
-
     const item = btn.closest('.api-key-item');
-    item.style.transition = 'all 0.3s ease';
-    item.style.opacity = '0';
-    item.style.transform = 'translateX(-20px)';
-    setTimeout(() => {
-        item.remove();
-        showToast('API Key eliminada', 'success');
-    }, 300);
+    if (!item) return;
+    const id = item.dataset.id;
+    const token = localStorage.getItem('token');
+    if (!token) { showToast('Sesión no iniciada', 'error'); return; }
+
+    if (!confirm('¿Revocar esta API Key?')) return;
+
+    fetch(`/api/tenant/apikeys/${encodeURIComponent(id)}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+    })
+        .then(res => {
+            if (!res.ok) throw new Error('Error al revocar');
+            item.style.transition = 'all 0.3s ease';
+            item.style.opacity = '0';
+            item.style.transform = 'translateX(-20px)';
+            setTimeout(() => item.remove(), 300);
+            showToast('API Key revocada', 'success');
+        })
+        .catch(err => showToast('Error: ' + err.message, 'error'));
+}
+
+async function loadApiKeys() {
+    const container = document.getElementById('apiKeysContainer');
+    if (!container) return;
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    try {
+        const res = await fetch(`/api/tenant/apikeys`, { headers: { 'Authorization': `Bearer ${token}` } });
+        if (!res.ok) throw new Error('apikeys error');
+        const data = await res.json();
+        const keys = data.keys || [];
+        if (!keys.length) {
+            container.innerHTML = '<div style="padding:16px;color:var(--gray);font-size:13px;">No hay API Keys creadas.</div>';
+            return;
+        }
+        container.innerHTML = keys.map(k => {
+            const clave = k.clave || '';
+            const masked = clave.length > 15 ? clave.substring(0, 11) + '••••••' + clave.substring(clave.length - 4) : clave;
+            const fecha = k.created_at ? new Date(k.created_at).toLocaleDateString('es-HN') : '—';
+            const uso = k.ultimo_uso ? new Date(k.ultimo_uso).toLocaleDateString('es-HN') : 'Nunca';
+            return `
+                <div class="api-key-item" data-id="${k.id}">
+                    <div>
+                        <div class="api-key-name">${k.nombre}</div>
+                        <div class="api-key-value">${masked}${k.activa === false ? ' <span style="color:var(--red);font-size:11px;">· Inactiva</span>' : ''}</div>
+                        <div class="api-key-meta">Creada: ${fecha} · Última usada: ${uso}</div>
+                    </div>
+                    <div class="api-key-actions">
+                        <button class="btn btn-ghost btn-xs" onclick="copyApiKey(this, '${clave}')"><i class="fas fa-copy"></i> Copiar</button>
+                        <button class="btn btn-outline btn-xs" onclick="editApiKey(this)"><i class="fas fa-edit"></i> Editar</button>
+                        <button class="btn btn-danger btn-xs" onclick="deleteApiKey(this)"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>`;
+        }).join('');
+    } catch (e) {
+        console.warn('[TENANT] Error cargando API keys:', e.message);
+        container.innerHTML = '<div style="padding:16px;color:var(--gray);font-size:13px;">No se pudieron cargar las API Keys.</div>';
+    }
 }
 
 function generateApiKey() {
@@ -652,30 +1054,33 @@ function generateApiKey() {
         return;
     }
 
-    const newKey = `pk_live_${Math.random().toString(36).substring(2, 10)}${Math.random().toString(36).substring(2, 6)}`;
-    const maskedKey = newKey.substring(0, 11) + '••••••' + newKey.substring(newKey.length - 4);
+    const token = localStorage.getItem('token');
+    if (!token) { showToast('Sesión no iniciada', 'error'); return; }
 
-    const container = document.getElementById('apiKeysContainer');
-    const newItem = document.createElement('div');
-    newItem.className = 'api-key-item';
-    newItem.innerHTML = `
-        <div>
-            <div class="api-key-name">${name}</div>
-            <div class="api-key-value">${maskedKey}</div>
-            <div class="api-key-meta">Creada: Hoy · Última usada: Nunca</div>
-        </div>
-        <div class="api-key-actions">
-            <button class="btn btn-ghost btn-xs" onclick="copyApiKey(this, '${newKey}')"><i class="fas fa-copy"></i> Copiar</button>
-            <button class="btn btn-outline btn-xs" onclick="editApiKey(this)"><i class="fas fa-edit"></i> Editar</button>
-            <button class="btn btn-danger btn-xs" onclick="deleteApiKey(this)"><i class="fas fa-trash"></i></button>
-        </div>
-    `;
-
-    container.insertBefore(newItem, container.firstChild);
-
-    closeModal('apiKeyModal');
-    document.getElementById('keyName').value = '';
-    showToast(`API Key "${name}" generada`, 'success');
+    fetch('/api/tenant/apikeys', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nombre: name })
+    })
+        .then(res => {
+            if (!res.ok) return res.json().then(d => Promise.reject(new Error(d.error || 'Error al generar')));
+            return res.json();
+        })
+        .then(data => {
+            const clave = data.clave || (data.key && data.key.clave) || '';
+            let keysHtml = '';
+            if (clave) {
+                keysHtml = `<div style="background:rgba(139,92,246,0.1);border:1px solid rgba(139,92,246,0.3);padding:12px;border-radius:8px;margin-bottom:14px;">
+                    <div style="font-size:11px;color:var(--gray);margin-bottom:4px;">⚠️ Guarda esta clave ahora, no se mostrará de nuevo:</div>
+                    <div style="font-family:monospace;font-size:12px;color:var(--accent);word-break:break-all;">${clave}</div>
+                </div>`;
+            }
+            closeModal('apiKeyModal');
+            document.getElementById('keyName').value = '';
+            if (clave) showToast(`API Key "${name}" generada`, 'success');
+            loadApiKeys();
+        })
+        .catch(err => showToast('Error: ' + err.message, 'error'));
 }
 
 // ── Integrations ───────────────────────────────────
@@ -789,11 +1194,6 @@ function filterLogs() {
     });
 }
 
-function exportLogs() {
-    showToast('Exportando logs...', 'info');
-    setTimeout(() => showToast('Logs exportados', 'success'), 1000);
-}
-
 // ── Settings ───────────────────────────────────────
 function saveSettings() {
     showToast('Configuración guardada', 'success');
@@ -836,8 +1236,29 @@ async function confirmDelete() {
 }
 
 function executeSuspend() {
-    closeModal('suspendModal');
-    showToast('Tenant suspendido', 'success');
+    const params = new URLSearchParams(window.location.search);
+    const tenantId = params.get('id') || params.get('tenant');
+    const token = localStorage.getItem('token');
+    if (!tenantId || !token) { showToast('Falta ID del tenant o sesión', 'error'); return; }
+    showToast('Suspendiendo tenant...', 'info');
+    fetch(`/api/tenants/${encodeURIComponent(tenantId)}`, {
+        method: 'PUT',
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ estado: 'suspendido' })
+    })
+        .then(res => {
+            if (!res.ok) throw new Error('Error al suspender');
+            closeModal('suspendModal');
+            showToast('Tenant suspendido', 'success');
+            const statusEl = document.getElementById('tenant-status');
+            if (statusEl) {
+                statusEl.textContent = 'Suspendido';
+                statusEl.className = 'badge badge-danger';
+            }
+        })
+        .catch(err => {
+            showToast('Error al suspender: ' + err.message, 'error');
+        });
 }
 
 // ── Open Tenant Portal ─────────────────────────────
@@ -864,6 +1285,10 @@ window.addEventListener('load', () => {
 // ── Load Tenant Data from API ──────────────────────
 document.addEventListener('DOMContentLoaded', () => {
     loadBillingDocuments();
+    loadTenantNotifications();
+    loadTenantActivity();
+    loadTenantLogs();
+    loadApiKeys();
     const token = localStorage.getItem('token');
     if (!token) {
         console.warn('⚠️ No se encontró token.');

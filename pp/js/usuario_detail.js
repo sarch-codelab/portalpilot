@@ -215,7 +215,7 @@ function cancelEdit() {
     showToast('Cambios cancelados', 'info');
 }
 
-function saveAllChanges() {
+async function saveAllChanges() {
     const changes = {};
     document.querySelectorAll('.info-value[data-field]').forEach(el => {
         const field = el.getAttribute('data-field');
@@ -225,13 +225,68 @@ function saveAllChanges() {
         el.parentElement.classList.remove('editing');
     });
 
-    // Simular guardado
-    setTimeout(() => {
+    const token = localStorage.getItem('token');
+    const userId = new URLSearchParams(window.location.search).get('id');
+    if (!token || !userId) {
         toggleEditMode();
-        showToast('✓ Cambios guardados exitosamente', 'success');
-        console.log('Cambios guardados:', changes);
-        // Aquí iría la llamada a API real
-    }, 800);
+        showToast('Falta token o ID de usuario', 'error');
+        return;
+    }
+
+    // Mapear campos al schema de PUT /api/users/:id
+    const apiFields = {};
+    const extendedFields = {};
+
+    // Map direct fields
+    if (changes.firstName !== undefined) apiFields.nombre = changes.firstName;
+    if (changes.lastName !== undefined) apiFields.apellido = changes.lastName;
+    if (changes.email !== undefined) apiFields.email = changes.email;
+    if (changes.role !== undefined) apiFields.rol = changes.role;
+    if (changes.status !== undefined) apiFields.status = changes.status;
+    if (changes.notas !== undefined) apiFields.notas = changes.notas;
+
+    // Extended profile fields → store in notas as JSON
+    ['department', 'position', 'location', 'timezone', 'phone', 'extension', 'responsibilities'].forEach(key => {
+        if (changes[key] !== undefined) extendedFields[key] = changes[key];
+    });
+
+    if (Object.keys(extendedFields).length > 0) {
+        // Merge with existing notas if present
+        let existingNotas = '';
+        try { existingNotas = currentUserData?.notas || ''; } catch { existingNotas = ''; }
+        let notasData = {};
+        try {
+            const parsed = JSON.parse(existingNotas);
+            if (typeof parsed === 'object') notasData = parsed;
+        } catch { notasData = { raw: existingNotas }; }
+        Object.assign(notasData, extendedFields);
+        apiFields.notas = JSON.stringify(notasData);
+    }
+
+    if (Object.keys(apiFields).length === 0) {
+        toggleEditMode();
+        showToast('No hay cambios para guardar', 'warning');
+        return;
+    }
+
+    try {
+        const res = await fetch(`/api/users/${encodeURIComponent(userId)}`, {
+            method: 'PUT',
+            headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify(apiFields)
+        });
+        if (!res.ok) {
+            const data = await res.json().catch(() => ({}));
+            throw new Error(data.error || `Error ${res.status}`);
+        }
+        toggleEditMode();
+        showToast('Cambios guardados exitosamente', 'success');
+        // Reload profile
+        const profile = await fetchUserProfile(userId);
+        if (profile) renderProfile(profile);
+    } catch (err) {
+        showToast('Error al guardar: ' + err.message, 'error');
+    }
 }
 
 function toggleSectionEdit(section) {
@@ -533,6 +588,7 @@ async function initProfilePage() {
       ]);
       renderSessions(sessions);
       renderActivity(activity);
+      loadUserApiKeys();
     }
 }
 
@@ -598,8 +654,35 @@ async function impersonateUser() {
     }
 }
 
-function executeReset() {
-    showToast('Usa Recuperar contraseña desde Login para cambiar credenciales.', 'warning');
+async function executeReset() {
+    const userId = new URLSearchParams(window.location.search).get('id');
+    const token = localStorage.getItem('token');
+    const method = document.getElementById('resetMethod')?.value || '';
+    if (!userId || !token) { showToast('Falta ID de usuario o sesión', 'error'); return; }
+
+    const tempPwd = 'Tmp' + Math.random().toString(36).slice(2, 8) + '!A' + Date.now().toString().slice(-4);
+
+    showToast('Reseteando contraseña...', 'info');
+    try {
+        const res = await fetch(`/api/users/${encodeURIComponent(userId)}`, {
+            method: 'PUT',
+            headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ password: tempPwd })
+        });
+        if (!res.ok) {
+            const data = await res.json().catch(() => ({}));
+            throw new Error(data.error || `Error ${res.status}`);
+        }
+        closeModal('resetPasswordModal');
+
+        if (method.includes('mostrar aquí')) {
+            alert(`Contraseña temporal generada: ${tempPwd}\n\nCompártela de forma segura con el usuario.`);
+        } else {
+            showToast('Contraseña temporal enviada al usuario', 'success');
+        }
+    } catch (err) {
+        showToast('Error al resetear: ' + err.message, 'error');
+    }
 }
 
 // Suspend modal validation
@@ -611,8 +694,66 @@ if (suspendReason) {
     });
 }
 
-function executeSuspend() {
-    showToast('Suspensión disponible desde Gestión de Usuarios.', 'warning');
+async function executeSuspend() {
+    const userId = new URLSearchParams(window.location.search).get('id');
+    const token = localStorage.getItem('token');
+    const reasonEl = document.getElementById('suspendReason');
+    const reason = reasonEl ? reasonEl.value : '';
+
+    if (!userId || !token) { showToast('Falta ID de usuario o sesión', 'error'); return; }
+
+    showToast('Suspendiendo cuenta...', 'info');
+    try {
+        const res = await fetch(`/api/users/${encodeURIComponent(userId)}`, {
+            method: 'PUT',
+            headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: 'suspended', reason, notas: reason ? JSON.stringify({ suspend_reason: reason }) : undefined })
+        });
+        if (!res.ok) {
+            const data = await res.json().catch(() => ({}));
+            throw new Error(data.error || `Error ${res.status}`);
+        }
+        const modal = document.getElementById('suspendModal');
+        if (modal) modal.classList.remove('active');
+        showToast('Cuenta suspendida', 'success');
+        const profile = await fetchUserProfile(userId);
+        if (profile) renderProfile(profile);
+    } catch (err) {
+        showToast('Error al suspender: ' + err.message, 'error');
+    }
+}
+
+async function loadUserApiKeys() {
+    const container = document.getElementById('userApiKeysList');
+    if (!container) return;
+    const token = localStorage.getItem('token');
+    if (!token) { container.innerHTML = '<div style="padding:12px;color:var(--gray);font-size:13px;">Inicia sesión para ver claves API.</div>'; return; }
+    try {
+        const res = await fetch('/api/tenant/apikeys', { headers: { 'Authorization': `Bearer ${token}` } });
+        if (!res.ok) throw new Error('apikeys error');
+        const data = await res.json();
+        const keys = data.keys || [];
+        if (!keys.length) { container.innerHTML = '<div style="padding:12px;color:var(--gray);font-size:13px;">No hay claves API generadas.</div>'; return; }
+        container.innerHTML = keys.map(k => {
+            const full = k.clave || '';
+            const short = full.length > 24 ? full.slice(0, 17) + '...' + full.slice(-8) : full;
+            const used = k.ultimo_uso ? 'Último uso: ' + new Date(k.ultimo_uso).toLocaleString('es') : 'Sin uso registrado';
+            const created = k.created_at ? 'Creada: ' + new Date(k.created_at).toLocaleDateString('es') : '';
+            return `<div class="api-key-item">
+                <div class="api-key-info">
+                    <div class="api-key-name">${k.nombre || 'Clave API'}</div>
+                    <div class="api-key-value">${short}</div>
+                    <div class="api-key-meta"><span>${created}</span><span>•</span><span>${used}</span></div>
+                </div>
+                <div class="api-key-actions">
+                    <button class="btn btn-ghost btn-xs" onclick="copyApiKey('${full}')"><i class="fas fa-copy"></i></button>
+                    <button class="btn btn-danger btn-xs" onclick="revokeApiKey('${k.id}')"><i class="fas fa-trash"></i></button>
+                </div>
+            </div>`;
+        }).join('');
+    } catch (e) {
+        container.innerHTML = '<div style="padding:12px;color:var(--gray);font-size:13px;">No se pudieron cargar las claves API.</div>';
+    }
 }
 
 async function generateApiKey() {
@@ -657,64 +798,140 @@ async function generateApiKey() {
     document.getElementById('apiKeyName').value = '';
     document.getElementById('apiKeyPerms').selectedIndex = 2;
     document.getElementById('apiKeyExpiry').value = '';
+    loadUserApiKeys();
     } catch (error) {
         showToast(error.message || 'No se pudo crear la clave API.', 'error');
     }
 }
 
-function saveNote() {
+async function saveNote() {
     const type = document.getElementById('noteType').value;
     const content = document.getElementById('noteContent').value.trim();
     const internal = document.getElementById('noteInternal').checked;
 
     if (!content) { showToast('Escribe el contenido de la nota', 'error'); return; }
 
-    setTimeout(() => {
+    const userId = new URLSearchParams(window.location.search).get('id');
+    const token = localStorage.getItem('token');
+    if (!userId || !token) { showToast('Falta ID de usuario o sesión', 'error'); return; }
+
+    const nota = { tipo: type, contenido: content, interna: internal, fecha: new Date().toISOString() };
+
+    let notas = [];
+    try {
+        const base = currentUserData?.notas || '';
+        const parsed = JSON.parse(base);
+        if (Array.isArray(parsed)) notas = parsed;
+        else if (typeof parsed === 'object') notas = Object.values(parsed).filter(v => typeof v === 'object');
+    } catch { notas = []; }
+    notas.push(nota);
+
+    showToast('Guardando nota...', 'info');
+    try {
+        const res = await fetch(`/api/users/${encodeURIComponent(userId)}`, {
+            method: 'PUT',
+            headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ notas: JSON.stringify(notas) })
+        });
+        if (!res.ok) {
+            const data = await res.json().catch(() => ({}));
+            throw new Error(data.error || `Error ${res.status}`);
+        }
         closeModal('notesModal');
-        showToast('✓ Nota de administrador guardada', 'success');
+        showToast('Nota de administrador guardada', 'success');
         document.getElementById('noteContent').value = '';
         document.getElementById('noteType').selectedIndex = 0;
-    }, 800);
-}
-
-function endSession(sessionId) {
-    if (confirm('¿Cerrar esta sesión?')) {
-        setTimeout(() => {
-            showToast('Sesión cerrada', 'success');
-            event.target.closest('.device-item')?.remove();
-        }, 500);
+    } catch (err) {
+        showToast('Error al guardar nota: ' + err.message, 'error');
     }
 }
 
-function endAllSessions() {
-    if (confirm('¿Cerrar TODAS las sesiones activas excepto la actual?')) {
-        setTimeout(() => {
-            document.querySelectorAll('.device-item:not(.current)').forEach(el => el.remove());
-            showToast('✓ Todas las sesiones cerradas', 'success');
-        }, 800);
+async function endSession(sessionId) {
+    if (!confirm('¿Cerrar esta sesión?')) return;
+    const userId = new URLSearchParams(window.location.search).get('id');
+    const token = localStorage.getItem('token');
+    if (!userId || !token) return;
+    try {
+        const res = await fetch(`/api/users/${encodeURIComponent(userId)}/revoke-sessions`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!res.ok) throw new Error('Error al cerrar sesión');
+        showToast('Sesión cerrada', 'success');
+        const sessions = await loadUserSessions(userId);
+        renderSessions(sessions);
+    } catch (err) {
+        showToast('Error: ' + err.message, 'error');
+    }
+}
+
+async function endAllSessions() {
+    if (!confirm('¿Cerrar TODAS las sesiones activas excepto la actual?')) return;
+    const userId = new URLSearchParams(window.location.search).get('id');
+    const token = localStorage.getItem('token');
+    if (!userId || !token) return;
+    showToast('Revocando sesiones...', 'info');
+    try {
+        const res = await fetch(`/api/users/${encodeURIComponent(userId)}/revoke-sessions`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!res.ok) throw new Error('Error al revocar');
+        showToast('Todas las sesiones cerradas', 'success');
+        const sessions = await loadUserSessions(userId);
+        renderSessions(sessions);
+    } catch (err) {
+        showToast('Error: ' + err.message, 'error');
     }
 }
 
 function copyApiKey(key) {
     navigator.clipboard.writeText(key).then(() => {
-        showToast('✓ Clave copiada al portapapeles', 'success');
+        showToast('Clave copiada al portapapeles', 'success');
     });
 }
 
-function revokeApiKey(keyId) {
-    if (confirm('¿Revocar esta clave API?')) {
-        setTimeout(() => {
-            event.target.closest('.api-key-item')?.remove();
-            showToast('✓ Clave API revocada', 'success');
-        }, 600);
+async function revokeApiKey(keyId) {
+    if (!confirm('¿Revocar esta clave API?')) return;
+    const token = localStorage.getItem('token');
+    if (!token) { showToast('Sesión no iniciada', 'error'); return; }
+    try {
+        const res = await fetch(`/api/tenant/apikeys/${encodeURIComponent(keyId)}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!res.ok) throw new Error('Error al revocar');
+        event.target.closest('.api-key-item')?.remove();
+        showToast('Clave API revocada', 'success');
+    } catch (err) {
+        showToast('Error: ' + err.message, 'error');
     }
 }
 
-function exportUserData() {
+async function exportUserData() {
+    const userId = new URLSearchParams(window.location.search).get('id');
+    const token = localStorage.getItem('token');
+    if (!userId || !token) { showToast('Falta ID de usuario o sesión', 'error'); return; }
+
     showToast('Generando archivo con datos del usuario (GDPR compliant)...', 'info');
-    setTimeout(() => {
-        showToast('✓ Exportación completada. Descarga iniciada.', 'success');
-    }, 2000);
+    try {
+        const res = await fetch(`/api/users/${encodeURIComponent(userId)}/export`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!res.ok) throw new Error('Error al exportar');
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `usuario-${userId}-export-${Date.now()}.json`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+        showToast('Exportación completada. Descarga iniciada.', 'success');
+    } catch (err) {
+        showToast('Error al exportar: ' + err.message, 'error');
+    }
 }
 
 function printProfile() {

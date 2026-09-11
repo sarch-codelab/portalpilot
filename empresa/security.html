@@ -1303,31 +1303,9 @@
                     <!-- Access Map -->
                     <div class="card reveal">
                         <h2 class="card-title"><i class="fas fa-map-marked-alt"></i> Accesos Recientes</h2>
-                        <div class="access-list">
-                            <div class="access-item">
-                                <span class="access-ip allowed"><i class="fas fa-check-circle"></i> 187.210.34.89</span>
-                                <div class="access-location">Oficina Central Monterrey (IP Permitida)</div>
-                                <div class="access-user">Carlos Mendoza (Owner)</div>
-                                <div class="access-time"><i class="fas fa-clock"></i> Hace 2 min</div>
-                            </div>
-                            <div class="access-item">
-                                <span class="access-ip remote"><i class="fas fa-laptop"></i> Acceso Remoto</span>
-                                <div class="access-location">Laptop Corporativa (CTO Direct)</div>
-                                <div class="access-user">Sesión extendida sin restricción</div>
-                                <div class="access-time"><i class="fas fa-clock"></i> Hace 1 hora</div>
-                            </div>
-                            <div class="access-item">
-                                <span class="access-ip blocked"><i class="fas fa-ban"></i> 201.99.12.45</span>
-                                <div class="access-location"><b>⚠️ Bloqueado: IP No Autorizada</b></div>
-                                <div class="access-user">Intento en módulo Admin</div>
-                                <div class="access-time"><i class="fas fa-clock"></i> Hace 4 horas</div>
-                            </div>
-                            <div class="access-item">
-                                <span class="access-ip allowed"><i class="fas fa-check-circle"></i> 192.168.10.45</span>
-                                <div class="access-location">VPN Corporativa - Sucursal Guadalajara</div>
-                                <div class="access-user">Ana López (Auditor)</div>
-                                <div class="access-time"><i class="fas fa-clock"></i> Hace 6 horas</div>
-                            </div>
+                        <div class="access-list" id="recentAccesses">
+                            <div class="access-item" style="grid-column:1/-1;"><div class="access-location">Cargando accesos recientes...</div></div>
+                        </div>
                         </div>
                     </div>
 
@@ -1477,6 +1455,7 @@
         });
 
     </script>
+<script src="../js/security-recent.js"></script>
 <script src="../js/notifications.js"></script>
 <script src="../js/plan-gate.js"></script>
 <script src="../js/sidebar-loader.js"></script>

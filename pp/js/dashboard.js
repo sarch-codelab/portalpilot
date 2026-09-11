@@ -180,8 +180,206 @@ document.querySelectorAll('.model-item').forEach(item => {
     document.getElementById('currentModel').textContent = `- ${name} ${ver}`;
     document.getElementById('modelSelectorModal').classList.remove('active');
     showToast('Modelo Actualizado', `${name} ${ver} seleccionado.`, 'success');
+    localStorage.setItem('selectedModel', `${name} ${ver}`);
   });
 });
+
+// ── Cargar Notificaciones desde /api/notificaciones ────
+async function loadDashboardNotifications() {
+  const container = document.getElementById('dashboardNotifications');
+  const badge = document.getElementById('notifBadge');
+  if (!container) return;
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    const isLocalhost = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+    const API_ROOT = isLocalhost ? 'https://portal-pilot.vercel.app' : '';
+    const res = await fetch(`${API_ROOT}/api/notificaciones`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (!res.ok) throw new Error('API error');
+    const data = await res.json();
+    const notifs = data.notificaciones || [];
+
+    if (badge) {
+      const unread = data.unread_count != null ? data.unread_count : notifs.filter(n => !n.leida).length;
+      if (unread > 0) {
+        badge.textContent = unread > 99 ? '99+' : unread;
+        badge.style.display = 'flex';
+      } else {
+        badge.style.display = 'none';
+      }
+    }
+
+    if (!notifs.length) {
+      container.innerHTML = `<div class="notification-item">
+        <div class="notification-icon success"><i class="fas fa-check-circle"></i></div>
+        <div class="notification-content">
+          <div class="notification-title">Sin notificaciones</div>
+          <div class="notification-desc">No tienes notificaciones pendientes.</div>
+          <div class="notification-time">Todo al día</div>
+        </div>
+      </div>`;
+      return;
+    }
+
+    const tipoMap = {
+      success: ['fa-check-circle', 'success'],
+      error: ['fa-exclamation-circle', 'error'],
+      warning: ['fa-exclamation-triangle', 'warning'],
+      info: ['fa-info-circle', 'info']
+    };
+    const fmtTime = iso => {
+      if (!iso) return 'Recién';
+      const d = new Date(iso);
+      const diff = Date.now() - d.getTime();
+      if (diff < 60000) return 'Justo ahora';
+      if (diff < 3600000) return `Hace ${Math.max(1, Math.floor(diff / 60000))} min`;
+      if (diff < 86400000) return `Hace ${Math.floor(diff / 3600000)} h`;
+      return d.toLocaleDateString('es', { day: '2-digit', month: 'short' });
+    };
+
+    container.innerHTML = notifs.slice(0, 10).map(n => {
+      const [icon, cls] = tipoMap[n.tipo] || tipoMap.info;
+      const isUnread = !n.leida;
+      return `
+        <div class="notification-item ${isUnread ? 'unread' : ''}" data-id="${n.id}">
+          <div class="notification-icon ${cls}"><i class="fas ${icon}"></i></div>
+          <div class="notification-content">
+            <div class="notification-title">${n.titulo || 'Notificación'}</div>
+            <div class="notification-desc">${n.mensaje || ''}</div>
+            <div class="notification-time">${fmtTime(n.created_at)}</div>
+          </div>
+        </div>`;
+    }).join('');
+
+    container.querySelectorAll('.notification-item.unread').forEach(item => {
+      item.addEventListener('click', async () => {
+        const id = item.dataset.id;
+        item.classList.remove('unread');
+        try {
+          await fetch(`${API_ROOT}/api/notificaciones/${id}/read`, {
+            method: 'PUT',
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          loadDashboardNotifications();
+        } catch (e) { /* no crítico */ }
+      });
+    });
+  } catch (e) {
+    console.warn('[NOTIF] Error cargando notificaciones:', e.message);
+    container.innerHTML = `<div class="notification-item">
+      <div class="notification-icon info"><i class="fas fa-bell"></i></div>
+      <div class="notification-content">
+        <div class="notification-title">No se pudieron cargar</div>
+        <div class="notification-desc">Verifica tu conexión al servidor.</div>
+      </div>
+    </div>`;
+  }
+}
+
+// ── Cargar Mensajes del Sistema ────
+async function loadDashboardMessages() {
+  const container = document.getElementById('dashboardMessages');
+  if (!container) return;
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    const isLocalhost = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+    const API_ROOT = isLocalhost ? 'https://portal-pilot.vercel.app' : '';
+
+    // Mensajes = últimas notificaciones de tipo info/warning relevantes
+    const res = await fetch(`${API_ROOT}/api/notificaciones`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (!res.ok) throw new Error('API error');
+    const data = await res.json();
+    const notifs = (data.notificaciones || []).filter(n => n.tipo === 'info' || n.tipo === 'warning').slice(0, 5);
+
+    if (!notifs.length) {
+      container.innerHTML = '<div style="text-align:center;padding:20px;color:var(--gray);font-size:13px;">No hay mensajes del sistema.</div>';
+      return;
+    }
+
+    container.innerHTML = notifs.map(n => {
+      const initials = (n.titulo || 'SYS').split(' ').filter(w => w.length > 1).map(w => w[0]).slice(0, 2).join('').toUpperCase() || 'SYS';
+      const fecha = n.created_at ? new Date(n.created_at).toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' }) : '';
+      return `
+        <div class="message-item ${!n.leida ? 'unread' : ''}" data-id="${n.id}">
+          <div class="message-avatar">${initials}</div>
+          <div class="message-content">
+            <div class="message-header">
+              <span class="message-sender">${n.titulo || 'Sistema'}</span>
+              <span class="message-time">${fecha}</span>
+            </div>
+            <div class="message-preview">${n.mensaje || ''}</div>
+          </div>
+          ${!n.leida ? '<span class="unread-badge"></span>' : ''}
+        </div>`;
+    }).join('');
+
+    container.querySelectorAll('.message-item.unread').forEach(item => {
+      item.addEventListener('click', async () => {
+        const id = item.dataset.id;
+        item.classList.remove('unread');
+        try {
+          await fetch(`${API_ROOT}/api/notificaciones/${id}/read`, {
+            method: 'PUT',
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+        } catch (e) { /* no crítico */ }
+      });
+    });
+  } catch (e) {
+    console.warn('[MSG] Error cargando mensajes:', e.message);
+    container.innerHTML = '<div style="text-align:center;padding:20px;color:var(--gray);font-size:13px;">No se pudieron cargar los mensajes.</div>';
+  }
+}
+
+// ── Cargar Modelos IA ────
+const dashboardModels = [
+  { name: 'Gemma 3N', version: 'v1.2.4', status: 'Activo', active: true },
+  { name: 'Llama 3', version: 'v2.1.0', status: 'Disponible', active: false },
+  { name: 'Mistral', version: 'v1.5.2', status: 'Disponible', active: false },
+  { name: 'DeepSeek R1', version: 'v0.9.1', status: 'Disponible', active: false }
+];
+
+function renderDashboardModels() {
+  const container = document.getElementById('modelList');
+  if (!container) return;
+
+  const saved = localStorage.getItem('selectedModel');
+  const savedName = saved ? saved.split(' v')[0] : '';
+
+  container.innerHTML = dashboardModels.map(m => {
+    const isActive = saved ? savedName === m.name : m.active;
+    const dotClass = m.status === 'Activo' ? 'green' : 'green';
+    return `
+      <div class="model-item ${isActive ? 'active' : ''}" data-model="${m.name}" data-version="${m.version}">
+        <div class="model-name">${m.name}</div>
+        <div class="model-version">${m.version}</div>
+        <div class="model-status"><span class="status-dot ${dotClass}"></span> ${isActive ? 'Activo' : m.status}</div>
+      </div>`;
+  }).join('');
+
+  container.querySelectorAll('.model-item').forEach(item => {
+    item.addEventListener('click', () => {
+      container.querySelectorAll('.model-item').forEach(i => i.classList.remove('active'));
+      item.classList.add('active');
+      const name = item.dataset.model;
+      const ver = item.dataset.version;
+      document.getElementById('currentModel').textContent = `- ${name} ${ver}`;
+      document.getElementById('modelSelectorModal').classList.remove('active');
+      showToast('Modelo Actualizado', `${name} ${ver} seleccionado.`, 'success');
+      localStorage.setItem('selectedModel', `${name} ${ver}`);
+    });
+  });
+}
+
+// Cargar modelos + notificaciones al iniciar
+renderDashboardModels();
+loadDashboardNotifications();
+loadDashboardMessages();
 
 // ── Dashboard Data Loading (Backend Integration) ────
 let dashboardData = null;
@@ -247,13 +445,21 @@ function updateDashboardUI() {
   // Revenue
   const kpiRevenue = document.getElementById('kpiRevenue');
   if (kpiRevenue) {
-    kpiRevenue.textContent = `L ${(kpis.facturasTotal || 0).toLocaleString()}`;
+    const total = kpis.facturasTotal || 0;
+    kpiRevenue.textContent = total > 0 ? `L ${total.toLocaleString()}` : 'Activo';
   }
 
   // Health
   const kpiHealth = document.getElementById('kpiHealth');
   if (kpiHealth) {
     kpiHealth.textContent = '100%';
+  }
+
+  // Update online users status with real data
+  const onlineText = document.getElementById('onlineUsers');
+  if (onlineText) {
+    const activosHoy = kpis.usuariosActivosHoy || 0;
+    onlineText.textContent = activosHoy > 0 ? `${activosHoy} activos hoy` : 'Sin actividad hoy';
   }
 
   // Update chart data
@@ -269,6 +475,83 @@ function updateDashboardUI() {
   // Render charts
   createBarChart('chartTenants', chartDataSets.tenants['30D'], 'linear-gradient(180deg,#8b5cf6,#a78bfa)');
   createBarChart('chartTokens', chartDataSets.tokens['total'], 'linear-gradient(180deg,#a78bfa,#7c3aed)');
+
+  // Render alerts from real data
+  renderDashboardAlerts(dashboardData.alertas || []);
+  // Render activity from real data
+  renderDashboardActivity(dashboardData.actividadReciente || []);
+  // Render heatmap from real usage
+  renderHeatmapFromUsage(usage7d);
+}
+
+// ── Render Alertas desde /api/dashboard/summary ────
+function renderDashboardAlerts(alertas) {
+  const container = document.getElementById('dashboardAlerts');
+  if (!container) return;
+
+  if (!alertas.length) {
+    container.innerHTML = `
+      <div class="alert-item info">
+        <div class="alert-icon" style="background:rgba(48,209,88,0.15);color:var(--green);"><i class="fas fa-shield-check"></i></div>
+        <div class="alert-content">
+          <div class="alert-title">Todo operativo</div>
+          <div class="alert-desc">No hay alertas pendientes en el sistema.</div>
+          <div class="alert-time"><i class="fas fa-clock"></i> Sin novedades</div>
+        </div>
+      </div>`;
+    return;
+  }
+
+  const sevMap = {
+    alta: { color: 'var(--red)', bg: 'rgba(248,113,113,0.15)', icon: 'fa-exclamation-circle' },
+    media: { color: 'var(--yellow)', bg: 'rgba(251,191,36,0.15)', icon: 'fa-exclamation-triangle' },
+    baja: { color: 'var(--cyan)', bg: 'rgba(52,211,153,0.15)', icon: 'fa-info-circle' }
+  };
+
+  container.innerHTML = alertas.slice(0, 5).map(a => {
+    const s = sevMap[a.severidad] || sevMap.baja;
+    return `
+      <div class="alert-item info">
+        <div class="alert-icon" style="background:${s.bg};color:${s.color};"><i class="fas ${s.icon}"></i></div>
+        <div class="alert-content">
+          <div class="alert-title">${a.titulo}</div>
+          <div class="alert-desc">${a.detalle}</div>
+          <div class="alert-time"><i class="fas fa-clock"></i> Actualizado en vivo</div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+// ── Render Actividad desde /api/dashboard/summary ────
+function renderDashboardActivity(eventos) {
+  const container = document.getElementById('dashboardActivity');
+  if (!container) return;
+
+  if (!eventos.length) {
+    container.innerHTML = '<div style="text-align:center;padding:20px;color:var(--gray);font-size:13px;">Sin actividad registrada todavía.</div>';
+    return;
+  }
+
+  const iconMap = {
+    factura: ['fa-file-invoice-dollar', 'var(--accent)'],
+    ingreso: ['fa-arrow-down', 'var(--green)'],
+    gasto: ['fa-arrow-up', 'var(--red)'],
+    usuario: ['fa-user', 'var(--cyan)'],
+    login: ['fa-sign-in-alt', 'var(--accent)']
+  };
+
+  container.innerHTML = eventos.slice(0, 5).map((e, i) => {
+    const [icon, color] = iconMap[e.tipo] || ['fa-history', 'var(--accent)'];
+    const initials = (e.titulo || 'EV').split(' ').filter(w => w.length > 1).map(w => w[0]).slice(0, 2).join('').toUpperCase() || 'EV';
+    return `
+      <div class="activity-item">
+        <div class="activity-avatar" style="background:${color};color:#fff;">${initials}</div>
+        <div class="activity-content">
+          <div class="activity-text"><strong>${e.titulo}</strong></div>
+          <div class="activity-meta"><span><i class="fas ${icon}"></i> ${e.detalle || `${e.tipo} registrado`}</span><span><i class="fas fa-clock"></i> ${i === 0 ? 'Reciente' : 'Registrado'}</span></div>
+        </div>
+      </div>`;
+  }).join('');
 }
 
 // ── Online/Offline Toggle (cada 30s) ────
@@ -302,15 +585,20 @@ function toggleUserStatus() {
   const icon = document.getElementById('usersStatusIcon');
   const text = document.getElementById('onlineUsers');
 
+  // Datos reales: usuarios activos hoy desde /api/dashboard/summary
+  const activosHoy = (dashboardData && dashboardData.kpis && dashboardData.kpis.usuariosActivosHoy) || 0;
+  const activos = (dashboardData && dashboardData.kpis && dashboardData.kpis.usuariosActivos) ||
+    Math.max(0, realUserCount);
+
   if (isOnline) {
-    const online = Math.max(1, Math.floor(realUserCount * (0.3 + Math.random() * 0.4)));
+    const online = activosHoy > 0 ? activosHoy : activos;
     icon.innerHTML = '<i class="fas fa-circle" style="color:var(--green);font-size:6px;"></i>';
-    text.textContent = `${online} online ahora`;
+    text.textContent = online > 0 ? `${online} activos ahora` : 'Sin actividad ahora';
     text.style.color = '';
   } else {
-    const sleeping = Math.max(1, Math.floor(realUserCount * (0.6 + Math.random() * 0.2)));
+    const sleeping = Math.max(0, realUserCount - activosHoy);
     icon.innerHTML = '<i class="fas fa-moon" style="color:var(--accent);font-size:10px;"></i>';
-    text.textContent = `${sleeping.toLocaleString()} durmiendo ahora`;
+    text.textContent = sleeping > 0 ? `${sleeping.toLocaleString()} inactivos` : 'Todos activos';
     text.style.color = 'var(--accent)';
   }
 }
@@ -727,24 +1015,138 @@ function renderAllEvents() {
     </div>`).join('');
 }
 
-// ── Charts ────
-function createBarChart(containerId, data, gradient) {
+// ── Charts with ApexCharts ────
+let tenantsChart = null;
+let tokensChart = null;
+
+function createApexChart(containerId, data, chartType, title) {
   const container = document.getElementById(containerId);
   if (!container) return;
+  
   if (!data.length) {
     container.innerHTML = '<div class="chart-empty">Sin datos registrados</div>';
     return;
   }
-  container.innerHTML = '';
-  const max = Math.max(...data.map(d => d.value));
-  data.forEach((d, i) => {
-    const height = (d.value / max) * 160;
-    const bar = document.createElement('div');
-    bar.className = 'chart-bar';
-    bar.innerHTML = `<div class="chart-bar-fill" style="height:0;background:${gradient};"><span class="chart-bar-value">${d.value}</span></div><span class="chart-bar-label">${d.label}</span>`;
-    container.appendChild(bar);
-    setTimeout(() => bar.querySelector('.chart-bar-fill').style.height = height + 'px', 100 + i * 80);
-  });
+
+  const categories = data.map(d => d.label);
+  const values = data.map(d => d.value);
+
+  const options = {
+    series: [{
+      name: title,
+      data: values
+    }],
+    chart: {
+      type: chartType,
+      height: 280,
+      toolbar: {
+        show: false
+      },
+      background: 'transparent',
+      animations: {
+        enabled: true,
+        easing: 'easeinout',
+        speed: 800
+      }
+    },
+    theme: {
+      mode: 'dark',
+      palette: 'palette1'
+    },
+    colors: ['#8b5cf6', '#a78bfa', '#7c3aed', '#6d28d9'],
+    plotOptions: {
+      bar: {
+        borderRadius: 8,
+        columnWidth: '60%',
+        dataLabels: {
+          position: 'top'
+        }
+      }
+    },
+    dataLabels: {
+      enabled: true,
+      style: {
+        colors: ['#ffffff'],
+        fontSize: '12px',
+        fontFamily: 'DM Sans'
+      },
+      formatter: function (val) {
+        return val;
+      }
+    },
+    xaxis: {
+      categories: categories,
+      labels: {
+        style: {
+          colors: '#9ca3af',
+          fontSize: '11px',
+          fontFamily: 'DM Sans'
+        },
+        rotate: -45
+      },
+      axisBorder: {
+        show: false
+      },
+      axisTicks: {
+        show: false
+      }
+    },
+    yaxis: {
+      labels: {
+        style: {
+          colors: '#9ca3af',
+          fontSize: '11px',
+          fontFamily: 'DM Sans'
+        }
+      }
+    },
+    grid: {
+      borderColor: 'rgba(139, 92, 246, 0.1)',
+      strokeDashArray: 4
+    },
+    tooltip: {
+      theme: 'dark',
+      style: {
+        fontSize: '12px',
+        fontFamily: 'DM Sans'
+      },
+      x: {
+        show: true
+      }
+    }
+  };
+
+  if (chartType === 'line') {
+    options.stroke = {
+      curve: 'smooth',
+      width: 3
+    };
+    options.markers = {
+      size: 4,
+      colors: ['#8b5cf6'],
+      strokeColors: '#8b5cf6',
+      strokeWidth: 2
+    };
+    options.fill = {
+      type: 'gradient',
+      gradient: {
+        shadeIntensity: 1,
+        opacityFrom: 0.7,
+        opacityTo: 0.1,
+        stops: [0, 90, 100]
+      }
+    };
+  }
+
+  const chart = new ApexCharts(container, options);
+  chart.render();
+  
+  return chart;
+}
+
+function createBarChart(containerId, data, gradient) {
+  // Legacy function - redirect to ApexCharts
+  return createApexChart(containerId, data, 'bar', 'Valor');
 }
 
 const chartDataSets = {
@@ -756,8 +1158,13 @@ window.addEventListener('load', () => {
   setTimeout(() => {
     // Load real data first, then render charts
     fetchDashboardData().then(() => {
-      createBarChart('chartTenants', chartDataSets.tenants['30D'], 'linear-gradient(180deg,#8b5cf6,#a78bfa)');
-      createBarChart('chartTokens', chartDataSets.tokens['total'], 'linear-gradient(180deg,#a78bfa,#7c3aed)');
+      // Destroy existing charts if they exist
+      if (tenantsChart) tenantsChart.destroy();
+      if (tokensChart) tokensChart.destroy();
+      
+      // Create new ApexCharts
+      tenantsChart = createApexChart('chartTenants', chartDataSets.tenants['30D'], 'bar', 'Empresas');
+      tokensChart = createApexChart('chartTokens', chartDataSets.tokens['total'], 'line', 'Actividad');
     });
   }, 300);
 });
@@ -887,14 +1294,53 @@ document.querySelectorAll('.chart-view-tab').forEach(tab => {
 
 // ── Calendar ────
 const calendarEvents = [];
-/*
-  { date: '2026-08-20', title: 'Revisión plataforma Portal Pilot', priority: 'med', time: '10:00' },
-  { date: '2026-08-25', title: 'Backup programado Supabase', priority: 'med', time: '02:00' },
-  { date: '2026-08-30', title: 'Cierre mensual facturación SAR', priority: 'high', time: '23:59' },
-  { date: '2026-09-01', title: 'Inicio nuevo período comercial', priority: 'med', time: '08:00' },
-  { date: '2026-09-05', title: 'Auditoría interna de seguridad', priority: 'high', time: '09:00' },
-  { date: '2026-09-15', title: 'Actualización app móvil Portal Pilot', priority: 'med', time: '14:00' },
-]; */
+
+async function loadCalendarEvents() {
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    const isLocalhost = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+    const API_ROOT = isLocalhost ? 'https://portal-pilot.vercel.app' : '';
+    const res = await fetch(`${API_ROOT}/api/dashboard/summary?period=90`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (!res.ok) return;
+    const data = await res.json();
+
+    // Generar eventos comerciales a partir de datos reales (facturas, transacciones)
+    const events = [];
+    const usage = data.usage7d || [];
+    const hoy = new Date();
+
+    // Eventos a partir de días con facturación (>0)
+    usage.forEach(d => {
+      if (d.facturas > 0) {
+        events.push({
+          date: d.fecha,
+          title: `${d.facturas} factura(s) emitidas`,
+          priority: 'med',
+          time: '00:00'
+        });
+      }
+    });
+
+    // Próximos hitos comerciales recurrentes del mes
+    for (let m = 0; m < 2; m++) {
+      const mes = new Date(hoy.getFullYear(), hoy.getMonth() + m, 1);
+      const y = mes.getFullYear();
+      const mm = String(mes.getMonth() + 1).padStart(2, '0');
+      events.push({ date: `${y}-${mm}-01`, title: 'Inicio de período comercial', priority: 'med', time: '08:00' });
+      events.push({ date: `${y}-${mm}-28`, title: 'Cierre mensual facturación SAR', priority: 'high', time: '23:59' });
+      events.push({ date: `${y}-${mm}-15`, title: 'Backup programado Supabase', priority: 'low', time: '02:00' });
+    }
+
+    calendarEvents.length = 0;
+    calendarEvents.push(...events.filter(e => new Date(e.date) >= new Date(hoy.getFullYear(), hoy.getMonth() - 1, 1)));
+    renderCalendar();
+  } catch (e) {
+    console.warn('[CAL] Error cargando eventos:', e.message);
+  }
+}
 
 let currentCalDate = new Date();
 
@@ -988,10 +1434,14 @@ document.getElementById('calNext')?.addEventListener('click', () => {
   renderCalendar();
 });
 renderCalendar();
+loadCalendarEvents();
 
-// ── Heatmap (GitHub style) ────
+// ── Heatmap (GitHub style) con datos reales de usage ────
+let heatmapRequestCounts = {};
+
 function renderHeatmap() {
   const container = document.getElementById('heatmapContainer');
+  if (!container) return;
   const cells = 364; // 52 semanas x 7 días
   let html = '';
   const today = new Date();
@@ -999,14 +1449,30 @@ function renderHeatmap() {
   for (let i = cells - 1; i >= 0; i--) {
     const date = new Date(today);
     date.setDate(date.getDate() - i);
-    const level = 0;
-    const requests = 0;
     const dateStr = date.toISOString().split('T')[0];
+    const requests = heatmapRequestCounts[dateStr] || 0;
+    const level = requests === 0 ? 0 : Math.min(4, 1 + Math.floor(requests / 3));
     html += `<div class="heatmap-cell" data-level="${level}" data-tooltip="${dateStr}: ${requests} peticiones"></div>`;
   }
   container.innerHTML = html;
 }
 renderHeatmap();
+
+// ── Poblar heatmap desde /api/dashboard/summary (usage7d / transacciones+facturas) ────
+function renderHeatmapFromUsage(usage7d) {
+  if (!usage7d || !usage7d.length) return;
+  const counts = {};
+  usage7d.forEach(d => {
+    counts[d.fecha] = (d.transacciones || 0) + (d.facturas || 0);
+  });
+  // Mantener la petición extra desde KPIs reales (100% funcional)
+  if (dashboardData && dashboardData.kpis) {
+    const hoy = new Date().toISOString().slice(0, 10);
+    counts[hoy] = (counts[hoy] || 0) + (dashboardData.kpis.transaccionesHoy || 0);
+  }
+  heatmapRequestCounts = counts;
+  renderHeatmap();
+}
 
 // ── Status Pulse ────
 document.querySelectorAll('.status-dot').forEach(d => d.style.animationDelay = '0s');

@@ -167,6 +167,7 @@ function openModal(id) {
         console.warn('[PERFIL] Modal no encontrado:', id);
     }
     if (id === 'apiKeysModal') loadApiKeys();
+    if (id === 'sessionsModal') loadPerfilSessions();
     if (id === 'uploadAvatarModal' || id === 'uploadBannerModal') {
         syncModalPreviews(id);
     }
@@ -417,13 +418,68 @@ async function saveProfile() {
 
 // ── Notifications ──────────────────────────────────
 const notificationsBtn = document.getElementById('notificationsBtn');
+// ── Perfil Notifications (reales) ──────────────────
+async function loadPerfilNotifications() {
+    const container = document.getElementById('perfilNotifications');
+    if (!container) return;
+    const token = localStorage.getItem('token');
+    if (!token) {
+        container.innerHTML = '<div style="text-align:center;padding:24px;color:var(--gray);font-size:13px;"><i class="fas fa-bell-slash"></i> Inicia sesión para ver notificaciones.</div>';
+        return;
+    }
+    try {
+        const res = await fetch(`${_API_ROOT}/api/notificaciones`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!res.ok) throw new Error('notif error');
+        const data = await res.json();
+        const notifs = data.notificaciones || [];
+
+        if (!notifs.length) {
+            container.innerHTML = '<div style="text-align:center;padding:24px;color:var(--gray);font-size:13px;"><i class="fas fa-bell-slash" style="font-size:24px;display:block;margin-bottom:8px;"></i>Sin notificaciones pendientes.</div>';
+            updateNotifBadge();
+            return;
+        }
+
+        const iconMap = { success: ['fa-check', 'success'], warning: ['fa-exclamation', 'warning'], info: ['fa-info', 'info'], error: ['fa-exclamation-circle', 'error'] };
+        const fmtTime = iso => {
+            if (!iso) return 'Recién';
+            const d = new Date(iso);
+            const diff = Date.now() - d.getTime();
+            if (diff < 60000) return 'Justo ahora';
+            if (diff < 3600000) return `Hace ${Math.max(1, Math.floor(diff / 60000))} min`;
+            if (diff < 86400000) return `Hace ${Math.floor(diff / 3600000)} h`;
+            return d.toLocaleDateString('es', { day: '2-digit', month: 'short' });
+        };
+
+        container.innerHTML = notifs.slice(0, 15).map(n => {
+            const [icon, cls] = iconMap[n.tipo] || iconMap.info;
+            const isUnread = !n.leida;
+            return `<div class="notification-item ${isUnread ? 'unread' : ''}" data-id="${n.id}">
+                <div class="notif-icon ${cls}"><i class="fas ${icon}"></i></div>
+                <div class="notif-content">
+                    <div class="notif-title">${n.titulo || 'Notificación'}</div>
+                    <div class="notif-desc">${n.mensaje || ''}</div>
+                    <div class="notif-time">${fmtTime(n.created_at)}</div>
+                </div>
+                <button class="notif-mark" data-id="${n.id}" onclick="markAsRead(this)"><i class="fas fa-check"></i></button>
+            </div>`;
+        }).join('');
+
+        updateNotifBadge();
+    } catch (e) {
+        console.warn('[PERFIL] Error notificaciones:', e.message);
+        container.innerHTML = '<div style="text-align:center;padding:24px;color:var(--gray);font-size:13px;"><i class="fas fa-exclamation-triangle"></i> No se pudieron cargar las notificaciones.</div>';
+    }
+}
+
 const notificationsModal = document.getElementById('notificationsModal');
 const notifBadge = document.getElementById('notifBadge');
 
 if (notificationsBtn) {
     notificationsBtn.addEventListener('click', () => {
         openModal('notificationsModal');
-        // Reset badge
+        loadPerfilNotifications();
         if (notifBadge) {
             notifBadge.style.display = 'none';
         }
@@ -432,21 +488,37 @@ if (notificationsBtn) {
 
 function markAsRead(btn) {
     const item = btn.closest('.notification-item');
+    const id = (item && item.dataset.id) || btn.dataset.id;
     item.classList.remove('unread');
     btn.style.opacity = '0';
     updateNotifBadge();
+
+    const token = localStorage.getItem('token');
+    if (id && token) {
+        fetch(`${_API_ROOT}/api/notificaciones/${id}/read`, {
+            method: 'PUT',
+            headers: { 'Authorization': `Bearer ${token}` }
+        }).catch(() => {});
+    }
 }
 
 function markAllRead() {
-    document.querySelectorAll('.notification-item.unread').forEach(item => {
+    const token = localStorage.getItem('token');
+    document.querySelectorAll('#perfilNotifications .notification-item.unread').forEach(item => {
         item.classList.remove('unread');
+        if (item.dataset.id && token) {
+            fetch(`${_API_ROOT}/api/notificaciones/${item.dataset.id}/read`, {
+                method: 'PUT',
+                headers: { 'Authorization': `Bearer ${token}` }
+            }).catch(() => {});
+        }
     });
     updateNotifBadge();
     showToast('Todas las notificaciones marcadas como leídas', 'success');
 }
 
 function updateNotifBadge() {
-    const unreadCount = document.querySelectorAll('.notification-item.unread').length;
+    const unreadCount = document.querySelectorAll('#perfilNotifications .notification-item.unread').length;
     if (notifBadge) {
         if (unreadCount > 0) {
             notifBadge.textContent = unreadCount;
@@ -728,10 +800,57 @@ function toggle2FA() {
 }
 
 // ── Sessions ───────────────────────────────────────
-function endSession(btn) {
-    if (confirm('¿Cerrar esta sesión?')) {
-        btn.closest('.session-item').remove();
+async function loadPerfilSessions() {
+    const container = document.getElementById('profileSessionsList');
+    if (!container) return;
+    const token = localStorage.getItem('token');
+    const userId = localStorage.getItem('currentAccountId');
+    if (!token || !userId) { container.innerHTML = '<div style="text-align:center;padding:16px;color:var(--gray);font-size:13px;">Inicia sesión para ver sesiones.</div>'; return; }
+    try {
+        const res = await fetch(`${_API_ROOT}/api/users/${encodeURIComponent(userId)}/sessions`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!res.ok) throw new Error('sessions error');
+        const data = await res.json();
+        const sessions = data.sessions || [];
+        if (!sessions.length) { container.innerHTML = '<div style="text-align:center;padding:16px;color:var(--gray);font-size:13px;"><i class="fas fa-laptop"></i> No hay sesiones registradas.</div>'; return; }
+        container.innerHTML = sessions.map(s => {
+            const icon = s.deviceType === 'mobile' ? 'fa-mobile-alt' : s.deviceType === 'tablet' ? 'fa-tablet-alt' : 'fa-desktop';
+            const time = s.lastActivity ? new Date(s.lastActivity).toLocaleString('es') : '';
+            const status = s.isActive
+                ? '<span style="color:var(--green);">&#x25cf; Activa</span>'
+                : '<span style="color:var(--gray);">Inactiva</span>';
+            return `<div class="session-item ${s.isCurrent ? 'current' : ''}">
+                <div class="session-info">
+                    <div class="session-device"><i class="fas ${icon}"></i> ${s.browser || 'Navegador'} &bull; ${s.os || 'Sistema'}</div>
+                    <div class="session-meta">Última actividad: ${time} &bull; ${status}</div>
+                    ${s.location ? '<div class="session-location">&#x1F4CD; ' + s.location + (s.ip ? ' &bull; ' + s.ip : '') + '</div>' : ''}
+                </div>
+                ${s.isCurrent ? '<span class="profile-badge verified" style="font-size:10px;padding:2px 8px;">Actual</span>'
+                    : '<button class="btn btn-ghost btn-xs" onclick="endSession(this)">Cerrar</button>'}
+            </div>`;
+        }).join('');
+    } catch (e) {
+        container.innerHTML = '<div style="text-align:center;padding:16px;color:var(--gray);font-size:13px;"><i class="fas fa-exclamation-triangle"></i> No se pudieron cargar las sesiones.</div>';
+    }
+}
+
+async function endSession(btn) {
+    if (!confirm('¿Cerrar esta sesión?')) return;
+    const item = btn.closest('.session-item');
+    const token = localStorage.getItem('token');
+    const userId = localStorage.getItem('currentAccountId');
+    if (!token || !userId) return showToast('Sesión no válida', 'error');
+    try {
+        const res = await fetch(`${_API_ROOT}/api/users/${encodeURIComponent(userId)}/revoke-sessions`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!res.ok) throw new Error('Error al revocar');
+        item.remove();
         showToast('Sesión cerrada', 'success');
+    } catch (err) {
+        showToast(err.message || 'Error al cerrar sesión', 'error');
     }
 }
 
@@ -855,7 +974,7 @@ function checkDeleteConfirm() {
     }
 }
 
-function deleteAccount() {
+async function deleteAccount() {
     if (document.getElementById('deleteConfirm').value.trim().toUpperCase() !== 'ELIMINAR') {
         showToast('Escribe ELIMINAR para confirmar', 'error');
         return;
@@ -946,6 +1065,7 @@ async function downloadData() {
 window.addEventListener('load', () => {
     // Cargar perfil real desde la base de datos
     loadProfile();
+    loadPerfilNotifications();
 
     setTimeout(() => {
         document.querySelectorAll('.reveal').forEach((el, i) => {

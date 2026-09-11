@@ -131,7 +131,7 @@ function renderActivityChart() {
 // ── Render Activity Table ─────────────────
 function renderActivityTable() {
   if (!summaryData) return;
-  const tbody = document.querySelector('.analytics-table tbody');
+  const tbody = document.getElementById('recentActivityBody');
   if (!tbody) return;
   const events = summaryData.actividadReciente || [];
   if (!events.length) {
@@ -139,11 +139,12 @@ function renderActivityTable() {
     return;
   }
   tbody.innerHTML = events.map(e => {
-    const dateStr = e.detalle?.split('·')[1]?.trim() || '';
-    const meta = e.detalle?.split('·')[0]?.trim() || '';
+    const parts = (e.detalle || '').split(' · ');
+    const meta = parts[0] || '';
+    const dateStr = parts[1] || '';
     const impact = getImpact(e.tipo);
     return `<tr>
-      <td>${dateStr}</td>
+      <td>${esc(dateStr)}</td>
       <td>${esc(e.titulo)}</td>
       <td>${esc(meta)}</td>
       <td><span class="impact-badge ${impact.cls}">${impact.label}</span></td>

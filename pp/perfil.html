@@ -311,7 +311,7 @@
                 <div class="topbar-right">
                     <button class="topbar-btn" title="Notificaciones" id="notificationsBtn">
                         <i class="fas fa-bell"></i>
-                        <span class="badge" id="notifBadge">2</span>
+                        <span class="badge" id="notifBadge" style="display:none;">0</span>
                     </button>
                     <button class="btn btn-outline btn-sm" onclick="openIdCard()">
                         <i class="fas fa-id-card"></i> Identificación
@@ -416,7 +416,7 @@
                         <div class="security-item">
                             <div class="security-info">
                                 <div class="security-title">Contraseña</div>
-                                <div class="security-desc">Último cambio: hace 45 días</div>
+                                <div class="security-desc" id="passwordLastChanged">Último cambio registrado</div>
                             </div>
                             <button class="btn btn-outline btn-sm" onclick="openModal('changePasswordModal')">
                                 Cambiar
@@ -602,41 +602,8 @@
                         class="fas fa-times"></i></button>
             </div>
             <div class="modal-body" style="max-height:400px;overflow-y:auto;">
-                <div class="notification-item unread">
-                    <div class="notif-icon success"><i class="fas fa-check"></i></div>
-                    <div class="notif-content">
-                        <div class="notif-title">Perfil actualizado</div>
-                        <div class="notif-desc">Tu información personal fue guardada exitosamente</div>
-                        <div class="notif-time">Hace 2 horas</div>
-                    </div>
-                    <button class="notif-mark" onclick="markAsRead(this)"><i class="fas fa-check"></i></button>
-                </div>
-                <div class="notification-item unread">
-                    <div class="notif-icon warning"><i class="fas fa-exclamation"></i></div>
-                    <div class="notif-content">
-                        <div class="notif-title">Sesión nueva detectada</div>
-                        <div class="notif-desc">Inicio de sesión desde Guadalajara, MX</div>
-                        <div class="notif-time">Hace 5 horas</div>
-                    </div>
-                    <button class="notif-mark" onclick="markAsRead(this)"><i class="fas fa-check"></i></button>
-                </div>
-                <div class="notification-item">
-                    <div class="notif-icon info"><i class="fas fa-info"></i></div>
-                    <div class="notif-content">
-                        <div class="notif-title">Actualización de seguridad</div>
-                        <div class="notif-desc">Se aplicaron nuevas políticas de contraseña</div>
-                        <div class="notif-time">Hace 2 días</div>
-                    </div>
-                    <button class="notif-mark" onclick="markAsRead(this)"><i class="fas fa-check"></i></button>
-                </div>
-                <div class="notification-item">
-                    <div class="notif-icon success"><i class="fas fa-shield-alt"></i></div>
-                    <div class="notif-content">
-                        <div class="notif-title">2FA activado</div>
-                        <div class="notif-desc">La autenticación de dos factores está habilitada</div>
-                        <div class="notif-time">Hace 45 días</div>
-                    </div>
-                    <button class="notif-mark" onclick="markAsRead(this)"><i class="fas fa-check"></i></button>
+                <div id="perfilNotifications">
+                    <div style="text-align:center;padding:24px;color:var(--gray);font-size:13px;"><i class="fas fa-spinner fa-spin"></i> Cargando notificaciones...</div>
                 </div>
             </div>
             <div class="modal-footer" style="justify-content:space-between;">
@@ -753,30 +720,8 @@
                 <button class="modal-close" onclick="closeModal('sessionsModal')"><i class="fas fa-times"></i></button>
             </div>
             <div class="modal-body">
-                <div class="session-item current">
-                    <div class="session-info">
-                        <div class="session-device"><i class="fas fa-desktop"></i> Chrome • Windows</div>
-                        <div class="session-meta">Última actividad: Ahora • <span style="color:var(--green)">●
-                                Activa</span></div>
-                        <div class="session-location">📍 Monterrey, MX • 187.210.34.89</div>
-                    </div>
-                    <span class="profile-badge verified" style="font-size:10px;padding:2px 8px;">Actual</span>
-                </div>
-                <div class="session-item">
-                    <div class="session-info">
-                        <div class="session-device"><i class="fas fa-mobile-alt"></i> Safari • iOS</div>
-                        <div class="session-meta">Última actividad: Hace 2 horas</div>
-                        <div class="session-location">📍 Guadalajara, MX • 189.203.45.12</div>
-                    </div>
-                    <button class="btn btn-ghost btn-xs" onclick="endSession(this)">Cerrar</button>
-                </div>
-                <div class="session-item">
-                    <div class="session-info">
-                        <div class="session-device"><i class="fas fa-laptop"></i> Firefox • macOS</div>
-                        <div class="session-meta">Última actividad: Ayer, 6:45 PM</div>
-                        <div class="session-location">📍 CDMX, MX • 201.99.12.45</div>
-                    </div>
-                    <button class="btn btn-ghost btn-xs" onclick="endSession(this)">Cerrar</button>
+                <div id="profileSessionsList">
+                    <div style="text-align:center;padding:24px;color:var(--gray);font-size:13px;"><i class="fas fa-spinner fa-spin"></i> Cargando sesiones...</div>
                 </div>
             </div>
             <div class="modal-footer">

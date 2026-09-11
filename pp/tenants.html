@@ -335,7 +335,7 @@
         </div>
         <div class="topbar-right">
           <button class="topbar-btn" title="Notificaciones"><i class="fas fa-bell"></i><span
-              class="badge">2</span></button>
+              class="badge" data-notif-badge style="display:none;">0</span></button>
           <!--  Al hacer click aparece una pantalla emergente con la lista de notificaciones como alertas de error acceso denegado tenant creado exitosamente, etceterea. -->
           <button class="btn btn-acc btn-sm" onclick="openModal('createModal')"><i class="fas fa-plus"></i> Nuevo
             Tenant</button>
@@ -434,12 +434,12 @@
         <form id="createTenantForm">
           <div class="form-group">
             <label class="form-label">Nombre de la Empresa *</label>
-            <input type="text" id="t-nombre" class="form-input" placeholder="Ej: TechCorp Solutions" required>
+            <input type="text" id="t-nombre" class="form-input" placeholder="Ej: Mi Empresa S.A." required>
           </div>
           <div class="form-row">
             <div class="form-group">
               <label class="form-label">Dominio *</label>
-              <input type="text" id="t-dominio" class="form-input" placeholder="techcorp.portalpilot.io" required>
+              <input type="text" id="t-dominio" class="form-input" placeholder="midominio.portalpilot.io" required>
             </div>
             <div class="form-group">
               <label class="form-label">Plan *</label>
@@ -576,6 +576,7 @@
   <!-- ✅ Scripts -->
   <script src="../auth-check.js"></script>
   <script src="js/portal-admin-guard.js"></script>
+<script src="js/notif-badge.js"></script>
   <script src="js/tenants.js"></script>
   <script src="../js/notifications.js"></script>
   <script src="../js/sidebar-loader.js"></script>

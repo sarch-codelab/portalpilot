@@ -383,7 +383,7 @@ a{text-decoration:none;color:inherit}ul{list-style:none}img{max-width:100%;displ
 
     <!-- Profile -->
     <div class="profile-section">
-      <div id="sidebarAvatar" class="avatar" style="display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;color:#fff;background:linear-gradient(135deg,var(--accent),var(--cyan))">PP</div>
+      <div id="sidebarAvatar" class="avatar" style="display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;color:#fff;background:linear-gradient(135deg,var(--accent),var(--cyan))">&mdash;</div>
       <div class="profile-info"><span class="name" id="sidebarName">Cargando...</span><span class="role" id="sidebarRole">Administrador</span></div>
     </div>
 
@@ -422,7 +422,7 @@ a{text-decoration:none;color:inherit}ul{list-style:none}img{max-width:100%;displ
     <div class="page-header">
       <div>
         <h1 class="page-title">Gestión de <span>Talento Humano</span></h1>
-        <p class="page-subtitle">Administra tu equipo, asigna roles y controla el acceso. Tu plan Enterprise permite hasta 60 miembros.</p>
+        <p class="page-subtitle">Administra tu equipo, asigna roles y controla el acceso. Administra tu equipo, asigna roles y controla el acceso seg&uacute;n tu plan.</p>
       </div>
       <div class="page-actions">
         <button class="btn btn-outline btn-sm" onclick="exportTeam()"><i class="fas fa-download"></i> Exportar CSV</button>
@@ -434,7 +434,7 @@ a{text-decoration:none;color:inherit}ul{list-style:none}img{max-width:100%;displ
       <div class="stat-card reveal">
         <div class="stat-icon purple"><i class="fas fa-users"></i></div>
         <div class="stat-info">
-          <div class="stat-value"><span id="totalMembers">48</span> <span style="font-size:14px;color:var(--gray);font-weight:400">/ 60</span></div>
+          <div class="stat-value"><span id="totalMembers">&mdash;</span> <span style="font-size:14px;color:var(--gray);font-weight:400">/ <span id="seatsLimit">&hellip;</span></span></div>
           <div class="stat-label">Seats Usados</div>
           <div class="stat-bar"><div class="stat-bar-fill" id="seatsBar" style="width:80%"></div></div>
         </div>
@@ -442,7 +442,7 @@ a{text-decoration:none;color:inherit}ul{list-style:none}img{max-width:100%;displ
       <div class="stat-card reveal" style="transition-delay:.05s">
         <div class="stat-icon green"><i class="fas fa-user-check"></i></div>
         <div class="stat-info">
-          <div class="stat-value" id="activeCount">42</div>
+          <div class="stat-value" id="activeCount">&mdash;</div>
           <div class="stat-label">Activos</div>
           <div class="stat-bar"><div class="stat-bar-fill" style="width:87%;background:var(--green)"></div></div>
         </div>
@@ -450,7 +450,7 @@ a{text-decoration:none;color:inherit}ul{list-style:none}img{max-width:100%;displ
       <div class="stat-card reveal" style="transition-delay:.1s">
         <div class="stat-icon cyan"><i class="fas fa-user-shield"></i></div>
         <div class="stat-info">
-          <div class="stat-value" id="adminCount">6</div>
+          <div class="stat-value" id="adminCount">&mdash;</div>
           <div class="stat-label">Administradores</div>
           <div class="stat-bar"><div class="stat-bar-fill" style="width:100%;background:var(--cyan)"></div></div>
         </div>
@@ -458,7 +458,7 @@ a{text-decoration:none;color:inherit}ul{list-style:none}img{max-width:100%;displ
       <div class="stat-card reveal" style="transition-delay:.15s">
         <div class="stat-icon yellow"><i class="fas fa-user-clock"></i></div>
         <div class="stat-info">
-          <div class="stat-value" id="invitedCount">3</div>
+          <div class="stat-value" id="invitedCount">&mdash;</div>
           <div class="stat-label">Invitaciones Pendientes</div>
           <div class="stat-bar"><div class="stat-bar-fill" style="width:50%;background:var(--yellow)"></div></div>
         </div>
@@ -504,7 +504,7 @@ a{text-decoration:none;color:inherit}ul{list-style:none}img{max-width:100%;displ
 
     <!-- PAGINATION -->
     <div style="padding:0 clamp(16px,4vw,40px) 24px;display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--border);padding-top:16px">
-      <div style="font-size:12px;color:var(--gray)">Mostrando <strong style="color:var(--white)">1-10</strong> de <strong style="color:var(--white)" id="totalFiltered">48</strong> miembros</div>
+      <div style="font-size:12px;color:var(--gray)">Mostrando <strong style="color:var(--white)">1-10</strong> de <strong style="color:var(--white)" id="totalFiltered">&mdash;</strong> miembros</div>
       <div style="display:flex;gap:8px">
         <button class="btn btn-ghost btn-xs" disabled><i class="fas fa-chevron-left"></i></button>
         <button class="btn btn-ghost btn-xs" style="background:var(--accent);color:#fff">1</button>
@@ -542,6 +542,12 @@ const API_BASE = '../api';
 const token = localStorage.getItem('token');
 const empresaCodigo = localStorage.getItem('empresaCodigo');
 const headers = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` };
+// -- Limite de seats segun plan (limites reales del backend) --
+const SEAT_LIMITS = { starter: 5, business: 50, pro: 50, enterprise: 200, corporativo: 200 };
+const planActual = ((window._currentPlan || localStorage.getItem('empresaPlan') || 'starter')).toLowerCase();
+let seatLimit = SEAT_LIMITS[planActual] || 200;
+const seatsLimitEl = document.getElementById('seatsLimit');
+if (seatsLimitEl) seatsLimitEl.textContent = seatLimit;
 
 // ── Team Data (from API) ───────────────────────────
 let teamMembers = [];
@@ -818,7 +824,7 @@ function updateStats() {
   document.getElementById('activeCount').textContent = active;
   document.getElementById('adminCount').textContent = admins;
   document.getElementById('invitedCount').textContent = invited;
-  const pct = Math.round((total / 60) * 100);
+  const pct = seatLimit > 0 ? Math.round((total / seatLimit) * 100) : 100;
   const bar = document.getElementById('seatsBar');
   bar.style.width = pct + '%';
   if (pct >= 90) bar.className = 'stat-bar-fill warning'; else bar.className = 'stat-bar-fill';

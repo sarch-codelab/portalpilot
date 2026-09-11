@@ -626,35 +626,8 @@
                     <!-- API Keys -->
                     <div class="card reveal">
                         <h2 class="card-title"><i class="fas fa-code"></i> Claves API</h2>
-                        <div style="display:flex;flex-direction:column;gap:10px;">
-                            <div class="api-key-item">
-                                <div class="api-key-info">
-                                    <div class="api-key-name">Producción - Dashboard</div>
-                                    <div class="api-key-value">pk_live_8a3f...2e1b9c4d</div>
-                                    <div class="api-key-meta"><span>Creada: 12 Ene 2026</span><span>•</span><span>Último
-                                            uso: Hoy</span></div>
-                                </div>
-                                <div class="api-key-actions">
-                                    <button class="btn btn-ghost btn-xs" onclick="copyApiKey('pk_live_8a3f2e1b9c4d')"><i
-                                            class="fas fa-copy"></i></button>
-                                    <button class="btn btn-danger btn-xs" onclick="revokeApiKey('key_prod_001')"><i
-                                            class="fas fa-trash"></i></button>
-                                </div>
-                            </div>
-                            <div class="api-key-item">
-                                <div class="api-key-info">
-                                    <div class="api-key-name">Desarrollo - Testing</div>
-                                    <div class="api-key-value">pk_test_4f1a...9b2c8e3d</div>
-                                    <div class="api-key-meta"><span>Creada: 3 Mar 2026</span><span>•</span><span>Último
-                                            uso: Hace 3 días</span></div>
-                                </div>
-                                <div class="api-key-actions">
-                                    <button class="btn btn-ghost btn-xs" onclick="copyApiKey('pk_test_4f1a9b2c8e3d')"><i
-                                            class="fas fa-copy"></i></button>
-                                    <button class="btn btn-danger btn-xs" onclick="revokeApiKey('key_dev_002')"><i
-                                            class="fas fa-trash"></i></button>
-                                </div>
-                            </div>
+                        <div style="display:flex;flex-direction:column;gap:10px;" id="userApiKeysList">
+                            <div style="padding:12px;color:var(--gray);font-size:13px;"><i class="fas fa-spinner fa-spin"></i> Cargando claves API...</div>
                         </div>
                         <button class="btn btn-ghost btn-sm" style="width:100%;margin-top:12px;"
                             onclick="openModal('createApiKeyModal')">+ Generar Nueva Clave</button>

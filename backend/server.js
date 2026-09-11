@@ -1109,6 +1109,135 @@ app.get('/api/config', (req, res) => {
     supabaseAnonKey: process.env.SUPABASE_ANON_KEY || ''
   });
 });
+// -------------------------------------------------------------------------
+// CONFIGURACION GLOBAL (panel ROOT) - persiste en configuraciones_globales
+// -------------------------------------------------------------------------
+function validarClaveConfig(clave) {
+  return /^[A-Za-z0-9_]{1,100}$/.test(String(clave || '').trim());
+}
+
+app.get('/api/global/config', authenticate, requireRoot, async (req, res) => {
+  try {
+    if (!requireSupabase(res)) return;
+    const { data, error } = await supabase
+      .from('configuraciones_globales')
+      .select('clave, valor, entorno, sensible, descripcion, updated_at')
+      .order('clave', { ascending: true });
+    if (error) return res.status(500).json({ error: error.message });
+    return res.json({ configuraciones: data || [] });
+  } catch (err) { return handleServerError(res, err); }
+});
+
+app.put('/api/global/config', authenticate, requireRoot, async (req, res) => {
+  try {
+    if (!requireSupabase(res)) return;
+    const cuerpo = Array.isArray(req.body && req.body.configuraciones) ? req.body.configuraciones : [];
+    if (!cuerpo.length) return res.status(400).json({ error: 'Enviar configuraciones a guardar.' });
+    const ahora = new Date().toISOString();
+    const filas = [];
+    const claves = [];
+    for (const c of cuerpo) {
+      const clave = String((c && c.clave) || '').trim();
+      if (!validarClaveConfig(clave)) continue;
+      const valor = (c.valor === null || c.valor === undefined) ? '' : String(c.valor);
+      filas.push({
+        clave,
+        valor,
+        entorno: String((c && c.entorno) || 'production').slice(0, 30),
+        sensible: !!(c && c.sensible),
+        descripcion: (c && c.descripcion) ? String(c.descripcion).slice(0, 300) : null,
+        updated_at: ahora
+      });
+      claves.push(clave);
+    }
+    if (!filas.length) return res.status(400).json({ error: 'No hay claves validas.' });
+    const { error } = await supabase.from('configuraciones_globales').upsert(filas, { onConflict: 'clave' });
+    if (error) return res.status(500).json({ error: error.message });
+    const quien = (req.user && req.user.email) || 'root';
+    await registrarAuditoria('ROOT', 'config_actualizada', 'Configuracion global actualizada: ' + claves.join(', '), 'config', quien, req);
+    return res.json({ ok: true, actualizadas: claves.length });
+  } catch (err) { return handleServerError(res, err); }
+});
+
+app.delete('/api/global/config/:clave', authenticate, requireRoot, async (req, res) => {
+  try {
+    if (!requireSupabase(res)) return;
+    const clave = String(req.params.clave || '').trim();
+    if (!validarClaveConfig(clave) || clave.toUpperCase() === 'SITE_NAME') {
+      return res.status(400).json({ error: 'Clave invalida o protegida.' });
+    }
+    const { error } = await supabase.from('configuraciones_globales').delete().eq('clave', clave);
+    if (error) return res.status(500).json({ error: error.message });
+    const quien = (req.user && req.user.email) || 'root';
+    await registrarAuditoria('ROOT', 'config_eliminada', 'Configuracion global eliminada: ' + clave, 'config', quien, req);
+    return res.json({ ok: true, clave });
+  } catch (err) { return handleServerError(res, err); }
+});
+
+app.get('/api/global/admins', authenticate, requireRoot, async (req, res) => {
+  try {
+    if (!requireSupabase(res)) return;
+    const { data, error } = await supabase
+      .from('usuarios')
+      .select('id, nombre, email, rol, rol_global, estado, activo, ultimo_acceso, empresa_codigo')
+      .order('nombre', { ascending: true });
+    if (error) return res.status(500).json({ error: error.message });
+    const admins = (data || [])
+      .filter(function (u) {
+        const rg = String(u.rol_global || '').toLowerCase();
+        const r = String(u.rol || '').toLowerCase();
+        return normalizeTenantCode(u.empresa_codigo) === 'ROOT' || ['root', 'root pp', 'superadmin'].includes(rg) || ['root', 'root pp', 'superadmin'].includes(r);
+      })
+      .map(function (u) {
+        return {
+          id: u.id,
+          nombre: (u.nombre || '').trim() || 'Sin nombre',
+          email: u.email || '',
+          rol: (u.rol_global || u.rol || 'admin'),
+          estado: (u.estado || 'activo'),
+          activo: u.activo !== false,
+          ultimo_acceso: u.ultimo_acceso || null,
+          empresa_codigo: u.empresa_codigo || 'ROOT'
+        };
+      });
+    return res.json({ total: admins.length, admins });
+  } catch (err) { return handleServerError(res, err); }
+});
+
+app.post('/api/global/admins', authenticate, requireRoot, async (req, res) => {
+  try {
+    if (!requireSupabase(res)) return;
+    const email = String((req.body && req.body.email) || '').trim().toLowerCase();
+    const nombre = String((req.body && req.body.nombre) || '').trim();
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return res.status(400).json({ error: 'Email invalido.' });
+    const { data: usuario, error } = await supabase.from('usuarios').select('id, nombre, email, rol, rol_global').eq('email', email).maybeSingle();
+    if (error) return res.status(500).json({ error: error.message });
+    if (!usuario) return res.status(404).json({ error: 'No existe ningun usuario con ese email.' });
+    const payload = { rol: 'root', rol_global: 'root', updated_at: new Date().toISOString() };
+    if (nombre && usuario.nombre !== nombre) payload.nombre = nombre.slice(0, 100);
+    const { error: upErr } = await supabase.from('usuarios').update(payload).eq('id', usuario.id);
+    if (upErr) return res.status(500).json({ error: upErr.message });
+    const quien = (req.user && req.user.email) || 'root';
+    await registrarAuditoria('ROOT', 'admin_creado', 'Administrador global agregado: ' + email, 'config', quien, req);
+    return res.json({ ok: true, admin: { id: usuario.id, nombre: (usuario.nombre || '').trim(), email, rol: 'root' } });
+  } catch (err) { return handleServerError(res, err); }
+});
+
+app.delete('/api/global/admins/:id', authenticate, requireRoot, async (req, res) => {
+  try {
+    if (!requireSupabase(res)) return;
+    const id = String(req.params.id || '');
+    if (id === req.user.sub) return res.status(400).json({ error: 'No puedes remover tu propio acceso de administrador.' });
+    const { data: usuario, error } = await supabase.from('usuarios').select('id, email').eq('id', id).maybeSingle();
+    if (error) return res.status(500).json({ error: error.message });
+    if (!usuario) return res.status(404).json({ error: 'Usuario no encontrado.' });
+    const { error: upErr } = await supabase.from('usuarios').update({ rol: 'admin', rol_global: 'operador', updated_at: new Date().toISOString() }).eq('id', id);
+    if (upErr) return res.status(500).json({ error: upErr.message });
+    const quien = (req.user && req.user.email) || 'root';
+    await registrarAuditoria('ROOT', 'admin_eliminado', 'Administrador global removido: ' + (usuario.email || id), 'config', quien, req);
+    return res.json({ ok: true, id });
+  } catch (err) { return handleServerError(res, err); }
+});
 
 app.get('/api/check-email', authenticate, requireRoot, async (req, res) => {
   try {
@@ -2095,17 +2224,19 @@ app.get('/api/tenant/:id/stats', authenticate, async (req, res) => {
     const finalTenantCode = tenant.codigo || tenant.id;
 
     // Obtener stats reales
-    const [usuariosRes, botsRes, facturasRes, almacenamientoRes] = await Promise.all([
+    const [usuariosRes, botsRes, facturasRes, almacenamientoRes, tokensRes] = await Promise.all([
       supabase.from('usuarios').select('id, activo').eq('empresa_codigo', finalTenantCode),
       supabase.from('bots').select('id, estado').eq('empresa_codigo', finalTenantCode),
       supabase.from('facturas').select('id').eq('empresa_codigo', finalTenantCode),
-      supabase.from('almacenamiento').select('bytes_usados').eq('empresa_codigo', finalTenantCode).maybeSingle()
+      supabase.from('almacenamiento').select('bytes_usados').eq('empresa_codigo', finalTenantCode).maybeSingle(),
+      supabase.from('ai_usage_log').select('tokens_total').eq('empresa_codigo', finalTenantCode)
     ]);
 
     const usuarios = usuariosRes.data || [];
     const bots = botsRes.data || [];
     const facturas = facturasRes.data || [];
     const almacenamiento = almacenamientoRes.data || { bytes_usados: 0 };
+    const tokensUsados = (tokensRes.data || []).reduce((s, r) => s + (Number(r.tokens_total) || 0), 0);
 
     const totalUsuarios = usuarios.length;
     const usuariosActivos = usuarios.filter(u => u.activo !== false).length;
@@ -2141,9 +2272,9 @@ app.get('/api/tenant/:id/stats', authenticate, async (req, res) => {
         porcentaje: limits.bots > 0 ? Math.round((totalBots / limits.bots) * 100) : 0
       },
       tokens: {
-        usados: 0,
+        usados: tokensUsados,
         limite: limits.tokens,
-        porcentaje: 0
+        porcentaje: limits.tokens > 0 ? Math.round((tokensUsados / limits.tokens) * 100) : 0
       },
       almacenamiento: {
         gbUsados: parseFloat(gbUsados),

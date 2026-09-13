@@ -1,5 +1,6 @@
 // ── Analytics — Data & Charts ─────────────────
-const API_BASE = '/api';
+const API_ROOT = (location.hostname === 'localhost' || location.hostname === '127.0.0.1') ? 'https://portal-pilot.vercel.app' : '';
+const API_BASE = API_ROOT + '/api';
 let summaryData = null;
 let analyticsFilters = { period: '7', tenant: '', metric: 'usage' };
 
@@ -26,15 +27,16 @@ async function loadAnalytics() {
 function renderKPIs() {
   if (!summaryData) return;
   const kpis = summaryData.kpis || {};
+  const isPlatformView = kpis.tenantsActivos != null;
   const cards = document.querySelectorAll('.kpi-card');
   if (cards.length >= 6) {
-    setKPI(cards[0], formatNum(kpis.usuariosTotal || 0), 'Total Usuarios');
+    setKPI(cards[0], formatNum(kpis.usuariosTotal || 0), isPlatformView ? 'Total Usuarios' : 'Total Usuarios');
     setKPI(cards[1], formatNum(kpis.usuariosActivosHoy || 0), 'Usuarios Activos (hoy)');
-    setKPI(cards[2], 'L ' + formatNum(kpis.ingresoMes || 0), 'Ingresos del mes');
+    setKPI(cards[2], 'L ' + formatNum(kpis.ingresoMes || 0), isPlatformView ? 'Ingresos del mes (MRR)' : 'Ingresos del mes');
     const paidRate = kpis.facturasCount > 0 ? ((1 - (kpis.facturasPendientes || 0) / kpis.facturasCount) * 100).toFixed(1) + '%' : '—';
-    setKPI(cards[3], paidRate, 'Facturas cobradas');
+    setKPI(cards[3], paidRate, isPlatformView ? 'Pagos cobrados' : 'Facturas cobradas');
     setKPI(cards[4], 'L ' + formatNum(kpis.balanceMes || 0), 'Balance del mes');
-    setKPI(cards[5], formatNum(kpis.lowStock || 0), 'Productos con stock bajo');
+    setKPI(cards[5], formatNum(isPlatformView ? (kpis.tenantsActivos || 0) : (kpis.lowStock || 0)), isPlatformView ? 'Tenants activos' : 'Productos con stock bajo');
   }
 }
 

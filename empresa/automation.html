@@ -344,7 +344,7 @@ a{text-decoration:none;color:inherit}ul{list-style:none}img{max-width:100%;displ
         <div class="topbar-search"><i class="fas fa-search"></i><input type="text" placeholder="Buscar agentes, flujos o logs..."></div>
       </div>
       <div class="topbar-right">
-        <button class="topbar-btn" title="Notificaciones"><i class="fas fa-bell"></i><span class="badge">2</span></button>
+        <button class="topbar-btn" title="Notificaciones"><i class="fas fa-bell"></i><span class="badge" style="display:none">0</span></button>
         <button class="btn btn-acc btn-sm" onclick="openModal('newFlowModal')"><i class="fas fa-plus"></i> Nuevo Agente</button>
       </div>
     </header>
@@ -378,11 +378,11 @@ a{text-decoration:none;color:inherit}ul{list-style:none}img{max-width:100%;displ
       </div>
       <div class="metric-card reveal" style="transition-delay:.1s">
         <div class="metric-icon cyan"><i class="fas fa-chart-line"></i></div>
-        <div class="metric-info"><div class="metric-value">98.4%</div><div class="metric-label">Tasa de Éxito</div></div>
+        <div class="metric-info"><div class="metric-value" id="successRate">0%</div><div class="metric-label">Tasa de Éxito</div></div>
       </div>
       <div class="metric-card reveal" style="transition-delay:.15s">
-        <div class="metric-icon yellow"><i class="fas fa-bolt"></i></div>
-        <div class="metric-info"><div class="metric-value">1.2s</div><div class="metric-label">Respuesta Promedio IA</div></div>
+        <div class="metric-icon yellow"><i class="fas fa-clock-rotate-left"></i></div>
+        <div class="metric-info"><div class="metric-value" id="execRuns">0</div><div class="metric-label">Registros de Ejecución</div></div>
       </div>
     </div>
 
@@ -542,7 +542,16 @@ async function loadAgents() {
     document.getElementById('totalAgents').textContent = agents.length;
     document.getElementById('tasksToday').textContent = metric.tareasHoy;
     const successAvg = agents.length ? Math.round(agents.reduce((s, a) => s + (Number(a.exito) || 0), 0) / agents.length) : 0;
-    document.querySelector('.metrics-bar .metric-card:nth-child(3) .metric-value').textContent = successAvg + '%';
+    const runs = data.runs || [];
+    const totalRuns = runs.length;
+    if (totalRuns) {
+      const errors = runs.filter(r => (r.nivel || '').toLowerCase() === 'error').length;
+      document.getElementById('successRate').textContent = Math.round(((totalRuns - errors) / totalRuns) * 100) + '%';
+      document.getElementById('execRuns').textContent = Number(totalRuns).toLocaleString('es-ES');
+    } else {
+      document.getElementById('successRate').textContent = successAvg + '%';
+      document.getElementById('execRuns').textContent = '0';
+    }
     renderAgents();
     renderLogs();
     return data;
@@ -734,7 +743,21 @@ async function createFlow(){
 }
 
 // ── Utilities ────────────────────────────────────────
-function exportFlows(){showToast('La exportación de flujos estará disponible próximamente.','info')}
+function exportFlows(){
+  const line = row => row.map(c => `"${String(c ?? '').replace(/"/g, '""')}"`).join(',');
+  let csv = '\uFEFF';
+  csv += line(['Nombre', 'Descripción', 'Estado', 'Tareas', 'Éxito %', 'Icono']) + '\n';
+  agents.forEach(a => { csv += line([a.nombre, a.descripcion || '', a.estado, a.tareas || 0, a.exito || 0, a.icono || '']) + '\n'; });
+  csv += '\n' + line(['Registros de Ejecución']) + '\n';
+  csv += line(['Fecha', 'Nivel', 'Mensaje', 'Agente']) + '\n';
+  logsLoaded.forEach(l => { csv += line([l.time, l.level, l.msg, l.agent]) + '\n'; });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
+  a.download = 'automatizacion_' + (localStorage.getItem('empresaCodigo') || 'tenant') + '.csv';
+  a.click();
+  URL.revokeObjectURL(a.href);
+  showToast('📄 Flujos y registros exportados','success');
+}
 async function refreshAgents(){showToast('🔄 Sincronizando estado de agentes...','info');await loadAgents();showToast('✓ Todos los agentes actualizados','success')}
 
 // ── Init ────────────────────────────────────────────
@@ -757,6 +780,7 @@ document.addEventListener('keydown',e=>{
 });
 </script>
 <script src="../js/notifications.js"></script>
+<script src="../js/notif-panel.js"></script>
 <script src="../js/plan-gate.js"></script>
 <script src="../js/sidebar-empresa.js"></script>
 <script src="../js/sidebar-loader.js"></script>

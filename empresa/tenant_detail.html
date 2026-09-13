@@ -1587,7 +1587,7 @@
                 <div class="topbar-right">
                     <button class="topbar-btn" title="Notificaciones">
                         <i class="fas fa-bell"></i>
-                        <span class="badge">3</span>
+                        <span class="badge" style="display:none">0</span>
                     </button>
                     <button class="btn btn-outline btn-sm"
                         onclick="openTenantPortal()">
@@ -1620,8 +1620,8 @@
                         <button class="btn btn-acc btn-sm" onclick="openModal('addUserModal')"><i
                                 class="fas fa-user-plus"></i> Invitar Usuario</button>
                         <button id="openPortalBtn" class="btn btn-outline btn-sm" onclick="openTenantPortal()"><i class="fas fa-external-link-alt"></i> Abrir Portal</button>
-                        <button class="btn btn-outline btn-sm"><i class="fas fa-cog"></i> Configurar</button>
-                        <button class="btn btn-ghost btn-sm"><i class="fas fa-download"></i> Exportar Datos</button>
+                        <button class="btn btn-outline btn-sm" onclick="openTab('settings')"><i class="fas fa-cog"></i> Configurar</button>
+                        <button class="btn btn-ghost btn-sm" onclick="exportTenantData()"><i class="fas fa-download"></i> Exportar Datos</button>
                         <button class="btn btn-danger btn-sm" style="margin-left:auto;" onclick="confirmSuspend()"><i
                                 class="fas fa-pause-circle"></i> Suspender</button>
                     </div>
@@ -1644,20 +1644,20 @@
                 </div>
                 <div class="stat-card reveal">
                     <div class="stat-card-icon"><i class="fas fa-brain"></i></div>
-                    <div class="stat-card-value">1.2M</div>
+                    <div class="stat-card-value" id="statTokens">—</div>
                     <div class="stat-card-label">Tokens IA este mes</div>
                     <div class="stat-card-trend up"><i class="fas fa-arrow-up"></i> +34% vs anterior</div>
                 </div>
                 <div class="stat-card reveal">
                     <div class="stat-card-icon"><i class="fas fa-server"></i></div>
-                    <div class="stat-card-value">99.98%</div>
+                    <div class="stat-card-value" id="statSla">—</div>
                     <div class="stat-card-label">Uptime SLA</div>
                     <div class="stat-card-trend"><i class="fas fa-check" style="color:var(--green)"></i> Dentro de SLA
                     </div>
                 </div>
                 <div class="stat-card reveal">
                     <div class="stat-card-icon"><i class="fas fa-dollar-sign"></i></div>
-                    <div class="stat-card-value">L 1,499</div>
+                    <div class="stat-card-value" id="statBilling">—</div>
                     <div class="stat-card-label">Facturación Mensual</div>
                     <div class="stat-card-trend"><i class="fas fa-calendar"></i> Renueva: 15 Abr</div>
                 </div>
@@ -1875,31 +1875,8 @@
                         <button class="btn btn-acc btn-sm" onclick="openModal('apiKeyModal')"><i
                                 class="fas fa-plus"></i> Nueva Key</button>
                     </div>
-                    <div class="section-body">
-                        <div class="api-key-item">
-                            <div>
-                                <div class="api-key-name">Producción - Backend</div>
-                                <div class="api-key-value">pk_live_8x9k••••••2m4p</div>
-                                <div class="api-key-meta">Creada: 12 Mar 2026 · Última usada: Hoy, 09:24</div>
-                            </div>
-                            <div class="api-key-actions">
-                                <button class="btn btn-ghost btn-xs"><i class="fas fa-copy"></i> Copiar</button>
-                                <button class="btn btn-outline btn-xs"><i class="fas fa-edit"></i> Editar</button>
-                                <button class="btn btn-danger btn-xs"><i class="fas fa-trash"></i></button>
-                            </div>
-                        </div>
-                        <div class="api-key-item">
-                            <div>
-                                <div class="api-key-name">Desarrollo - Testing</div>
-                                <div class="api-key-value">pk_test_3a7b••••••9k1m</div>
-                                <div class="api-key-meta">Creada: 28 Feb 2026 · Última usada: Ayer, 14:30</div>
-                            </div>
-                            <div class="api-key-actions">
-                                <button class="btn btn-ghost btn-xs"><i class="fas fa-copy"></i> Copiar</button>
-                                <button class="btn btn-outline btn-xs"><i class="fas fa-edit"></i> Editar</button>
-                                <button class="btn btn-danger btn-xs"><i class="fas fa-trash"></i></button>
-                            </div>
-                        </div>
+                    <div class="section-body" style="display:flex;flex-direction:column;gap:12px;" id="apiKeysList">
+                        <div style="grid-column:1/-1;text-align:center;color:var(--gray);padding:24px;"><i class="fas fa-spinner fa-spin"></i> Cargando claves...</div>
                     </div>
                 </div>
 
@@ -2154,8 +2131,8 @@
                             <div class="form-row">
                                 <div class="form-group">
                                     <label class="form-label"><i class="fas fa-map-marker-alt"></i>País / Región</label>
-                                    <select class="form-select">
-                                        <option selected>México</option>
+                                    <select class="form-select" id="settingsCountry">
+                                        <option>México</option>
                                         <option>Estados Unidos</option>
                                         <option>España</option>
                                         <option>Colombia</option>
@@ -2163,8 +2140,8 @@
                                 </div>
                                 <div class="form-group">
                                     <label class="form-label"><i class="fas fa-clock"></i>Zona Horaria</label>
-                                    <select class="form-select">
-                                        <option selected>America/Mexico_City (GMT-6)</option>
+                                    <select class="form-select" id="settingsTimezone">
+                                        <option>America/Mexico_City (GMT-6)</option>
                                         <option>America/New_York (GMT-5)</option>
                                         <option>Europe/Madrid (GMT+1)</option>
                                     </select>
@@ -2233,7 +2210,7 @@
                         <div style="display:flex;gap:12px;flex-wrap:wrap;">
                             <button class="btn btn-outline btn-sm"
                                 style="border-color:var(--yellow);color:var(--yellow);"
-                                onclick="showToast('Exportación de datos disponible próximamente.', 'info')">
+                                onclick="exportTenantData()">
                                 <i class="fas fa-download"></i> Exportar Todos los Datos
                             </button>
                             <button class="btn btn-danger btn-sm" onclick="confirmSuspend()">
@@ -2400,36 +2377,229 @@
         }
 
         // ── API Key Generation ───────────────────────────────
-        function generateApiKey() {
-            const name = document.getElementById('keyName').value;
+        function tdFetch(url, options) {
+            const token = localStorage.getItem('token');
+            const headers = Object.assign({}, options?.headers || {}, token ? { 'Authorization': 'Bearer ' + token } : {});
+            return fetch(url, Object.assign({}, options, { headers }));
+        }
+
+        async function renderApiKeys() {
+            const list = document.getElementById('apiKeysList');
+            if (!list) return;
+            list.innerHTML = '<div style="text-align:center;color:var(--gray);padding:24px;"><i class="fas fa-spinner fa-spin"></i> Cargando claves...</div>';
+            try {
+                const res = await tdFetch('/api/tenant/apikeys');
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    throw new Error(err.error || 'Error');
+                }
+                const data = await res.json();
+                const keys = data.keys || [];
+                if (!keys.length) {
+                    list.innerHTML = '<div style="text-align:center;color:var(--gray);padding:24px;"><i class="fas fa-key" style="font-size:24px;display:block;margin-bottom:8px;opacity:.3"></i>Aún no hay claves API. Crea la primera con "Nueva Key".</div>';
+                    return;
+                }
+                list.innerHTML = keys.map(k => `
+                    <div class="api-key-item">
+                        <div style="flex:1;min-width:0;">
+                            <div class="api-key-name">${k.nombre || '(sin nombre)'}</div>
+                            <div class="api-key-value">${(k.clave || '').slice(0, 14)}••••••••••••••••${(k.clave || '').slice(-4)}</div>
+                            <div class="api-key-meta">Creada: ${k.created_at ? new Date(k.created_at).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'}${k.ultimo_uso ? ' · Última usada: ' + new Date(k.ultimo_uso).toLocaleString('es-ES', { day: '2-digit', month: 'short' }) : ''}</div>
+                        </div>
+                        <div class="api-key-actions">
+                            <button class="btn btn-ghost btn-xs" onclick="copyApiKey('${k.clave.replace(/\\/g, '\\\\').replace(/'/g, '\\\'')}')"><i class="fas fa-copy"></i> Copiar</button>
+                            <button class="btn btn-danger btn-xs" onclick="revokeApiKey('${k.id}')"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (err) {
+                list.innerHTML = `<div style="text-align:center;color:var(--red);padding:24px;">No se pudieron cargar las claves: ${err.message}</div>`;
+            }
+        }
+
+        function copyApiKey(key) {
+            navigator.clipboard.writeText(key).then(() => showToast('Clave copiada al portapapeles', 'success'));
+        }
+
+        async function revokeApiKey(id) {
+            if (!confirm('¿Revocar esta clave API? Las aplicaciones que la usen dejarán de funcionar.')) return;
+            try {
+                const res = await tdFetch('/api/tenant/apikeys/' + encodeURIComponent(id), { method: 'DELETE' });
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    throw new Error(err.error || 'Error');
+                }
+                showToast('Clave revocada', 'success');
+                renderApiKeys();
+            } catch (err) {
+                showToast('Error: ' + err.message, 'error');
+            }
+        }
+
+        async function generateApiKey() {
+            const name = document.getElementById('keyName').value.trim();
             if (!name) {
                 alert('Por favor ingresa un nombre para la API Key');
                 return;
             }
-            showToast('La generación de API Keys estará disponible próximamente.', 'info');
-            closeModal('apiKeyModal');
-            document.getElementById('keyName').value = '';
-        }
-
-        // ── Settings Save ────────────────────────────────────
-        function saveSettings() {
-            showToast('Configuración guardada.', 'success');
-        }
-
-        // ── Confirm Actions ──────────────────────────────────
-        function confirmSuspend() {
-            if (confirm('¿Estás seguro de suspender este tenant?\n\nEl acceso al portal será bloqueado inmediatamente, pero los datos se conservarán.')) {
-                showToast('La suspensión de tenants estará disponible próximamente.', 'info');
+            const btn = event.target;
+            const orig = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generando...';
+            btn.disabled = true;
+            try {
+                const res = await tdFetch('/api/tenant/apikeys', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nombre: name })
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Error');
+                showToast('✓ Clave generada correctamente', 'success');
+                closeModal('apiKeyModal');
+                document.getElementById('keyName').value = '';
+                renderApiKeys();
+            } catch (err) {
+                showToast('Error: ' + err.message, 'error');
+                btn.innerHTML = orig;
+                btn.disabled = false;
             }
         }
 
-        function confirmDelete() {
+        // ── Settings Save ────────────────────────────────────
+        async function saveSettings() {
+            const tenantId = new URLSearchParams(window.location.search).get('id') || localStorage.getItem('empresaCodigo') || '';
+            if (!tenantId) { showToast('No se pudo identificar el tenant', 'error'); return; }
+            const payload = {
+                nombre_empresa: document.getElementById('settingsCompanyName').value.trim(),
+                dominio: document.getElementById('settingsDomain').value.trim(),
+                pais: document.getElementById('settingsCountry').value.trim(),
+                zona_horaria: document.getElementById('settingsTimezone').value.trim()
+            };
+            const btn = event.target;
+            const orig = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+            btn.disabled = true;
+            try {
+                const res = await tdFetch('/api/tenants/' + encodeURIComponent(tenantId), {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    throw new Error(err.error || 'Error');
+                }
+                showToast('✓ Configuración guardada', 'success');
+                setTimeout(() => window.location.reload(), 800);
+            } catch (err) {
+                showToast('Error: ' + err.message, 'error');
+                btn.innerHTML = orig;
+                btn.disabled = false;
+            }
+        }
+
+        // ── Confirm Actions ──────────────────────────────────
+        async function confirmSuspend() {
+            const tenantId = new URLSearchParams(window.location.search).get('id') || localStorage.getItem('empresaCodigo') || '';
+            if (!tenantId) return;
+            if (!confirm('¿Estás seguro de suspender este tenant?\n\nEl acceso al portal será bloqueado inmediatamente, pero los datos se conservarán.')) return;
+            try {
+                const res = await tdFetch('/api/tenants/' + encodeURIComponent(tenantId), {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ estado: 'suspendido' })
+                });
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    throw new Error(err.error || 'Error');
+                }
+                showToast('✓ Tenant suspendido', 'success');
+                setTimeout(() => window.location.reload(), 800);
+            } catch (err) {
+                showToast('Error: ' + err.message, 'error');
+            }
+        }
+
+        async function confirmDelete() {
+            const tenantId = new URLSearchParams(window.location.search).get('id') || localStorage.getItem('empresaCodigo') || '';
+            if (!tenantId) return;
             if (prompt('Escribe ELIMINAR para confirmar la eliminación permanente:') !== 'ELIMINAR') {
                 alert('Operación cancelada');
                 return;
             }
-            showToast('La eliminación de tenants estará disponible próximamente.', 'info');
-            window.location.href = '../pp/tenants.html';
+            try {
+                const res = await tdFetch('/api/tenants/' + encodeURIComponent(tenantId), { method: 'DELETE' });
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    throw new Error(err.error || 'Error');
+                }
+                showToast('✓ Tenant eliminado permanentemente', 'success');
+                setTimeout(() => { window.location.href = '../pp/tenants.html'; }, 900);
+            } catch (err) {
+                showToast('Error: ' + err.message, 'error');
+            }
+        }
+
+        // ── Tabs ─────────────────────────────────────────────
+        function openTab(name) {
+            const btn = document.querySelector('.tab-btn[data-tab="' + name + '"]');
+            if (!btn) return;
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            btn.classList.add('active');
+            const panel = document.getElementById(name);
+            if (panel) {
+                panel.classList.add('active');
+                setTimeout(() => {
+                    document.querySelectorAll('#' + name + ' .reveal').forEach((el, i) => {
+                        setTimeout(() => el.classList.add('in'), i * 50);
+                    });
+                }, 100);
+            }
+        }
+
+        // ── Stats ────────────────────────────────────────────
+        function fmtCompact(v) {
+            const n = Number(v) || 0;
+            if (n >= 1e6) return (n / 1e6).toFixed(2).replace(/\.00$/, '') + 'M';
+            if (n >= 1e3) return (n / 1e3).toFixed(1).replace(/\.0$/, '') + 'K';
+            return String(n);
+        }
+        async function loadTenantStats(tenantId) {
+            try {
+                const res = await tdFetch('/api/tenant/' + encodeURIComponent(tenantId) + '/stats');
+                if (!res.ok) throw new Error('Error');
+                const data = await res.json();
+                const s = data.stats || {};
+                const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+                set('statUsers', s.usuarios ? s.usuarios.activos + ' / ' + s.usuarios.limite : null);
+                set('statBots', s.bots ? s.bots.activos + ' / ' + s.bots.limite : null);
+                set('statTokens', s.tokens ? fmtCompact(s.tokens.usados) + ' / ' + fmtCompact(s.tokens.limite) : null);
+                set('statSla', s.sla || '—');
+                set('statBilling', s.facturas ? Number(s.facturas.total).toLocaleString('es-ES') + ' facturas' : null);
+            } catch (err) {
+                console.warn('[tenant-detail] stats:', err.message);
+            }
+        }
+
+        // ── Export Data ───────────────────────────────────────
+        async function exportTenantData() {
+            const tenantId = new URLSearchParams(window.location.search).get('id') || localStorage.getItem('empresaCodigo') || '';
+            showToast('Preparando exportación de datos...', 'info');
+            try {
+                const tenant = await tdFetch('/api/tenant/' + encodeURIComponent(tenantId)).then(r => r.json()).catch(() => ({}));
+                const users = await tdFetch('/api/users?empresa=' + encodeURIComponent(tenantId)).then(r => r.json()).catch(() => []);
+                const bots = await tdFetch('/api/automation').then(r => r.json()).catch(() => ({}));
+                const data = { exportado_en: new Date().toISOString(), tenant: tenant.preview || tenant, usuarios: Array.isArray(users) ? users : users.users || [], automatizaciones: bots.agents || [] };
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }));
+                a.download = 'tenant_' + (tenantId || 'export').slice(0, 20) + '_datos.json';
+                a.click();
+                URL.revokeObjectURL(a.href);
+                showToast('✓ Datos exportados correctamente', 'success');
+            } catch (err) {
+                showToast('Error al exportar: ' + err.message, 'error');
+            }
         }
 
         // ── Initialize ───────────────────────────────────────
@@ -2530,6 +2700,13 @@
                     if (portalBtn) {
                         portalBtn.dataset.domain = preview.domain || '';
                     }
+                    const setVal = (id, val) => { const el = document.getElementById(id); if (el && val) el.value = val; };
+                    setVal('settingsCompanyName', preview.name);
+                    setVal('settingsDomain', preview.domain);
+                    setVal('settingsCountry', preview.country);
+                    setVal('settingsTimezone', detail.timezone);
+                    renderApiKeys();
+                    loadTenantStats(tenantId);
                     console.log('✅ Tenant cargado correctamente:', preview, detail);
                 })
                 .catch(err => {
@@ -2550,6 +2727,7 @@
     </script>
 <script src="../js/tenant-detail.js"></script>
 <script src="../js/notifications.js"></script>
+<script src="../js/notif-panel.js"></script>
 <script src="../js/plan-gate.js"></script>
 <script src="../js/sidebar-empresa.js"></script>
 <script src="../js/sidebar-loader.js"></script>

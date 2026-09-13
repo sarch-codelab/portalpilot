@@ -19,8 +19,9 @@
         var tenantId = params.get('id') || params.get('tenant') || localStorage.getItem('empresaCodigo') || '';
         var myCode = (localStorage.getItem('empresaCodigo') || '').toString().trim().toUpperCase();
         var isRoot = (myCode === 'ROOT' || myCode === 'ROOT PP' || myCode === '');
+        var API_ROOT = (location.hostname === 'localhost' || location.hostname === '127.0.0.1') ? 'https://portal-pilot.vercel.app' : '';
 
-        fetch('/api/users', { headers: { 'Authorization': 'Bearer ' + (token || '') } })
+        fetch(API_ROOT + '/api/users', { headers: { 'Authorization': 'Bearer ' + (token || '') } })
             .then(function (res) { if (!res.ok) throw new Error('HTTP ' + res.status); return res.json(); })
             .then(function (all) {
                 var list = Array.isArray(all) ? all : [];
@@ -39,6 +40,7 @@
                     var roleClass = String(roleLabel).toLowerCase();
                     var last = since(u.lastActivity || u.last_login || u.ultimo_acceso || null);
                     var row = document.createElement('tr');
+                    row.dataset.userId = u.id || email;
                     row.dataset.userName = full;
                     row.dataset.userEmail = email;
                     row.dataset.userRole = roleLabel;

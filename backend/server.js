@@ -338,13 +338,23 @@ function slugifyDominio(value) {
   return slug || 'empresa';
 }
 
+const ALL_PLAN_FEATURES = Object.freeze([
+  'operacion_basica', 'operacion_completa', 'inventario', 'facturacion_sar', 'web_consulta', 'web_admin',
+  'pos_basico', 'pos', 'clientes', 'reportes', 'reportes_basicos', 'reportes_avanzados',
+  'proveedores', 'compras', 'precios', 'promociones',
+  'canal_tradicional', 'canal_moderno', 'fiado', 'rutas', 'cobros',
+  'sucursales', 'transferencias', 'inventario_multi_sucursal',
+  'membresias', 'socios', 'puntos',
+  'roles', 'auditoria', 'seguridad_avanzada',
+  'api_keys', 'automation', 'fleet', 'multiempresa',
+  'ia', 'ia_avanzada'
+]);
+
 const PLAN_ENTITLEMENTS = Object.freeze({
+  // Prueba: trial de 15 días con TODA la plataforma abierta para evaluar.
   starter: {
     maxUsers: 5, maxCompanies: 1,
-    features: [
-      'operacion_basica', 'inventario', 'facturacion_sar', 'web_consulta',
-      'pos_basico', 'clientes', 'reportes_basicos'
-    ]
+    features: ALL_PLAN_FEATURES
   },
   business: {
     maxUsers: 15, maxCompanies: 3,
@@ -357,15 +367,7 @@ const PLAN_ENTITLEMENTS = Object.freeze({
   },
   enterprise: {
     maxUsers: Number.MAX_SAFE_INTEGER, maxCompanies: Number.MAX_SAFE_INTEGER,
-    features: [
-      'operacion_completa', 'inventario', 'facturacion_sar', 'web_admin', 'reportes', 'ia', 'roles', 'auditoria',
-      'pos', 'clientes', 'proveedores', 'compras', 'precios', 'promociones',
-      'canal_tradicional', 'fiado', 'rutas', 'cobros',
-      'canal_moderno', 'sucursales', 'transferencias', 'inventario_multi_sucursal',
-      'membresias', 'socios', 'puntos',
-      'api_keys', 'automation', 'fleet', 'multiempresa', 'seguridad_avanzada',
-      'reportes_avanzados', 'ia_avanzada'
-    ]
+    features: ALL_PLAN_FEATURES
   }
 });
 
@@ -1577,6 +1579,7 @@ app.post('/api/login', loginLimiter, async (req, res) => {
         tenant: userRow.empresa_codigo || 'ROOT',
         area: userArea,
         plan: userPlan,
+        features: PLAN_ENTITLEMENTS[normalizePlan(userPlan)]?.features || [],
         modulos_activos: activeModules,
         status: userRow.estado || 'activo',
         trial_expired: trialExpired,
@@ -1652,7 +1655,7 @@ app.post('/api/login/2fa', loginLimiter, async (req, res) => {
         id: userRow.id, nombre: userRow.nombre || '', apellido: userRow.apellido || '', email: userRow.email,
         rol: resolveDisplayRole(userRow, tenantData), empresa_codigo: userRow.empresa_codigo || 'ROOT',
         tenant: userRow.empresa_codigo || 'ROOT', area: userArea, plan: userPlan,
-        modulos_activos: getModulesForAreaAndPlan(userArea, userPlan), status: userRow.estado || 'activo', token
+        features: PLAN_ENTITLEMENTS[userPlan]?.features || [], modulos_activos: getModulesForAreaAndPlan(userArea, userPlan), status: userRow.estado || 'activo', token
       }
     });
   } catch (error) {
@@ -1716,7 +1719,7 @@ app.get('/api/tenant/modules', authenticate, async (req, res) => {
     const area = tenant?.area || 'Área Comercial';
     const plan = normalizePlan(tenant?.plan);
     const modulos = getModulesForAreaAndPlan(area, plan);
-    res.json({ success: true, empresa_codigo: tenantCode, area, plan, modulos_activos: modulos });
+    res.json({ success: true, empresa_codigo: tenantCode, area, plan, features: PLAN_ENTITLEMENTS[plan]?.features || [], modulos_activos: modulos });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message || 'Error consultando módulos' });
   }
@@ -2153,7 +2156,9 @@ app.post('/api/tenants', authenticate, requireRoot, async (req, res) => {
   }
 });
 
-app.get('/api/tenant/:id', authenticate, async (req, res) => {
+app.get('/api/tenant/:id', authenticate, async (req, res, next) => {
+  const RESERVED_TENANT_ROUTES = new Set(['apikeys', 'features', 'modules', 'security']);
+  if (RESERVED_TENANT_ROUTES.has(req.params.id)) return next();
   try {
     const tenantId = req.params.id;
     const tenant = await findTenantByIdentifier(tenantId);
@@ -2199,6 +2204,18 @@ app.get('/api/tenant/:id', authenticate, async (req, res) => {
   }
 });
 
+// Límites de plan compartidos (tenants y usuarios)
+const PLAN_LIMITS = {
+  starter: { usuarios: 5, bots: 2, tokens: 100000, storage: 5, soporte: 'Email', sla: '99.0%' },
+  business: { usuarios: 50, bots: 15, tokens: 2000000, storage: 100, soporte: 'Priority 24/7', sla: '99.9%' },
+  enterprise: { usuarios: 200, bots: 50, tokens: 10000000, storage: 500, soporte: 'Dedicado 24/7', sla: '99.99%' },
+  custom: { usuarios: 9999, bots: 9999, tokens: 99999999, storage: 9999, soporte: 'Dedicado 24/7', sla: '99.99%' }
+};
+
+function planLimitsFor(plan) {
+  return PLAN_LIMITS[String(plan || '').toLowerCase()] || PLAN_LIMITS.business;
+}
+
 // Información detallada del tenant con stats reales
 app.get('/api/tenant/:id/stats', authenticate, async (req, res) => {
   try {
@@ -2224,18 +2241,16 @@ app.get('/api/tenant/:id/stats', authenticate, async (req, res) => {
     const finalTenantCode = tenant.codigo || tenant.id;
 
     // Obtener stats reales
-    const [usuariosRes, botsRes, facturasRes, almacenamientoRes, tokensRes] = await Promise.all([
+    const [usuariosRes, botsRes, facturasRes, tokensRes] = await Promise.all([
       supabase.from('usuarios').select('id, activo').eq('empresa_codigo', finalTenantCode),
-      supabase.from('bots').select('id, estado').eq('empresa_codigo', finalTenantCode),
+      supabase.from('automatizaciones').select('id, estado').eq('empresa_codigo', finalTenantCode),
       supabase.from('facturas').select('id').eq('empresa_codigo', finalTenantCode),
-      supabase.from('almacenamiento').select('bytes_usados').eq('empresa_codigo', finalTenantCode).maybeSingle(),
       supabase.from('ai_usage_log').select('tokens_total').eq('empresa_codigo', finalTenantCode)
     ]);
 
     const usuarios = usuariosRes.data || [];
     const bots = botsRes.data || [];
     const facturas = facturasRes.data || [];
-    const almacenamiento = almacenamientoRes.data || { bytes_usados: 0 };
     const tokensUsados = (tokensRes.data || []).reduce((s, r) => s + (Number(r.tokens_total) || 0), 0);
 
     const totalUsuarios = usuarios.length;
@@ -2243,19 +2258,12 @@ app.get('/api/tenant/:id/stats', authenticate, async (req, res) => {
     const totalBots = bots.length;
     const botsActivos = bots.filter(b => b.estado === 'activo' || b.estado === 'active').length;
     const totalFacturas = facturas.length;
-    const bytesUsados = almacenamiento.bytes_usados || 0;
+    const bytesUsados = 0;
     const gbUsados = (bytesUsados / (1024 * 1024 * 1024)).toFixed(2);
 
     // Límites según plan
-    const planLimits = {
-      starter: { usuarios: 5, bots: 2, tokens: 100000, storage: 5, soporte: 'Email', sla: '99.0%' },
-      business: { usuarios: 50, bots: 15, tokens: 2000000, storage: 100, soporte: 'Priority 24/7', sla: '99.9%' },
-      enterprise: { usuarios: 200, bots: 50, tokens: 10000000, storage: 500, soporte: 'Dedicado 24/7', sla: '99.99%' },
-      custom: { usuarios: 9999, bots: 9999, tokens: 99999999, storage: 9999, soporte: 'Dedicado 24/7', sla: '99.99%' }
-    };
-
     const plan = tenant.plan || 'business';
-    const limits = planLimits[plan.toLowerCase()] || planLimits.business;
+    const limits = planLimitsFor(plan);
 
     const stats = {
       plan: tenant.plan || 'business',
@@ -2298,7 +2306,7 @@ app.get('/api/tenant/:id/stats', authenticate, async (req, res) => {
 app.put('/api/tenants/:id', authenticate, requireTenantAdmin, async (req, res) => {
   try {
     const { id } = req.params;
-    const { plan, estado } = req.body;
+    const { plan, estado, nombre_empresa, dominio, pais, zona_horaria } = req.body;
 
     if (!assertTenantAccess(req, id)) {
       return res.status(403).json({ error: 'No tienes permiso para modificar este tenant.' });
@@ -2312,6 +2320,10 @@ app.put('/api/tenants/:id', authenticate, requireTenantAdmin, async (req, res) =
       const supaUpdate = {};
       if (plan) supaUpdate.plan = plan;
       if (estado) supaUpdate.estado = estado;
+      if (nombre_empresa) supaUpdate.nombre_empresa = nombre_empresa;
+      if (dominio) supaUpdate.dominio = dominio;
+      if (pais) supaUpdate.pais = pais;
+      if (zona_horaria) supaUpdate.zona_horaria = zona_horaria;
       if (Object.keys(supaUpdate).length > 0) {
         await supabase.from('tenants').update(supaUpdate).eq('codigo', id);
       }
@@ -2326,6 +2338,10 @@ app.put('/api/tenants/:id', authenticate, requireTenantAdmin, async (req, res) =
         <li><strong>Código:</strong> ${id}</li>
         ${plan ? `<li><strong>Plan:</strong> ${plan.toUpperCase()}</li>` : ''}
         ${estado ? `<li><strong>Estado:</strong> ${estado.toUpperCase()}</li>` : ''}
+        ${nombre_empresa ? `<li><strong>Empresa:</strong> ${nombre_empresa}</li>` : ''}
+        ${dominio ? `<li><strong>Dominio:</strong> ${dominio}</li>` : ''}
+        ${pais ? `<li><strong>País:</strong> ${pais}</li>` : ''}
+        ${zona_horaria ? `<li><strong>Zona Horaria:</strong> ${zona_horaria}</li>` : ''}
       </ul>`
     );
 
@@ -3512,12 +3528,20 @@ async function computeUserStats(userId, codigo, nombreCompleto, usuario) {
     }
   } catch (e) { /* noop */ }
 
-  // Tokens IA consumidos por el usuario
+  // Tokens IA consumidos por el usuario + % sobre el límite del plan del tenant
   try {
     const { data } = await supabase.from('ai_usage_log').select('tokens_total').eq('usuario_id', userId);
-    if (data && Array.isArray(data)) {
-      stats.tokens = data.reduce((s, r) => s + (Number(r.tokens_total) || 0), 0);
+    const usados = (data && Array.isArray(data)) ? data.reduce((s, r) => s + (Number(r.tokens_total) || 0), 0) : 0;
+    let limite = 0;
+    if (t) {
+      const { data: ten } = await supabase.from('tenants').select('plan').eq('codigo', t).maybeSingle();
+      limite = planLimitsFor(ten && ten.plan).tokens || 0;
     }
+    stats.tokens = {
+      usados,
+      limite,
+      porcentaje: limite > 0 ? Math.max(0, Math.min(100, Math.round((usados / limite) * 100))) : 0
+    };
   } catch (e) { /* noop */ }
 
   // Intentos fallidos de sesión en los últimos 30 días
@@ -4240,14 +4264,112 @@ Sé conciso, empático y profesional.`;
 app.get('/api/dashboard/summary', authenticate, async (req, res) => {
   if (!requireSupabase(res)) return;
   try {
+    const isPlatformView = isRootUser(req) && !req.query.tenant;
     const requestedTenant = isRootUser(req) && req.query.tenant
       ? normalizeTenantCode(req.query.tenant)
       : normalizeTenantCode(getTenantCode(req));
     const tenant = requestedTenant;
     const empresa = await resolverEmpresaSupabase(tenant);
-    const empresaId = empresa?.id || null;
+    const empresaId = isPlatformView ? null : (empresa?.id || null);
     const periodDays = [1, 7, 30, 90].includes(Number(req.query.period)) ? Number(req.query.period) : 7;
 
+    // ── Vista Plataforma (ROOT sin tenant): negocio real de Portal Pilot ──
+    // Billing (pagos de planes), tenants y usuarios globales. NO datos de negocio de los tenants.
+    if (isPlatformView) {
+      const ahora = new Date();
+      const hoy = ahora.toISOString().slice(0, 10);
+      const enMes = t => t && t.slice(0, 7) === hoy.slice(0, 7);
+
+      const [payRes, tenRes, userRes] = await Promise.all([
+        supabase.from('billing_payments').select('*').order('created_at', { ascending: false }).limit(500),
+        supabase.from('tenants').select('*'),
+        supabase.from('usuarios').select('id, rol_global, activo, created_at, ultimo_acceso')
+      ]);
+      const pagos = payRes.data || [];
+      const tenantsList = tenRes.data || [];
+      const users = userRes.data || [];
+      const pagosOk = pagos.filter(p => p.status === 'success');
+      const pagosPendientes = pagos.filter(p => p.status !== 'success');
+
+      const usuariosTotal = users.length;
+      const usuariosActivos = users.filter(u => u.activo !== false).length;
+      const usuariosActivosHoy = users.filter(u => {
+        const acceso = u.ultimo_acceso ? new Date(u.ultimo_acceso) : null;
+        return u.activo !== false && acceso && acceso.toISOString().slice(0, 10) === hoy;
+      }).length;
+      const ingresoMes = pagosOk.filter(p => enMes(p.created_at)).reduce((s, p) => s + (Number(p.amount) || 0), 0);
+      const facturasTotal = pagosOk.reduce((s, p) => s + (Number(p.amount) || 0), 0);
+      const transaccionesHoy = pagos.filter(p => (p.created_at || '').slice(0, 10) === hoy).length;
+
+      const dias = [];
+      for (let i = periodDays - 1; i >= 0; i--) {
+        const d = new Date(ahora);
+        d.setDate(d.getDate() - i);
+        const key = d.toISOString().slice(0, 10);
+        dias.push({ fecha: key, label: ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'][d.getDay()], facturas: 0, transacciones: 0, usuarios: 0, ingresos: 0, gastos: 0 });
+      }
+      pagos.forEach(p => {
+        const k = (p.created_at || '').slice(0, 10);
+        const slot = dias.find(d => d.fecha === k);
+        if (slot) {
+          slot.transacciones++;
+          if (p.status === 'success') { slot.facturas++; slot.ingresos += Number(p.amount) || 0; }
+        }
+      });
+      users.forEach(u => {
+        const slot = dias.find(d => d.fecha === (u.created_at || '').slice(0, 10));
+        if (slot) slot.usuarios++;
+      });
+
+      const rolesMap = {};
+      users.forEach(u => { const r = u.rol_global || 'usuario'; rolesMap[r] = (rolesMap[r] || 0) + 1; });
+
+      const eventos = [];
+      pagos.forEach(p => eventos.push({
+        tipo: p.status === 'success' ? 'ingreso' : 'gasto',
+        descripcion: `Pago ${String(p.plan || '').toUpperCase()}${p.status === 'success' ? '' : ' pendiente'} — ${p.email || 's/n'} (L ${Number(p.amount || 0).toFixed(2)})`,
+        fecha: p.created_at,
+        meta: 'Billing'
+      }));
+      users.forEach(u => eventos.push({ tipo: 'usuario', descripcion: `Usuario ${u.activo === false ? 'desactivado' : 'registrado'} (${u.rol_global || 'usuario'})`, fecha: u.created_at, meta: 'Usuarios' }));
+      eventos.sort((a, b) => new Date(b.fecha || 0) - new Date(a.fecha || 0));
+      const actividadReciente = eventos.slice(0, 8).map(e => ({
+        titulo: e.descripcion,
+        detalle: e.meta + (e.fecha ? ' · ' + new Date(e.fecha).toLocaleString('es') : ''),
+        tipo: e.tipo
+      }));
+
+      const alertas = [];
+      if (pagosPendientes.length > 0) alertas.push({ severidad: 'alta', titulo: `${pagosPendientes.length} pago(s) pendiente(s) de verificación`, detalle: 'Revisa el módulo de Billing para confirmar Tigo Money o transferencias.' });
+
+      return res.json({
+        tenant,
+        empresa: empresa || null,
+        kpis: {
+          usuariosTotal,
+          usuariosActivos,
+          usuariosActivosHoy,
+          facturasCount: pagosOk.length,
+          facturasTotal,
+          facturasPendientes: pagosPendientes.length,
+          ingresoMes,
+          gastoMes: 0,
+          balanceMes: ingresoMes,
+          productosCount: 0,
+          lowStock: 0,
+          transaccionesHoy,
+          tenantsActivos: tenantsList.filter(t => (t.estado || 'activo') === 'activo').length
+        },
+        usage7d: dias,
+        periodDays,
+        roles: Object.entries(rolesMap).map(([rol, count]) => ({ rol, count })),
+        gastosCategoria: [],
+        actividadReciente,
+        alertas
+      });
+    }
+
+    // ── Vista Tenant: KPIs de negocio de la empresa seleccionada ──
     let users = [], facturas = [], transacciones = [], productos = [];
     if (empresaId) {
       const [uRes, fRes, tRes, pRes] = await Promise.all([
@@ -6032,10 +6154,10 @@ app.get('/api/productos/:id/precios', authenticate, requirePlanFeature('precios'
     const empresa = await resolverEmpresaSupabase(tenant);
     if (!empresa) return res.status(404).json({ error: 'Empresa no encontrada' });
     const { data, error } = await supabase
-      .from('productos_precios')
-      .select('*, listas_precios(nombre, moneda)')
+      .from('productos_precio')
+      .select('*, listas_precios(nombre)')
       .eq('producto_id', req.params.id)
-      .eq('empresa_id', empresa.id);
+      .eq('empresa_codigo', tenant);
     if (error) return res.status(500).json({ error: error.message });
     return res.json({ precios: data || [] });
   } catch (err) { return handleServerError(res, err); }

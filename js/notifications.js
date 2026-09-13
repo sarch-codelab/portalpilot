@@ -37,14 +37,21 @@
   }
 
   /* ── Crear notificación ── */
-  function crear(texto, tipo) {
+  var TIPOS = ['error', 'success', 'info', 'warning'];
+
+  function esTipo(v) {
+    return TIPOS.indexOf(v) !== -1;
+  }
+
+  function crear(texto, subtitulo, tipo) {
+    if (esTipo(subtitulo)) { tipo = subtitulo; subtitulo = null; }
     tipo = tipo || 'info';
-    if (!['error', 'success', 'info', 'warning'].includes(tipo)) tipo = 'info';
+    if (TIPOS.indexOf(tipo) === -1) tipo = 'info';
 
     var container = ensureContainer();
 
     if (animando) {
-      setTimeout(function () { crear(texto, tipo); }, 100);
+      setTimeout(function () { crear(texto, subtitulo, tipo); }, 100);
       return;
     }
 
@@ -54,10 +61,13 @@
     var el = document.createElement('div');
     el.className = 'pp-notif';
     el.dataset.id = id;
+    var subHtml = subtitulo ? '<p class="pp-notif-sub">' + subtitulo + '</p>' : '';
     el.innerHTML =
       '<div class="pp-notif-content">' +
         '<div class="pp-notif-icon"><img src="' + BASE_URL + emoji + '" alt="' + tipo + '"></div>' +
-        '<p class="pp-notif-text">' + texto + '</p>' +
+        '<div class="pp-notif-body">' +
+          '<p class="pp-notif-text">' + texto + '</p>' + subHtml +
+        '</div>' +
       '</div>' +
       '<div class="pp-notif-bar ' + tipo + '"></div>';
 
@@ -176,11 +186,27 @@
   }
 
   /* ── API pública ── */
-  window.showMessage = function (text, type) {
-    crear(text, type || 'info');
+  function mostrarPublico(tipoPorDefecto, argv) {
+    var a = Array.prototype.slice.call(argv);
+    if (!a.length) return;
+    var texto = String(a[0]);
+    var tipo = tipoPorDefecto;
+    var subtitulo = null;
+    if (a.length === 2) {
+      if (esTipo(a[1])) { tipo = a[1]; }
+      else if (a[1]) { subtitulo = a[1]; }
+    } else if (a.length >= 3) {
+      if (a[1]) subtitulo = a[1];
+      if (esTipo(a[2])) tipo = a[2];
+    }
+    crear(texto, subtitulo, tipo);
+  }
+
+  window.showMessage = function () {
+    mostrarPublico('info', arguments);
   };
 
-  window.showToast = function (text, type) {
-    crear(text, type || 'success');
+  window.showToast = function () {
+    mostrarPublico('success', arguments);
   };
 })();

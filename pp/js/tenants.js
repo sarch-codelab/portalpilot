@@ -1,4 +1,5 @@
 // ── Custom Cursor ─────────────────
+const API_ROOT = (location.hostname === 'localhost' || location.hostname === '127.0.0.1') ? 'https://portal-pilot.vercel.app' : '';
 const dot = document.getElementById('cursor-dot');
 const ring = document.getElementById('cursor-ring');
 const glow = document.getElementById('cursor-glow');
@@ -200,7 +201,7 @@ async function fetchTenants() {
 
   try {
     const token = localStorage.getItem('token');
-    const response = await fetch('/api/tenants', {
+    const response = await fetch(API_ROOT + '/api/tenants', {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -258,7 +259,7 @@ async function fetchTenantDebug(id) {
   try {
     const token = localStorage.getItem('token');
     if (!token) return { error: 'No se encontró token de sesión.' };
-    const res = await fetch(`/api/debug/tenants/${encodeURIComponent(id)}`, {
+    const res = await fetch(`${API_ROOT}/api/debug/tenants/${encodeURIComponent(id)}`, {
       headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
     });
     const data = await res.json().catch(() => ({}));
@@ -277,7 +278,7 @@ async function deleteTenant(id, name) {
       return;
     }
 
-    const res = await fetch(`/api/tenants/${encodeURIComponent(id)}`, {
+    const res = await fetch(`${API_ROOT}/api/tenants/${encodeURIComponent(id)}`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -513,7 +514,7 @@ async function createTenant() {
       'Authorization': `Bearer ${token}`
     };
 
-    const res = await fetch('/api/tenants', {
+    const res = await fetch(API_ROOT + '/api/tenants', {
       method: 'POST',
       headers,
       body: JSON.stringify(payload)
@@ -586,7 +587,7 @@ async function createUser() {
       return;
     }
 
-    const res = await fetch('/api/users', {
+    const res = await fetch(API_ROOT + '/api/users', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
       body: JSON.stringify(payload)
@@ -629,12 +630,29 @@ function confirmAction(title, message, callback, opts = {}) {
 }
 
 // ── Tenant Actions ───────────────
+async function cambioEstadoAPI(id, estado) {
+  const token = localStorage.getItem('token');
+  const res = await fetch(`${API_ROOT}/api/tenants/${encodeURIComponent(id)}`, {
+    method: 'PUT',
+    headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ estado })
+  });
+  const data = await res.json().catch(() => null);
+  if (!res.ok) throw new Error((data && data.error) || 'Error al actualizar');
+  return data;
+}
+
 function toggleStatus(id, currentStatus) {
   const t = tenants.find(x => x.id === id);
   if (!t) return;
-  t.status = currentStatus === 'active' ? 'suspended' : 'active';
-  alert(`✓ ${t.name} ${t.status === 'active' ? 'desbloqueado' : 'bloqueado'} exitosamente`);
-  filterTenants();
+  const next = currentStatus === 'active' ? 'suspendido' : 'activo';
+  cambioEstadoAPI(id, next)
+    .then(() => {
+      t.status = currentStatus === 'active' ? 'suspended' : 'active';
+      filterTenants();
+      showToast('Tenant actualizado', `${t.name} ${next === 'activo' ? 'activado' : 'suspendido'} exitosamente`, 'success');
+    })
+    .catch(e => showToast('Error', e.message, 'error'));
 }
 
 function toggleTenantStatus(id) {
@@ -647,33 +665,38 @@ function toggleTenantStatus(id) {
     `¿Deseas ${action} el tenant "${t.name}"?${wasActive ? '\n\nLos usuarios de este tenant no podrán acceder hasta que sea reactivado.' : '\n\nLos usuarios podrán volver a acceder a la plataforma.'}`,
     async () => {
       try {
-        const token = localStorage.getItem('token');
         const newEstado = wasActive ? 'suspendido' : 'activo';
-        const res = await fetch(`/api/tenants/${encodeURIComponent(t.id)}`, {
-          method: 'PUT',
-          headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ estado: newEstado })
-        });
-        if (!res.ok) throw new Error('Error al actualizar');
+        await cambioEstadoAPI(id, newEstado);
         t.status = wasActive ? 'suspended' : 'active';
         filterTenants();
-        alert(`✓ Tenant "${t.name}" ${wasActive ? 'desactivado' : 'activado'} exitosamente`);
+        showToast('Tenant actualizado', `${t.name} ${wasActive ? 'desactivado' : 'activado'} exitosamente`, 'success');
       } catch (e) {
-        alert(`✗ Error al ${action} tenant: ${e.message}`);
+        showToast('Error', e.message, 'error');
       }
     },
     { btnText: wasActive ? 'Desactivar' : 'Activar', btnClass: wasActive ? 'btn-danger' : 'btn-success' }
   );
 }
 
-function showChangePlan(id) {
+async function showChangePlan(id) {
   const t = tenants.find(x => x.id === id);
   if (!t) return;
-  const newPlan = prompt(`Cambiar plan para ${t.name}:\n(starter/business/enterprise)`, t.plan);
-  if (newPlan && ['starter', 'business', 'enterprise'].includes(newPlan)) {
+  const newPlan = prompt(`Cambiar plan para ${t.name}:\n(starter/business/enterprise)`, t.plan || 'starter');
+  if (!newPlan || !['starter', 'business', 'enterprise'].includes(newPlan)) return;
+  try {
+    const token = localStorage.getItem('token');
+    const res = await fetch(`${API_ROOT}/api/tenants/${encodeURIComponent(id)}`, {
+      method: 'PUT',
+      headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ plan: newPlan })
+    });
+    const data = await res.json().catch(() => null);
+    if (!res.ok) throw new Error((data && data.error) || 'Error al actualizar');
     t.plan = newPlan;
-    alert(`✓ Plan actualizado a ${newPlan}`);
     filterTenants();
+    showToast('Plan actualizado', `${t.name} ahora está en plan ${newPlan}`, 'success');
+  } catch (e) {
+    showToast('Error', e.message, 'error');
   }
 }
 
@@ -688,7 +711,7 @@ async function openDetailPanel(tenant) {
   try {
     const token = localStorage.getItem('token');
     if (token) {
-      const tRes = await fetch(`/api/users?empresa=${encodeURIComponent(tenant.id)}`, {
+      const tRes = await fetch(`${API_ROOT}/api/users?empresa=${encodeURIComponent(tenant.id)}`, {
         headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
       });
       if (tRes.ok) {
@@ -698,7 +721,7 @@ async function openDetailPanel(tenant) {
       }
 
       try {
-        const sRes = await fetch(`/api/dashboard/summary?tenant=${encodeURIComponent(tenant.id)}`, {
+        const sRes = await fetch(`${API_ROOT}/api/dashboard/summary?tenant=${encodeURIComponent(tenant.id)}`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (sRes.ok) {
@@ -783,7 +806,7 @@ async function exportTenantLogs(tenantId) {
   const token = localStorage.getItem('token');
   if (!token) { alert('Sesión no iniciada'); return; }
   try {
-    const res = await fetch(`/api/dashboard/summary?tenant=${encodeURIComponent(tenantId)}`, {
+    const res = await fetch(`${API_ROOT}/api/dashboard/summary?tenant=${encodeURIComponent(tenantId)}`, {
       headers: { 'Authorization': `Bearer ${token}` }
     });
     if (!res.ok) throw new Error('No se pudo obtener logs');

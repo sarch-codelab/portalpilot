@@ -1,4 +1,5 @@
 // ── Custom Cursor (OPTIMIZADO) ─────────────────────
+const API_ROOT = (location.hostname === 'localhost' || location.hostname === '127.0.0.1') ? 'https://portal-pilot.vercel.app' : '';
 const dot = document.getElementById('cursor-dot');
 const ring = document.getElementById('cursor-ring');
 let mouseX = 0, mouseY = 0;
@@ -258,7 +259,7 @@ async function loadTenantRealStats() {
     const tenantId = params.get('id') || params.get('tenant');
     if (!tenantId) return;
     try {
-        const res = await fetch(`/api/tenant/${encodeURIComponent(tenantId)}/stats`, {
+        const res = await fetch(`${API_ROOT}/api/tenant/${encodeURIComponent(tenantId)}/stats`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         if (!res.ok) throw new Error('stats error');
@@ -287,6 +288,11 @@ function updateOverviewStatCards() {
         const t = s.tokens.usados || 0;
         tokensValue.textContent = t >= 1000 ? `${(t / 1000).toFixed(1).replace('.', ',')}K` : t;
     }
+    const tokensTrendEl = document.getElementById('tokensStatTrend');
+    if (tokensTrendEl && s.tokens && typeof s.tokens.porcentaje === 'number') {
+        tokensTrendEl.textContent = `${s.tokens.porcentaje}% del límite`;
+        tokensTrendEl.classList.toggle('down', (s.tokens.porcentaje || 0) >= 90);
+    }
 
     const slaValue = document.getElementById('slaStatValue');
     if (slaValue && s.sla) slaValue.textContent = s.sla;
@@ -311,7 +317,7 @@ async function openFullActivityModal() {
     const tenantId = params.get('id') || params.get('tenant');
     openModal('activityHistoryModal');
     try {
-        const res = await fetch(`/api/dashboard/summary?tenant=${encodeURIComponent(tenantId)}`, {
+        const res = await fetch(`${API_ROOT}/api/dashboard/summary?tenant=${encodeURIComponent(tenantId)}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         if (!res.ok) throw new Error('activity error');
@@ -345,7 +351,7 @@ async function loadTenantNotifications() {
     const token = localStorage.getItem('token');
     if (!token) return;
     try {
-        const res = await fetch(`/api/notificaciones`, {
+        const res = await fetch(`${API_ROOT}/api/notificaciones`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         if (!res.ok) throw new Error('notif error');
@@ -390,7 +396,7 @@ async function loadTenantNotifications() {
             item.addEventListener('click', async () => {
                 item.classList.remove('unread');
                 try {
-                    await fetch(`/api/notificaciones/${item.dataset.id}/read`, { method: 'PUT', headers: { 'Authorization': `Bearer ${token}` } });
+                    await fetch(`${API_ROOT}/api/notificaciones/${item.dataset.id}/read`, { method: 'PUT', headers: { 'Authorization': `Bearer ${token}` } });
                     loadTenantNotifications();
                 } catch (e) { /* no crítico */ }
             });
@@ -410,7 +416,7 @@ async function loadTenantActivity() {
     const params = new URLSearchParams(window.location.search);
     const tenantId = params.get('id') || params.get('tenant');
     try {
-        const res = await fetch(`/api/dashboard/summary?tenant=${encodeURIComponent(tenantId)}`, {
+        const res = await fetch(`${API_ROOT}/api/dashboard/summary?tenant=${encodeURIComponent(tenantId)}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         if (!res.ok) throw new Error('activity error');
@@ -446,7 +452,7 @@ async function loadTenantLogs() {
     const params = new URLSearchParams(window.location.search);
     const tenantId = params.get('id') || params.get('tenant');
     try {
-        const res = await fetch(`/api/dashboard/summary?tenant=${encodeURIComponent(tenantId)}`, {
+        const res = await fetch(`${API_ROOT}/api/dashboard/summary?tenant=${encodeURIComponent(tenantId)}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         if (!res.ok) throw new Error('logs error');
@@ -520,7 +526,7 @@ async function loadBotLogs() {
     const params = new URLSearchParams(window.location.search);
     const tenantId = params.get('id') || params.get('tenant');
     try {
-        const res = await fetch(`/api/dashboard/summary?tenant=${encodeURIComponent(tenantId)}`, {
+        const res = await fetch(`${API_ROOT}/api/dashboard/summary?tenant=${encodeURIComponent(tenantId)}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         if (!res.ok) throw new Error('bots logs error');
@@ -608,7 +614,7 @@ async function loadChartsData() {
     const tenantId = params.get('id') || params.get('tenant');
     if (!tenantId) return;
     try {
-        const res = await fetch(`/api/dashboard/summary?tenant=${encodeURIComponent(tenantId)}`, {
+        const res = await fetch(`${API_ROOT}/api/dashboard/summary?tenant=${encodeURIComponent(tenantId)}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         if (!res.ok) return;
@@ -616,7 +622,7 @@ async function loadChartsData() {
         chartUsageData = data.usage7d || [];
         const stats = tenantRealStats.usuarios ? tenantRealStats : (await (async () => {
             try {
-                const r = await fetch(`/api/tenant/${encodeURIComponent(tenantId)}/stats`, { headers: { 'Authorization': `Bearer ${token}` } });
+                const r = await fetch(`${API_ROOT}/api/tenant/${encodeURIComponent(tenantId)}/stats`, { headers: { 'Authorization': `Bearer ${token}` } });
                 if (r.ok) return (await r.json()).stats || {};
                 return {};
             } catch { return {}; }
@@ -821,16 +827,11 @@ function editUser(btn) {
     openModal('editUserModal');
 }
 
-function saveUserEdit() {
+function aplicarEdicionLocal(newRole, newStatus) {
     if (!currentEditRow) return;
-
-    const newRole = document.getElementById('editUserRole').value;
-    const newStatus = document.getElementById('editUserStatus').value;
-
     currentEditRow.dataset.userRole = newRole;
     currentEditRow.dataset.userStatus = newStatus;
 
-    // Actualizar badge de rol
     const roleBadge = currentEditRow.querySelector('.role-badge');
     if (roleBadge) {
         roleBadge.className = 'role-badge';
@@ -842,11 +843,10 @@ function saveUserEdit() {
             roleBadge.textContent = 'Operador';
         } else {
             roleBadge.classList.add('viewer');
-            roleBadge.textContent = 'Viewer';
+            roleBadge.textContent = 'Visualizador';
         }
     }
 
-    // Actualizar estado
     const statusCell = currentEditRow.querySelectorAll('td')[2];
     if (statusCell) {
         if (newStatus === 'Activo') {
@@ -857,9 +857,41 @@ function saveUserEdit() {
             statusCell.innerHTML = `<span style="color:var(--red);font-size:12px;"><span class="status-dot" style="background:var(--red);"></span>Suspendido</span>`;
         }
     }
+}
 
-    closeModal('editUserModal');
-    showToast('Usuario actualizado correctamente', 'success');
+async function saveUserEdit() {
+    if (!currentEditRow) return;
+
+    const newRole = document.getElementById('editUserRole').value;
+    const newStatus = document.getElementById('editUserStatus').value;
+    const userId = currentEditRow.dataset.userId;
+    const token = localStorage.getItem('token');
+
+    const nombre = currentEditRow.dataset.userName || '';
+
+    if (!userId || !token) {
+        aplicarEdicionLocal(newRole, newStatus);
+        closeModal('editUserModal');
+        showToast('Usuario actualizado en vista local', 'success');
+        return;
+    }
+
+    try {
+        const res = await fetch(`${API_ROOT}/api/users/${encodeURIComponent(userId)}`, {
+            method: 'PUT',
+            headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ rol: newRole, status: newStatus })
+        });
+        const data = await res.json().catch(() => null);
+        if (!res.ok) throw new Error((data && data.error) || `Error ${res.status}`);
+
+        aplicarEdicionLocal(newRole, newStatus);
+        closeModal('editUserModal');
+        showToast('Usuario actualizado', data.message || `Cambios guardados para ${nombre}`, 'success');
+        if (window.loadTenantUsers) loadTenantUsers();
+    } catch (e) {
+        showToast('Error al actualizar usuario', e.message, 'error');
+    }
 }
 
 // ── Delete User ────────────────────────────────────
@@ -875,22 +907,44 @@ function deleteUser(btn) {
     openModal('deleteUserModal');
 }
 
-function confirmDeleteUser() {
+async function confirmDeleteUser() {
     if (!currentDeleteRow) return;
 
-    const name = currentDeleteRow.dataset.userName;
+    const name = currentDeleteRow.dataset.userName || '';
+    const userId = currentDeleteRow.dataset.userId;
+    const token = localStorage.getItem('token');
+    const row = currentDeleteRow;
 
-    currentDeleteRow.style.transition = 'all 0.3s ease';
-    currentDeleteRow.style.opacity = '0';
-    currentDeleteRow.style.transform = 'translateX(-20px)';
-
-    setTimeout(() => {
-        currentDeleteRow.remove();
+    if (!userId || !token) {
+        closeModal('deleteUserModal');
+        row.remove();
         currentDeleteRow = null;
         showToast(`Usuario ${name} eliminado`, 'success');
-    }, 300);
+        return;
+    }
 
-    closeModal('deleteUserModal');
+    try {
+        const res = await fetch(`${API_ROOT}/api/users/${encodeURIComponent(userId)}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json().catch(() => null);
+        if (!res.ok) throw new Error((data && data.error) || `Error ${res.status}`);
+
+        closeModal('deleteUserModal');
+        row.style.transition = 'all 0.3s ease';
+        row.style.opacity = '0';
+        row.style.transform = 'translateX(-20px)';
+        setTimeout(() => {
+            if (row.parentNode) row.remove();
+        }, 300);
+        currentDeleteRow = null;
+        showToast('Usuario eliminado', data.message || `Se eliminó ${name}`, 'success');
+        if (window.loadTenantUsers) loadTenantUsers();
+    } catch (e) {
+        closeModal('deleteUserModal');
+        showToast('Error al eliminar usuario', e.message, 'error');
+    }
 }
 
 // ── Invite User ────────────────────────────────────
@@ -909,52 +963,45 @@ async function inviteUser(event) {
         return;
     }
 
-    const btn = event.target;
+    const btn = event.target || document.getElementById('sendInviteBtn');
     const origText = btn.innerHTML;
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
     btn.disabled = true;
 
-    setTimeout(() => {
-        const tbody = document.getElementById('usersTableBody');
-        const initials = email.split('@')[0].substring(0, 2).toUpperCase();
-        const roleClass = rol === 'Administrador' ? 'admin' : (rol === 'Operador' ? 'operator' : 'viewer');
-        const roleLabel = rol === 'Administrador' ? 'Admin' : (rol === 'Operador' ? 'Operador' : 'Viewer');
-        const displayName = email.split('@')[0];
-
-        const newRow = document.createElement('tr');
-        newRow.dataset.userName = displayName;
-        newRow.dataset.userEmail = email;
-        newRow.dataset.userRole = roleLabel;
-        newRow.dataset.userStatus = 'Activo';
-
-        newRow.innerHTML = `
-            <td>
-                <div class="user-info-cell">
-                    <div class="user-avatar-sm">${initials}</div>
-                    <div>
-                        <div class="user-name-cell">${displayName}</div>
-                        <div class="user-email-cell">${email}</div>
-                    </div>
-                </div>
-            </td>
-            <td><span class="role-badge ${roleClass}">${roleLabel}</span></td>
-            <td><span style="color:var(--yellow);font-size:12px;"><span class="status-dot" style="background:var(--yellow);"></span>Pendiente</span></td>
-            <td>Justo ahora</td>
-            <td>
-                <button class="btn btn-ghost btn-xs" onclick="editUser(this)"><i class="fas fa-edit"></i></button>
-                <button class="btn btn-danger btn-xs" onclick="deleteUser(this)"><i class="fas fa-trash"></i></button>
-            </td>
-        `;
-
-        tbody.insertBefore(newRow, tbody.firstChild);
-
-        form.reset();
+    const token = localStorage.getItem('token');
+    if (!token) {
         btn.innerHTML = origText;
         btn.disabled = false;
+        showToast('No autorizado', 'Inicia sesión para invitar trabajadores.', 'error');
+        return;
+    }
 
+    const tenantId = new URLSearchParams(window.location.search).get('id') || localStorage.getItem('empresaCodigo') || '';
+
+    try {
+        const res = await fetch(`${API_ROOT}/api/users`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                nombre: email.split('@')[0],
+                email: email,
+                rol: rol,
+                tenant: tenantId
+            })
+        });
+        const data = await res.json().catch(() => null);
+        if (!res.ok) throw new Error((data && data.error) || `Error ${res.status}`);
+
+        form.reset();
         closeModal('addUserModal');
-        showToast(`Invitación enviada a ${email}`, 'success');
-    }, 800);
+        showToast('Trabajador creado', data.message || `Invitación enviada a ${email}`, 'success');
+        if (window.loadTenantUsers) loadTenantUsers();
+    } catch (e) {
+        showToast('Error al invitar', e.message, 'error');
+    } finally {
+        btn.innerHTML = origText;
+        btn.disabled = false;
+    }
 }
 
 // ── Bot Configuration ──────────────────────────────
@@ -993,7 +1040,7 @@ function deleteApiKey(btn) {
 
     if (!confirm('¿Revocar esta API Key?')) return;
 
-    fetch(`/api/tenant/apikeys/${encodeURIComponent(id)}`, {
+    fetch(`${API_ROOT}/api/tenant/apikeys/${encodeURIComponent(id)}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
     })
@@ -1014,7 +1061,7 @@ async function loadApiKeys() {
     const token = localStorage.getItem('token');
     if (!token) return;
     try {
-        const res = await fetch(`/api/tenant/apikeys`, { headers: { 'Authorization': `Bearer ${token}` } });
+        const res = await fetch(`${API_ROOT}/api/tenant/apikeys`, { headers: { 'Authorization': `Bearer ${token}` } });
         if (!res.ok) throw new Error('apikeys error');
         const data = await res.json();
         const keys = data.keys || [];
@@ -1057,7 +1104,7 @@ function generateApiKey() {
     const token = localStorage.getItem('token');
     if (!token) { showToast('Sesión no iniciada', 'error'); return; }
 
-    fetch('/api/tenant/apikeys', {
+    fetch(API_ROOT + '/api/tenant/apikeys', {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({ nombre: name })
@@ -1118,9 +1165,9 @@ async function loadBillingDocuments() {
         const headers = { Authorization: `Bearer ${token}` };
         const query = `?tenant=${encodeURIComponent(tenant)}`;
         const [invoiceResponse, receiptResponse, noteResponse] = await Promise.all([
-            fetch(`/api/facturas${query}`, { headers }),
-            fetch(`/api/recibos${query}`, { headers }),
-            fetch(`/api/notas-credito${query}`, { headers })
+            fetch(`${API_ROOT}/api/facturas${query}`, { headers }),
+            fetch(`${API_ROOT}/api/recibos${query}`, { headers }),
+            fetch(`${API_ROOT}/api/notas-credito${query}`, { headers })
         ]);
         const invoices = invoiceResponse.ok ? (await invoiceResponse.json()).facturas || [] : [];
         const receipts = receiptResponse.ok ? (await receiptResponse.json()).recibos || [] : [];
@@ -1220,7 +1267,7 @@ async function confirmDelete() {
 
     try {
         showToast('Eliminando tenant y todos sus usuarios...', 'info');
-        const res = await fetch(`/api/tenants/${encodeURIComponent(tenantId)}`, {
+        const res = await fetch(`${API_ROOT}/api/tenants/${encodeURIComponent(tenantId)}`, {
             method: 'DELETE',
             headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -1241,7 +1288,7 @@ function executeSuspend() {
     const token = localStorage.getItem('token');
     if (!tenantId || !token) { showToast('Falta ID del tenant o sesión', 'error'); return; }
     showToast('Suspendiendo tenant...', 'info');
-    fetch(`/api/tenants/${encodeURIComponent(tenantId)}`, {
+    fetch(`${API_ROOT}/api/tenants/${encodeURIComponent(tenantId)}`, {
         method: 'PUT',
         headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({ estado: 'suspendido' })
@@ -1303,7 +1350,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
-    fetch(`/api/tenant/${encodeURIComponent(tenantId)}`, {
+    fetch(`${API_ROOT}/api/tenant/${encodeURIComponent(tenantId)}`, {
         headers: { 'Authorization': `Bearer ${token}` }
     })
         .then(res => {
@@ -1349,7 +1396,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
     // Load tenant stats (real data from backend)
-    fetch(`/api/tenant/${encodeURIComponent(tenantId)}/stats`, {
+    fetch(`${API_ROOT}/api/tenant/${encodeURIComponent(tenantId)}/stats`, {
         headers: { 'Authorization': `Bearer ${token}` }
     })
         .then(res => {
@@ -1379,6 +1426,15 @@ document.addEventListener('DOMContentLoaded', () => {
             // Tokens
             const tokensLimitEl = document.getElementById('tokens-limit');
             if (tokensLimitEl && stats.tokens) tokensLimitEl.textContent = stats.tokens.limite.toLocaleString('es-ES');
+            const tokensUsedEl = document.getElementById('tokens-used');
+            if (tokensUsedEl && stats.tokens) {
+                const tu = stats.tokens.usados || 0;
+                tokensUsedEl.textContent = `(${tu.toLocaleString('es-ES')} usados)`;
+            }
+            const tokensFillEl = document.getElementById('tokens-progress-fill');
+            const tokensLabelEl = document.getElementById('tokens-progress-label');
+            if (tokensFillEl && stats.tokens) tokensFillEl.style.width = `${Math.max(0, Math.min(100, stats.tokens.porcentaje || 0))}%`;
+            if (tokensLabelEl && stats.tokens) tokensLabelEl.textContent = `${stats.tokens.porcentaje || 0}%`;
 
             // Almacenamiento
             const storageLimitEl = document.getElementById('storage-limit');

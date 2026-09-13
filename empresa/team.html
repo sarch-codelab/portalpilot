@@ -414,7 +414,7 @@ a{text-decoration:none;color:inherit}ul{list-style:none}img{max-width:100%;displ
         <div class="topbar-search"><i class="fas fa-search"></i><input type="text" placeholder="Buscar por nombre, email o rol..." oninput="searchMembers(this.value)"></div>
       </div>
       <div class="topbar-right">
-        <button class="topbar-btn" title="Notificaciones"><i class="fas fa-bell"></i><span class="badge">1</span></button>
+        <button class="topbar-btn" title="Notificaciones"><i class="fas fa-bell"></i><span class="badge" style="display:none">0</span></button>
         <button class="btn btn-acc btn-sm" onclick="openModal('addMemberModal')"><i class="fas fa-plus"></i> Nuevo Miembro</button>
       </div>
     </header>
@@ -504,14 +504,8 @@ a{text-decoration:none;color:inherit}ul{list-style:none}img{max-width:100%;displ
 
     <!-- PAGINATION -->
     <div style="padding:0 clamp(16px,4vw,40px) 24px;display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--border);padding-top:16px">
-      <div style="font-size:12px;color:var(--gray)">Mostrando <strong style="color:var(--white)">1-10</strong> de <strong style="color:var(--white)" id="totalFiltered">&mdash;</strong> miembros</div>
-      <div style="display:flex;gap:8px">
-        <button class="btn btn-ghost btn-xs" disabled><i class="fas fa-chevron-left"></i></button>
-        <button class="btn btn-ghost btn-xs" style="background:var(--accent);color:#fff">1</button>
-        <button class="btn btn-ghost btn-xs">2</button>
-        <button class="btn btn-ghost btn-xs">3</button>
-        <button class="btn btn-ghost btn-xs"><i class="fas fa-chevron-right"></i></button>
-      </div>
+      <div style="font-size:12px;color:var(--gray)">Mostrando <strong style="color:var(--white)" id="pageRange">0-0</strong> de <strong style="color:var(--white)" id="totalFiltered">&mdash;</strong> miembros</div>
+      <div style="display:flex;gap:8px" id="paginationControls"></div>
     </div>
   </main>
 </div>
@@ -578,6 +572,7 @@ async function loadTeam() {
       avatar: u.avatar || null
     }));
     filteredMembers = [...teamMembers];
+    currentPage = 1;
     renderTable();
     updateStats();
   } catch (err) {
@@ -600,14 +595,23 @@ function timeAgo(dateStr) {
 
 // ── Render Table ─────────────────────────────────────
 let filteredMembers = [...teamMembers];
+let currentPage = 1;
+const pageSize = 10;
 function renderTable(data = filteredMembers) {
   const tbody = document.getElementById('teamTableBody');
   tbody.innerHTML = '';
   if (data.length === 0) {
     tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--gray)"><i class="fas fa-users" style="font-size:32px;display:block;margin-bottom:12px;opacity:.3"></i>No hay miembros que mostrar</td></tr>';
+    document.getElementById('totalFiltered').textContent = '0';
+    document.getElementById('pageRange').textContent = '0-0';
+    renderPagination(0);
     return;
   }
-  data.forEach(m => {
+  const totalPages = Math.max(1, Math.ceil(data.length / pageSize));
+  if (currentPage > totalPages) currentPage = totalPages;
+  const start = (currentPage - 1) * pageSize;
+  const pageRows = data.slice(start, start + pageSize);
+  pageRows.forEach(m => {
     const initials = (m.firstName[0] || '?') + (m.lastName[0] || '');
     const row = document.createElement('tr');
     row.innerHTML = `
@@ -628,6 +632,30 @@ function renderTable(data = filteredMembers) {
     tbody.appendChild(row);
   });
   document.getElementById('totalFiltered').textContent = data.length;
+  document.getElementById('pageRange').textContent = `${start + 1}-${Math.min(start + pageSize, data.length)}`;
+  renderPagination(totalPages);
+}
+
+function renderPagination(totalPages) {
+  const wrap = document.getElementById('paginationControls');
+  if (!wrap) return;
+  wrap.innerHTML = '';
+  if (totalPages <= 1) return;
+  const mkBtn = (html, disabled, click) => {
+    const b = document.createElement('button');
+    b.className = 'btn btn-ghost btn-xs';
+    b.disabled = !!disabled;
+    b.innerHTML = html;
+    b.onclick = click;
+    return b;
+  };
+  wrap.appendChild(mkBtn('<i class="fas fa-chevron-left"></i>', currentPage <= 1, () => { currentPage--; renderTable(); }));
+  for (let i = 1; i <= totalPages; i++) {
+    const p = mkBtn(String(i), false, () => { currentPage = i; renderTable(); });
+    if (i === currentPage) { p.style.background = 'var(--accent)'; p.style.color = '#fff'; }
+    wrap.appendChild(p);
+  }
+  wrap.appendChild(mkBtn('<i class="fas fa-chevron-right"></i>', currentPage >= totalPages, () => { currentPage++; renderTable(); }));
 }
 
 // ── Filters ─────────────────────────────────────────
@@ -641,6 +669,7 @@ function applyFilters() {
     if (dept && m.dept !== dept) return false;
     return true;
   });
+  currentPage = 1;
   renderTable();
 }
 function resetFilters() {
@@ -648,6 +677,7 @@ function resetFilters() {
   document.getElementById('filterStatus').value = '';
   document.getElementById('filterDept').value = '';
   filteredMembers = [...teamMembers];
+  currentPage = 1;
   renderTable();
 }
 function searchMembers(query) {
@@ -657,6 +687,7 @@ function searchMembers(query) {
     m.lastName.toLowerCase().includes(q) ||
     m.email.toLowerCase().includes(q)
   );
+  currentPage = 1;
   renderTable();
 }
 
@@ -858,6 +889,7 @@ document.addEventListener('keydown', e => {
 });
 </script>
 <script src="../js/notifications.js"></script>
+<script src="../js/notif-panel.js"></script>
 <script src="../js/plan-gate.js"></script>
 <script src="../js/sidebar-empresa.js"></script>
 <script src="../js/sidebar-loader.js"></script>

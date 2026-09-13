@@ -427,13 +427,17 @@ function updateDashboardUI() {
   // Update KPIs
   const kpis = dashboardData.kpis || {};
   
-  // Tenants - fetch from /api/tenants for root users
+  // Tenants - en vista plataforma viene en KPIs; fallback a /api/tenants
   const kpiTenants = document.getElementById('kpiTenants');
   if (kpiTenants) {
-    // Try to get tenant count separately
-    fetchTenantsCount().then(count => {
-      kpiTenants.textContent = count.toLocaleString();
-    });
+    if (kpis.tenantsActivos != null) {
+      kpiTenants.textContent = kpis.tenantsActivos.toLocaleString();
+    } else {
+      // Try to get tenant count separately
+      fetchTenantsCount().then(count => {
+        kpiTenants.textContent = count.toLocaleString();
+      });
+    }
   }
 
   // Users
@@ -442,18 +446,22 @@ function updateDashboardUI() {
     kpiUsers.textContent = (kpis.usuariosTotal || 0).toLocaleString();
   }
 
-  // Revenue
+  // Revenue (plataforma: ingreso real por billing_payments; tenant: se mantiene)
   const kpiRevenue = document.getElementById('kpiRevenue');
   if (kpiRevenue) {
     const total = kpis.facturasTotal || 0;
-    kpiRevenue.textContent = total > 0 ? `L ${total.toLocaleString()}` : 'Activo';
+    kpiRevenue.textContent = total > 0 ? `L ${total.toLocaleString()}` : '—';
+    const isPlatformView = kpis.tenantsActivos != null;
+    const label = document.querySelector('.kpi-card[data-widget="kpi-revenue"] .kpi-label');
+    const trend = document.querySelector('.kpi-card[data-widget="kpi-revenue"] .kpi-trend');
+    if (isPlatformView) {
+      if (label) label.textContent = 'Ingresos por Planes';
+      if (trend) trend.innerHTML = '<i class="fas fa-check"></i> Billing';
+    }
   }
 
   // Health
-  const kpiHealth = document.getElementById('kpiHealth');
-  if (kpiHealth) {
-    kpiHealth.textContent = '100%';
-  }
+  fetchHealth();
 
   // Update online users status with real data
   const onlineText = document.getElementById('onlineUsers');
@@ -606,15 +614,12 @@ setInterval(toggleUserStatus, 30000);
 
 // ── Quick Actions ────
 document.getElementById('createTenantBtn')?.addEventListener('click', () => window.location.href = 'tenants.html');
-document.getElementById('deployBotBtn')?.addEventListener('click', () => {
-  showToast('Desplegando Bot', 'Redirigiendo...', 'info');
-  setTimeout(() => window.location.href = 'bots.html', 1000);
-});
+document.getElementById('deployBotBtn')?.addEventListener('click', () => window.location.href = 'bots_rpa.html');
 document.getElementById('exportAuditBtn')?.addEventListener('click', () => {
   showToast('Exportando', 'Descargando...', 'success');
 });
 document.getElementById('managePermissionsBtn')?.addEventListener('click', () => window.location.href = 'usuarios.html');
-document.getElementById('newBotBtn')?.addEventListener('click', () => window.location.href = 'bots.html');
+document.getElementById('newBotBtn')?.addEventListener('click', () => window.location.href = 'bots_rpa.html');
 document.getElementById('checkServices')?.addEventListener('click', function () {
   this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verificando...';
   this.disabled = true;
@@ -1022,7 +1027,13 @@ let tokensChart = null;
 function createApexChart(containerId, data, chartType, title) {
   const container = document.getElementById(containerId);
   if (!container) return;
-  
+
+  if (!window._apexChartsRegistry) window._apexChartsRegistry = {};
+  if (window._apexChartsRegistry[containerId]) {
+    try { window._apexChartsRegistry[containerId].destroy(); } catch (e) {}
+    window._apexChartsRegistry[containerId] = null;
+  }
+
   if (!data.length) {
     container.innerHTML = '<div class="chart-empty">Sin datos registrados</div>';
     return;
@@ -1140,6 +1151,7 @@ function createApexChart(containerId, data, chartType, title) {
 
   const chart = new ApexCharts(container, options);
   chart.render();
+  window._apexChartsRegistry[containerId] = chart;
   
   return chart;
 }
@@ -1496,15 +1508,39 @@ async function fetchRealKPIs() {
 
     const elTenants = document.getElementById('kpiTenants');
     const elUsers = document.getElementById('kpiUsers');
-    const elHealth = document.getElementById('kpiHealth');
 
     if (elTenants) elTenants.textContent = tenantCount.toLocaleString();
     if (elUsers) elUsers.textContent = userCount.toLocaleString();
-    if (elHealth) elHealth.textContent = '100%';
   } catch (e) {
     console.warn('[KPI] Error cargando métricas reales:', e);
   }
 }
+
+async function fetchHealth() {
+  try {
+    const isLocalhost = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+    const API_ROOT = isLocalhost ? 'https://portal-pilot.vercel.app' : '';
+    const res = await fetch(`${API_ROOT}/api/health`);
+    if (!res.ok) throw new Error('health error');
+    const h = await res.json();
+    const healthy = h.status === 'ok' && h.supabase_configured && h.jwt_configured;
+
+    const el = document.getElementById('kpiHealth');
+    if (el) el.textContent = healthy ? '100%' : h.status === 'ok' ? 'Parcial' : 'Offline';
+
+    const card = document.querySelector('.kpi-card[data-widget="kpi-health"] .kpi-footer');
+    if (card) {
+      const label = healthy ? 'Supabase PostgreSQL OK' : h.supabase_configured ? 'Supabase conectada' : 'Supabase no configurado';
+      const dotClass = healthy ? 'green' : 'yellow';
+      card.innerHTML = `<span class="status-dot ${dotClass}"></span> ${label}`;
+    }
+  } catch (e) {
+    const el = document.getElementById('kpiHealth');
+    if (el) el.textContent = '—';
+  }
+}
+fetchHealth();
+setInterval(fetchHealth, 30000);
 fetchRealKPIs();
 setInterval(fetchRealKPIs, 30000);
 

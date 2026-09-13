@@ -53,10 +53,15 @@
 
   var logoutBtn = document.getElementById('logoutBtn');
   if (logoutBtn) {
-    logoutBtn.addEventListener('click', function () {
+    logoutBtn.addEventListener('click', function (e) {
+      e.preventDefault();
+      e.stopImmediatePropagation();
       if (confirm('¿Cerrar sesión?')) {
-        localStorage.clear();
-        window.location.href = '/login.html';
+        if (window.ppLogout) window.ppLogout('/login.html');
+        else {
+          localStorage.clear();
+          window.location.href = '/login.html';
+        }
       }
     });
   }

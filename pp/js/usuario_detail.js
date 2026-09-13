@@ -1,4 +1,5 @@
 // ── Custom Cursor (OPTIMIZADO) ─────────────────────
+const API_ROOT = (location.hostname === 'localhost' || location.hostname === '127.0.0.1') ? 'https://portal-pilot.vercel.app' : '';
 const dot = document.getElementById('cursor-dot');
 const ring = document.getElementById('cursor-ring');
 let mouseX = 0, mouseY = 0;
@@ -270,7 +271,7 @@ async function saveAllChanges() {
     }
 
     try {
-        const res = await fetch(`/api/users/${encodeURIComponent(userId)}`, {
+        const res = await fetch(`${API_ROOT}/api/users/${encodeURIComponent(userId)}`, {
             method: 'PUT',
             headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
             body: JSON.stringify(apiFields)
@@ -312,7 +313,7 @@ const profileSource = new URLSearchParams(window.location.search).get('source') 
 async function fetchUserProfile(id) {
     try {
         const token = localStorage.getItem('token');
-        let url = `/api/users/${encodeURIComponent(id)}`;
+        let url = `${API_ROOT}/api/users/${encodeURIComponent(id)}`;
         if (profileSource === 'nocodb') url += '?source=nocodb';
         const response = await fetch(url, {
             method: 'GET',
@@ -398,11 +399,22 @@ function renderProfile(user) {
     };
     setStat('statSesiones', typeof stats.sesiones === 'number' ? stats.sesiones.toLocaleString('es-ES') : '—');
     setStat('statBots', typeof stats.bots === 'number' ? stats.bots.toLocaleString('es-ES') : '—');
+    let tokens = stats.tokens;
     let tokensText = '—';
-    if (typeof stats.tokens === 'number') {
-        tokensText = stats.tokens >= 1000000 ? `${(stats.tokens / 1000000).toFixed(2)}M` : stats.tokens >= 1000 ? `${(stats.tokens / 1000).toFixed(1)}K` : String(stats.tokens);
+    if (typeof tokens === 'number') tokens = { usados: tokens, limite: 0, porcentaje: 0 };
+    if (tokens && typeof tokens.usados === 'number') {
+        const t = tokens.usados;
+        tokensText = t >= 1000000 ? `${(t / 1000000).toFixed(2)}M` : t >= 1000 ? `${(t / 1000).toFixed(1)}K` : String(t);
     }
     setStat('statTokens', tokensText);
+    const progEl = document.getElementById('statTokensProgress');
+    if (progEl && tokens && typeof tokens.porcentaje === 'number') {
+        const pct = Math.max(0, Math.min(100, tokens.porcentaje));
+        progEl.style.width = `${pct}%`;
+        progEl.style.background = pct >= 90 ? 'linear-gradient(90deg,#f87171,#ef4444)' : pct >= 60 ? 'linear-gradient(90deg,#fbbf24,#f59e0b)' : 'linear-gradient(90deg,#a78bfa,#7c3aed)';
+    }
+    const pctEl = document.getElementById('statTokensPct');
+    if (pctEl && tokens && typeof tokens.porcentaje === 'number') pctEl.textContent = `${tokens.porcentaje}%`;
     setStat('statScore', typeof stats.score === 'number' ? `${stats.score}%` : '—');
 
     // Professional Information (solo datos reales; si no existen, se queda en '—')
@@ -455,7 +467,7 @@ function renderProfile(user) {
 async function loadUserSessions(userId) {
   try {
     const token = localStorage.getItem('token');
-    const response = await fetch(`/api/users/${encodeURIComponent(userId)}/sessions`, {
+    const response = await fetch(`${API_ROOT}/api/users/${encodeURIComponent(userId)}/sessions`, {
       headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
     });
     if (response.ok) {
@@ -471,7 +483,7 @@ async function loadUserSessions(userId) {
 async function loadUserActivity(userId) {
   try {
     const token = localStorage.getItem('token');
-    const response = await fetch(`/api/users/${encodeURIComponent(userId)}/activity?limit=10`, {
+    const response = await fetch(`${API_ROOT}/api/users/${encodeURIComponent(userId)}/activity?limit=10`, {
       headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
     });
     if (response.ok) {
@@ -526,7 +538,7 @@ function renderActivity(activity) {
 async function loadUserActivity(userId) {
   try {
     const token = localStorage.getItem('token');
-    const response = await fetch(`/api/users/${encodeURIComponent(userId)}/activity?limit=10`, {
+    const response = await fetch(`${API_ROOT}/api/users/${encodeURIComponent(userId)}/activity?limit=10`, {
       headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
     });
     if (response.ok) {
@@ -542,7 +554,7 @@ async function loadUserActivity(userId) {
 async function loadUserSessions(userId) {
   try {
     const token = localStorage.getItem('token');
-    const response = await fetch(`/api/users/${encodeURIComponent(userId)}/sessions`, {
+    const response = await fetch(`${API_ROOT}/api/users/${encodeURIComponent(userId)}/sessions`, {
       headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
     });
     if (response.ok) {
@@ -606,7 +618,7 @@ async function impersonateUser() {
         return;
     }
     try {
-        const response = await fetch(`/api/users/${encodeURIComponent(profileUserId)}/impersonate`, {
+        const response = await fetch(`${API_ROOT}/api/users/${encodeURIComponent(profileUserId)}/impersonate`, {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${token}`,
@@ -634,7 +646,7 @@ async function impersonateUser() {
 
         // Sincronizar la cookie httpOnly con la nueva sesión para que /empresa/* se sirva de inmediato
         try {
-            await fetch('/api/session/sync', {
+            await fetch(API_ROOT + '/api/session/sync', {
                 method: 'POST',
                 headers: { 'Authorization': `Bearer ${data.token}` }
             });
@@ -664,7 +676,7 @@ async function executeReset() {
 
     showToast('Reseteando contraseña...', 'info');
     try {
-        const res = await fetch(`/api/users/${encodeURIComponent(userId)}`, {
+        const res = await fetch(`${API_ROOT}/api/users/${encodeURIComponent(userId)}`, {
             method: 'PUT',
             headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
             body: JSON.stringify({ password: tempPwd })
@@ -704,7 +716,7 @@ async function executeSuspend() {
 
     showToast('Suspendiendo cuenta...', 'info');
     try {
-        const res = await fetch(`/api/users/${encodeURIComponent(userId)}`, {
+        const res = await fetch(`${API_ROOT}/api/users/${encodeURIComponent(userId)}`, {
             method: 'PUT',
             headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
             body: JSON.stringify({ status: 'suspended', reason, notas: reason ? JSON.stringify({ suspend_reason: reason }) : undefined })
@@ -729,7 +741,7 @@ async function loadUserApiKeys() {
     const token = localStorage.getItem('token');
     if (!token) { container.innerHTML = '<div style="padding:12px;color:var(--gray);font-size:13px;">Inicia sesión para ver claves API.</div>'; return; }
     try {
-        const res = await fetch('/api/tenant/apikeys', { headers: { 'Authorization': `Bearer ${token}` } });
+        const res = await fetch(API_ROOT + '/api/tenant/apikeys', { headers: { 'Authorization': `Bearer ${token}` } });
         if (!res.ok) throw new Error('apikeys error');
         const data = await res.json();
         const keys = data.keys || [];
@@ -764,7 +776,7 @@ async function generateApiKey() {
     if (!token) { showToast('Sesión no válida. Inicia sesión nuevamente.', 'error'); return; }
 
     try {
-        const response = await fetch('/api/tenant/apikeys', {
+        const response = await fetch(API_ROOT + '/api/tenant/apikeys', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
             body: JSON.stringify({ nombre: name })
@@ -828,7 +840,7 @@ async function saveNote() {
 
     showToast('Guardando nota...', 'info');
     try {
-        const res = await fetch(`/api/users/${encodeURIComponent(userId)}`, {
+        const res = await fetch(`${API_ROOT}/api/users/${encodeURIComponent(userId)}`, {
             method: 'PUT',
             headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
             body: JSON.stringify({ notas: JSON.stringify(notas) })
@@ -852,7 +864,7 @@ async function endSession(sessionId) {
     const token = localStorage.getItem('token');
     if (!userId || !token) return;
     try {
-        const res = await fetch(`/api/users/${encodeURIComponent(userId)}/revoke-sessions`, {
+        const res = await fetch(`${API_ROOT}/api/users/${encodeURIComponent(userId)}/revoke-sessions`, {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -872,7 +884,7 @@ async function endAllSessions() {
     if (!userId || !token) return;
     showToast('Revocando sesiones...', 'info');
     try {
-        const res = await fetch(`/api/users/${encodeURIComponent(userId)}/revoke-sessions`, {
+        const res = await fetch(`${API_ROOT}/api/users/${encodeURIComponent(userId)}/revoke-sessions`, {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -896,7 +908,7 @@ async function revokeApiKey(keyId) {
     const token = localStorage.getItem('token');
     if (!token) { showToast('Sesión no iniciada', 'error'); return; }
     try {
-        const res = await fetch(`/api/tenant/apikeys/${encodeURIComponent(keyId)}`, {
+        const res = await fetch(`${API_ROOT}/api/tenant/apikeys/${encodeURIComponent(keyId)}`, {
             method: 'DELETE',
             headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -915,7 +927,7 @@ async function exportUserData() {
 
     showToast('Generando archivo con datos del usuario (GDPR compliant)...', 'info');
     try {
-        const res = await fetch(`/api/users/${encodeURIComponent(userId)}/export`, {
+        const res = await fetch(`${API_ROOT}/api/users/${encodeURIComponent(userId)}/export`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         if (!res.ok) throw new Error('Error al exportar');

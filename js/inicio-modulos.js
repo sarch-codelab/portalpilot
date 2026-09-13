@@ -35,6 +35,20 @@ const SLUG_TO_MODULO = {
   automatizacion_rpa: 'Comercial', api_keys_seguridad: 'Seguridad'
 };
 const MODULOS_FALLBACK = ['POS','Canal Moderno','Canal Tradicional','Chat IA','Comercial','Compras & Proveedores','Contabilidad','Cotizaciones','CRM','CRM Avanzado','Facturación SAR','Fiscal Avanzado','Inventario','Membresías','Multi-Empresa','Retail','RRHH','Sector Retail','Seguridad','Configuración','Soporte','Supply Chain','Analytics'];
+const MODULO_URL = {
+  'Comercial': 'automation.html',
+  'Supply Chain': 'fleet.html',
+  'Seguridad': 'security.html',
+  'Configuración': 'tenant_detail.html',
+  'Multi-Empresa': 'tenant_detail.html',
+  'Analytics': 'dashboard.html',
+  'Retail': 'dashboard.html',
+  'POS': 'dashboard.html',
+  'Inventario': 'dashboard.html',
+  'Facturación SAR': 'dashboard.html',
+  'CRM': 'dashboard.html',
+  'Chat IA': 'dashboard.html'
+};
 
 function renderModulos(nombres) {
   const grid = document.getElementById('modulosGrid');
@@ -44,7 +58,7 @@ function renderModulos(nombres) {
     const info = MODULO_INFO[nombre] || { icon: 'fa-cube' };
     const card = document.createElement('a');
     card.className = 'area-card';
-    card.href = 'dashboard.html';
+    card.href = MODULO_URL[nombre] || 'dashboard.html';
     card.style.opacity = '0';
     card.style.transform = 'translateY(20px)';
     card.style.transition = 'opacity 0.5s ease, transform 0.5s ease';

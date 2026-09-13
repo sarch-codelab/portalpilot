@@ -159,6 +159,7 @@
         @media (max-width: 768px) { .dashboard { grid-template-columns: 1fr; } .sidebar { position: fixed; left: -260px; top: 0; height: 100vh; z-index: 999; transition: left 0.3s; } .sidebar.active { left: 0; } .main-content { margin-left: 0; } }
     </style>
 <link rel="stylesheet" href="../css/sidebar-empresa.css">
+<link rel="stylesheet" href="../css/notifications.css">
 </head>
 
 <body>
@@ -409,6 +410,7 @@
                 document.getElementById('newKeyDisplay').textContent = generatedKey;
 
                 showToast('Clave API creada exitosamente. Cópiala ahora.', 'success');
+                loadKeys();
                 gtag('event', 'api_key_created', { plan_level: 'enterprise' });
             } catch (err) {
                 showToast(err.message || 'Error creando clave', 'error');

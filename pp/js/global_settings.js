@@ -38,12 +38,14 @@ function gsTiempoDesde(iso) {
 }
 function gsApi(url, opts) {
   opts = opts || {};
+  var local = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+  var apiUrl = (local ? 'https://portal-pilot.vercel.app' : '') + (String(url).charAt(0) === '/' ? url : '/' + url);
   opts.headers = Object.assign({}, opts.headers || {}, { 'Authorization': 'Bearer ' + (localStorage.getItem('token') || '') });
   if (opts.body && typeof opts.body !== 'string') {
     opts.headers['Content-Type'] = 'application/json';
     opts.body = JSON.stringify(opts.body);
   }
-  return fetch(url, opts).then(function (resp) {
+  return fetch(apiUrl, opts).then(function (resp) {
     return resp.json().then(function (data) {
       return { ok: resp.ok, status: resp.status, json: data };
     }).catch(function () { return { ok: resp.ok, status: resp.status, json: null }; });

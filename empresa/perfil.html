@@ -318,7 +318,7 @@
           <div class="topbar-search"><i class="fas fa-search"></i><input type="text" placeholder="Buscar en configuración..."></div>
         </div>
         <div class="topbar-right">
-          <button class="topbar-btn" title="Notificaciones"><i class="fas fa-bell"></i><span class="badge">2</span></button>
+          <button class="topbar-btn" title="Notificaciones"><i class="fas fa-bell"></i><span class="badge" style="display:none">0</span></button>
           <button class="btn btn-acc btn-sm" onclick="saveProfile()"><i class="fas fa-save"></i> Guardar Cambios</button>
         </div>
       </header>
@@ -426,7 +426,7 @@
             <div class="security-item">
               <div class="security-info">
                 <div class="security-title">Sesiones Activas</div>
-                <div class="security-desc">3 dispositivos conectados actualmente</div>
+                <div class="security-desc"><span id="sessionsActiveDesc">&mdash;</span> dispositivos conectados</div>
               </div>
               <button class="btn btn-ghost btn-sm" onclick="openModal('sessionsModal')">Ver todas</button>
             </div>
@@ -613,29 +613,8 @@
         <button class="modal-close" onclick="closeModal('sessionsModal')"><i class="fas fa-times"></i></button>
       </div>
       <div class="modal-body">
-        <div class="session-item current">
-          <div class="session-info">
-            <div class="session-device"><i class="fas fa-desktop"></i> Chrome • Windows</div>
-            <div class="session-meta">Última actividad: Ahora • <span style="color:var(--green)">● Activa</span></div>
-            <div class="session-location">📍 Monterrey, MX • 187.210.34.89</div>
-          </div>
-          <span class="profile-badge verified" style="font-size:10px;padding:2px 8px;">Actual</span>
-        </div>
-        <div class="session-item">
-          <div class="session-info">
-            <div class="session-device"><i class="fas fa-mobile-alt"></i> Safari • iOS</div>
-            <div class="session-meta">Última actividad: Hace 2 horas</div>
-            <div class="session-location">📍 Guadalajara, MX • 189.203.45.12</div>
-          </div>
-          <button class="btn btn-ghost btn-xs" onclick="endSession(this)">Cerrar</button>
-        </div>
-        <div class="session-item">
-          <div class="session-info">
-            <div class="session-device"><i class="fas fa-laptop"></i> Firefox • macOS</div>
-            <div class="session-meta">Última actividad: Ayer, 6:45 PM</div>
-            <div class="session-location">📍 CDMX, MX • 201.99.12.45</div>
-          </div>
-          <button class="btn btn-ghost btn-xs" onclick="endSession(this)">Cerrar</button>
+        <div id="sessionsList">
+          <div style="text-align:center;padding:20px;color:var(--gray);"><i class="fas fa-spinner fa-spin"></i> Cargando sesiones...</div>
         </div>
       </div>
       <div class="modal-footer">
@@ -690,7 +669,7 @@
       <p style="font-size:14px;color:var(--text-dim);margin-bottom:20px;">¿Estás seguro que deseas cerrar sesión?</p>
       <div class="modal-footer">
         <button class="btn btn-ghost" id="modalCancel" onclick="closeModal('logoutModal')">Cancelar</button>
-        <button class="btn btn-acc" id="modalConfirm" onclick="window.location.href='../login.html'">Cerrar Sesión</button>
+        <button class="btn btn-acc" id="modalConfirm">Cerrar Sesión</button>
       </div>
     </div>
   </div>
@@ -791,9 +770,9 @@
 
     // ── Logout Modal ─────────────────
     const logoutBtn = document.getElementById('logoutBtn'), logoutModal = document.getElementById('logoutModal'), modalCancel = document.getElementById('modalCancel'), modalConfirm = document.getElementById('modalConfirm');
-    logoutBtn.addEventListener('click', (e) => { e.preventDefault(); logoutModal.classList.add('active'); });
+    logoutBtn.addEventListener('click', (e) => { e.preventDefault(); e.stopImmediatePropagation(); logoutModal.classList.add('active'); });
     modalCancel.addEventListener('click', () => { logoutModal.classList.remove('active'); });
-    modalConfirm.addEventListener('click', () => { logoutModal.classList.remove('active'); alert('Sesión cerrada. Redirigiendo...'); });
+    modalConfirm.addEventListener('click', () => { logoutModal.classList.remove('active'); if (window.ppLogout) window.ppLogout('../login.html'); else window.location.href = '../login.html'; });
     logoutModal.addEventListener('click', (e) => { if(e.target === logoutModal) { logoutModal.classList.remove('active'); } });
 
     // ── Profile Functions ──────────────
@@ -864,7 +843,7 @@
     }
 
     // ── Modal Functions ──────────────
-    function openModal(id) { document.getElementById(id).classList.add('active'); if (id === 'apiKeysModal') loadApiKeys(); }
+    function openModal(id) { document.getElementById(id).classList.add('active'); if (id === 'apiKeysModal') loadApiKeys(); if (id === 'sessionsModal') loadSessions(); }
     function closeModal(id) { document.getElementById(id).classList.remove('active'); }
     document.querySelectorAll('.modal-overlay').forEach(overlay => {
       overlay.addEventListener('click', e => { if(e.target === overlay) overlay.classList.remove('active'); });
@@ -1012,17 +991,62 @@
     function setBtnLoading(btn) { try { btn.disabled = true; setTimeout(() => { btn.disabled = false; }, 900); } catch(e) {} }
 
     // ── Sessions ──────────────
-    function endSession(btn) {
-      if(confirm('¿Cerrar esta sesión?')) {
-        btn.closest('.session-item').remove();
-        showMessage('Sesión cerrada', 'success');
+    async function loadSessions() {
+      const list = document.getElementById('sessionsList');
+      if (!list) return;
+      const id = currentUserId();
+      if (!id) { list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--gray);">No se pudo identificar tu usuario.</div>'; return; }
+      list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--gray);"><i class="fas fa-spinner fa-spin"></i> Cargando sesiones...</div>';
+      try {
+        const res = await apiFetch('/api/users/' + encodeURIComponent(id) + '/sessions');
+        if (!res.ok) throw new Error((await res.json()).error || 'Error');
+        const data = await res.json();
+        const sessions = data.sessions || [];
+        const desc = document.getElementById('sessionsActiveDesc');
+        if (desc) desc.textContent = sessions.length;
+        if (!sessions.length) {
+          list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--gray);">Sin sesiones registradas.</div>';
+          return;
+        }
+        list.innerHTML = sessions.map(s => `
+          <div class="session-item${s.isCurrent ? ' current' : ''}">
+            <div class="session-info">
+              <div class="session-device"><i class="fas ${s.deviceType === 'mobile' ? 'fa-mobile-alt' : 'fa-laptop'}"></i> ${s.deviceName || 'Dispositivo'}${s.browser && s.browser !== 'Navegador actual' ? ' • ' + s.browser : ''}${s.os && s.os !== 'Sistema actual' ? ' • ' + s.os : ''}</div>
+              <div class="session-meta">Última actividad: ${s.lastActivity ? new Date(s.lastActivity).toLocaleString('es-ES', { weekday: 'short', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—'}${s.isActive ? '<span style="color:var(--green)"> • Activa</span>' : ''}</div>
+              <div class="session-location">${s.location || 'Ubicación desconocida'}${s.ip ? ' • ' + s.ip : ''}</div>
+            </div>
+            ${s.isCurrent ? '<span class="profile-badge verified" style="font-size:10px;padding:2px 8px;">Actual</span>' : '<button class="btn btn-ghost btn-xs" onclick="endSession(\'' + s.id + '\')">Cerrar</button>'}
+          </div>
+        `).join('');
+      } catch (err) {
+        list.innerHTML = `<div style="text-align:center;padding:20px;color:var(--red);">No se pudieron cargar las sesiones: ${err.message}</div>`;
       }
     }
-    function endAllSessions() {
-      if(confirm('¿Cerrar TODAS las sesiones excepto la actual?')) {
-        document.querySelectorAll('.session-item:not(.current)').forEach(el => el.remove());
+    async function endSession(id) {
+      if(!confirm('¿Cerrar esta sesión?')) return;
+      const uid = currentUserId();
+      if (!uid) return;
+      try {
+        const res = await apiFetch('/api/users/' + encodeURIComponent(uid) + '/revoke-sessions', { method: 'POST' });
+        if (!res.ok) throw new Error((await res.json()).error || 'Error');
+        showMessage('✓ Sesión cerrada', 'success');
+        await loadSessions();
+      } catch (err) {
+        showMessage('Error al cerrar sesión: ' + err.message, 'error');
+      }
+    }
+    async function endAllSessions() {
+      if(!confirm('¿Cerrar TODAS las sesiones excepto la actual?')) return;
+      const uid = currentUserId();
+      if (!uid) return;
+      try {
+        const res = await apiFetch('/api/users/' + encodeURIComponent(uid) + '/revoke-sessions', { method: 'POST' });
+        if (!res.ok) throw new Error((await res.json()).error || 'Error');
         closeModal('sessionsModal');
         showMessage('✓ Todas las sesiones cerradas', 'success');
+        await loadSessions();
+      } catch (err) {
+        showMessage('Error: ' + err.message, 'error');
       }
     }
 
@@ -1099,18 +1123,49 @@
     document.getElementById('deleteConfirm')?.addEventListener('input', function() {
       document.getElementById('btnDeleteAccount').disabled = this.value.trim().toUpperCase() !== 'ELIMINAR';
     });
-    function deleteAccount() {
-      if(document.getElementById('deleteConfirm').value.trim().toUpperCase() === 'ELIMINAR') {
-        if(confirm('⚠️ ÚLTIMA CONFIRMACIÓN: ¿Estás 100% seguro de eliminar tu cuenta? Esta acción NO se puede deshacer.')) {
-          alert('Cuenta eliminada. Gracias por usar Portal Pilot.');
-          // window.location.href = 'login.html';
+    async function deleteAccount() {
+      if(document.getElementById('deleteConfirm').value.trim().toUpperCase() !== 'ELIMINAR') return;
+      if(!confirm('⚠️ ÚLTIMA CONFIRMACIÓN: ¿Estás 100% seguro de eliminar tu cuenta? Esta acción NO se puede deshacer.')) return;
+      const id = currentUserId();
+      if (!id) return;
+      const btn = document.getElementById('btnDeleteAccount');
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Eliminando...';
+      btn.disabled = true;
+      try {
+        const res = await apiFetch('/api/users/' + encodeURIComponent(id), { method: 'DELETE' });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.error || 'Error al eliminar la cuenta');
         }
+        localStorage.clear();
+        showMessage('Cuenta eliminada. Gracias por usar Portal Pilot.', 'success');
+        setTimeout(() => { window.location.href = '/login.html'; }, 1500);
+      } catch (err) {
+        showMessage('Error: ' + err.message, 'error');
+        btn.innerHTML = 'Eliminar Permanentemente';
+        btn.disabled = false;
       }
     }
 
     // ── Utilities ──────────────
-    function exportProfile() { showMessage('Preparando exportación de datos...', 'info'); }
-    function downloadData() { showMessage('Generando archivo con tus datos...', 'info'); }
+    async function exportProfile() {
+      const id = currentUserId();
+      if (!id) return;
+      try {
+        const res = await apiFetch('/api/users/' + encodeURIComponent(id) + '/export');
+        if (!res.ok) throw new Error((await res.json()).error || 'Error');
+        const data = await res.json();
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }));
+        a.download = 'mis_datos_' + id.slice(0, 8) + '.json';
+        a.click();
+        URL.revokeObjectURL(a.href);
+        showMessage('✓ Datos exportados correctamente', 'success');
+      } catch (err) {
+        showMessage('Error al exportar: ' + err.message, 'error');
+      }
+    }
+    function downloadData() { exportProfile(); }
 
     // ── Initialize ──────────────
     window.addEventListener('load', () => {
@@ -1120,6 +1175,7 @@
     });
   </script>
 <script src="../js/notifications.js"></script>
+<script src="../js/notif-panel.js"></script>
 <script src="../js/plan-gate.js"></script>
 <script src="../js/sidebar-loader.js"></script>
 <script>

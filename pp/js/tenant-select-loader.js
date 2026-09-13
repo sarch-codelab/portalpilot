@@ -1,10 +1,11 @@
 // Puebla el select de tenants (#u-tenant) con datos reales de /api/tenants
 (function () {
+    var API_ROOT = (location.hostname === 'localhost' || location.hostname === '127.0.0.1') ? 'https://portal-pilot.vercel.app' : '';
     function populate() {
         var sel = document.getElementById('u-tenant');
         if (!sel) return;
         var token = localStorage.getItem('token');
-        fetch('/api/tenants', { headers: { 'Authorization': 'Bearer ' + (token || '') } })
+        fetch(API_ROOT + '/api/tenants', { headers: { 'Authorization': 'Bearer ' + (token || '') } })
             .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
             .then(function (list) {
                 if (!Array.isArray(list) || !list.length) return;

@@ -1023,11 +1023,9 @@
         btn.style.borderColor = 'transparent';
 
         setTimeout(() => {
-          showToast(`Módulo de ${area.charAt(0).toUpperCase() + area.slice(1)} disponible próximamente.`, 'info');
-          btn.innerHTML = originalText;
-          btn.style.background = '';
-          btn.style.borderColor = '';
-        }, 1200);
+          const url = (window.MODULO_URL && MODULO_URL[area]) || 'dashboard.html';
+          window.location.href = url + '?mod=' + encodeURIComponent(area);
+        }, 300);
       }, 150);
     }
 

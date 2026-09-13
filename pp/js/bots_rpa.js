@@ -1,5 +1,6 @@
 // ── Bots RPA — Automation Rules Engine ─────────────────
-const API_BASE = '/api';
+const API_ROOT = (location.hostname === 'localhost' || location.hostname === '127.0.0.1') ? 'https://portal-pilot.vercel.app' : '';
+const API_BASE = API_ROOT + '/api';
 let allRules = [];
 let filteredRules = [];
 let currentPage = 1;

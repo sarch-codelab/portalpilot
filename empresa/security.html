@@ -1184,7 +1184,7 @@
                 </div>
                 <div class="topbar-right">
                     <button class="topbar-btn" title="Alertas"><i class="fas fa-bell"></i><span
-                            class="badge">2</span></button>
+                            class="badge" style="display:none">0</span></button>
                     <button class="btn btn-acc btn-sm" onclick="exportAuditReport()"><i class="fas fa-file-export"></i>
                         Exportar Reporte Firmado</button>
                 </div>
@@ -1258,8 +1258,8 @@
 
                         <div class="stats-row">
                             <div class="stat-item">
-                                <div class="stat-value">99.98%</div>
-                                <div class="stat-label">Uptime Auditoría</div>
+                                <div class="stat-value" id="statUptime">—</div>
+                                <div class="stat-label">Integridad de la Cadena</div>
                             </div>
                             <div class="stat-item">
                                 <div class="stat-value" id="statHashes">1,247</div>
@@ -1371,6 +1371,17 @@
                 chainStats = data.stats || { total: 0, valid: true };
                 const verified = document.getElementById('statHashes');
                 if (verified) verified.textContent = (chainStats.total || hashChain.length).toLocaleString();
+                const uptime = document.getElementById('statUptime');
+                if (uptime) {
+                    if (chainStats.verificados && chainStats.total) {
+                        uptime.textContent = Math.round((chainStats.verificados / chainStats.total) * 100) + '%';
+                    } else if (hashChain.length) {
+                        const ok = hashChain.filter(h => h.valid !== false).length;
+                        uptime.textContent = Math.round((ok / hashChain.length) * 100) + '%';
+                    } else {
+                        uptime.textContent = '—';
+                    }
+                }
                 if (skeleton) skeleton.closest('tr').style.display = 'none';
                 renderHashes();
             } catch (err) {
@@ -1448,6 +1459,20 @@
             showToast('Auditoría actualizada con los últimos eventos.', 'success');
         }
 
+        // ── Políticas de Seguridad (persistencia local) ──
+        document.querySelectorAll('.policy-item input[type="checkbox"]').forEach(sw => {
+            const item = sw.closest('.policy-item');
+            const titleEl = item ? item.querySelector('.policy-title') : null;
+            const title = titleEl ? titleEl.textContent.trim() : 'Política';
+            const key = 'pp_policy_' + title.toLowerCase().replace(/[^a-z0-9]+/g, '_');
+            const saved = localStorage.getItem(key);
+            if (saved !== null) sw.checked = saved !== 'off';
+            sw.addEventListener('change', function () {
+                localStorage.setItem(key, sw.checked ? 'on' : 'off');
+                showToast(title + (sw.checked ? ' activada' : ' desactivada'), sw.checked ? 'success' : 'warning');
+            });
+        });
+
         // ── Initialize ──────────────────
         window.addEventListener('load', () => {
             loadAudit();
@@ -1457,6 +1482,7 @@
     </script>
 <script src="../js/security-recent.js"></script>
 <script src="../js/notifications.js"></script>
+<script src="../js/notif-panel.js"></script>
 <script src="../js/plan-gate.js"></script>
 <script src="../js/sidebar-loader.js"></script>
 <script src="../auth-check.js"></script>

@@ -167,8 +167,8 @@ a{text-decoration:none;color:inherit}ul{list-style:none}img{max-width:100%;displ
         </div>
       </div>
       <div class="topbar-right">
-        <button class="topbar-btn"><i class="fas fa-bell"></i><span class="badge">3</span></button>
-        <button class="btn btn-acc btn-sm" onclick="showToast('🚀 Creando automatización...')"><i class="fas fa-plus"></i> Nueva Automatización</button>
+        <button class="topbar-btn" title="Notificaciones"><i class="fas fa-bell"></i><span class="badge" style="display:none">0</span></button>
+        <button class="btn btn-acc btn-sm" onclick="window.location.href='automation.html'"><i class="fas fa-plus"></i> Nueva Automatización</button>
       </div>
     </header>
 
@@ -178,8 +178,8 @@ a{text-decoration:none;color:inherit}ul{list-style:none}img{max-width:100%;displ
         <p class="page-subtitle">Centro de mando empresarial en tiempo real. Monitorea métricas clave y toma decisiones informadas.</p>
       </div>
       <div class="page-actions">
-        <button class="btn btn-ghost btn-sm" onclick="showToast('📊 Exportando reporte...')"><i class="fas fa-download"></i> Exportar Reporte</button>
-        <button class="btn btn-ghost btn-sm" onclick="showToast('✓ Datos actualizados')"><i class="fas fa-sync-alt"></i> Actualizar</button>
+        <button class="btn btn-ghost btn-sm" onclick="exportDashboardReport()"><i class="fas fa-download"></i> Exportar Reporte</button>
+        <button class="btn btn-ghost btn-sm" onclick="loadDashboard()"><i class="fas fa-sync-alt"></i> Actualizar</button>
       </div>
     </div>
 
@@ -285,14 +285,18 @@ document.addEventListener('mousemove',e=>{ring.style.left=e.clientX+'px';ring.st
 const fmt = new Intl.NumberFormat('en-US');
 function fmtMoney(v){ return '$' + fmt.format(Math.round(v || 0)); }
 
+let currentPeriod = 7;
+let _dashData = null;
+
 async function loadDashboard() {
   const token = localStorage.getItem('token');
   try {
-    const res = await fetch('/api/dashboard/summary', {
+    const res = await fetch('/api/dashboard/summary?period=' + currentPeriod, {
       headers: { 'Authorization': 'Bearer ' + token }
     });
     if (!res.ok) throw new Error((await res.json()).error || 'Error');
     const data = await res.json();
+    _dashData = data;
     renderKPIs(data);
     renderCharts(data);
     renderActivity(data);
@@ -386,8 +390,34 @@ function renderAlerts(data) {
 function setPeriod(p,btn){
   document.querySelectorAll('.period-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
+  currentPeriod = p === 'today' ? 1 : (p === 'month' ? 30 : 7);
   loadDashboard();
   showToast('📊 Datos actualizados: '+p);
+}
+
+function exportDashboardReport(){
+  if (!_dashData) { showToast('Carga los datos antes de exportar', 'warning'); return; }
+  const d = _dashData;
+  const k = d.kpis || {};
+  const line = row => row.map(c => `"${String(c ?? '').replace(/"/g, '""')}"`).join(',');
+  let csv = '\uFEFF';
+  csv += line(['Métrica', 'Valor']) + '\n';
+  csv += line(['Usuario activo', k.usuariosActivos || 0]) + '\n';
+  csv += line(['Balance del mes', k.balanceMes || 0]) + '\n';
+  csv += line(['Transacciones / facturas', k.facturasCount || 0]) + '\n';
+  csv += line(['Productos', k.productosCount || 0]) + '\n';
+  csv += line(['Facturas totales', k.facturasTotal || 0]) + '\n';
+  csv += line(['Facturas pendientes', k.facturasPendientes || 0]) + '\n';
+  csv += line(['Stock bajo', k.lowStock || 0]) + '\n';
+  csv += line(['Periodo (días)', d.periodDays || currentPeriod]) + '\n';
+  csv += '\n' + line(['Día', 'Facturas', 'Transacciones']) + '\n';
+  (d.usage7d || []).forEach(u => { csv += line([u.label, u.facturas, u.transacciones]) + '\n'; });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
+  a.download = 'reporte_empresa_' + (localStorage.getItem('empresaCodigo') || 'tenant') + '.csv';
+  a.click();
+  URL.revokeObjectURL(a.href);
+  showToast('📊 Reporte exportado', 'success');
 }
 
 
@@ -395,6 +425,7 @@ window.addEventListener('load',loadDashboard);
 
 </script>
 <script src="../js/notifications.js"></script>
+<script src="../js/notif-panel.js"></script>
 <script src="../js/plan-gate.js"></script>
 <script src="../js/sidebar-empresa.js"></script>
 <script src="../js/sidebar-loader.js"></script>

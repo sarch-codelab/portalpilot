@@ -892,7 +892,14 @@
                                 </div>
                                 <div style="display:flex;justify-content:space-between;">
                                     <span style="color:var(--gray);">Tokens IA / mes</span>
-                                    <strong style="color:var(--white);" id="tokens-limit">2,000,000</strong>
+                                    <strong style="color:var(--white);" id="tokens-limit">2,000,000 <span
+                                            id="tokens-used" style="color:var(--gray);font-weight:400;">(0 usados)</span></strong>
+                                </div>
+                                <div style="display:flex;align-items:center;gap:10px;">
+                                    <div style="flex:1;height:8px;background:rgba(255,255,255,0.08);border-radius:999px;overflow:hidden;">
+                                        <div id="tokens-progress-fill" style="width:0%;height:100%;background:linear-gradient(90deg,#a78bfa,#7c3aed);border-radius:999px;transition:width .5s ease;"></div>
+                                    </div>
+                                    <span style="color:var(--gray);font-size:12px;min-width:38px;text-align:right;" id="tokens-progress-label">0%</span>
                                 </div>
                                 <div style="display:flex;justify-content:space-between;">
                                     <span style="color:var(--gray);">Bots RPA</span>

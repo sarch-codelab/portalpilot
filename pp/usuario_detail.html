@@ -382,7 +382,10 @@
                     <div class="stat-content">
                         <div class="stat-value" id="statTokens">—</div>
                         <div class="stat-label">Tokens IA Consumidos</div>
-                        <div class="stat-trend down"><i class="fas fa-arrow-down"></i> -5% vs promedio</div>
+                        <div style="height:6px;background:rgba(255,255,255,0.08);border-radius:999px;overflow:hidden;margin-top:4px;">
+                            <div id="statTokensProgress" style="width:0%;height:100%;background:linear-gradient(90deg,#a78bfa,#7c3aed);border-radius:999px;transition:width .5s ease;"></div>
+                        </div>
+                        <div class="stat-trend" id="statTokensTrend" style="margin-top:4px;"><i class="fas fa-tachometer-alt"></i> <span id="statTokensPct">—</span> del plan del tenant</div>
                     </div>
                 </div>
                 <div class="stat-card reveal">

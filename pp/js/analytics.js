@@ -162,6 +162,49 @@ function getImpact(tipo) {
 
 function esc(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
 
+// ── Consumo global por tenant (Bloque L — solo ROOT) ────────
+async function loadGlobalUsage() {
+  const tbody = document.getElementById('globalUsageBody');
+  if (!tbody) return;
+  try {
+    const [usageRes, aiRes, costRes] = await Promise.all([
+      fetch(`${API_BASE}/usage`, { headers: authHeaders() }),
+      fetch(`${API_BASE}/ai/usage`, { headers: authHeaders() }),
+      fetch(`${API_BASE}/ai/costs`, { headers: authHeaders() })
+    ]);
+    if (!usageRes.ok || !aiRes.ok || !costRes.ok) throw new Error('Error cargando consumo global');
+    const usage = await usageRes.json();
+    const ai = await aiRes.json();
+    const costs = await costRes.json();
+    const tenants = new Set([...Object.keys(usage.porTenant || {}), ...Object.keys(ai.porTenant || {}), ...Object.keys(costs.porTenant || {})]);
+    if (!tenants.size) {
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--gray);padding:24px;">Aún no hay consumo registrado por ningún tenant.</td></tr>';
+      return;
+    }
+    // Nombres reales de tenants
+    let nombres = {};
+    try {
+      const tRes = await fetch(`${API_BASE}/tenants`, { headers: authHeaders() });
+      if (tRes.ok) (await tRes.json()).forEach(t => { nombres[t.codigo] = t.name || t.nombre_empresa || t.codigo; });
+    } catch (_) {}
+    tbody.innerHTML = [...tenants].sort().map(cod => {
+      const u = (usage.porTenant || {})[cod] || {};
+      const a = (ai.porTenant || {})[cod] || {};
+      const c = (costs.porTenant || {})[cod] || 0;
+      return `<tr>
+        <td><b style="color:var(--white)">${esc(nombres[cod] || cod)}</b> <span style="color:var(--gray);font-size:11px">${esc(cod)}</span></td>
+        <td style="text-align:right">${formatNum(u.documents || 0)}</td>
+        <td style="text-align:right">${formatNum(a.tokens || 0)}</td>
+        <td style="text-align:right">${formatNum(u.api_requests || 0)}</td>
+        <td style="text-align:right">${formatNum(a.solicitudes || 0)}</td>
+        <td style="text-align:right">$${Number(c).toFixed(4)}</td>
+      </tr>`;
+    }).join('');
+  } catch (err) {
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--red);padding:24px;">No se pudo cargar el consumo global: ${esc(err.message)}</td></tr>`;
+  }
+}
+
 // ── Reveal Animations ─────────────────
 function initReveal() {
   const observer = new IntersectionObserver((entries) => {
@@ -223,5 +266,6 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   loadAnalytics();
   loadTenants();
+  loadGlobalUsage();
   initReveal();
 });

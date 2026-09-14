@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/png" href="../img/iconos/robot_logo.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reportes — Portal Pilot</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="stylesheet" href="../css/portales.css">
+</head>
+<body class="pp-body">
+<div class="pp-dashboard">
+  <aside class="pp-sidebar" id="sidebar">
+    <div class="pp-sidebar-logo"><div class="logo-icon"><img src="../img/iconos/robot_logo.png" alt="Portal Pilot"></div><span>Portal Pilot</span></div>
+    <nav class="pp-nav">
+      <a href="dashboard.html" class="pp-nav-link"><i class="fas fa-home"></i> <span>Dashboard</span></a>
+      <a href="consumo.html" class="pp-nav-link"><i class="fas fa-chart-pie"></i> <span>Consumo</span></a>
+      <div class="pp-nav-sep">Análisis</div>
+      <a href="reports.html" class="pp-nav-link active"><i class="fas fa-chart-line"></i> <span>Reportes</span></a>
+      <div class="pp-nav-sep">Cuenta</div>
+      <a href="suscripcion.html" class="pp-nav-link"><i class="fas fa-crown"></i> <span>Suscripción</span></a>
+      <a href="perfil.html" class="pp-nav-link"><i class="fas fa-user"></i> <span>Mi Perfil</span></a>
+    </nav>
+    <div class="pp-sidebar-footer">
+      <button class="pp-btn pp-btn-ghost pp-btn-sm" onclick="window.location.href='/login.html'"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</button>
+    </div>
+  </aside>
+  <main class="main-content">
+    <div class="pp-topbar"><div class="pp-topbar-title">Reportes de <span>MI EMPRESA</span></div></div>
+    <div class="pp-page-header">
+      <div>
+        <h1 class="pp-page-title">Reportes <span>operativos</span></h1>
+        <p class="pp-page-subtitle">Reportes generados desde datos reales del tenant. Cada reporte se descarga en CSV/JSON o se imprime — nada de números de demostración.</p>
+      </div>
+    </div>
+    <div class="pp-content">
+      <div class="pp-grid pp-grid-3" id="repGrid">
+        <div class="pp-card">
+          <div class="pp-card-head"><div class="pp-card-title"><i class="fas fa-file-invoice-dollar"></i> Resumen de facturación</div></div>
+          <p style="font-size:13px;color:var(--gray)">Emisión de facturas, recibos y notas de crédito con montos y estados.</p>
+          <button class="pp-btn pp-btn-ghost pp-btn-sm" data-rep="facturacion"><i class="fas fa-download"></i> Generar CSV</button>
+        </div>
+        <div class="pp-card">
+          <div class="pp-card-head"><div class="pp-card-title"><i class="fas fa-users"></i> Directorio de usuarios</div></div>
+          <p style="font-size:13px;color:var(--gray)">Usuarios del tenant con rol, estado, creación y último acceso.</p>
+          <button class="pp-btn pp-btn-ghost pp-btn-sm" data-rep="usuarios"><i class="fas fa-download"></i> Generar CSV</button>
+        </div>
+        <div class="pp-card">
+          <div class="pp-card-head"><div class="pp-card-title"><i class="fas fa-clipboard-list"></i> Registro de auditoría</div></div>
+          <p style="font-size:13px;color:var(--gray)">Eventos administrativos completos con usuario, IP y fecha.</p>
+          <button class="pp-btn pp-btn-ghost pp-btn-sm" data-rep="auditoria"><i class="fas fa-download"></i> Generar CSV</button>
+        </div>
+        <div class="pp-card">
+          <div class="pp-card-head"><div class="pp-card-title"><i class="fas fa-chart-pie"></i> Consumo del mes</div></div>
+          <p style="font-size:13px;color:var(--gray)">Uso de recursos del periodo actual con límites del plan.</p>
+          <button class="pp-btn pp-btn-ghost pp-btn-sm" data-rep="consumo"><i class="fas fa-download"></i> Generar JSON</button>
+        </div>
+      </div>
+      <div class="pp-info-box" id="repInfo" style="display:none"><i class="fas fa-circle-info"></i><div id="repInfoText"></div></div>
+    </div>
+  </main>
+</div>
+<script src="../js/plan-gate.js"></script>
+<script src="../js/portales.js"></script>
+<script>
+(async function () {
+  if (!window.PP.requireSession()) return;
+  const H = window.PP.escapeHtml;
+
+  function downloadCSV(nombre, filas) {
+    if (!filas.length) { window.ppToast('Sin datos para exportar en este periodo', 'err'); return; }
+    const headers = Object.keys(filas[0]);
+    const esc = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+    const csv = '\uFEFF' + headers.join(',') + '\n' + filas.map(f => headers.map(h => esc(f[h])).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = nombre + '_' + new Date().toISOString().slice(0, 10) + '.csv';
+    a.click();
+    URL.revokeObjectURL(a.href);
+    window.ppToast('Reporte generado: ' + filas.length + ' fila(s)');
+  }
+
+  document.getElementById('repGrid').addEventListener('click', async (e) => {
+    const btn = e.target.closest('[data-rep]');
+    if (!btn || btn.disabled) return;
+    btn.disabled = true;
+    const orig = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generando…';
+    try {
+      const tipo = btn.dataset.rep;
+      if (tipo === 'facturacion') {
+        const d = await window.PP.apiFetch('/api/empresa/billing/documents?limit=300');
+        downloadCSV('facturacion', (d.documentos || []).map(x => ({ tipo: x.tipo, correlativo: x.correlativo, contraparte: x.contraparte, total: x.total, isv: x.isv, estado: x.estado, fecha: x.fecha })));
+      } else if (tipo === 'usuarios') {
+        const d = await window.PP.apiFetch('/api/users');
+        downloadCSV('usuarios', (Array.isArray(d) ? d : []).map(u => ({ nombre: u.nombre, apellido: u.apellido, email: u.email, rol: u.rol, estado: u.status, creado: u.registered, ultimo_acceso: u.lastActivity })));
+      } else if (tipo === 'auditoria') {
+        const d = await window.PP.apiFetch('/api/auditoria/tenant?limit=500');
+        downloadCSV('auditoria', (d.eventos || []).map(x => ({ fecha: x.created_at, accion: x.accion, detalle: x.descripcion, tipo: x.tipo, usuario: x.usuario, ip: x.ip })));
+      } else if (tipo === 'consumo') {
+        const d = await window.PP.apiFetch('/api/tenant/usage');
+        const blob = new Blob([JSON.stringify(d, null, 2)], { type: 'application/json' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'consumo_' + (d.periodo || '') + '.json';
+        a.click();
+        URL.revokeObjectURL(a.href);
+        window.ppToast('Reporte de consumo generado');
+      }
+      const info = document.getElementById('repInfo');
+      info.style.display = 'flex';
+      document.getElementById('repInfoText').textContent = 'Reporte "' + tipo + '" generado con datos reales del tenant.';
+    } catch (err) {
+      window.ppToast(err.message, 'err');
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = orig;
+    }
+  });
+})();
+</script>
+</body>
+</html>

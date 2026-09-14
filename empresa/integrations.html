@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/png" href="../img/iconos/robot_logo.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Integraciones — Portal Pilot</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="stylesheet" href="../css/portales.css">
+<style>
+.int-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px}
+.int-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px;display:flex;flex-direction:column;gap:10px;transition:all .2s}
+.int-card:hover{border-color:var(--border2)}
+.int-head{display:flex;justify-content:space-between;align-items:flex-start}
+.int-icon{width:42px;height:42px;border-radius:12px;background:rgba(139,92,246,0.12);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;color:var(--accent);font-size:17px}
+.int-icon.off{background:rgba(156,163,175,0.08);color:var(--gray)}
+.int-nombre{font-weight:600;color:var(--white);font-size:14px}
+.int-desc{font-size:12px;color:var(--gray);line-height:1.5}
+.int-foot{display:flex;justify-content:space-between;align-items:center;margin-top:auto}
+.switch{position:relative;width:38px;height:20px;background:var(--card2);border:1px solid var(--border2);border-radius:99px;cursor:pointer;transition:all .2s;flex-shrink:0}
+.switch.on{background:var(--accent);border-color:var(--accent)}
+.switch::after{content:'';position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:#fff;transition:all .2s}
+.switch.on::after{left:20px}
+.switch:disabled{opacity:.45;cursor:not-allowed}
+</style>
+</head>
+<body class="pp-body">
+<div class="pp-dashboard">
+  <aside class="pp-sidebar" id="sidebar">
+    <div class="pp-sidebar-logo"><div class="logo-icon"><img src="../img/iconos/robot_logo.png" alt="Portal Pilot"></div><span>Portal Pilot</span></div>
+    <nav class="pp-nav">
+      <a href="dashboard.html" class="pp-nav-link"><i class="fas fa-home"></i> <span>Dashboard</span></a>
+      <a href="team.html" class="pp-nav-link"><i class="fas fa-users"></i> <span>Equipo</span></a>
+      <a href="roles.html" class="pp-nav-link"><i class="fas fa-user-shield"></i> <span>Roles</span></a>
+      <a href="modules.html" class="pp-nav-link"><i class="fas fa-shapes"></i> <span>Módulos</span></a>
+      <a href="consumo.html" class="pp-nav-link"><i class="fas fa-chart-pie"></i> <span>Consumo</span></a>
+      <div class="pp-nav-sep">Cuenta</div>
+      <a href="suscripcion.html" class="pp-nav-link"><i class="fas fa-crown"></i> <span>Suscripción</span></a>
+      <a href="api_keys.html" class="pp-nav-link"><i class="fas fa-plug"></i> <span>API Keys</span></a>
+      <a href="integrations.html" class="pp-nav-link active"><i class="fas fa-puzzle-piece"></i> <span>Integraciones</span></a>
+      <a href="security.html" class="pp-nav-link"><i class="fas fa-shield-alt"></i> <span>Seguridad</span></a>
+      <a href="perfil.html" class="pp-nav-link"><i class="fas fa-user"></i> <span>Mi Perfil</span></a>
+    </nav>
+    <div class="pp-sidebar-footer">
+      <button class="pp-btn pp-btn-ghost pp-btn-sm" onclick="window.location.href='/login.html'"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</button>
+    </div>
+  </aside>
+  <main class="main-content">
+    <div class="pp-topbar"><div class="pp-topbar-title">Integraciones de <span>MI EMPRESA</span></div><span class="pp-badge purple" id="countBadge">—</span></div>
+    <div class="pp-page-header">
+      <div>
+        <h1 class="pp-page-title">Integraciones <span>disponibles</span></h1>
+        <p class="pp-page-subtitle">Conecta Portal Pilot con los servicios que ya usa tu empresa. Cada conexión queda registrada en el historial de seguridad.</p>
+      </div>
+      <button class="pp-btn pp-btn-ghost pp-btn-sm" onclick="load()"><i class="fas fa-sync-alt"></i> Actualizar</button>
+    </div>
+    <div class="pp-content">
+      <div id="msg" class="pp-info-box"><i class="fas fa-spinner fa-spin"></i> Cargando integraciones…</div>
+      <div class="int-grid" id="intGrid"></div>
+    </div>
+  </main>
+</div>
+<script src="../js/plan-gate.js"></script>
+<script src="../js/portales.js"></script>
+<script>
+(async function () {
+  if (!window.PP.requireSession()) return;
+  const H = window.PP.escapeHtml;
+  async function load() {
+    const msg = document.getElementById('msg');
+    try {
+      const data = await window.PP.apiFetch('/api/empresa/integrations');
+      msg.style.display = 'none';
+      const list = data.integraciones || [];
+      const activas = list.filter(i => i.enabled).length;
+      const badge = document.getElementById('countBadge');
+      badge.textContent = activas + ' / ' + list.length + ' activas';
+      badge.className = 'pp-badge ' + (activas > 0 ? 'green' : 'gray');
+      document.getElementById('intGrid').innerHTML = list.map(i => `
+        <div class="int-card">
+          <div class="int-head">
+            <div class="int-icon ${i.enabled ? '' : 'off'}"><i class="${H(i.icono)}"></i></div>
+            <span class="pp-badge ${i.enabled ? 'green' : 'gray'}">${i.enabled ? 'Conectada' : 'Sin conectar'}</span>
+          </div>
+          <div class="int-nombre">${H(i.nombre)}</div>
+          <div class="int-desc">${H(i.descripcion)}</div>
+          <div class="int-foot">
+            <span style="font-size:11px;color:var(--gray)">${i.connected_at ? 'Desde ' + window.PP.fmtFecha(i.connected_at) : 'Categoría: ' + H(i.categoria)}</span>
+            <button class="switch ${i.enabled ? 'on' : ''}" data-key="${H(i.key)}" data-enabled="${i.enabled}" title="${i.enabled ? 'Desconectar' : 'Conectar'}"></button>
+          </div>
+        </div>`).join('');
+    } catch (err) {
+      msg.className = 'pp-error';
+      msg.innerHTML = `<i class="fas fa-triangle-exclamation"></i><div><b>No se pudieron cargar las integraciones.</b><br>${H(err.message)}</div>`;
+    }
+  }
+  document.getElementById('intGrid').addEventListener('click', async (e) => {
+    const sw = e.target.closest('.switch');
+    if (!sw || sw.disabled) return;
+    sw.disabled = true;
+    const key = sw.dataset.key;
+    const enabled = sw.dataset.enabled !== 'true';
+    try {
+      await window.PP.apiFetch('/api/empresa/integrations/' + encodeURIComponent(key), { method: 'PUT', body: JSON.stringify({ enabled }) });
+      window.ppToast(enabled ? 'Integración conectada' : 'Integración desconectada');
+      load();
+    } catch (err) {
+      window.ppToast(err.message, 'err');
+      sw.disabled = false;
+    }
+  });
+  window.load = load;
+  load();
+})();
+</script>
+</body>
+</html>

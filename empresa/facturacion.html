@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/png" href="../img/iconos/robot_logo.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Facturación — Portal Pilot</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="stylesheet" href="../css/portales.css">
+<style>
+.doc-tabs{display:flex;gap:8px;flex-wrap:wrap}
+.doc-tab{padding:9px 18px;border-radius:40px;font-size:12.5px;font-weight:600;background:var(--card);border:1px solid var(--border);color:var(--gray2);cursor:pointer}
+.doc-tab.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.doc-tab .n{margin-left:6px;opacity:.75;font-weight:700}
+</style>
+</head>
+<body class="pp-body">
+<div class="pp-dashboard">
+  <aside class="pp-sidebar" id="sidebar">
+    <div class="pp-sidebar-logo"><div class="logo-icon"><img src="../img/iconos/robot_logo.png" alt="Portal Pilot"></div><span>Portal Pilot</span></div>
+    <nav class="pp-nav">
+      <a href="dashboard.html" class="pp-nav-link"><i class="fas fa-home"></i> <span>Dashboard</span></a>
+      <a href="team.html" class="pp-nav-link"><i class="fas fa-users"></i> <span>Equipo</span></a>
+      <a href="modules.html" class="pp-nav-link"><i class="fas fa-shapes"></i> <span>Módulos</span></a>
+      <a href="consumo.html" class="pp-nav-link"><i class="fas fa-chart-pie"></i> <span>Consumo</span></a>
+      <div class="pp-nav-sep">Cuenta</div>
+      <a href="suscripcion.html" class="pp-nav-link"><i class="fas fa-crown"></i> <span>Suscripción</span></a>
+      <a href="facturacion.html" class="pp-nav-link active"><i class="fas fa-file-invoice-dollar"></i> <span>Facturación</span></a>
+      <a href="security.html" class="pp-nav-link"><i class="fas fa-shield-alt"></i> <span>Seguridad</span></a>
+      <a href="perfil.html" class="pp-nav-link"><i class="fas fa-user"></i> <span>Mi Perfil</span></a>
+    </nav>
+    <div class="pp-sidebar-footer">
+      <button class="pp-btn pp-btn-ghost pp-btn-sm" onclick="window.location.href='/login.html'"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</button>
+    </div>
+  </aside>
+  <main class="main-content">
+    <div class="pp-topbar"><div class="pp-topbar-title">Facturación de <span>MI EMPRESA</span></div></div>
+    <div class="pp-page-header">
+      <div>
+        <h1 class="pp-page-title">Documentos <span>fiscales</span></h1>
+        <p class="pp-page-subtitle">Historial real de tu operación. Cada tipo de documento es distinto: la <b>factura</b> es el comprobante fiscal de la venta; el <b>recibo</b> acredita un pago recibido; la <b>nota de crédito</b> ajusta o anula una factura emitida.</p>
+      </div>
+    </div>
+    <div class="pp-content">
+      <div id="msg" class="pp-info-box"><i class="fas fa-spinner fa-spin"></i> Cargando documentos reales…</div>
+      <div id="content" style="display:none;flex-direction:column;gap:20px">
+        <div class="pp-grid pp-grid-3">
+          <div class="pp-stat"><div class="pp-stat-icon"><i class="fas fa-file-invoice"></i></div><div class="pp-stat-info"><div class="pp-stat-value" id="sumFac">—</div><div class="pp-stat-label">Facturas fiscales</div><div class="pp-stat-foot" id="sumFacMonto"></div></div></div>
+          <div class="pp-stat"><div class="pp-stat-icon green"><i class="fas fa-receipt"></i></div><div class="pp-stat-info"><div class="pp-stat-value" id="sumRec">—</div><div class="pp-stat-label">Recibos</div><div class="pp-stat-foot" id="sumRecMonto"></div></div></div>
+          <div class="pp-stat"><div class="pp-stat-icon red"><i class="fas fa-rotate-left"></i></div><div class="pp-stat-info"><div class="pp-stat-value" id="sumNc">—</div><div class="pp-stat-label">Notas de crédito</div><div class="pp-stat-foot" id="sumNcMonto"></div></div></div>
+        </div>
+        <div class="doc-tabs" id="tabs">
+          <button class="doc-tab active" data-tipo="todos">Todos <span class="n" id="nTodos"></span></button>
+          <button class="doc-tab" data-tipo="factura">Facturas <span class="n" id="nFac"></span></button>
+          <button class="doc-tab" data-tipo="recibo">Recibos <span class="n" id="nRec"></span></button>
+          <button class="doc-tab" data-tipo="nota_credito">Notas de crédito <span class="n" id="nNc"></span></button>
+        </div>
+        <div class="pp-table-wrap">
+          <table class="pp-table">
+            <thead><tr><th>Tipo</th><th>Correlativo</th><th>Contraparte / Detalle</th><th style="text-align:right">Total</th><th>Estado</th><th>Fecha</th></tr></thead>
+            <tbody id="docRows"></tbody>
+          </table>
+          <div id="emptyState" style="display:none"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+<script src="../js/plan-gate.js"></script>
+<script src="../js/portales.js"></script>
+<script>
+(async function () {
+  if (!window.PP.requireSession()) return;
+  const H = window.PP.escapeHtml, fmtMoney = window.PP.fmtMoney, fmtDate = window.PP.fmtDate;
+  let documentos = [];
+  let filtro = 'todos';
+
+  const TIPO_META = {
+    factura: { label: 'Factura fiscal', cls: 'purple', icon: 'fa-file-invoice' },
+    recibo: { label: 'Recibo', cls: 'green', icon: 'fa-receipt' },
+    nota_credito: { label: 'Nota de crédito', cls: 'red', icon: 'fa-rotate-left' }
+  };
+  const badgeEstado = (tipo, estado) => {
+    const e = String(estado || '').toLowerCase();
+    const map = { emitida: 'yellow', pagada: 'green', pendiente: 'yellow', recibido: 'green', anulada: 'red', cancelada: 'red' };
+    const [cls] = map[e] || ['gray'];
+    return `<span class="pp-badge ${cls}"><span class="dot"></span>${H(e || '—')}</span>`;
+  };
+
+  function render() {
+    const rows = documentos.filter(d => filtro === 'todos' || d.tipo === filtro);
+    const tbody = document.getElementById('docRows');
+    if (!rows.length) {
+      tbody.innerHTML = '';
+      const es = document.getElementById('emptyState');
+      es.style.display = 'block';
+      es.innerHTML = `<div class="pp-empty"><i class="fas fa-file-circle-question"></i><div class="pp-empty-title">Sin documentos ${filtro === 'todos' ? '' : 'de este tipo '}</div><p>Los documentos aparecerán aquí cuando se emitan desde Facturación o POS en el Workspace.</p></div>`;
+      return;
+    }
+    document.getElementById('emptyState').style.display = 'none';
+    tbody.innerHTML = rows.map(d => {
+      const m = TIPO_META[d.tipo];
+      return `<tr>
+        <td><span class="pp-badge ${m.cls}"><i class="fas ${m.icon}"></i> ${m.label}</span></td>
+        <td style="font-family:monospace;color:var(--white)">${H(d.correlativo)}</td>
+        <td style="max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${H(d.contraparte || '')}">${H(d.contraparte || '—')}</td>
+        <td style="text-align:right;color:var(--white);font-weight:600">${fmtMoney(d.total)}</td>
+        <td>${badgeEstado(d.tipo, d.estado)}</td>
+        <td>${fmtDate(d.fecha)}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  async function load() {
+    const msg = document.getElementById('msg');
+    try {
+      const data = await window.PP.apiFetch('/api/empresa/billing/documents?limit=300');
+      msg.style.display = 'none';
+      document.getElementById('content').style.display = 'flex';
+      documentos = data.documentos || [];
+      const r = data.resumen || {};
+      document.getElementById('sumFac').textContent = window.PP.fmtNum(r.facturas?.cantidad || 0);
+      document.getElementById('sumFacMonto').textContent = fmtMoney(r.facturas?.monto || 0);
+      document.getElementById('sumRec').textContent = window.PP.fmtNum(r.recibos?.cantidad || 0);
+      document.getElementById('sumRecMonto').textContent = fmtMoney(r.recibos?.monto || 0);
+      document.getElementById('sumNc').textContent = window.PP.fmtNum(r.notas_credito?.cantidad || 0);
+      document.getElementById('sumNcMonto').textContent = fmtMoney(r.notas_credito?.monto || 0);
+      document.getElementById('nFac').textContent = r.facturas?.cantidad || 0;
+      document.getElementById('nRec').textContent = r.recibos?.cantidad || 0;
+      document.getElementById('nNc').textContent = r.notas_credito?.cantidad || 0;
+      document.getElementById('nTodos').textContent = documentos.length;
+      render();
+    } catch (err) {
+      msg.className = 'pp-error';
+      msg.innerHTML = `<i class="fas fa-triangle-exclamation"></i><div><b>No se pudo cargar la facturación.</b><br>${H(err.message)}</div>`;
+    }
+  }
+
+  document.getElementById('tabs').addEventListener('click', (e) => {
+    const btn = e.target.closest('.doc-tab');
+    if (!btn) return;
+    document.querySelectorAll('.doc-tab').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    filtro = btn.dataset.tipo;
+    render();
+  });
+
+  load();
+})();
+</script>
+</body>
+</html>

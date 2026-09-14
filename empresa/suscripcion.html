@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/png" href="../img/iconos/robot_logo.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Suscripción — Portal Pilot</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="stylesheet" href="../css/portales.css">
+<style>
+.sub-hero{display:flex;justify-content:space-between;align-items:center;gap:20px;background:linear-gradient(135deg,rgba(139,92,246,0.15),rgba(167,139,250,0.05));border:1px solid var(--border2);border-radius:var(--radius-lg);padding:28px 30px;flex-wrap:wrap}
+.sub-plan{font-family:'Syne',sans-serif;font-size:34px;font-weight:800;color:var(--white);letter-spacing:-1px;text-transform:capitalize}
+.sub-meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px}
+.meta-item{background:var(--card2);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px}
+.meta-label{font-size:11px;color:var(--gray);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px}
+.meta-value{font-size:14px;font-weight:600;color:var(--white)}
+.feature-list{display:flex;flex-direction:column;gap:8px;max-height:320px;overflow-y:auto}
+.feature-item{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--text);padding:8px 12px;background:var(--card2);border-radius:8px}
+.feature-item i{color:var(--green);font-size:12px}
+.feature-item.off{opacity:.45}
+.feature-item.off i{color:var(--gray)}
+</style>
+</head>
+<body class="pp-body">
+<div class="pp-dashboard">
+  <aside class="pp-sidebar" id="sidebar">
+    <div class="pp-sidebar-logo"><div class="logo-icon"><img src="../img/iconos/robot_logo.png" alt="Portal Pilot"></div><span>Portal Pilot</span></div>
+    <nav class="pp-nav">
+      <a href="dashboard.html" class="pp-nav-link"><i class="fas fa-home"></i> <span>Dashboard</span></a>
+      <a href="team.html" class="pp-nav-link"><i class="fas fa-users"></i> <span>Equipo</span></a>
+      <a href="modules.html" class="pp-nav-link"><i class="fas fa-shapes"></i> <span>Módulos</span></a>
+      <a href="consumo.html" class="pp-nav-link"><i class="fas fa-chart-pie"></i> <span>Consumo</span></a>
+      <div class="pp-nav-sep">Cuenta</div>
+      <a href="suscripcion.html" class="pp-nav-link active"><i class="fas fa-crown"></i> <span>Suscripción</span></a>
+      <a href="facturacion.html" class="pp-nav-link" data-need-owner><i class="fas fa-file-invoice-dollar"></i> <span>Facturación</span></a>
+      <a href="security.html" class="pp-nav-link"><i class="fas fa-shield-alt"></i> <span>Seguridad</span></a>
+      <a href="perfil.html" class="pp-nav-link"><i class="fas fa-user"></i> <span>Mi Perfil</span></a>
+    </nav>
+    <div class="pp-sidebar-footer">
+      <button class="pp-btn pp-btn-ghost pp-btn-sm" onclick="window.location.href='/login.html'"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</button>
+    </div>
+  </aside>
+  <main class="main-content">
+    <div class="pp-topbar"><div class="pp-topbar-title">Suscripción de <span>MI EMPRESA</span></div><span class="pp-badge purple" id="planBadge">—</span></div>
+    <div class="pp-page-header">
+      <div>
+        <h1 class="pp-page-title">Plan y <span>suscripción</span></h1>
+        <p class="pp-page-subtitle">La información proviene del Plan Engine del backend. Esta página solo representa los entitlements recibidos — las reglas del plan nunca se duplican en el navegador.</p>
+      </div>
+      <button class="pp-btn pp-btn-ghost pp-btn-sm" onclick="load()"><i class="fas fa-sync-alt"></i> Actualizar</button>
+    </div>
+    <div class="pp-content">
+      <div id="msg" class="pp-info-box"><i class="fas fa-spinner fa-spin"></i> Cargando suscripción real…</div>
+      <div id="content" style="display:none;flex-direction:column;gap:20px">
+        <div class="sub-hero" id="hero"></div>
+        <div class="pp-grid pp-grid-2">
+          <div class="pp-card">
+            <div class="pp-card-head"><div class="pp-card-title"><i class="fas fa-calendar-check"></i> Ciclo de vida</div></div>
+            <div class="sub-meta" id="metaGrid"></div>
+          </div>
+          <div class="pp-card">
+            <div class="pp-card-head"><div class="pp-card-title"><i class="fas fa-list-check"></i> Funciones habilitadas por el plan</div><span class="pp-badge gray" id="featCount"></span></div>
+            <div class="feature-list" id="featList"></div>
+          </div>
+        </div>
+        <div class="pp-card">
+          <div class="pp-card-head"><div class="pp-card-title"><i class="fas fa-gauge"></i> Límites del plan</div></div>
+          <div class="pp-grid pp-grid-4" id="limitsGrid" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr))"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+<script src="../js/plan-gate.js"></script>
+<script src="../js/portales.js"></script>
+<script>
+(async function () {
+  if (!window.PP.requireSession()) return;
+  const H = window.PP.escapeHtml;
+  const badgeEstado = (estado) => {
+    const map = { active: ['green', 'Activa'], trial: ['purple', 'Prueba'], expired: ['red', 'Vencida'], suspended: ['red', 'Suspendida'], pending: ['yellow', 'Pendiente'], canceled: ['gray', 'Cancelada'], inactive: ['gray', 'Inactiva'] };
+    const [cls, label] = map[estado] || ['gray', estado || '—'];
+    return `<span class="pp-badge ${cls}"><span class="dot"></span>${H(label)}</span>`;
+  };
+  const LIMIT_LABELS = [
+    { key: 'usuarios', label: 'Usuarios', icon: 'fa-users' },
+    { key: 'bots', label: 'Automatizaciones', icon: 'fa-robot' },
+    { key: 'tokens', label: 'Tokens IA / mes', icon: 'fa-wand-magic-sparkles' },
+    { key: 'storage', label: 'Almacenamiento (GB)', icon: 'fa-database' },
+    { key: 'soporte', label: 'Soporte', icon: 'fa-headset' },
+    { key: 'sla', label: 'SLA', icon: 'fa-file-contract' }
+  ];
+
+  async function load() {
+    const msg = document.getElementById('msg');
+    msg.className = 'pp-info-box';
+    msg.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Cargando suscripción real…';
+    try {
+      const [ent, usage] = await Promise.all([
+        window.PP.apiFetch('/api/empresa/entitlements'),
+        window.PP.apiFetch('/api/tenant/usage').catch(() => null)
+      ]);
+      msg.style.display = 'none';
+      const content = document.getElementById('content');
+      content.style.display = 'flex';
+
+      document.getElementById('planBadge').textContent = 'Plan: ' + ent.plan;
+      const sub = ent.suscripcion || {};
+      const estadoGeneral = ent.estado === 'expired' ? 'expired' : (sub.estado || ent.estado);
+      const enTrial = !!ent.trial && ent.trial.isTrial;
+
+      document.getElementById('hero').innerHTML = `
+        <div>
+          <div style="font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--gray);margin-bottom:6px">Plan actual</div>
+          <div class="sub-plan">${H(ent.plan)}</div>
+          <div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap">
+            ${badgeEstado(estadoGeneral)}
+            ${enTrial ? `<span class="pp-badge cyan"><i class="fas fa-hourglass-half"></i> Trial · ${ent.trial.endsAt ? window.PP.fmtDate(ent.trial.endsAt) : '15 días'}</span>` : ''}
+            ${ent.estado === 'expired' ? '<span class="pp-badge red"><i class="fas fa-lock"></i> Solo lectura</span>' : ''}
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          ${ent.estado !== 'expired' ? `<a class="pp-btn pp-btn-ghost pp-btn-sm" href="../pay_plan.html"><i class="fas fa-arrow-up"></i> Mejorar plan</a>` : `<a class="pp-btn pp-btn-acc pp-btn-sm" href="../pay_plan.html"><i class="fas fa-credit-card"></i> Renovar plan</a>`}
+        </div>`;
+
+      const meta = [
+        { l: 'Fecha de inicio', v: sub.current_period_start ? window.PP.fmtDate(sub.current_period_start) : (sub.trial_started_at ? window.PP.fmtDate(sub.trial_started_at) : '—') },
+        { l: 'Próxima renovación', v: sub.current_period_end ? window.PP.fmtDate(sub.current_period_end) : (sub.estado === 'trial' ? 'Al finalizar el trial' : '—') },
+        { l: 'Vence / fin de trial', v: ent.trial_ends_at ? window.PP.fmtDate(ent.trial_ends_at) : (sub.current_period_end ? window.PP.fmtDate(sub.current_period_end) : '—') },
+        { l: 'Cancelación programada', v: sub.cancel_at_period_end ? 'Sí — al fin del periodo' : 'No' },
+        { l: 'Usuarios incluidos', v: Number.isFinite(ent.max_users) ? window.PP.fmtNum(ent.max_users) : 'Ilimitados' },
+        { l: 'Empresas incluidas', v: Number.isFinite(ent.max_companies) ? window.PP.fmtNum(ent.max_companies) : 'Ilimitadas' }
+      ];
+      document.getElementById('metaGrid').innerHTML = meta.map(m => `<div class="meta-item"><div class="meta-label">${H(m.l)}</div><div class="meta-value">${H(m.v)}</div></div>`).join('');
+
+      const feats = ent.features || [];
+      document.getElementById('featCount').textContent = feats.length + ' activas';
+      document.getElementById('featList').innerHTML = feats.map(f =>
+        `<div class="feature-item"><i class="fas fa-check-circle"></i> <code style="color:var(--cyan);font-size:12px">${H(f)}</code></div>`
+      ).join('') || '<div class="pp-empty"><i class="fas fa-circle-info"></i><div class="pp-empty-title">Sin features registradas</div></div>';
+
+      const uso = (usage && usage.uso) || {};
+      document.getElementById('limitsGrid').innerHTML = LIMIT_LABELS.map(L => {
+        const lim = ent.limits ? ent.limits[L.key] : null;
+        if (lim === undefined) return '';
+        const numeric = typeof lim === 'number';
+        const st = numeric ? window.PP.usageState(Number(uso[L.key === 'usuarios' ? 'users' : (L.key === 'bots' ? 'automations' : (L.key === 'tokens' ? 'ai_tokens' : L.key))]) || 0, lim) : { cls: 'gray', label: '', pct: null };
+        return `<div class="meta-item">
+          <div class="meta-label"><i class="fas ${L.icon}" style="margin-right:6px;color:var(--accent)"></i>${H(L.label)}</div>
+          <div class="meta-value">${numeric ? window.PP.fmtNum(lim) : H(lim)}</div>
+          ${st.pct !== null ? `<div class="pp-bar"><div class="pp-bar-fill ${st.pct >= 100 ? 'danger' : st.pct >= 80 ? 'warn' : ''}" style="width:${Math.max(2, st.pct)}%"></div></div><div style="font-size:11px;color:var(--gray);margin-top:4px">${st.label}</div>` : ''}
+        </div>`;
+      }).join('');
+    } catch (err) {
+      msg.className = 'pp-error';
+      msg.innerHTML = `<i class="fas fa-triangle-exclamation"></i><div><b>No se pudo cargar la suscripción.</b><br>${H(err.message)}</div>`;
+    }
+  }
+  window.load = load;
+  load();
+})();
+</script>
+</body>
+</html>

@@ -15,19 +15,38 @@ async function loadLogs() {
   if (!tbody) return;
   tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--gray);"><i class="fas fa-spinner fa-spin" style="font-size:20px;"></i><br><br>Cargando registros de auditoría...</td></tr>';
   try {
-    const res = await fetch(`${API_BASE}/security/audit`, { headers: authHeaders() });
-    if (!res.ok) throw new Error('Error al cargar');
-    const data = await res.json();
-    allLogs = (data.blocks || []).map(b => ({
-      id: b.block,
-      date: b.fecha,
-      user: b.usuario || 'Sistema',
-      action: b.type || b.event,
-      description: b.event || '',
-      ip: b.ip || '',
-      hash: b.currHash || '',
-      valid: b.valid
-    }));
+    // Vista ROOT (Portal PP): auditoría global cross-tenant; fallback al
+    // endpoint por tenant si por algún motivo no hay vista global.
+    let res = await fetch(`${API_BASE}/auditoria`, { headers: authHeaders() });
+    let data = null;
+    if (res.ok) {
+      data = await res.json();
+      allLogs = (data.eventos || []).map((e, i) => ({
+        id: i + 1,
+        date: e.created_at,
+        user: e.usuario || 'Sistema',
+        action: e.accion || e.tipo,
+        description: e.descripcion || '',
+        ip: e.ip || '',
+        tenant: e.empresa_codigo || '',
+        hash: e.id || '',
+        valid: true
+      }));
+    } else {
+      res = await fetch(`${API_BASE}/security/audit`, { headers: authHeaders() });
+      if (!res.ok) throw new Error('Error al cargar');
+      data = await res.json();
+      allLogs = (data.blocks || []).map(b => ({
+        id: b.block,
+        date: b.fecha,
+        user: b.usuario || 'Sistema',
+        action: b.type || b.event,
+        description: b.event || '',
+        ip: b.ip || '',
+        hash: b.currHash || '',
+        valid: b.valid
+      }));
+    }
     filteredLogs = [...allLogs];
     renderLogs();
     // Update stats

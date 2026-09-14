@@ -466,6 +466,31 @@
           </div>
         </div>
 
+        <!-- CONSUMO GLOBAL (Bloque L: tenant_usage + IA + costes, solo ROOT) -->
+        <div class="table-card reveal">
+          <div class="table-header">
+            <div class="table-title">Consumo global por tenant (periodo actual)</div>
+            <span style="font-size:11px;color:var(--gray)">Fuente: tenant_usage · ai_usage_log — sin datos inventados</span>
+          </div>
+          <div class="table-container">
+            <table class="analytics-table">
+              <thead>
+                <tr>
+                  <th>Tenant</th>
+                  <th style="text-align:right">Documentos</th>
+                  <th style="text-align:right">Tokens IA</th>
+                  <th style="text-align:right">Requests API</th>
+                  <th style="text-align:right">Solicitudes IA</th>
+                  <th style="text-align:right">Coste IA (USD)</th>
+                </tr>
+              </thead>
+              <tbody id="globalUsageBody">
+                <tr><td colspan="6" style="text-align:center;color:var(--gray);padding:24px;"><i class="fas fa-spinner fa-spin"></i> Cargando consumo real...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
         <!-- RECENT ACTIVITY TABLE -->
         <div class="table-card reveal">
           <div class="table-header">

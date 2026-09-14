@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/png" href="../img/iconos/robot_logo.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Roles y Permisos — Portal Pilot</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="stylesheet" href="../css/portales.css">
+</head>
+<body class="pp-body">
+<div class="pp-dashboard">
+  <aside class="pp-sidebar" id="sidebar">
+    <div class="pp-sidebar-logo"><div class="logo-icon"><img src="../img/iconos/robot_logo.png" alt="Portal Pilot"></div><span>Portal Pilot</span></div>
+    <nav class="pp-nav">
+      <a href="dashboard.html" class="pp-nav-link"><i class="fas fa-home"></i> <span>Dashboard</span></a>
+      <a href="team.html" class="pp-nav-link active"><i class="fas fa-users"></i> <span>Equipo</span></a>
+      <a href="roles.html" class="pp-nav-link"><i class="fas fa-user-shield"></i> <span>Roles</span></a>
+      <a href="modules.html" class="pp-nav-link"><i class="fas fa-shapes"></i> <span>Módulos</span></a>
+      <a href="consumo.html" class="pp-nav-link"><i class="fas fa-chart-pie"></i> <span>Consumo</span></a>
+      <div class="pp-nav-sep">Cuenta</div>
+      <a href="suscripcion.html" class="pp-nav-link"><i class="fas fa-crown"></i> <span>Suscripción</span></a>
+      <a href="security.html" class="pp-nav-link"><i class="fas fa-shield-alt"></i> <span>Seguridad</span></a>
+      <a href="perfil.html" class="pp-nav-link"><i class="fas fa-user"></i> <span>Mi Perfil</span></a>
+    </nav>
+    <div class="pp-sidebar-footer">
+      <button class="pp-btn pp-btn-ghost pp-btn-sm" onclick="window.location.href='/login.html'"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</button>
+    </div>
+  </aside>
+  <main class="main-content">
+    <div class="pp-topbar"><div class="pp-topbar-title">Roles de <span>MI EMPRESA</span></div></div>
+    <div class="pp-page-header">
+      <div>
+        <h1 class="pp-page-title">Roles y <span>permisos</span></h1>
+        <p class="pp-page-subtitle">Los permisos se aplican SIEMPRE en el backend — esta matriz es una representación de las reglas reales del servidor, no la fuente de control.</p>
+      </div>
+    </div>
+    <div class="pp-content">
+      <div id="msg" class="pp-info-box"><i class="fas fa-spinner fa-spin"></i> Cargando roles…</div>
+      <div id="content" style="display:none;flex-direction:column;gap:20px">
+        <div class="pp-grid pp-grid-4">
+          <div class="pp-stat"><div class="pp-stat-icon yellow"><i class="fas fa-crown"></i></div><div class="pp-stat-info"><div class="pp-stat-value" id="cOwner">—</div><div class="pp-stat-label">Owner</div></div></div>
+          <div class="pp-stat"><div class="pp-stat-icon"><i class="fas fa-user-shield"></i></div><div class="pp-stat-info"><div class="pp-stat-value" id="cAdmin">—</div><div class="pp-stat-label">Admin</div></div></div>
+          <div class="pp-stat"><div class="pp-stat-icon green"><i class="fas fa-user"></i></div><div class="pp-stat-info"><div class="pp-stat-value" id="cMiembro">—</div><div class="pp-stat-label">Miembros</div></div></div>
+          <div class="pp-stat"><div class="pp-stat-icon"><i class="fas fa-users"></i></div><div class="pp-stat-info"><div class="pp-stat-value" id="cTotal">—</div><div class="pp-stat-label">Total usuarios</div></div></div>
+        </div>
+        <div class="pp-card">
+          <div class="pp-card-head"><div class="pp-card-title"><i class="fas fa-table-cells"></i> Matriz de permisos por rol</div><span class="pp-badge gray">aplicada en backend</span></div>
+          <div class="pp-table-wrap" style="border:none">
+            <table class="pp-table">
+              <thead><tr><th>Capacidad</th><th style="text-align:center">OWNER</th><th style="text-align:center">ADMIN</th><th style="text-align:center">MEMBER</th></tr></thead>
+              <tbody id="matrizRows"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="pp-info-box">
+          <i class="fas fa-circle-info"></i>
+          <div>MEMBER no accede al Portal Empresa: su lugar es el <b>Workspace Client</b>. El Owner es único por empresa: un ADMIN nunca puede crear ni asignar roles Owner/Admin — el backend lo bloquea con <b>403</b> aunque se manipule la petición.</div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+<script src="../js/plan-gate.js"></script>
+<script src="../js/portales.js"></script>
+<script>
+(async function () {
+  if (!window.PP.requireSession()) return;
+  const H = window.PP.escapeHtml;
+  const CAPS = [
+    ['gestionar_empresa', 'Gestionar información de la empresa'],
+    ['usuarios', 'Crear y editar usuarios'],
+    ['roles', 'Asignar roles Owner/Admin'],
+    ['suscripcion', 'Gestionar suscripción y plan'],
+    ['facturacion', 'Ver facturación'],
+    ['api_keys', 'Administrar API keys'],
+    ['eliminar_usuarios', 'Eliminar usuarios']
+  ];
+  const cell = v => v === true
+    ? '<i class="fas fa-check-circle" style="color:var(--green)"></i>'
+    : (v === 'lectura' ? '<span class="pp-badge cyan"><i class="fas fa-eye"></i> Lectura</span>'
+    : '<i class="fas fa-times" style="color:var(--red);opacity:.7"></i>');
+  async function load() {
+    try {
+      const data = await window.PP.apiFetch('/api/empresa/roles');
+      document.getElementById('msg').style.display = 'none';
+      document.getElementById('content').style.display = 'flex';
+      document.getElementById('cOwner').textContent = data.roles.owner;
+      document.getElementById('cAdmin').textContent = data.roles.admin;
+      document.getElementById('cMiembro').textContent = data.roles.miembro + (data.roles.otros ? ' / ' + data.roles.otros + ' otros' : '');
+      document.getElementById('cTotal').textContent = data.total;
+      const m = data.matriz || {};
+      document.getElementById('matrizRows').innerHTML = CAPS.map(([k, label]) => `
+        <tr><td style="color:var(--white);font-weight:500">${H(label)}</td>
+        <td style="text-align:center">${cell(m.owner?.[k])}</td>
+        <td style="text-align:center">${cell(m.admin?.[k])}</td>
+        <td style="text-align:center">${cell(m.member?.[k])}</td></tr>`).join('');
+    } catch (err) {
+      const msg = document.getElementById('msg');
+      msg.className = 'pp-error';
+      msg.innerHTML = `<i class="fas fa-triangle-exclamation"></i><div><b>No se pudieron cargar los roles.</b><br>${H(err.message)}</div>`;
+    }
+  }
+  load();
+})();
+</script>
+</body>
+</html>

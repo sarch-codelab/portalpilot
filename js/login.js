@@ -505,37 +505,10 @@ async function doRegister() {
   const btns = document.querySelectorAll('#regStep3 .btn-submit');
   btns[1].innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creando...'; btns[1].disabled = true;
 
-  const client = await getSupabaseClient();
-  if (!client) {
-    showMessage('Error de configuración en el servicio de autenticación.', 'error');
-    btns[1].innerHTML = '<i class="fas fa-check"></i> Crear Cuenta'; btns[1].disabled = false;
-    return;
-  }
-
+  // Registro unificado: TODO pasa por POST /api/registro (el backend crea la
+  // cuenta de Auth y el perfil con el mismo id). El antiguo signUp client-side
+  // quedó deshabilitado: creaba usuarios Auth huérfanos que nunca podían entrar.
   try {
-    const { data, error } = await client.auth.signUp({
-      email: payload.email,
-      password: payload.password,
-      options: {
-        data: {
-          nombre: payload.usuarioNombre,
-          apellido: payload.usuarioApellido,
-          empresa_nombre: payload.empresaNombre,
-          empresa_codigo: payload.empresaCodigo,
-          empresa_sector: payload.empresaSector,
-          rol: payload.rol,
-          dos_fa_activo: payload.dosFaActivo,
-          terminos_aceptados: payload.terminosAceptados
-        }
-      }
-    });
-
-    if (error) {
-      showMessage(error.message, 'error');
-      btns[1].innerHTML = '<i class="fas fa-check"></i> Crear Cuenta'; btns[1].disabled = false;
-      return;
-    }
-
     const res = await fetch(`${API_ROOT}/api/registro`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

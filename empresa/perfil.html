@@ -296,6 +296,7 @@
         <a href="automation.html" class="sidebar-link" data-min-plan="enterprise"><i class="fas fa-robot"></i> <span>Bots RPA</span></a>
         <a href="api_keys.html" class="sidebar-link" data-min-plan="enterprise"><i class="fas fa-key"></i> <span>API Keys</span></a>
         <a href="security.html" class="sidebar-link" data-min-plan="business"><i class="fas fa-shield-alt"></i> <span>Auditoría</span></a>
+      <a href="consumo.html" class="sidebar-link"><i class="fas fa-chart-pie"></i> <span>Consumo</span></a>
       </nav>
 
       <!-- Footer -->
@@ -1168,6 +1169,11 @@
     function downloadData() { exportProfile(); }
 
     // ── Initialize ──────────────
+    // Toast unificado (showToast estaba referenciado pero nunca definido)
+    function showToast(msg, type){
+      if (window.ppToast) window.ppToast(msg, type === 'success' ? 'ok' : (type === 'warning' ? 'ok' : 'err'));
+    }
+
     window.addEventListener('load', () => {
       setTimeout(() => document.querySelectorAll('.reveal').forEach((el,i) => setTimeout(() => el.classList.add('in'), i*50)), 100);
       // Disable all form fields by default
@@ -1177,6 +1183,7 @@
 <script src="../js/notifications.js"></script>
 <script src="../js/notif-panel.js"></script>
 <script src="../js/plan-gate.js"></script>
+<script src="../js/portales.js"></script>
 <script src="../js/sidebar-loader.js"></script>
 <script>
 (function() {

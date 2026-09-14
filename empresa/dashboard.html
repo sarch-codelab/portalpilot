@@ -140,10 +140,21 @@ a{text-decoration:none;color:inherit}ul{list-style:none}img{max-width:100%;displ
     <nav class="sidebar-nav">
       <a href="dashboard.html" class="sidebar-link active"><i class="fas fa-home"></i> <span>Dashboard</span></a>
       <a href="team.html" class="sidebar-link" data-min-plan="business"><i class="fas fa-users"></i> <span>Equipo</span></a>
+      <a href="roles.html" class="sidebar-link" data-min-plan="business"><i class="fas fa-user-shield"></i> <span>Roles</span></a>
+      <a href="modules.html" class="sidebar-link"><i class="fas fa-shapes"></i> <span>Módulos</span></a>
       <a href="fleet.html" class="sidebar-link" data-min-plan="enterprise"><i class="fas fa-truck"></i> <span>Flota</span></a>
       <a href="automation.html" class="sidebar-link" data-min-plan="enterprise"><i class="fas fa-robot"></i> <span>Bots RPA</span></a>
       <a href="api_keys.html" class="sidebar-link" data-min-plan="enterprise"><i class="fas fa-key"></i> <span>API Keys</span></a>
-      <a href="security.html" class="sidebar-link" data-min-plan="business"><i class="fas fa-shield-alt"></i> <span>Auditoría</span></a>
+      <a href="consumo.html" class="sidebar-link"><i class="fas fa-chart-pie"></i> <span>Consumo</span></a>
+      <a href="reports.html" class="sidebar-link"><i class="fas fa-chart-line"></i> <span>Reportes</span></a>
+      <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--gray);padding:12px 16px 4px">Cuenta</div>
+      <a href="suscripcion.html" class="sidebar-link" data-need-owner><i class="fas fa-crown"></i> <span>Suscripción</span></a>
+      <a href="facturacion.html" class="sidebar-link" data-need-owner><i class="fas fa-file-invoice-dollar"></i> <span>Facturación</span></a>
+      <a href="security.html" class="sidebar-link" data-min-plan="business"><i class="fas fa-shield-alt"></i> <span>Seguridad</span></a>
+      <a href="sessions.html" class="sidebar-link" data-min-plan="business"><i class="fas fa-laptop"></i> <span>Sesiones</span></a>
+      <a href="audit.html" class="sidebar-link" data-min-plan="business"><i class="fas fa-clipboard-list"></i> <span>Auditoría</span></a>
+      <a href="configuracion.html" class="sidebar-link" data-need-owner><i class="fas fa-building"></i> <span>Configuración</span></a>
+      <a href="support.html" class="sidebar-link"><i class="fas fa-headset"></i> <span>Soporte</span></a>
     </nav>
 
     <!-- Footer -->
@@ -189,6 +200,18 @@ a{text-decoration:none;color:inherit}ul{list-style:none}img{max-width:100%;displ
       <div class="skeleton" style="height:140px;border-radius:var(--radius-lg)"></div>
       <div class="skeleton" style="height:140px;border-radius:var(--radius-lg)"></div>
     </div>
+    <div class="dash-grid" style="padding-bottom:0">
+      <div class="kpi-card" style="grid-column:1/-1;display:flex;flex-wrap:wrap;gap:18px;align-items:center;justify-content:space-between;padding:16px 22px">
+        <div style="display:flex;gap:10px;align-items:center"><div class="kpi-icon"><i class="fas fa-crown"></i></div><div><div class="kpi-label" style="margin:0">Plan · Estado</div><div style="color:var(--white);font-weight:600;font-size:14px" id="planStrip">—</div></div></div>
+        <div><div class="kpi-label" style="margin:0">Trial</div><div style="color:var(--white);font-weight:600;font-size:14px" id="trialStrip">—</div></div>
+        <div><div class="kpi-label" style="margin:0">IA del mes</div><div style="color:var(--white);font-weight:600;font-size:14px"><span id="iaStrip">—</span></div></div>
+        <div><div class="kpi-label" style="margin:0">API requests</div><div style="color:var(--white);font-weight:600;font-size:14px" id="apiStrip">—</div></div>
+        <div><div class="kpi-label" style="margin:0">Documentos del mes</div><div style="color:var(--white);font-weight:600;font-size:14px" id="docsStrip">—</div></div>
+        <div><div class="kpi-label" style="margin:0">Límites alcanzados</div><div style="color:var(--white);font-weight:600;font-size:14px" id="limStrip">—</div></div>
+        <a href="suscripcion.html" class="btn btn-ghost btn-sm">Ver suscripción <i class="fas fa-arrow-right"></i></a>
+      </div>
+    </div>
+
     <div class="dash-grid">
       <div class="kpi-card">
         <div class="kpi-header">
@@ -232,7 +255,7 @@ a{text-decoration:none;color:inherit}ul{list-style:none}img{max-width:100%;displ
 
       <div class="chart-card">
         <div class="chart-header">
-          <div class="chart-title"><i class="fas fa-chart-line" style="margin-right:8px;color:var(--accent)"></i>Uso de IA vs Tiempo</div>
+          <div class="chart-title"><i class="fas fa-chart-line" style="margin-right:8px;color:var(--accent)"></i>Operación vs Tiempo</div>
         </div>
         <div class="chart-container"><canvas id="usageChart"></canvas></div>
       </div>
@@ -301,6 +324,7 @@ async function loadDashboard() {
     renderCharts(data);
     renderActivity(data);
     renderAlerts(data);
+    loadPlanStrip();
   } catch (err) {
     document.querySelector('.dash-grid .kpi-value') && document.getElementById('activityList') &&
       (document.getElementById('activityList').innerHTML = '<div style="padding:16px;color:var(--red);font-size:13px">No se pudieron cargar los datos: ' + err.message + '</div>');
@@ -387,6 +411,28 @@ function renderAlerts(data) {
   ).join('');
 }
 
+// Franja de plan/estado/consumo — datos reales del Plan Engine + metering
+async function loadPlanStrip(){
+  try {
+    const token = localStorage.getItem('token');
+    const res = await fetch('/api/empresa/overview', { headers: { 'Authorization': 'Bearer ' + token } });
+    if (!res.ok) return;
+    const o = await res.json();
+    const el = id => document.getElementById(id);
+    const trialTxt = o.plan && o.plan.estado === 'expired' ? 'Vencido' :
+      (o.plan && o.plan.dias_trial_restantes != null ? o.plan.dias_trial_restantes + ' días restantes' : 'No aplica');
+    el('planStrip').textContent = (o.empresa ? o.empresa.nombre : '') + ' · ' + (o.plan ? o.plan.clave : '') + ' · ' + (o.plan ? o.plan.estado : '');
+    el('trialStrip').textContent = trialTxt;
+    el('iaStrip').textContent = (o.kpis ? o.kpis.ia_tokens.toLocaleString('es-HN') : '0') + ' / ' + (o.kpis && o.kpis.ia_limite ? o.kpis.ia_limite.toLocaleString('es-HN') : '∞') + ' (' + (o.kpis ? o.kpis.ia_porcentaje : 0) + '%)';
+    el('apiStrip').textContent = o.kpis ? o.kpis.api_requests.toLocaleString('es-HN') : '0';
+    el('docsStrip').textContent = o.kpis ? o.kpis.documentos_mes.toLocaleString('es-HN') : '0';
+    const alertasAltas = (o.alertas || []).filter(a => a.severidad === 'alta').length;
+    el('limStrip').innerHTML = alertasAltas > 0
+      ? '<span style="color:var(--red)">' + alertasAltas + ' crítico(s)</span>'
+      : '<span style="color:var(--green)">Todo normal</span>';
+  } catch (e) { /* la franja no bloquea el dashboard */ }
+}
+
 function setPeriod(p,btn){
   document.querySelectorAll('.period-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
@@ -421,12 +467,18 @@ function exportDashboardReport(){
 }
 
 
+// Toast unificado (showToast estaba referenciado pero nunca definido)
+function showToast(msg, type){
+  if (window.ppToast) window.ppToast(msg, type === 'success' ? 'ok' : (type === 'warning' ? 'ok' : 'err'));
+}
+
 window.addEventListener('load',loadDashboard);
 
 </script>
 <script src="../js/notifications.js"></script>
 <script src="../js/notif-panel.js"></script>
 <script src="../js/plan-gate.js"></script>
+<script src="../js/portales.js"></script>
 <script src="../js/sidebar-empresa.js"></script>
 <script src="../js/sidebar-loader.js"></script>
 </body>

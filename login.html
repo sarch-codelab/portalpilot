@@ -1209,6 +1209,7 @@
                                     localStorage.setItem('empresaCodigo', norm2);
                                     localStorage.setItem('empresaNombre', norm2 === 'ROOT' ? 'Portal Pilot' : norm2);
                                     localStorage.setItem('currentAccountId', u2.id || '');
+                                    localStorage.setItem('soloLectura', u2.trial_expired ? '1' : '0');
                                     localStorage.removeItem('linkedAccounts');
                                     showMessage('Acceso concedido (2FA). Redirigiendo...', 'success');
                                     setTimeout(() => window.location.href = 'pp/welcome.html', 1200);
@@ -1234,6 +1235,7 @@
                         localStorage.setItem('empresaCodigo', normalizedEmpresa);
                         localStorage.setItem('empresaNombre', empresaNombre);
                         localStorage.setItem('currentAccountId', user.id || '');
+                        localStorage.setItem('soloLectura', user.trial_expired ? '1' : '0');
 
                         if (data.accounts && data.accounts.length > 1) {
                             const normAccounts = data.accounts.map(a => ({ ...a, empresa_codigo: (a.empresa_codigo || '').toString().trim().toUpperCase() }));

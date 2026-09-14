@@ -273,9 +273,8 @@ a{text-decoration:none;color:inherit}ul{list-style:none}img{max-width:100%;displ
             <label class="form-label">Rol *</label>
             <select class="form-select" id="memberRole" required>
               <option value="">Seleccionar rol...</option>
-              <option value="admin">🔧 Admin</option>
-              <option value="hr">👥 Recursos Humanos</option>
-              <option value="employee">👤 Empleado</option>
+              <option value="admin" data-need-owner>🔧 Admin</option>
+              <option value="miembro" selected>👤 Miembro</option>
             </select>
           </div>
           <div class="form-group">
@@ -340,10 +339,9 @@ a{text-decoration:none;color:inherit}ul{list-style:none}img{max-width:100%;displ
           <div class="form-group">
             <label class="form-label">Rol</label>
             <select class="form-select" id="editRole">
-              <option value="owner">👑 Owner</option>
-              <option value="admin">🔧 Admin</option>
-              <option value="hr">👥 RRHH</option>
-              <option value="employee">👤 Empleado</option>
+              <option value="owner" data-need-owner-owner-only>👑 Owner</option>
+              <option value="admin" data-need-owner>🔧 Admin</option>
+              <option value="miembro">👤 Miembro</option>
             </select>
           </div>
           <div class="form-group">
@@ -395,6 +393,7 @@ a{text-decoration:none;color:inherit}ul{list-style:none}img{max-width:100%;displ
       <a href="automation.html" class="sidebar-link" data-min-plan="enterprise"><i class="fas fa-robot"></i> <span>Bots RPA</span></a>
       <a href="api_keys.html" class="sidebar-link" data-min-plan="enterprise"><i class="fas fa-key"></i> <span>API Keys</span></a>
       <a href="security.html" class="sidebar-link" data-min-plan="business"><i class="fas fa-shield-alt"></i> <span>Auditoría</span></a>
+      <a href="consumo.html" class="sidebar-link"><i class="fas fa-chart-pie"></i> <span>Consumo</span></a>
     </nav>
 
     <!-- Footer -->
@@ -546,7 +545,7 @@ if (seatsLimitEl) seatsLimitEl.textContent = seatLimit;
 // ── Team Data (from API) ───────────────────────────
 let teamMembers = [];
 const deptNames = {it:'IT & Desarrollo',ops:'Operaciones',sales:'Ventas',hr:'RRHH',finance:'Finanzas',marketing:'Marketing'};
-const roleNames = {owner:'Owner',admin:'Admin',hr:'RRHH',employee:'Empleado',user:'Empleado'};
+const roleNames = {owner:'Owner',admin:'Admin',administrador:'Admin',miembro:'Miembro',member:'Miembro',user:'Miembro',operador:'Miembro'};
 
 // ── Load from API ──────────────────────────────────
 async function loadTeam() {
@@ -563,8 +562,7 @@ async function loadTeam() {
       firstName: u.nombre || '',
       lastName: u.apellido || '',
       email: u.email || '',
-      rol: (u.rol || 'employee').toLowerCase(),
-      dept: 'it',
+      rol: (u.rol || 'miembro').toLowerCase(),
       status: u.status === 'active' ? 'active' : 'blocked',
       lastLogin: u.lastActivity ? timeAgo(u.lastActivity) : 'Nunca',
       registered: u.registered,
@@ -620,7 +618,7 @@ function renderTable(data = filteredMembers) {
         <div><div class="member-name">${m.firstName} ${m.lastName}</div><div class="member-email">${m.email}</div></div>
       </div></td>
       <td><span class="role-badge ${m.rol}">${roleNames[m.rol] || m.rol}</span></td>
-      <td style="color:var(--gray2)">${deptNames[m.dept] || '—'}</td>
+      <td style="color:var(--gray);font-size:12px">${m.registered ? new Date(m.registered).toLocaleDateString('es-HN') : '—'}</td>
       <td><span class="status-badge ${m.status}"><span class="status-dot"></span>${m.status === 'active' ? 'Activo' : m.status === 'blocked' ? 'Bloqueado' : 'Invitado'}</span></td>
       <td style="color:var(--gray);font-size:12px">${m.lastLogin}</td>
       <td><div class="actions-cell">
@@ -662,11 +660,9 @@ function renderPagination(totalPages) {
 function applyFilters() {
   const role = document.getElementById('filterRole').value;
   const status = document.getElementById('filterStatus').value;
-  const dept = document.getElementById('filterDept').value;
   filteredMembers = teamMembers.filter(m => {
     if (role && m.rol !== role) return false;
     if (status && m.status !== status) return false;
-    if (dept && m.dept !== dept) return false;
     return true;
   });
   currentPage = 1;
@@ -881,6 +877,25 @@ window.addEventListener('load', async () => {
   setTimeout(() => { document.querySelectorAll('.reveal').forEach((el, i) => { setTimeout(() => el.classList.add('in'), i * 50); }); }, 100);
 });
 
+// Toast unificado (showToast estaba referenciado pero nunca definido)
+function showToast(msg, type){
+  if (window.ppToast) window.ppToast(msg, type === 'success' ? 'ok' : (type === 'warning' ? 'ok' : 'err'));
+}
+
+// Guardia de roles en la UI (el backend revalida SIEMPRE): solo Owner ve
+// opciones de asignar Owner/Admin; ADMIN no puede eliminar usuarios.
+(function applyRoleGuards(){
+  let rol = '';
+  try {
+    const p = JSON.parse(decodeURIComponent(atob((localStorage.getItem('token')||'').split('.')[1].replace(/-/g,'+').replace(/_/g,'/')).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join('') || '{}'));
+    rol = String(p.rol || '').toLowerCase();
+  } catch (e) { /* noop */ }
+  const esOwnerOrRoot = ['owner','root','root pp','superadmin','ceo'].includes(rol);
+  if (!esOwnerOrRoot) {
+    document.querySelectorAll('[data-need-owner],[data-need-owner-owner-only]').forEach(el => el.remove());
+  }
+})();
+
 document.querySelectorAll('.modal-overlay,.confirm-dialog').forEach(o => { o.addEventListener('click', e => { if (e.target === o) { o.classList.remove('active'); if (o.id === 'confirmDialog') closeConfirm(); } }); });
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') { document.querySelectorAll('.modal-overlay.active,.confirm-dialog.active').forEach(m => m.classList.remove('active')); }
@@ -891,6 +906,7 @@ document.addEventListener('keydown', e => {
 <script src="../js/notifications.js"></script>
 <script src="../js/notif-panel.js"></script>
 <script src="../js/plan-gate.js"></script>
+<script src="../js/portales.js"></script>
 <script src="../js/sidebar-empresa.js"></script>
 <script src="../js/sidebar-loader.js"></script>
 <script src="../auth-check.js"></script>

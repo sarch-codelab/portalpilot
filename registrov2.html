@@ -1460,7 +1460,13 @@
                     dosFaSecret: twoFASecret || null,
                     dosFaBackupCodes: backupCodes,
                     terminosAceptados: true,
-                    plan
+                    plan,
+                    // Contexto de onboarding (Blueprint §2): persiste en el tenant
+                    // lo que la app/web ya respondió; no se vuelve a preguntar.
+                    industria: (function(){ try { const c = JSON.parse(sessionStorage.getItem('portalpilot_onboarding') || '{}'); return c.industria || c.business || ''; } catch (e) { return ''; } })(),
+                    tamano: (function(){ try { const c = JSON.parse(sessionStorage.getItem('portalpilot_onboarding') || '{}'); return c.operacion || c.tamano || ''; } catch (e) { return ''; } })(),
+                    modulos: (function(){ try { const c = JSON.parse(sessionStorage.getItem('portalpilot_onboarding') || '{}'); return c.modulos || ''; } catch (e) { return ''; } })(),
+                    origen: (function(){ try { const c = JSON.parse(sessionStorage.getItem('portalpilot_onboarding') || '{}'); return c.origen || 'web'; } catch (e) { return 'web'; } })()
                 };
 
                 const res = await fetch(`${API_ROOT}/api/registro`, {
@@ -1535,19 +1541,41 @@
                 const business = params.get('business_type') || '';
                 const customer = params.get('customer_type') || '';
                 const operation = params.get('operation_type') || '';
-                const normalizedBusiness = business.toLowerCase();
-                const areaByBusiness = normalizedBusiness.includes('supermer') || normalizedBusiness.includes('tienda')
+                // Blueprint §2: la app puede entregar industria/categoría/módulos/tamaño
+                // ya respondidos; la web NO vuelve a preguntarlos.
+                const industria = params.get('industria') || '';
+                const categoria = params.get('categoria') || '';
+                const operacion = params.get('operacion') || params.get('tamano') || '';
+                const modulosParam = params.get('modulos') || '';
+                const origen = params.get('origen') || (business ? 'app' : '');
+                const normalizedBusiness = (business || industria).toLowerCase();
+                const areaByBusiness = normalizedBusiness.includes('supermer') || normalizedBusiness.includes('tienda') || normalizedBusiness.includes('retail')
                     ? 'Sector Retail (Comercio al por Menor)'
                     : normalizedBusiness.includes('pulper') || normalizedBusiness.includes('mercad')
                         ? 'Canal Tradicional'
                         : normalizedBusiness.includes('club') || normalizedBusiness.includes('membres')
                             ? 'Comercio de Base Tecnológica o Membresía'
-                            : business ? 'Área Comercial' : '';
+                            : (business || industria) ? 'Área Comercial' : '';
                 const area = document.getElementById('regArea');
                 if (areaByBusiness && area) area.value = areaByBusiness;
-                sessionStorage.setItem('portalpilot_onboarding', JSON.stringify({ business, customer, operation }));
+                sessionStorage.setItem('portalpilot_onboarding', JSON.stringify({ business, customer, operation, industria, categoria, operacion, modulos: modulosParam, origen }));
+
+                // Aviso "Hemos preparado tu configuración" con lo que la app ya respondió.
+                if (origen || business || industria) {
+                    const formEl = document.querySelector('form');
+                    if (formEl) {
+                        const banner = document.createElement('div');
+                        banner.style.cssText = 'background:rgba(139,92,246,0.08);border:1px solid rgba(139,92,246,0.3);border-radius:14px;padding:16px 20px;margin:0 0 20px;';
+                        banner.innerHTML = '\n                          <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">\n                            <span style="font-size:20px;">\u2713</span>\n                            <strong style="color:#a78bfa;font-size:15px;">Hemos preparado tu configuraci\u00f3n</strong>\n                          </div>\n                          <div style="font-size:13px;color:#c4c4d4;line-height:1.7;">\n                            ' + ((industria || business) ? '<div><strong>\u00c1rea:</strong> ' + escapeBannerHtml(areaByBusiness || industria || business) + '</div>' : '') + '\n                            ' + (modulosParam ? '<div><strong>M\u00f3dulos:</strong> ' + escapeBannerHtml(modulosParam.split(',').map(m => m.trim()).filter(Boolean).join(' \u2713 ')) + ' \u2713</div>' : '') + '\n                            ' + (operacion ? '<div><strong>Operaci\u00f3n:</strong> ' + escapeBannerHtml(operacion) + '</div>' : '') + '\n                            <div style="margin-top:6px;color:#8b8ba7;font-size:12px;">Solo te falta completar los datos de tu empresa y del propietario.</div>\n                          </div>';
+                        formEl.parentNode.insertBefore(banner, formEl);
+                    }
+                }
             } catch (e) { console.warn('No se pudieron cargar las preferencias del onboarding:', e); }
         })();
+
+        function escapeBannerHtml(str) {
+            return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
 
         // ─── TIMEZONE POR PAÍS ───
         window.onCountryChange = function () {

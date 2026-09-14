@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/png" href="../img/iconos/robot_logo.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Configuración — Portal Pilot</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="stylesheet" href="../css/portales.css">
+<style>
+.form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+.form-section-title{font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--gray);margin:6px 0 10px;display:flex;align-items:center;gap:8px}
+.form-section-title i{color:var(--accent)}
+</style>
+</head>
+<body class="pp-body">
+<div class="pp-dashboard">
+  <aside class="pp-sidebar" id="sidebar">
+    <div class="pp-sidebar-logo"><div class="logo-icon"><img src="../img/iconos/robot_logo.png" alt="Portal Pilot"></div><span>Portal Pilot</span></div>
+    <nav class="pp-nav">
+      <a href="dashboard.html" class="pp-nav-link"><i class="fas fa-home"></i> <span>Dashboard</span></a>
+      <a href="team.html" class="pp-nav-link"><i class="fas fa-users"></i> <span>Equipo</span></a>
+      <div class="pp-nav-sep">Empresa</div>
+      <a href="configuracion.html" class="pp-nav-link active"><i class="fas fa-building"></i> <span>Configuración</span></a>
+      <a href="modules.html" class="pp-nav-link"><i class="fas fa-shapes"></i> <span>Módulos</span></a>
+      <div class="pp-nav-sep">Cuenta</div>
+      <a href="suscripcion.html" class="pp-nav-link"><i class="fas fa-crown"></i> <span>Suscripción</span></a>
+      <a href="security.html" class="pp-nav-link"><i class="fas fa-shield-alt"></i> <span>Seguridad</span></a>
+      <a href="perfil.html" class="pp-nav-link"><i class="fas fa-user"></i> <span>Mi Perfil</span></a>
+    </nav>
+    <div class="pp-sidebar-footer">
+      <button class="pp-btn pp-btn-ghost pp-btn-sm" onclick="window.location.href='/login.html'"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</button>
+    </div>
+  </aside>
+  <main class="main-content">
+    <div class="pp-topbar"><div class="pp-topbar-title">Configuración de <span>MI EMPRESA</span></div></div>
+    <div class="pp-page-header">
+      <div>
+        <h1 class="pp-page-title">Información de la <span>empresa</span></h1>
+        <p class="pp-page-subtitle">Datos legales y preferencias generales del tenant. Los cambios se guardan en el registro real de la empresa y quedan auditados.</p>
+      </div>
+    </div>
+    <div class="pp-content">
+      <div id="msg" class="pp-info-box"><i class="fas fa-spinner fa-spin"></i> Cargando configuración real…</div>
+      <form id="cfgForm" style="display:none;flex-direction:column;gap:20px">
+        <div class="pp-card">
+          <div class="pp-card-head"><div class="pp-card-title"><i class="fas fa-scale-balanced"></i> Información legal</div></div>
+          <div class="form-grid">
+            <div class="pp-field"><label for="cNombre">Razón social / nombre</label><input class="pp-input" id="cNombre" required maxlength="150"></div>
+            <div class="pp-field"><label for="cRtn">RTN / identificación fiscal</label><input class="pp-input" id="cRtn" maxlength="40" placeholder="0801-1990-01234"></div>
+            <div class="pp-field"><label for="cTelefono">Teléfono</label><input class="pp-input" id="cTelefono" maxlength="40" placeholder="+504 …"></div>
+            <div class="pp-field"><label for="cEmailFact">Email de facturación</label><input class="pp-input" id="cEmailFact" type="email" maxlength="200"></div>
+          </div>
+          <div class="pp-field"><label for="cDireccion">Dirección</label><textarea class="pp-textarea" id="cDireccion" rows="2" maxlength="500"></textarea></div>
+        </div>
+        <div class="pp-card">
+          <div class="pp-card-head"><div class="pp-card-title"><i class="fas fa-sliders"></i> Preferencias generales</div></div>
+          <div class="form-grid">
+            <div class="pp-field"><label for="cPais">País</label><input class="pp-input" id="cPais" maxlength="80"></div>
+            <div class="pp-field"><label for="cZona">Zona horaria</label>
+              <select class="pp-select" id="cZona">
+                <option value="America/Tegucigalpa">America/Tegucigalpa (GMT-6)</option>
+                <option value="America/Guatemala">America/Guatemala (GMT-6)</option>
+                <option value="America/Mexico_City">America/Mexico_City (GMT-6)</option>
+                <option value="America/Bogota">America/Bogota (GMT-5)</option>
+                <option value="America/New_York">America/New_York (GMT-5)</option>
+              </select>
+            </div>
+            <div class="pp-field"><label for="cMoneda">Moneda</label>
+              <select class="pp-select" id="cMoneda">
+                <option value="HNL">HNL — Lempira</option>
+                <option value="USD">USD — Dólar</option>
+                <option value="GTQ">GTQ — Quetzal</option>
+              </select>
+            </div>
+            <div class="pp-field"><label for="cFormato">Formato de fecha</label>
+              <select class="pp-select" id="cFormato">
+                <option value="DD/MM/YYYY">DD/MM/AAAA</option>
+                <option value="MM/DD/YYYY">MM/DD/AAAA</option>
+                <option value="YYYY-MM-DD">AAAA-MM-DD</option>
+              </select>
+            </div>
+            <div class="pp-field"><label for="cIdioma">Idioma</label>
+              <select class="pp-select" id="cIdioma">
+                <option value="es">Español</option>
+                <option value="en">English</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;gap:12px;align-items:center">
+          <button type="submit" class="pp-btn pp-btn-acc" id="btnGuardar"><i class="fas fa-floppy-disk"></i> Guardar cambios</button>
+          <span class="pp-hint" id="guardadoInfo"></span>
+        </div>
+      </form>
+    </div>
+  </main>
+</div>
+<script src="../js/plan-gate.js"></script>
+<script src="../js/portales.js"></script>
+<script>
+(async function () {
+  if (!window.PP.requireSession()) return;
+  const H = window.PP.escapeHtml;
+  let empresa = null;
+
+  async function load() {
+    const msg = document.getElementById('msg');
+    try {
+      const data = await window.PP.apiFetch('/api/empresa/profile');
+      empresa = data.empresa;
+      msg.style.display = 'none';
+      document.getElementById('cfgForm').style.display = 'flex';
+      document.getElementById('cNombre').value = empresa.nombre_empresa || '';
+      document.getElementById('cRtn').value = empresa.rtn || '';
+      document.getElementById('cTelefono').value = empresa.telefono || '';
+      document.getElementById('cEmailFact').value = empresa.email_facturacion || '';
+      document.getElementById('cDireccion').value = empresa.direccion || '';
+      document.getElementById('cPais').value = empresa.pais || '';
+      if (empresa.zona_horaria) document.getElementById('cZona').value = empresa.zona_horaria;
+      if (empresa.moneda) document.getElementById('cMoneda').value = empresa.moneda;
+      if (empresa.formato_fecha) document.getElementById('cFormato').value = empresa.formato_fecha;
+      if (empresa.idioma) document.getElementById('cIdioma').value = empresa.idioma;
+      document.getElementById('guardadoInfo').textContent = 'Código de empresa: ' + (empresa.codigo || '') + (empresa.created_at ? ' · creada ' + window.PP.fmtDate(empresa.created_at) : '');
+    } catch (err) {
+      msg.className = 'pp-error';
+      msg.innerHTML = `<i class="fas fa-triangle-exclamation"></i><div><b>No se pudo cargar la configuración.</b><br>${H(err.message)}</div>`;
+    }
+  }
+
+  document.getElementById('cfgForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('btnGuardar');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando…';
+    try {
+      const payload = {
+        nombre_empresa: document.getElementById('cNombre').value.trim(),
+        rtn: document.getElementById('cRtn').value.trim(),
+        telefono: document.getElementById('cTelefono').value.trim(),
+        email_facturacion: document.getElementById('cEmailFact').value.trim(),
+        direccion: document.getElementById('cDireccion').value.trim(),
+        pais: document.getElementById('cPais').value.trim(),
+        zona_horaria: document.getElementById('cZona').value,
+        moneda: document.getElementById('cMoneda').value,
+        formato_fecha: document.getElementById('cFormato').value,
+        idioma: document.getElementById('cIdioma').value
+      };
+      // PUT /api/tenants/:id — el scope de tenant lo resuelve el backend desde el JWT.
+      await window.PP.apiFetch('/api/tenants/' + encodeURIComponent(empresa.codigo), { method: 'PUT', body: JSON.stringify(payload) });
+      window.ppToast('Configuración guardada');
+      load();
+    } catch (err) {
+      window.ppToast(err.message, 'err');
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-floppy-disk"></i> Guardar cambios';
+    }
+  });
+
+  load();
+})();
+</script>
+</body>
+</html>

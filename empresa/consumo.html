@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+    <link rel="icon" type="image/png" href="../img/iconos/robot_logo.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Consumo — Portal Pilot</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#04040a;--bg2:#07070f;--card:#0e0e1c;--border:rgba(139,92,246,0.1);--border2:rgba(139,92,246,0.22);
+  --accent:#8b5cf6;--accent2:#7c3aed;--cyan:#a78bfa;--white:#fff;--gray:#5d5d7a;--gray2:#9ca3af;
+  --text:#c4c4d4;--green:#34d399;--red:#f87171;--yellow:#fbbf24;--radius:10px;--radius-lg:18px;
+}
+html{scroll-behavior:smooth}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);line-height:1.6;-webkit-font-smoothing:antialiased}
+a{text-decoration:none;color:inherit}button{font-family:inherit;cursor:pointer}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:var(--accent);border-radius:2px}
+.dashboard{display:grid;grid-template-columns:240px 1fr;min-height:100vh}
+.sidebar{background:var(--bg2);border-right:1px solid var(--border);padding:24px 16px;position:sticky;top:0;height:100vh;display:flex;flex-direction:column;gap:8px;z-index:50}
+.sidebar-logo{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:var(--white);display:flex;align-items:center;gap:10px;padding:8px 12px;margin-bottom:24px;border-radius:var(--radius)}
+.sidebar-logo .logo-icon{width:34px;height:34px;border-radius:8px;overflow:hidden;flex-shrink:0}
+.sidebar-logo .logo-icon img{width:100%;height:100%;object-fit:contain}
+.sidebar-nav{display:flex;flex-direction:column;gap:4px;flex:1}
+.sidebar-link{display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:var(--radius);font-size:13px;font-weight:500;color:var(--gray2);transition:all .2s}
+.sidebar-link:hover,.sidebar-link.active{background:rgba(139,92,246,0.1);color:var(--white)}
+.sidebar-link i{width:18px;text-align:center;font-size:14px}
+.sidebar-link.active{border-left:2px solid var(--accent);padding-left:14px}
+.main-content{display:flex;flex-direction:column}
+.topbar{position:sticky;top:0;z-index:40;background:rgba(4,4,10,0.85);backdrop-filter:blur(24px);border-bottom:1px solid var(--border);padding:0 clamp(16px,4vw,40px);height:64px;display:flex;align-items:center;justify-content:space-between}
+.topbar-title{font-family:'Syne',sans-serif;font-size:18px;font-weight:700;color:var(--white)}.topbar-title span{color:var(--accent)}
+.page-header{padding:clamp(24px,4vw,40px) clamp(16px,4vw,40px) 24px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:16px}
+.page-title{font-family:'Syne',sans-serif;font-size:clamp(24px,4vw,32px);font-weight:800;color:var(--white);letter-spacing:-1px}.page-title span{color:var(--accent)}
+.page-subtitle{font-size:14px;color:var(--gray);max-width:520px}
+.plan-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(139,92,246,0.12);border:1px solid var(--border2);color:var(--cyan);padding:8px 16px;border-radius:40px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px}
+.content{padding:clamp(20px,3vw,32px) clamp(16px,4vw,40px);display:flex;flex-direction:column;gap:20px}
+.usage-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
+.usage-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:22px}
+.usage-card-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.usage-card-title{display:flex;align-items:center;gap:10px;font-size:14px;font-weight:600;color:var(--white)}
+.usage-card-title i{color:var(--accent);width:18px;text-align:center}
+.usage-nums{font-family:'Syne',sans-serif;font-size:22px;font-weight:700;color:var(--white)}
+.usage-nums small{font-size:13px;color:var(--gray);font-weight:400;font-family:'DM Sans',sans-serif}
+.usage-bar{height:8px;background:rgba(255,255,255,0.06);border-radius:99px;overflow:hidden;margin-top:12px}
+.usage-bar-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--cyan));border-radius:99px;transition:width .6s ease}
+.usage-bar-fill.warn{background:linear-gradient(90deg,#f59e0b,#fbbf24)}
+.usage-bar-fill.danger{background:linear-gradient(90deg,#ef4444,#f87171)}
+.usage-foot{display:flex;justify-content:space-between;font-size:11.5px;color:var(--gray);margin-top:8px}
+.periodo-select{background:var(--card);border:1px solid var(--border2);color:var(--white);padding:9px 14px;border-radius:40px;font-size:13px;outline:none}
+.msg{padding:14px 18px;border-radius:12px;font-size:13.5px;display:none}
+.msg.error{display:block;background:rgba(248,113,113,0.1);border:1px solid rgba(248,113,113,0.3);color:var(--red)}
+.msg.loading{display:block;background:rgba(139,92,246,0.08);border:1px solid var(--border2);color:var(--cyan)}
+@media(max-width:900px){.dashboard{grid-template-columns:1fr}.sidebar{display:none}}
+</style>
+</head>
+<body>
+<div class="dashboard">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo"><div class="logo-icon"><img src="../img/iconos/robot_logo.png" alt="Portal Pilot"></div><span>Portal Pilot</span></div>
+    <nav class="sidebar-nav">
+      <a href="dashboard.html" class="sidebar-link"><i class="fas fa-home"></i> <span>Dashboard</span></a>
+      <a href="team.html" class="sidebar-link" data-min-plan="business"><i class="fas fa-users"></i> <span>Equipo</span></a>
+      <a href="roles.html" class="sidebar-link" data-min-plan="business"><i class="fas fa-user-shield"></i> <span>Roles</span></a>
+      <a href="modules.html" class="sidebar-link"><i class="fas fa-shapes"></i> <span>Módulos</span></a>
+      <a href="consumo.html" class="sidebar-link active"><i class="fas fa-chart-pie"></i> <span>Consumo</span></a>
+      <a href="fleet.html" class="sidebar-link" data-min-plan="enterprise"><i class="fas fa-truck"></i> <span>Flota</span></a>
+      <a href="automation.html" class="sidebar-link" data-min-plan="enterprise"><i class="fas fa-robot"></i> <span>Bots RPA</span></a>
+      <a href="api_keys.html" class="sidebar-link" data-min-plan="enterprise"><i class="fas fa-key"></i> <span>API Keys</span></a>
+      <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--gray);padding:12px 16px 4px">Cuenta</div>
+      <a href="suscripcion.html" class="sidebar-link"><i class="fas fa-crown"></i> <span>Suscripción</span></a>
+      <a href="security.html" class="sidebar-link" data-min-plan="business"><i class="fas fa-shield-alt"></i> <span>Seguridad</span></a>
+      <a href="perfil.html" class="sidebar-link"><i class="fas fa-user"></i> <span>Mi Perfil</span></a>
+      <a href="support.html" class="sidebar-link"><i class="fas fa-headset"></i> <span>Soporte</span></a>
+    </nav>
+  </aside>
+  <main class="main-content">
+    <div class="topbar"><div class="topbar-title">Consumo de <span>MI EMPRESA</span></div><span class="plan-badge" id="planBadge">—</span></div>
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Consumo del <span>periodo</span></h1>
+        <p class="page-subtitle">Uso real por recurso según el metering del backend (tenant_usage). Los límites provienen de tu plan — la fuente de verdad es la API, no esta página.</p>
+      </div>
+      <select class="periodo-select" id="periodoSelect"></select>
+    </div>
+    <div class="content">
+      <div id="msg" class="msg loading"><i class="fas fa-spinner fa-spin"></i> Cargando consumo real…</div>
+      <div class="usage-grid" id="usageGrid"></div>
+    </div>
+  </main>
+</div>
+<script src="../auth-check.js"></script>
+<script>
+(function () {
+  const token = localStorage.getItem('token') || (window.AUTH && window.AUTH.token) || '';
+  const headers = { 'Authorization': 'Bearer ' + token };
+  const API_ROOT = window.API_ROOT || '';
+  const RECURSOS = [
+    { key: 'documents', label: 'Documentos', icon: 'fa-file-lines', unidad: 'docs' },
+    { key: 'ai_tokens', label: 'Tokens IA', icon: 'fa-wand-magic-sparkles', unidad: 'tokens' },
+    { key: 'api_requests', label: 'Requests API', icon: 'fa-plug', unidad: 'req' },
+    { key: 'storage', label: 'Almacenamiento', icon: 'fa-database', unidad: 'GB' },
+    { key: 'users', label: 'Usuarios', icon: 'fa-users', unidad: '' },
+    { key: 'automations', label: 'Automatizaciones', icon: 'fa-robot', unidad: '' }
+  ];
+  const sel = document.getElementById('periodoSelect');
+  const now = new Date();
+  for (let i = 0; i < 6; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const val = d.toISOString().slice(0, 7);
+    const opt = document.createElement('option');
+    opt.value = val;
+    opt.textContent = d.toLocaleDateString('es-HN', { month: 'long', year: 'numeric' });
+    sel.appendChild(opt);
+  }
+  sel.addEventListener('change', load);
+
+  function pct(usado, limite) {
+    if (!limite || limite <= 0) return { pct: null, texto: 'Sin límite' };
+    const p = Math.min(100, Math.round((usado / limite) * 100));
+    return { pct: p, texto: p + '%' };
+  }
+
+  async function load() {
+    const grid = document.getElementById('usageGrid');
+    const msg = document.getElementById('msg');
+    msg.className = 'msg loading';
+    msg.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Cargando consumo real…';
+    grid.innerHTML = '';
+    try {
+      const res = await fetch(`${API_ROOT}/api/tenant/usage?periodo=${encodeURIComponent(sel.value)}`, { headers });
+      if (res.status === 403) {
+        const e = await res.json().catch(() => ({}));
+        msg.className = 'msg error';
+        msg.textContent = e.error || 'Acceso denegado.';
+        return;
+      }
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+      msg.className = 'msg';
+      document.getElementById('planBadge').textContent = 'Plan: ' + (data.plan || '—');
+      grid.innerHTML = RECURSOS.map(r => {
+        const usado = Number((data.uso || {})[r.key]) || 0;
+        const limite = Number((data.limites || {})[r.key]) || 0;
+        // Estados reales (Bloque H): normal / próximo al límite / alcanzado / ilimitado
+        let estado = { cls: 'gray', label: 'Ilimitado', pct: null };
+        if (limite > 0) {
+          const p = Math.min(100, Math.round((usado / limite) * 100));
+          estado = p >= 100 ? { cls: 'red', label: 'Límite alcanzado', pct: 100 }
+            : p >= 80 ? { cls: 'yellow', label: 'Próximo al límite', pct: p }
+            : { cls: 'green', label: 'Normal', pct: p };
+        }
+        const cls = estado.pct === null ? '' : (estado.pct >= 100 ? 'danger' : estado.pct >= 80 ? 'warn' : '');
+        const fmt = n => n.toLocaleString('es-HN');
+        return `
+        <div class="usage-card">
+          <div class="usage-card-head">
+            <div class="usage-card-title"><i class="fas ${r.icon}"></i> ${r.label}</div>
+            <span class="pp-badge ${estado.cls}"><span class="dot"></span>${estado.label}</span>
+          </div>
+          <div class="usage-nums">${fmt(usado)} <small>${r.unidad ? r.unidad + ' ' : ''}usados${limite ? ' / ' + fmt(limite) : ' · sin límite registrado'}</small></div>
+          <div class="usage-bar"><div class="usage-bar-fill ${cls}" style="width:${estado.pct === null ? 4 : Math.max(2, estado.pct)}%"></div></div>
+          <div class="usage-foot"><span>Periodo ${data.periodo}</span><span>${limite ? 'Restante: ' + fmt(Math.max(0, limite - usado)) : 'medición continua'}</span></div>
+        </div>`;
+      }).join('');
+    } catch (err) {
+      msg.className = 'msg error';
+      msg.textContent = 'No se pudo cargar el consumo: ' + err.message;
+    }
+  }
+  load();
+})();
+</script>
+</body>
+</html>

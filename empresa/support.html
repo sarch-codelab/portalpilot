@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/png" href="../img/iconos/robot_logo.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Soporte — Portal Pilot</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="stylesheet" href="../css/portales.css">
+</head>
+<body class="pp-body">
+<div class="pp-dashboard">
+  <aside class="pp-sidebar" id="sidebar">
+    <div class="pp-sidebar-logo"><div class="logo-icon"><img src="../img/iconos/robot_logo.png" alt="Portal Pilot"></div><span>Portal Pilot</span></div>
+    <nav class="pp-nav">
+      <a href="dashboard.html" class="pp-nav-link"><i class="fas fa-home"></i> <span>Dashboard</span></a>
+      <a href="team.html" class="pp-nav-link"><i class="fas fa-users"></i> <span>Equipo</span></a>
+      <div class="pp-nav-sep">Ayuda</div>
+      <a href="support.html" class="pp-nav-link active"><i class="fas fa-headset"></i> <span>Soporte</span></a>
+      <div class="pp-nav-sep">Cuenta</div>
+      <a href="suscripcion.html" class="pp-nav-link"><i class="fas fa-crown"></i> <span>Suscripción</span></a>
+      <a href="perfil.html" class="pp-nav-link"><i class="fas fa-user"></i> <span>Mi Perfil</span></a>
+    </nav>
+    <div class="pp-sidebar-footer">
+      <button class="pp-btn pp-btn-ghost pp-btn-sm" onclick="window.location.href='/login.html'"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</button>
+    </div>
+  </aside>
+  <main class="main-content">
+    <div class="pp-topbar"><div class="pp-topbar-title">Soporte de <span>MI EMPRESA</span></div></div>
+    <div class="pp-page-header">
+      <div>
+        <h1 class="pp-page-title">Centro de <span>soporte</span></h1>
+        <p class="pp-page-subtitle">Crea tickets reales que llegan al equipo de Portal Pilot y sigue el historial de los enviados por tu empresa.</p>
+      </div>
+    </div>
+    <div class="pp-content">
+      <div class="pp-grid pp-grid-2">
+        <div class="pp-card">
+          <div class="pp-card-head"><div class="pp-card-title"><i class="fas fa-paper-plane"></i> Nuevo ticket</div></div>
+          <form id="ticketForm">
+            <div class="pp-field"><label for="tCategoria">Categoría</label>
+              <select class="pp-select" id="tCategoria" required>
+                <option value="cuenta">Cuenta y acceso</option>
+                <option value="facturacion">Facturación y pagos</option>
+                <option value="tecnico">Problema técnico</option>
+                <option value="datos">Datos y migración</option>
+                <option value="otro">Otro</option>
+              </select>
+            </div>
+            <div class="pp-field"><label for="tPrioridad">Prioridad</label>
+              <select class="pp-select" id="tPrioridad">
+                <option value="baja">Baja</option>
+                <option value="normal" selected>Normal</option>
+                <option value="alta">Alta — operativa detenida</option>
+              </select>
+            </div>
+            <div class="pp-field"><label for="tMensaje">Describe tu situación</label>
+              <textarea class="pp-textarea" id="tMensaje" rows="5" required minlength="20" placeholder="Cuéntanos qué ocurre, desde cuándo y qué has intentado…"></textarea>
+            </div>
+            <button type="submit" class="pp-btn pp-btn-acc" id="btnEnviar"><i class="fas fa-paper-plane"></i> Enviar ticket</button>
+          </form>
+        </div>
+        <div class="pp-card">
+          <div class="pp-card-head"><div class="pp-card-title"><i class="fas fa-inbox"></i> Tickets de tu empresa</div><span class="pp-badge gray" id="tkCount">0</span></div>
+          <div id="tkMsg" class="pp-info-box" style="margin-bottom:12px"><i class="fas fa-spinner fa-spin"></i> Cargando tickets…</div>
+          <div id="tkList" style="display:flex;flex-direction:column;gap:10px;max-height:420px;overflow-y:auto"></div>
+          <div id="tkEmpty" style="display:none"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+<script src="../js/plan-gate.js"></script>
+<script src="../js/portales.js"></script>
+<script>
+(async function () {
+  if (!window.PP.requireSession()) return;
+  const H = window.PP.escapeHtml, fmtDT = window.PP.fmtDateTime;
+
+  async function loadTickets() {
+    const list = document.getElementById('tkList');
+    const msg = document.getElementById('tkMsg');
+    const empty = document.getElementById('tkEmpty');
+    try {
+      const data = await window.PP.apiFetch('/api/empresa/support/tickets');
+      const tickets = data.tickets || [];
+      document.getElementById('tkCount').textContent = tickets.length;
+      msg.style.display = 'none';
+      if (!tickets.length) {
+        list.innerHTML = '';
+        empty.style.display = 'block';
+        empty.innerHTML = '<div class="pp-empty"><i class="fas fa-inbox"></i><div class="pp-empty-title">Sin tickets todavía</div><p>Cuando envíes un ticket aparecerá aquí con su estado.</p></div>';
+        return;
+      }
+      empty.style.display = 'none';
+      const estadoBadge = e => ({ open: 'yellow', open_ : 'yellow', in_progress: 'purple', resolved: 'green', closed: 'gray' }[e] || 'gray');
+      list.innerHTML = tickets.map(t => `<div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:12px 14px">
+        <div style="display:flex;justify-content:space-between;gap:8px;align-items:center">
+          <span style="font-size:12px;color:var(--cyan);font-family:monospace">#${H(String(t.id).slice(0, 8))}</span>
+          <span class="pp-badge ${estadoBadge(t.estado)}">${H(t.estado || 'open')}</span>
+        </div>
+        <div style="font-size:13px;color:var(--white);font-weight:600;margin-top:6px">${H(t.categoria || '')} · ${H(t.prioridad || 'normal')}</div>
+        <div style="font-size:12.5px;color:var(--gray);margin-top:4px">${H((t.mensaje || '').slice(0, 140))}${(t.mensaje || '').length > 140 ? '…' : ''}</div>
+        <div style="font-size:11px;color:var(--gray);margin-top:6px"><i class="fas fa-clock"></i> ${fmtDT(t.created_at)}</div>
+      </div>`).join('');
+    } catch (err) {
+      msg.className = 'pp-error';
+      msg.innerHTML = `<i class="fas fa-triangle-exclamation"></i><div><b>No se pudieron cargar los tickets.</b><br>${H(err.message)}</div>`;
+    }
+  }
+
+  document.getElementById('ticketForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('btnEnviar');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando…';
+    try {
+      const nombre = localStorage.getItem('userName') || 'Usuario';
+      const email = localStorage.getItem('userEmail') || '';
+      const empresa = localStorage.getItem('empresaCodigo') || '';
+      const res = await fetch('../api/support-ticket', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: nombre,
+          email,
+          company: empresa,
+          plan: localStorage.getItem('empresaPlan') || 'none',
+          category: document.getElementById('tCategoria').value,
+          priority: document.getElementById('tPrioridad').value,
+          message: document.getElementById('tMensaje').value
+        })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || 'No se pudo enviar el ticket.');
+      window.ppToast('Ticket enviado. Te contactaremos pronto.');
+      document.getElementById('tMensaje').value = '';
+      loadTickets();
+    } catch (err) {
+      window.ppToast(err.message, 'err');
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-paper-plane"></i> Enviar ticket';
+    }
+  });
+
+  loadTickets();
+})();
+</script>
+</body>
+</html>

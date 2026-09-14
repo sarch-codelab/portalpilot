@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/png" href="../img/iconos/robot_logo.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Módulos — Portal Pilot</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="stylesheet" href="../css/portales.css">
+<style>
+.mod-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px}
+.mod-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px;display:flex;flex-direction:column;gap:10px;transition:all .2s}
+.mod-card:hover{border-color:var(--border2)}
+.mod-head{display:flex;justify-content:space-between;align-items:flex-start}
+.mod-icon{width:42px;height:42px;border-radius:12px;background:rgba(139,92,246,0.12);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;color:var(--accent);font-size:17px}
+.mod-icon.locked{background:rgba(156,163,175,0.08);color:var(--gray)}
+.mod-nombre{font-weight:600;color:var(--white);font-size:14px}
+.mod-foot{display:flex;justify-content:space-between;align-items:center;margin-top:auto}
+.switch{position:relative;width:38px;height:20px;background:var(--card2);border:1px solid var(--border2);border-radius:99px;cursor:pointer;transition:all .2s;flex-shrink:0}
+.switch.on{background:var(--accent);border-color:var(--accent)}
+.switch::after{content:'';position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:#fff;transition:all .2s}
+.switch.on::after{left:20px}
+.switch:disabled{opacity:.45;cursor:not-allowed}
+</style>
+</head>
+<body class="pp-body">
+<div class="pp-dashboard">
+  <aside class="pp-sidebar" id="sidebar">
+    <div class="pp-sidebar-logo"><div class="logo-icon"><img src="../img/iconos/robot_logo.png" alt="Portal Pilot"></div><span>Portal Pilot</span></div>
+    <nav class="pp-nav">
+      <a href="dashboard.html" class="pp-nav-link"><i class="fas fa-home"></i> <span>Dashboard</span></a>
+      <a href="team.html" class="pp-nav-link"><i class="fas fa-users"></i> <span>Equipo</span></a>
+      <a href="roles.html" class="pp-nav-link"><i class="fas fa-user-shield"></i> <span>Roles</span></a>
+      <a href="modules.html" class="pp-nav-link active"><i class="fas fa-shapes"></i> <span>Módulos</span></a>
+      <a href="consumo.html" class="pp-nav-link"><i class="fas fa-chart-pie"></i> <span>Consumo</span></a>
+      <div class="pp-nav-sep">Cuenta</div>
+      <a href="suscripcion.html" class="pp-nav-link"><i class="fas fa-crown"></i> <span>Suscripción</span></a>
+      <a href="security.html" class="pp-nav-link"><i class="fas fa-shield-alt"></i> <span>Seguridad</span></a>
+      <a href="perfil.html" class="pp-nav-link"><i class="fas fa-user"></i> <span>Mi Perfil</span></a>
+    </nav>
+    <div class="pp-sidebar-footer">
+      <button class="pp-btn pp-btn-ghost pp-btn-sm" onclick="window.location.href='/login.html'"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</button>
+    </div>
+  </aside>
+  <main class="main-content">
+    <div class="pp-topbar"><div class="pp-topbar-title">Módulos de <span>MI EMPRESA</span></div><span class="pp-badge purple" id="planBadge">—</span></div>
+    <div class="pp-page-header">
+      <div>
+        <h1 class="pp-page-title">Catálogo de <span>módulos</span></h1>
+        <p class="pp-page-subtitle">La disponibilidad se deriva de tenant → plan → entitlements del backend. Nada está hardcodeado aquí: activar un módulo que tu plan no incluye lo resuelve el servidor.</p>
+      </div>
+      <button class="pp-btn pp-btn-ghost pp-btn-sm" onclick="load()"><i class="fas fa-sync-alt"></i> Actualizar</button>
+    </div>
+    <div class="pp-content">
+      <div id="msg" class="pp-info-box"><i class="fas fa-spinner fa-spin"></i> Cargando catálogo real…</div>
+      <div class="mod-grid" id="modGrid"></div>
+      <div class="pp-info-box" id="legend" style="display:none">
+        <i class="fas fa-circle-info"></i>
+        <div><b>Activo</b>: incluido en tu plan y habilitado · <b>Disponible</b>: incluido, aún sin activar · <b>Bloqueado</b>: desactivado por decisión del tenant · <b>Requiere upgrade</b>: no incluido en el plan actual.</div>
+      </div>
+    </div>
+  </main>
+</div>
+<script src="../js/plan-gate.js"></script>
+<script src="../js/portales.js"></script>
+<script>
+(async function () {
+  if (!window.PP.requireSession()) return;
+  const H = window.PP.escapeHtml;
+  const ESTADOS = {
+    activo: { badge: ['green', 'Activo'], canToggle: true, on: true },
+    disponible: { badge: ['purple', 'Disponible'], canToggle: true, on: false },
+    bloqueado: { badge: ['gray', 'Bloqueado'], canToggle: true, on: false },
+    requiere_upgrade: { badge: ['yellow', 'Requiere upgrade'], canToggle: false, on: false }
+  };
+  async function load() {
+    const msg = document.getElementById('msg');
+    try {
+      const data = await window.PP.apiFetch('/api/empresa/modules');
+      msg.style.display = 'none';
+      document.getElementById('legend').style.display = 'flex';
+      document.getElementById('planBadge').textContent = 'Plan: ' + data.plan;
+      const grid = document.getElementById('modGrid');
+      grid.innerHTML = (data.modulos || []).map(m => {
+        const st = ESTADOS[m.estado] || ESTADOS.disponible;
+        const [cls, label] = st.badge;
+        const sw = st.canToggle
+          ? `<button class="switch ${st.on ? 'on' : ''}" data-key="${H(m.key)}" title="${st.on ? 'Desactivar' : 'Activar'} módulo"></button>`
+          : `<a href="../pay_plan.html" class="pp-badge yellow" style="text-decoration:none"><i class="fas fa-arrow-up"></i> Mejorar</a>`;
+        return `<div class="mod-card">
+          <div class="mod-head">
+            <div class="mod-icon ${st.canToggle ? '' : 'locked'}"><i class="fas ${H(m.icono)}"></i></div>
+            <span class="pp-badge ${cls}">${label}</span>
+          </div>
+          <div class="mod-nombre">${H(m.nombre)}</div>
+          <div style="font-size:11px;color:var(--gray)">Feature: <code style="color:var(--cyan)">${H(m.feature)}</code>${m.limite != null ? ' · Límite: ' + window.PP.fmtNum(m.limite) : ''}</div>
+          <div class="mod-foot"><span style="font-size:11px;color:var(--gray)">${st.canToggle ? (st.on ? 'Habilitado para tu equipo' : 'Puedes activarlo') : 'No incluido en ' + H(data.plan)}</span>${sw}</div>
+        </div>`;
+      }).join('');
+    } catch (err) {
+      msg.className = 'pp-error';
+      msg.innerHTML = `<i class="fas fa-triangle-exclamation"></i><div><b>No se pudo cargar el catálogo.</b><br>${H(err.message)}</div>`;
+    }
+  }
+  document.getElementById('modGrid').addEventListener('click', async (e) => {
+    const sw = e.target.closest('.switch');
+    if (!sw || sw.disabled) return;
+    sw.disabled = true;
+    const key = sw.dataset.key;
+    const enabled = !sw.classList.contains('on');
+    try {
+      await window.PP.apiFetch('/api/empresa/modules/' + encodeURIComponent(key), { method: 'PUT', body: JSON.stringify({ enabled }) });
+      window.ppToast(enabled ? 'Módulo activado' : 'Módulo desactivado');
+      load();
+    } catch (err) {
+      window.ppToast(err.message, 'err');
+      sw.disabled = false;
+    }
+  });
+  window.load = load;
+  load();
+})();
+</script>
+</body>
+</html>

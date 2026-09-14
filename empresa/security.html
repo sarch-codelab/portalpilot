@@ -1157,6 +1157,7 @@
                 <a href="automation.html" class="sidebar-link" data-min-plan="enterprise"><i class="fas fa-robot"></i> <span>Bots RPA</span></a>
                 <a href="api_keys.html" class="sidebar-link" data-min-plan="enterprise"><i class="fas fa-key"></i> <span>API Keys</span></a>
                 <a href="security.html" class="sidebar-link active" data-min-plan="business"><i class="fas fa-shield-alt"></i> <span>Auditoría</span></a>
+                <a href="consumo.html" class="sidebar-link"><i class="fas fa-chart-pie"></i> <span>Consumo</span></a>
             </nav>
 
             <!-- Footer -->
@@ -1251,6 +1252,14 @@
 
                 <!-- RIGHT: Policies & Access Map -->
                 <div class="sidebar-column">
+
+                    <!-- Eventos de seguridad reales (Bloque I) -->
+                    <div class="card reveal">
+                        <h2 class="card-title"><i class="fas fa-user-shield"></i> Eventos de Seguridad</h2>
+                        <div id="secEventsPanel" class="activity-list" style="margin-top:12px">
+                            <div style="padding:16px;color:var(--gray);font-size:13px">Cargando eventos de seguridad…</div>
+                        </div>
+                    </div>
 
                     <!-- Security Policies -->
                     <div class="card reveal">
@@ -1473,9 +1482,38 @@
             });
         });
 
+        // ── Bloque I: eventos de seguridad reales (logins, cambios sensibles, 2FA) ──
+        async function loadSecurityEvents() {
+            try {
+                const res = await apiFetch('/api/empresa/security/events?limit=30');
+                const data = await res.json();
+                const panel = document.getElementById('secEventsPanel');
+                if (!panel) return;
+                const eventos = data.eventos || [];
+                if (!eventos.length) {
+                    panel.innerHTML = '<div style="padding:16px;color:var(--gray);font-size:13px">Sin eventos de seguridad registrados todavía. Aparecerán al iniciar sesión, cambiar contraseña, activar 2FA, etc.</div>';
+                    return;
+                }
+                panel.innerHTML = eventos.slice(0, 10).map(ev => {
+                    const sev = ev.severidad === 'critical' ? 'var(--red)' : (ev.severidad === 'warning' ? 'var(--yellow)' : 'var(--cyan)');
+                    const icon = ev.evento && ev.evento.includes('fallido') ? 'fa-user-slash' : (ev.evento && ev.evento.includes('2fa') ? 'fa-key' : 'fa-shield-alt');
+                    return `<div class="activity-item security"><div class="activity-icon" style="color:${sev}"><i class="fas ${icon}"></i></div><div class="activity-content"><div class="activity-text">${String(ev.evento || '').replace(/_/g, ' ')}${ev.usuario_email ? ' · ' + ev.usuario_email : ''}</div><div class="activity-time">${ev.ip ? ev.ip + ' · ' : ''}${new Date(ev.created_at).toLocaleString('es-HN')}</div></div></div>`;
+                }).join('');
+            } catch (err) {
+                const panel = document.getElementById('secEventsPanel');
+                if (panel) panel.innerHTML = '<div style="padding:16px;color:var(--gray);font-size:13px">Eventos de seguridad no disponibles.</div>';
+            }
+        }
+
+        // Toast unificado (showToast estaba referenciado pero nunca definido)
+        function showToast(msg, type){
+            if (window.ppToast) window.ppToast(msg, type === 'success' ? 'ok' : (type === 'warning' ? 'ok' : 'err'));
+        }
+
         // ── Initialize ──────────────────
         window.addEventListener('load', () => {
             loadAudit();
+            loadSecurityEvents();
             setTimeout(() => document.querySelectorAll('.reveal').forEach((el, i) => setTimeout(() => el.classList.add('in'), i * 50)), 100);
         });
 
@@ -1484,6 +1522,7 @@
 <script src="../js/notifications.js"></script>
 <script src="../js/notif-panel.js"></script>
 <script src="../js/plan-gate.js"></script>
+<script src="../js/portales.js"></script>
 <script src="../js/sidebar-loader.js"></script>
 <script src="../auth-check.js"></script>
 </body>

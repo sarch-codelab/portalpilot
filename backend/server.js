@@ -90,6 +90,11 @@ app.use(express.json({ limit: '10mb' }));
 
 function handleServerError(res, error) {
   console.error('[ERROR]', error?.message || error);
+  // Errores de configuración (SMTP faltante, etc.): 503 con mensaje ACCIONABLE,
+  // nunca un 500 genérico que oculte la causa real.
+  if (error?.code === 'SMTP_NOT_CONFIGURED') {
+    return res.status(503).json({ error: error.message, code: 'SMTP_NOT_CONFIGURED' });
+  }
   return res.status(500).json({ error: 'Ha ocurrido un error interno en el servidor' });
 }
 
@@ -113,6 +118,7 @@ app.use((err, req, res, next) => {
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 5,
+  skipSuccessfulRequests: true, // solo cuentan los intentos fallidos: un usuario real no se bloquea al hacer login + refresh
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'Demasiados intentos de login. Intenta de nuevo en 15 minutos.' }
@@ -132,6 +138,22 @@ const alertaLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'Demasiadas alertas. Intenta de nuevo más tarde.' }
+});
+
+const emailLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hora
+  max: 10, // evita email-bombing vía endpoints públicos de correo
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Demasiados envíos. Intenta de nuevo más tarde.' }
+});
+
+const pagoLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Demasiadas confirmaciones de pago. Intenta de nuevo en una hora.' }
 });
 
 function escapeHtml(str) {
@@ -255,10 +277,119 @@ function protectPortalArea(req, res, next) {
     if (!isRoot) return isHtmlRequest ? res.redirect('/login.html') : forbidden();
   } else {
     if (!isRoot && !isTenantUser) return isHtmlRequest ? res.redirect('/login.html') : forbidden();
+    // Blueprint (§15): el Member NO entra a /empresa (Portal Empresa).
+    // Su lugar es el Workspace Client. Solo Owner/Admin (y ROOT) administran.
+    if (!isRoot && !isOwnerUser(req)) {
+      return isHtmlRequest ? res.redirect('/download.html') : forbidden();
+    }
   }
 
   next();
 }
+
+// ═══════════════════════════════════════════════════════════════
+// MODO SOLO LECTURA (TRIAL VENCIDO)
+// Cuando los 15 días de prueba vencen sin pago, la empresa conserva
+// el acceso para CONSULTAR y EXPORTAR sus datos, pero ya NO puede
+// registrar movimientos nuevos (ventas, facturas, inventario, etc.).
+// GET/HEAD/OPTIONS siempre se permiten. Las escrituras se bloquean
+// salvo rutas de autenticación, pago/renovación y exportación.
+// ═══════════════════════════════════════════════════════════════
+const WRITE_ALLOWED_WHEN_EXPIRED_PREFIXES = [
+  '/api/session/sync',
+  '/api/login',
+  '/api/logout',
+  '/api/password',
+  '/api/recuperacion',
+  '/api/security',
+  '/api/confirmar-pago',
+  '/api/tigo-money-reference',
+  '/api/payment',
+  '/api/plan',
+  '/api/suscripcion',
+  '/api/empresa/profile',
+  '/api/renew',
+  '/api/billing',
+  '/api/export',
+  '/api/backup',
+  '/api/download',
+  '/api/restore',
+  '/api/refresh',
+  '/api/me',
+  '/api/tenant/modules',
+  '/api/tenant/stats',
+  '/api/notificaciones',
+];
+
+function isWriteAllowedWhenExpired(path) {
+  const norm = (path || '').replace(/\/+$/, '');
+  return WRITE_ALLOWED_WHEN_EXPIRED_PREFIXES.some((p) => {
+    if (p === norm) return true;
+    if (p.endsWith('/')) return norm.startsWith(p);
+    return norm.startsWith(p + '/');
+  });
+}
+
+// Cache corta de entitlements para no golpear la DB en cada request.
+const _entitlementsCache = new Map();
+const ENTITLEMENTS_CACHE_TTL_MS = 30 * 1000;
+
+async function getEntitlementsCached(req) {
+  const tenantCode = normalizeTenantCode(getTenantCode(req));
+  if (!tenantCode) return getTenantEntitlements(req);
+  const hit = _entitlementsCache.get(tenantCode);
+  if (hit && Date.now() < hit.expiresAt) return hit.data;
+  const data = await getTenantEntitlements(req);
+  _entitlementsCache.set(tenantCode, { data, expiresAt: Date.now() + ENTITLEMENTS_CACHE_TTL_MS });
+  return data;
+}
+
+app.use(async (req, res, next) => {
+  if (['GET', 'HEAD', 'OPTIONS'].includes(req.method)) return next();
+  if (isWriteAllowedWhenExpired(req.path)) return next();
+
+  const authHeader = req.headers['authorization'];
+  // Rutas públicas (login, registro, confirmación de pago) sin token → pasar.
+  if (!authHeader || !authHeader.startsWith('Bearer ')) return next();
+
+  try {
+    const decoded = jwt.verify(authHeader.slice(7), localJwtSecret);
+    req.user = decoded; // evita que authenticate revuelva a consultar el mismo token
+    const entitlements = await getEntitlementsCached(req);
+    if (!entitlements || entitlements.status !== 'expired') return next();
+    req.entitlements = entitlements;
+    return res.status(403).json({
+      error: 'Tu período de prueba de 15 días ha vencido. La plataforma está en modo solo lectura: puedes consultar y exportar tus datos, pero no registrar movimientos nuevos. Renueva tu plan para continuar.',
+      code: 'TRIAL_EXPIRED',
+      readOnly: true
+    });
+  } catch (err) {
+    return next(); // token inválido → la ruta (authenticate) responderá 401/403
+  }
+});
+
+// ── Metering de escrituras operativas (Blueprint §12): cada alta/edición
+// operativa exitosa incrementa 'documents' del tenant. Debe registrarse ANTES
+// de las rutas para que el hook de respuesta aplique a todas. Nunca bloquea.
+const METERED_WRITE_PREFIXES = [
+  '/api/productos', '/api/clientes', '/api/facturas', '/api/recibos', '/api/notas-credito',
+  '/api/pos/ventas', '/api/compras', '/api/cotizaciones', '/api/ordenes-compra', '/api/kardex',
+  '/api/ventas-fiadas', '/api/abonos', '/api/sucursales', '/api/bodegas', '/api/proveedores',
+  '/api/transferencias', '/api/membresias', '/api/promociones', '/api/rutas', '/api/visitas',
+  '/api/notas', '/api/transacciones', '/api/sync'
+];
+
+app.use((req, res, next) => {
+  if (!['POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method)) return next();
+  const isMetered = METERED_WRITE_PREFIXES.some(p => req.path === p || req.path.startsWith(p + '/'));
+  if (!isMetered) return next();
+  res.on('finish', () => {
+    if (res.statusCode >= 200 && res.statusCode < 300) {
+      try { registrarUsoTenant(getTenantCode(req), 'documents', 1); } catch (e) { /* metering nunca bloquea */ }
+    }
+  });
+  next();
+});
 
 app.post('/api/session/sync', async (req, res) => {
   const authHeader = req.headers['authorization'];
@@ -296,11 +427,40 @@ function authenticate(req, res, next) {
 
   if (!token) return res.status(401).json({ error: 'Token no provisto' });
 
-  jwt.verify(token, localJwtSecret, (err, user) => {
+  jwt.verify(token, localJwtSecret, async (err, user) => {
     if (err) return res.status(403).json({ error: 'Token inválido' });
+    // Revocación de sesiones (Bloque J): si el usuario incrementó su
+    // token_version, todos los tokens emitidos ANTES quedan inválidos.
+    // Se consulta el valor actual en DB (30s de caché por usuario).
     req.user = user;
+    if (user?.sub && supabase) {
+      try {
+        const current = await getTokenVersionCached(user.sub);
+        if (current != null && (user.token_version || 0) < current) {
+          return res.status(401).json({ error: 'Sesión revocada. Inicia sesión de nuevo.', code: 'SESSION_REVOKED' });
+        }
+      } catch (e) {
+        console.warn('[AUTH] token_version check falló (se permite):', e.message);
+      }
+    }
     next();
   });
+}
+
+// Caché corto de token_version por usuario para no golpear la DB en cada request.
+const _tokenVersionCache = new Map();
+const TOKEN_VERSION_CACHE_TTL_MS = 30 * 1000;
+async function getTokenVersionCached(userId) {
+  const hit = _tokenVersionCache.get(userId);
+  if (hit && Date.now() < hit.expiresAt) return hit.value;
+  const { data, error } = await supabase.from('usuarios').select('token_version').eq('id', userId).maybeSingle();
+  if (error) throw new Error(error.message);
+  const value = data ? (data.token_version || 0) : null;
+  _tokenVersionCache.set(userId, { value, expiresAt: Date.now() + TOKEN_VERSION_CACHE_TTL_MS });
+  return value;
+}
+function invalidateTokenVersionCache(userId) {
+  _tokenVersionCache.delete(userId);
 }
 
 function isRootUser(req) {
@@ -378,6 +538,37 @@ function normalizePlan(plan) {
   return 'starter';
 }
 
+// Plan engine DB-backed: lee planes/plan_features/plan_limits cuando existen
+// y NO rompe si faltan (fallback a constantes locales).
+async function getPlanConfigFromDB(plan) {
+  const fallback = PLAN_ENTITLEMENTS[plan] || PLAN_ENTITLEMENTS.starter;
+  if (!supabase) return fallback;
+  try {
+    const { data: row } = await supabase.from('planes')
+      .select('id, orden, max_users, max_companies')
+      .eq('clave', plan).maybeSingle();
+    if (!row) return fallback;
+
+    const { data: feats } = await supabase.from('plan_features')
+      .select('feature')
+      .eq('plan_id', row.id);
+    const features = (feats && feats.length) ? feats.map(f => f.feature) : fallback.features;
+
+    const { data: limits } = await supabase.from('plan_limits')
+      .select('recurso, maximo')
+      .eq('plan_id', row.id);
+
+    return {
+      maxUsers: Number.isFinite(Number(row.max_users)) ? Number(row.max_users) : fallback.maxUsers,
+      maxCompanies: Number.isFinite(Number(row.max_companies)) ? Number(row.max_companies) : fallback.maxCompanies,
+      features,
+      customLimits: (limits && limits.length) ? limits.reduce((acc, l) => { acc[l.recurso] = Number(l.maximo); return acc; }, {}) : {}
+    };
+  } catch (e) {
+    return fallback;
+  }
+}
+
 async function getTenantEntitlements(req) {
   if (isRootUser(req)) return { plan: 'enterprise', ...PLAN_ENTITLEMENTS.enterprise };
   const tenantCode = normalizeTenantCode(getTenantCode(req));
@@ -386,25 +577,36 @@ async function getTenantEntitlements(req) {
     .select('plan, limite_usuarios, limite_empresas, estado, created_at')
     .eq('codigo', tenantCode).maybeSingle();
   const plan = normalizePlan(tenant?.plan);
-  const base = PLAN_ENTITLEMENTS[plan];
+  const base = await getPlanConfigFromDB(plan);
+  const baseLimits = PLAN_ENTITLEMENTS[plan] || PLAN_ENTITLEMENTS.starter;
+  // null-safety: Number(null)=0 pasaría Number.isFinite y dejaría el plan sin
+  // cupo de usuarios (bug crítico: tenants de /api/registro nacen con NULL).
+  const maxUsers = (tenant?.limite_usuarios != null && Number.isFinite(Number(tenant.limite_usuarios))) ? Number(tenant.limite_usuarios) : base.maxUsers;
+  const maxCompanies = (tenant?.limite_empresas != null && Number.isFinite(Number(tenant.limite_empresas))) ? Number(tenant.limite_empresas) : base.maxCompanies;
 
   // Trial de 15 días: si el plan es starter y superó los 15 días desde created_at,
   // el tenant queda suspendido hasta que pague un plan superior.
   let status = normalizeStatus(tenant?.estado || 'active');
+  let trialEndsAt = null;
   if (plan === 'starter' && status === 'active' && tenant?.created_at) {
     const created = new Date(tenant.created_at).getTime();
     const now = Date.now();
     const DAY_MS = 24 * 60 * 60 * 1000;
     if (Number.isFinite(created) && now - created > 15 * DAY_MS) {
       status = 'expired';
+      trialEndsAt = new Date(created + 15 * DAY_MS).toISOString();
     }
   }
 
   return {
     plan,
-    maxUsers: base.maxUsers,
-    maxCompanies: base.maxCompanies,
+    maxUsers,
+    maxCompanies,
     features: base.features,
+    customLimits: base.customLimits || {},
+    limits: PLAN_LIMITS[plan] || baseLimits,
+    trial_ends_at: trialEndsAt,
+    trial: { isTrial: plan === 'starter' && status !== 'expired', endsAt: trialEndsAt },
     status
   };
 }
@@ -412,12 +614,26 @@ async function getTenantEntitlements(req) {
 function requirePlanFeature(feature) {
   return async (req, res, next) => {
     try {
-      const entitlements = await getTenantEntitlements(req);
+      const entitlements = req.entitlements || await getTenantEntitlements(req);
       if (entitlements.status && entitlements.status === 'expired') {
-        return res.status(403).json({ error: 'Tu período de prueba de 15 días ha vencido. Elige un plan para continuar usando Portal Pilot.', code: 'TRIAL_EXPIRED' });
+        return res.status(403).json({ error: 'Tu período de prueba de 15 días ha vencido. La plataforma está en modo solo lectura: puedes consultar y exportar tus datos, pero no registrar movimientos nuevos. Elige un plan para continuar usando Portal Pilot.', code: 'TRIAL_EXPIRED', readOnly: true });
       }
       if (entitlements.status && entitlements.status !== 'active') {
         return res.status(403).json({ error: 'La empresa no tiene un plan activo.' });
+      }
+      // Límite server-side (Blueprint §11): si el plan define un límite para este
+      // recurso/feature, se comprueba aquí contra tenant_usage — nunca solo en UI.
+      const featureLimit = Number(entitlements.limits?.[feature]);
+      if (Number.isFinite(featureLimit) && featureLimit > 0 && supabase) {
+        try {
+          const tenantL = normalizeTenantCode(getTenantCode(req));
+          const mesL = new Date().toISOString().slice(0, 7);
+          const { data: usageRow } = await supabase.from('tenant_usage')
+            .select('cantidad').eq('empresa_codigo', tenantL).eq('recurso', feature).eq('periodo', mesL).maybeSingle();
+          if ((Number(usageRow?.cantidad) || 0) >= featureLimit) {
+            return res.status(403).json({ error: `Límite del plan alcanzado para ${feature}: ${featureLimit}.`, code: 'PLAN_LIMIT_REACHED' });
+          }
+        } catch (e) { console.warn('[PLAN_LIMIT] check falló (se permite):', e.message); }
       }
       if (!entitlements.features.includes(feature)) {
         return res.status(403).json({ error: `Esta función requiere un plan superior: ${feature}.`, code: 'PLAN_LIMIT' });
@@ -437,6 +653,54 @@ function requireTenantAdmin(req, res, next) {
     return res.status(403).json({ error: 'Esta acción requiere rol Owner o Administrador.' });
   }
   next();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// RBAC: requireOwner + tenant-scope helpers (Bloque 1 & 7)
+// El scope SIEMPRE sale del JWT autenticado, jamás del body/query
+// que envíe el cliente. Refuerza el aislamiento por empresa_codigo.
+// ═══════════════════════════════════════════════════════════════
+const OWNER_LIKE_ROLES = ['owner', 'administrador', 'admin'];
+
+function isOwnerUser(req) {
+  if (isRootUser(req)) return true;
+  const role = String(req.user?.rol || '').trim().toLowerCase();
+  return OWNER_LIKE_ROLES.includes(role) || role.includes('owner') || role === 'ceo';
+}
+
+function requireOwner(req, res, next) {
+  if (!isOwnerUser(req)) {
+    return res.status(403).json({ error: 'Esta acción es exclusiva del Owner de la empresa.' });
+  }
+  next();
+}
+
+// OWNER estricto: para acciones CRÍTICAS (eliminar usuarios, revocar sesiones
+// ajenas) el rol 'admin' NO cuenta como owner — solo 'owner'/'ceo' (o ROOT).
+// isOwnerUser se mantiene amplio para el acceso general al portal empresa.
+function isTrueOwner(req) {
+  if (isRootUser(req)) return true;
+  const role = String(req.user?.rol || '').trim().toLowerCase();
+  return role === 'owner' || role === 'ceo';
+}
+
+// Código de tenant EFECTIVO: para ROOT puede venir del body/query (acciones
+// transversales); para cualquier otro rol, el token manda y se ignora lo que
+// envíe el cliente. Previene el salto de tenant (OWNER 184 → tenant 185).
+function effectiveTenantCode(req) {
+  const bodyItem = Array.isArray(req.body) ? req.body[0] : req.body;
+  const declared = (bodyItem?.empresa_codigo || req.query?.empresa_codigo || req.query?.empresa || '').toString().trim();
+  const authTenant = normalizeTenantCode(getTenantCode(req));
+  if (isRootUser(req)) return normalizeTenantCode(declared) || authTenant;
+  return authTenant;
+}
+
+// Helper de scope centralizado: obliga a que las consultas de datos de tenant
+// siempre filtren por empresa_codigo efectivo (single source of truth).
+function withTenantScope(query, req) {
+  const tenant = effectiveTenantCode(req);
+  if (!tenant) return query;
+  return query.eq('empresa_codigo', tenant);
 }
 
 const BASE32_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
@@ -602,24 +866,45 @@ async function findTenantByIdentifier(identifier) {
 }
 
 // ======================================================================
-// MÓDULO DE EMAIL
+// MÓDULO DE EMAIL — configuración 100% por entorno (SMTP_
 // ======================================================================
+// CRÍTICO corregido: antes el host/port estaban hardcodeados a Gmail; sin
+// credenciales todo envío fallaba (y algunos flujos fingían éxito). Ahora:
+//  - SMTP_HOST/SMTP_PORT/SMTP_USER/SMTP_PASS (fallback: EMAIL_USER/EMAIL_PASS)
+//  - Si faltan credenciales, enviarCorreo() lanza un error CLARO en vez de
+//    fallar silenciosamente. Ningún flujo oculta un error SMTP.
+const SMTP_HOST = process.env.SMTP_HOST || 'smtp.gmail.com';
+const SMTP_PORT = Number(process.env.SMTP_PORT || 465);
+const SMTP_SECURE = process.env.SMTP_SECURE ? process.env.SMTP_SECURE === 'true' : SMTP_PORT === 465;
+const SMTP_USER = process.env.SMTP_USER || process.env.EMAIL_USER || '';
+const SMTP_PASS = process.env.SMTP_PASS || process.env.EMAIL_PASS || '';
+const SMTP_CONFIGURADO = Boolean(SMTP_USER && SMTP_PASS);
+
 const transporter = nodemailer.createTransport({
-  host: 'smtp.gmail.com',
-  port: 465,
-  secure: true,
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS
-  },
+  host: SMTP_HOST,
+  port: SMTP_PORT,
+  secure: SMTP_SECURE,
+  auth: SMTP_CONFIGURADO ? { user: SMTP_USER, pass: SMTP_PASS } : undefined,
   pool: false, // 🔧 FIX VERCEL: Desactivar pool de sockets para evitar conexiones muertas en serverless
   connectionTimeout: 10000,
   greetingTimeout: 5000,
   socketTimeout: 10000
 });
 
-const EMAIL_FROM = process.env.EMAIL_FROM || process.env.EMAIL_USER;
-const EMAIL_REPLY_TO = process.env.EMAIL_USER || EMAIL_FROM;
+const EMAIL_FROM = process.env.EMAIL_FROM || SMTP_USER;
+const EMAIL_REPLY_TO = process.env.EMAIL_REPLY_TO || EMAIL_FROM;
+
+// Punto único de envío: valida configuración y aporta el remitente por defecto.
+async function enviarCorreo(opciones) {
+  if (!SMTP_CONFIGURADO) {
+    const err = new Error('SMTP no configurado: define SMTP_HOST/SMTP_PORT/SMTP_USER/SMTP_PASS (o EMAIL_USER/EMAIL_PASS) en las variables de entorno. El correo no fue enviado.');
+    err.code = 'SMTP_NOT_CONFIGURED';
+    throw err;
+  }
+  const mail = { ...opciones };
+  if (!mail.from) mail.from = `"Portal Pilot" <${EMAIL_FROM}>`;
+  return transporter.sendMail(mail);
+}
 
 // 🔧 FIX VERCEL: Eliminar dispatchEmailAsync (no funciona en serverless)
 // En su lugar, todas las funciones de email ahora son await directamente
@@ -704,7 +989,7 @@ async function enviarEmailTrialVencido({ email, nombre, empresaCodigo, empresaNo
     const destino = String(email || '').trim().toLowerCase();
     if (!destino) return null;
 
-    await transporter.sendMail({
+    await enviarCorreo({
       from: `"Portal Pilot" <${EMAIL_FROM}>`,
       to: destino,
       subject: '⏳ Tu prueba gratuita de Portal Pilot ha vencido',
@@ -777,7 +1062,7 @@ async function enviarAlertaNuevoAcceso(emailDestinatario, req, success = true) {
       html: htmlContent
     };
 
-    await transporter.sendMail(mailOptions);
+    await enviarCorreo(mailOptions);
     console.log(`[Seguridad] Correo enviado a ${emailDestinatario} (Exitoso: ${success})`);
   } catch (error) {
     console.error('[Seguridad] Error al enviar correo:', error.message);
@@ -825,7 +1110,7 @@ async function enviarAlertaActivacionCuenta(emailDestinatario, passwordTemporal,
       html: htmlContent
     };
 
-    await transporter.sendMail(mailOptions);
+    await enviarCorreo(mailOptions);
     console.log(`[Activación] Correo enviado a ${emailDestinatario}`);
     return true;
   } catch (error) {
@@ -865,7 +1150,7 @@ async function enviarOnboardingEmail(emailDestinatario, datos = {}) {
       html: htmlContent
     };
 
-    await transporter.sendMail(mailOptions);
+    await enviarCorreo(mailOptions);
     console.log(`[Onboarding] Correo enviado a ${emailDestinatario}`);
   } catch (error) {
     console.error('[Onboarding] Error al enviar correo:', error.message);
@@ -887,7 +1172,7 @@ async function enviarCambioEstadoUsuario(emailDestinatario, action, adminEmail, 
         <p>Administrador: ${adminEmail}</p>
       </div>`;
 
-    await transporter.sendMail({
+    await enviarCorreo({
       from: `"Seguridad Portal Pilot" <${EMAIL_FROM}>`,
       replyTo: EMAIL_REPLY_TO,
       to: emailDestinatario,
@@ -946,7 +1231,7 @@ async function enviarNuevoAccesoUsuario(emailDestinatario, passwordTemporal, ten
       html: htmlContent
     };
 
-    await transporter.sendMail(mailOptions);
+    await enviarCorreo(mailOptions);
     console.log(`[Acceso Usuario] Correo enviado a ${emailDestinatario}`);
     return true;
   } catch (error) {
@@ -974,7 +1259,7 @@ async function enviarCorreoPortalPilot(emailDestinatario, asunto, titulo, subtit
       </div>
     `;
 
-    await transporter.sendMail({
+    await enviarCorreo({
       from: `"Notificaciones Portal Pilot" <${EMAIL_FROM}>`,
       replyTo: EMAIL_REPLY_TO,
       to: emailDestinatario,
@@ -1106,10 +1391,12 @@ app.post('/api/upload-image', authenticate, async (req, res) => {
 });
 
 app.get('/api/config', (req, res) => {
-  res.json({
-    supabaseUrl: process.env.SUPABASE_URL || '',
-    supabaseAnonKey: process.env.SUPABASE_ANON_KEY || ''
-  });
+  // Compatibilidad: el flujo CANÓNICO de registro es registrov2.html →
+  // POST /api/registro (crea Auth + perfil con el MISMO id). El viejo flujo
+  // client-side (signUp en el navegador + /api/registro) creaba usuarios
+  // Auth huérfanos con id distinto al perfil. Se mantiene la respuesta por
+  // si existe cache, PERO ya no se expone la URL del proyecto.
+  res.json({ supabaseUrl: null, supabaseAnonKey: null, registroLegacy: false });
 });
 // -------------------------------------------------------------------------
 // CONFIGURACION GLOBAL (panel ROOT) - persiste en configuraciones_globales
@@ -1267,6 +1554,8 @@ app.get('/api/diagnostico', authenticate, requireRoot, async (req, res) => {
     email_user: process.env.EMAIL_USER ? '✅ DEFINIDO' : '❌ FALTA',
     email_pass: process.env.EMAIL_PASS ? '✅ DEFINIDO' : '❌ FALTA',
     jwt_secret: process.env.JWT_SECRET ? '✅ DEFINIDO' : '❌ FALTA',
+    smtp_configurado: SMTP_CONFIGURADO ? '✅ DEFINIDO' : '❌ FALTA (define SMTP_HOST/SMTP_PORT/SMTP_USER/SMTP_PASS o EMAIL_USER/EMAIL_PASS)',
+    ai_providers_configurados: Object.keys(AI_PROVIDERS).filter(k => AI_PROVIDERS[k].getKey()).join(', ') || 'NINGUNO',
     supabase_test: null,
     supabase_error: null
   };
@@ -1293,7 +1582,7 @@ app.get('/api/test-email', authenticate, requireRoot, async (req, res) => {
   const targetEmail = req.query.to || process.env.EMAIL_USER;
   try {
     await transporter.verify();
-    const info = await transporter.sendMail({
+    const info = await enviarCorreo({
       from: `"Prueba Portal Pilot" <${EMAIL_FROM}>`,
       to: targetEmail,
       subject: '🧪 Prueba de Notificación por Correo — Portal Pilot',
@@ -1323,6 +1612,10 @@ app.post('/api/registro', async (req, res) => {
       password, dosFaActivo, dosFaSecret, dosFaBackupCodes, terminosAceptados,
       plan
     } = req.body;
+    // Contexto de onboarding (Blueprint §2): la app entrega industria/tamaño;
+    // se persisten en el tenant para que el Workspace los represente.
+    const industria = String(req.body.industria || '').trim() || String(empresaSector || '').trim() || null;
+    const tamano = String(req.body.tamano || '').trim() || String(empresaSize || sise || '').trim() || null;
 
     if (!email || !password || !empresaCodigo || !usuarioNombre || !usuarioApellido) {
       return res.status(400).json({ error: 'Faltan campos obligatorios' });
@@ -1336,6 +1629,12 @@ app.post('/api/registro', async (req, res) => {
       if (existing) {
         return res.status(409).json({ error: 'El correo ya está registrado.' });
       }
+      // Unicidad del código de empresa (release audit): dos tenants no pueden
+      // compartir empresa_codigo — contaminaría el scope de aislamiento.
+      const { data: dup } = await supabase.from('tenants').select('codigo').eq('codigo', String(empresaCodigo).trim().toUpperCase()).maybeSingle();
+      if (dup) {
+        return res.status(409).json({ error: 'El código de empresa ya existe. Elige otro nombre/código.' });
+      }
 
       const { company_banner, company_logo, profile_banner, profile_pic } = req.body || {};
 
@@ -1345,6 +1644,8 @@ app.post('/api/registro', async (req, res) => {
         nombre_empresa: empresaNombre || 'Portal Pilot',
         dominio: (dominioWorkspace && dominioWorkspace.trim()) ? dominioWorkspace.trim() : null,
         plan: plan || 'starter',
+        area: industria,
+        tamano: tamano,
         estado: 'activo'
       }, { onConflict: 'codigo' });
 
@@ -1353,6 +1654,7 @@ app.post('/api/registro', async (req, res) => {
       const passwordHash = await bcrypt.hash(password, salt);
 
       const userUuid = crypto.randomUUID();
+      // El primer usuario del tenant es el OWNER (Blueprint §3/§6).
       const { data: newUser, error: userErr } = await supabase.from('usuarios').insert({
         id: userUuid,
         email: emailNorm,
@@ -1360,7 +1662,8 @@ app.post('/api/registro', async (req, res) => {
         password: passwordHash,
         nombre: String(usuarioNombre || '').trim(),
         apellido: usuarioApellido || '',
-        rol: 'admin',
+        rol: 'owner',
+        rol_global: 'owner',
         empresa_codigo: empresaCodigo,
         estado: 'activo',
         activo: true,
@@ -1370,6 +1673,22 @@ app.post('/api/registro', async (req, res) => {
       if (userErr) {
         console.error('[REGISTRO] Error insertando usuario en Supabase:', JSON.stringify(userErr));
         return res.status(400).json({ error: userErr.message || userErr.details || 'Error al crear usuario en base de datos' });
+      }
+
+      // Suscripción inicial (Blueprint §14): trial 15 días para starter, activa para planes pagados.
+      try {
+        const planClave = normalizePlan(plan || 'starter');
+        const { data: planRow } = await supabase.from('planes').select('id').eq('clave', planClave).maybeSingle();
+        await supabase.from('subscriptions').upsert({
+          empresa_codigo: empresaCodigo,
+          plan_id: planRow?.id || null,
+          estado: planClave === 'starter' ? 'trial' : 'active',
+          trial_started_at: new Date().toISOString(),
+          trial_ends_at: planClave === 'starter' ? new Date(Date.now() + 15 * 86400000).toISOString() : null,
+          current_period_start: new Date().toISOString()
+        }, { onConflict: 'empresa_codigo' });
+      } catch (subErr) {
+        console.warn('[REGISTRO] subscriptions best-effort:', subErr.message);
       }
     }
 
@@ -1389,7 +1708,7 @@ app.post('/api/registro', async (req, res) => {
 });
 
 // Endpoint para enviar código de verificación de email durante el registro
-app.post('/api/enviar-codigo-verificacion', async (req, res) => {
+app.post('/api/enviar-codigo-verificacion', emailLimiter, async (req, res) => {
   try {
     const { email, codigo } = req.body;
     if (!email || !codigo) {
@@ -1399,7 +1718,7 @@ app.post('/api/enviar-codigo-verificacion', async (req, res) => {
     if (!emailRegex.test(email)) {
       return res.status(400).json({ error: 'Correo inválido' });
     }
-    await transporter.sendMail({
+    await enviarCorreo({
       from: `"Portal Pilot" <${EMAIL_FROM}>`,
       to: email,
       subject: `🔐 Tu código de verificación de Portal Pilot: ${codigo}`,
@@ -1505,6 +1824,7 @@ app.post('/api/login', loginLimiter, async (req, res) => {
       try {
         if (userRow.empresa_codigo) {
           await registrarAuditoria(userRow.empresa_codigo, 'login_fallido', 'Intento de inicio de sesión fallido', 'seguridad', normalizeDisplayName(userRow.nombre, userRow.apellido), req);
+          await registrarEventoSeguridad(userRow.empresa_codigo, 'login_fallido', { usuarioId: userRow.id, usuarioEmail: userRow.email, req, severidad: 'warning', descripcion: 'Intento de inicio de sesión fallido' });
         }
       } catch (e) { console.warn('[LOGIN] No se pudo auditar intento fallido:', e.message); }
       return res.status(401).json({ error: 'Contraseña incorrecta. Por favor, verifica tus datos.' });
@@ -1530,7 +1850,8 @@ app.post('/api/login', loginLimiter, async (req, res) => {
         sub: userRow.id,
         email: userRow.email,
         rol: resolveDisplayRole(userRow, tenantData),
-        empresa_codigo: userRow.empresa_codigo || 'ROOT'
+        empresa_codigo: userRow.empresa_codigo || 'ROOT',
+        token_version: userRow.token_version || 0
       },
       localJwtSecret,
       { expiresIn: '30d' }
@@ -1547,6 +1868,10 @@ app.post('/api/login', loginLimiter, async (req, res) => {
     try {
       if (userRow.empresa_codigo) {
         await registrarAuditoria(userRow.empresa_codigo, 'login_exitoso', 'Inicio de sesión exitoso', 'seguridad', normalizeDisplayName(userRow.nombre, userRow.apellido), req);
+        // Registro real de dispositivo/sesión y evento de seguridad (best-effort).
+        const sesOk = await registrarSesionTenant(userRow.empresa_codigo, userRow.id, req);
+        if (!sesOk) console.warn('[LOGIN] No se pudo registrar la sesión en tenant_sessions');
+        await registrarEventoSeguridad(userRow.empresa_codigo, 'login_exitoso', { usuarioId: userRow.id, usuarioEmail: userRow.email, req, descripcion: 'Inicio de sesión exitoso' });
       }
     } catch (e) { console.warn('[LOGIN] No se pudo auditar el inicio de sesión:', e.message); }
 
@@ -1576,6 +1901,7 @@ app.post('/api/login', loginLimiter, async (req, res) => {
         email: userRow.email,
         rol: resolveDisplayRole(userRow, tenantData),
         empresa_codigo: userRow.empresa_codigo || 'ROOT',
+        empresa_nombre: tenantData?.nombre_empresa || tenantData?.nombre || tenantData?.empresa_nombre || userRow.empresa_codigo || 'ROOT',
         tenant: userRow.empresa_codigo || 'ROOT',
         area: userArea,
         plan: userPlan,
@@ -1583,6 +1909,9 @@ app.post('/api/login', loginLimiter, async (req, res) => {
         modulos_activos: activeModules,
         status: userRow.estado || 'activo',
         trial_expired: trialExpired,
+        read_only: trialExpired,
+        trial_ends_at: (tenantData?.created_at && ['starter', 'free', 'startup'].includes(normalizePlan(userPlan))) ? new Date(new Date(tenantData.created_at).getTime() + 15 * 86400000).toISOString() : null,
+        area_negocio: tenantData?.area || tenantData?.area_negocio || null,
         foto_perfil_url: userRow.avatar_url || userRow.foto_perfil_url || null,
         banner_perfil_url: userRow.banner_perfil_url || null,
         token: accountToken
@@ -1631,7 +1960,8 @@ app.post('/api/login/2fa', loginLimiter, async (req, res) => {
     const userPlan = normalizePlan(tenantData?.plan);
     const token = jwt.sign({
       sub: userRow.id, email: userRow.email, rol: resolveDisplayRole(userRow, tenantData),
-      empresa_codigo: userRow.empresa_codigo || 'ROOT'
+      empresa_codigo: userRow.empresa_codigo || 'ROOT',
+      token_version: userRow.token_version || 0
     }, localJwtSecret, { expiresIn: '30d' });
     const now = new Date().toISOString();
     const restUrl = `${getSupabaseUrl()}/rest/v1/usuarios?id=eq.${userRow.id}`;
@@ -1643,6 +1973,9 @@ app.post('/api/login/2fa', loginLimiter, async (req, res) => {
       Prefer: 'return=minimal'
     };
     await axios.patch(restUrl, { updated_at: now, ultimo_acceso: now }, { headers, timeout: 8000 });
+    const trialExpired2fa = userPlan === 'starter' && tenantData?.created_at
+      ? (Number.isFinite(new Date(tenantData.created_at).getTime()) && Date.now() - new Date(tenantData.created_at).getTime() > 15 * 24 * 60 * 60 * 1000)
+      : false;
     try {
       if (userRow.empresa_codigo) {
         await registrarAuditoria(userRow.empresa_codigo, 'login_exitoso', 'Inicio de sesión exitoso (2FA)', 'seguridad', normalizeDisplayName(userRow.nombre, userRow.apellido), req);
@@ -1655,7 +1988,8 @@ app.post('/api/login/2fa', loginLimiter, async (req, res) => {
         id: userRow.id, nombre: userRow.nombre || '', apellido: userRow.apellido || '', email: userRow.email,
         rol: resolveDisplayRole(userRow, tenantData), empresa_codigo: userRow.empresa_codigo || 'ROOT',
         tenant: userRow.empresa_codigo || 'ROOT', area: userArea, plan: userPlan,
-        features: PLAN_ENTITLEMENTS[userPlan]?.features || [], modulos_activos: getModulesForAreaAndPlan(userArea, userPlan), status: userRow.estado || 'activo', token
+        features: PLAN_ENTITLEMENTS[userPlan]?.features || [], modulos_activos: getModulesForAreaAndPlan(userArea, userPlan), status: userRow.estado || 'activo', token,
+        read_only: trialExpired2fa, trial_expired: trialExpired2fa
       }
     });
   } catch (error) {
@@ -1719,17 +2053,35 @@ app.get('/api/tenant/modules', authenticate, async (req, res) => {
     const area = tenant?.area || 'Área Comercial';
     const plan = normalizePlan(tenant?.plan);
     const modulos = getModulesForAreaAndPlan(area, plan);
-    res.json({ success: true, empresa_codigo: tenantCode, area, plan, features: PLAN_ENTITLEMENTS[plan]?.features || [], modulos_activos: modulos });
+    const entitlements = await getTenantEntitlements(req);
+    res.json({ success: true, empresa_codigo: tenantCode, area, plan, features: PLAN_ENTITLEMENTS[plan]?.features || [], read_only: entitlements.status === 'expired', modulos_activos: modulos });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message || 'Error consultando módulos' });
   }
 });
 
-app.post('/api/confirmar-pago', async (req, res) => {
+app.post('/api/confirmar-pago', pagoLimiter, async (req, res) => {
   try {
-    const { email, plan, metodoPago, empresaCodigo } = req.body || {};
+    const { email, plan, metodoPago } = req.body || {};
+    // Compatibilidad de formato: el frontend puede enviar empresaCodigo o
+    // empresa_codigo. Un pago con código válido nunca debe perderse por el
+    // formato del campo (bug: pay_handler solo leía camelCase).
+    const empresaCodigo = req.body?.empresaCodigo || req.body?.empresa_codigo || null;
     if (!email || !email.includes('@')) {
       return res.status(400).json({ error: 'El correo electrónico es obligatorio y debe ser válido.' });
+    }
+    // RBAC opcional: si la petición llega CON sesión, solo Owner/Admin/ROOT
+    // pueden activar un plan. Sin sesión (flujo de pago público) se permite:
+    // es exactamente el flujo de pay_plan.html.
+    const authHdr = req.headers['authorization'] || '';
+    if (authHdr.startsWith('Bearer ')) {
+      try {
+        const dec = jwt.verify(authHdr.slice(7), localJwtSecret);
+        const r = String(dec.rol || '').toLowerCase();
+        if (!['owner', 'admin', 'administrador', 'root', 'superadmin', 'ceo'].includes(r)) {
+          return res.status(403).json({ error: 'Solo el propietario o un administrador puede activar un plan.', code: 'FORBIDDEN_ROLE' });
+        }
+      } catch (_) { /* token inválido → flujo público; las validaciones de abajo aplican */ }
     }
     if (!plan) {
       return res.status(400).json({ error: 'El plan es obligatorio.' });
@@ -1739,15 +2091,49 @@ app.post('/api/confirmar-pago', async (req, res) => {
     if (!allowedPlans.includes(planLower)) {
       return res.status(400).json({ error: `Plan inválido. Debe ser uno de: ${allowedPlans.join(', ')}.` });
     }
+    // El pago debe referenciar una empresa real (el flujo web envía el código
+    // del tenant registrado). Un tenant inexistente NO puede "activar" un plan.
+    if (empresaCodigo && supabase) {
+      const { data: tExiste } = await supabase.from('tenants').select('codigo').eq('codigo', String(empresaCodigo).trim().toUpperCase()).maybeSingle();
+      if (!tExiste) {
+        return res.status(404).json({ error: 'No existe una empresa registrada con ese código. Regístrate primero.' });
+      }
+    }
 
     const emailNorm = String(email).trim().toLowerCase();
     const planNombre = plan ? String(plan).toUpperCase() : 'PRO';
     const amountMap = { STARTER: 0, BUSINESS: 1499, ENTERPRISE: 4999 };
     const paymentStatus = metodoPago === 'tigo' || metodoPago === 'transferencia' ? 'pending' : 'success';
 
+    // Traza de seguridad: endpoint público de billing → todo intento queda
+    // auditado (éxito, fallo y origen), no solo los pagos aplicados.
+    try {
+      await registrarEventoSeguridad(empresaCodigo || 'ROOT', 'pago_confirmado_intento', {
+        usuarioEmail: emailNorm, req, severidad: 'info',
+        descripcion: `Confirmación de pago plan ${planNombre} vía ${metodoPago || 'transferencia'}`
+      });
+    } catch (e) { /* best-effort */ }
+
     // Actualizar plan del tenant en Supabase si existe
     if (supabase && empresaCodigo && !empresaCodigo.includes('XXXX')) {
       await supabase.from('tenants').update({ plan: planNombre.toLowerCase(), estado: 'activo' }).eq('codigo', empresaCodigo);
+      // State machine de suscripción: pago confirmado → active (Blueprint §14).
+      try {
+        const planClavePago = normalizePlan(planNombre);
+        const { data: planRowPago } = await supabase.from('planes').select('id').eq('clave', planClavePago).maybeSingle();
+        await supabase.from('subscriptions').upsert({
+          empresa_codigo: empresaCodigo,
+          plan_id: planRowPago?.id || null,
+          estado: 'active',
+          current_period_start: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'empresa_codigo' });
+        await registrarAuditoria(empresaCodigo, 'pago_confirmado', `Pago confirmado: plan ${planNombre}`, 'billing', emailNorm, req);
+      } catch (e) { console.warn('[BILLING] subscriptions sync:', e.message); }
+      // El pago cambia plan/estado → invalidar caché de entitlements para que
+      // el modo read-only por trial expirado se levante AL INSTANTE (sin esperar
+      // el TTL de 30s), y el nuevo plan aplique en la siguiente operación.
+      try { _entitlementsCache.delete(String(empresaCodigo).trim().toUpperCase()); } catch (e2) { /* best-effort */ }
     }
 
     if (supabase) {
@@ -1766,7 +2152,7 @@ app.post('/api/confirmar-pago', async (req, res) => {
 
     // Enviar correo de confirmación de pago
     try {
-      await transporter.sendMail({
+      await enviarCorreo({
         from: `"Portal Pilot Billing" <${EMAIL_FROM}>`,
         to: emailNorm,
         subject: `🎉 ¡Pago Confirmado! Tu Plan ${planNombre} en Portal Pilot está Activo`,
@@ -1807,7 +2193,7 @@ app.post('/api/confirmar-pago', async (req, res) => {
   }
 });
 
-app.post('/api/tigo-money-reference', async (req, res) => {
+app.post('/api/tigo-money-reference', emailLimiter, async (req, res) => {
   try {
     const { email, plan, empresaCodigo } = req.body || {};
     if (!email || !email.includes('@')) {
@@ -1853,7 +2239,12 @@ app.post('/api/tigo-money-reference', async (req, res) => {
 app.post('/api/refresh', authenticate, (req, res) => {
   try {
     const newToken = jwt.sign(
-      { sub: req.user.sub, rol: req.user.rol, empresa_codigo: req.user.empresa_codigo },
+      {
+        sub: req.user.sub, rol: req.user.rol, empresa_codigo: req.user.empresa_codigo,
+        // Preservar la versión de token: authenticate ya validó contra DB,
+        // pero el token renovado NO debe "resucitar" sesiones revocadas.
+        token_version: req.user.token_version || 0
+      },
       localJwtSecret,
       { expiresIn: '2h' }
     );
@@ -1889,7 +2280,7 @@ app.post('/api/notify/activation', authenticate, async (req, res) => {
 // ======================================================================
 // SOPORTE: Crear ticket desde el formulario de soporte
 // ======================================================================
-app.post('/api/support-ticket', async (req, res) => {
+app.post('/api/support-ticket', emailLimiter, async (req, res) => {
   try {
     const { name, email, company, plan, category, priority, message } = req.body || {};
 
@@ -1979,36 +2370,17 @@ app.get('/api/billing/payments', authenticate, requireRoot, async (req, res) => 
   }
 });
 
-app.get('/api/tenants', authenticate, async (req, res) => {
+app.get('/api/tenants', authenticate, requireTenantAdmin, async (req, res) => {
   try {
     let tenantsFormat = [];
     const userTenantCode = normalizeTenantCode(getTenantCode(req));
     const userIsRoot = isRootUser(req);
 
     if (supabase) {
-      // Auto-cleanup: eliminar tenants (excepto ROOT) que no tengan usuarios
-      if (userIsRoot) {
-        try {
-          const { data: tenantsWithUsers } = await supabase
-            .from('tenants')
-            .select('codigo')
-            .in('codigo', supabase.from('usuarios').select('empresa_codigo'));
-          const codigosConUsuarios = new Set((tenantsWithUsers || []).map(t => t.codigo));
-          
-          const { data: allTenants } = await supabase.from('tenants').select('codigo');
-          const aEliminar = (allTenants || [])
-            .filter(t => t.codigo !== 'ROOT' && !codigosConUsuarios.has(t.codigo))
-            .map(t => t.codigo);
-          
-          if (aEliminar.length > 0) {
-            await supabase.from('empresas').delete().in('codigo', aEliminar);
-            await supabase.from('tenants').delete().in('codigo', aEliminar);
-            console.log('[GET TENANTS] Auto-eliminados tenants sin usuarios:', aEliminar);
-          }
-        } catch (e) {
-          console.warn('[GET TENANTS] Auto-cleanup error:', e.message);
-        }
-      }
+      // ⚠️ Eliminado: "auto-cleanup" destructivo en GET. Un GET no debe borrar
+      // tenants (riesgo real: eliminar un tenant recién registrado cuyo owner
+      // aún no crea usuarios, o durante una carrera de registro). La limpieza
+      // de tenants huérfanos es una tarea de mantenimiento explícita (ROOT).
 
       let query = supabase.from('tenants').select('*');
       if (!userIsRoot && userTenantCode) {
@@ -2157,7 +2529,10 @@ app.post('/api/tenants', authenticate, requireRoot, async (req, res) => {
 });
 
 app.get('/api/tenant/:id', authenticate, async (req, res, next) => {
-  const RESERVED_TENANT_ROUTES = new Set(['apikeys', 'features', 'modules', 'security']);
+  // Rutas reservadas bajo /api/tenant/* que NO son identificadores de tenant.
+  // (Bug real: /api/tenant/usage y /api/tenant/subscription caían aquí y
+  // respondían 404 "Tenant not found" — aislamiento de rutas corregido.)
+  const RESERVED_TENANT_ROUTES = new Set(['apikeys', 'features', 'modules', 'security', 'usage', 'subscription']);
   if (RESERVED_TENANT_ROUTES.has(req.params.id)) return next();
   try {
     const tenantId = req.params.id;
@@ -2166,16 +2541,17 @@ app.get('/api/tenant/:id', authenticate, async (req, res, next) => {
     if (!tenant) return res.status(404).json({ error: 'Tenant no encontrado' });
 
     const tenantCode = tenant.codigo || tenant.Codigo || tenant.code || tenant.Id || tenant.id;
-    const userRole = (req.user.rol || '').toString();
-    const userEmpresaCodigo = (req.user.empresa_codigo || '').toString().trim();
-    const currentTenantCode = normalizeTenantCode(userEmpresaCodigo);
-    const roleLower = userRole.toLowerCase();
+    const userRole = (req.user.rol || '').toString().toLowerCase().trim();
+    const currentTenantCode = normalizeTenantCode(getTenantCode(req));
     const rootUserCheck = isRootUser(req);
-    const isAdmin = rootUserCheck || roleLower === 'administrador' || roleLower.includes('ceo') || roleLower.includes('owner');
     const declaredTenantCode = normalizeTenantCode(tenantCode || tenantId);
-    const isOwner = currentTenantCode && declaredTenantCode && currentTenantCode === declaredTenantCode;
+    // Scope estricto (Blueprint §5): ser Owner/Admin del PROPIO tenant no
+    // autoriza ver otros tenants. Solo ROOT es transversal.
+    const isTenantSelf = currentTenantCode && declaredTenantCode && currentTenantCode === declaredTenantCode;
+    const isTenantAdminRole = ['owner', 'owner pp', 'administrador', 'admin', 'ceo'].some(r => userRole === r || userRole.includes(r));
+    const isAdmin = rootUserCheck || (isTenantAdminRole && isTenantSelf);
 
-    if (!isAdmin && !isOwner) {
+    if (!rootUserCheck && !isAdmin) {
       return res.status(403).json({ error: 'Acceso no autorizado al tenant' });
     }
 
@@ -2225,16 +2601,17 @@ app.get('/api/tenant/:id/stats', authenticate, async (req, res) => {
     if (!tenant) return res.status(404).json({ error: 'Tenant no encontrado' });
 
     const tenantCode = tenant.codigo || tenant.Codigo || tenant.code || tenant.Id || tenant.id;
-    const userRole = (req.user.rol || '').toString();
-    const userEmpresaCodigo = (req.user.empresa_codigo || '').toString().trim();
-    const currentTenantCode = normalizeTenantCode(userEmpresaCodigo);
-    const roleLower = userRole.toLowerCase();
+    const userRole = (req.user.rol || '').toString().toLowerCase().trim();
+    const currentTenantCode = normalizeTenantCode(getTenantCode(req));
+    const roleLower = userRole;
     const rootUserCheck = isRootUser(req);
-    const isAdmin = rootUserCheck || roleLower === 'administrador' || roleLower.includes('ceo') || roleLower.includes('owner');
     const declaredTenantCode = normalizeTenantCode(tenantCode || tenantId);
-    const isOwner = currentTenantCode && declaredTenantCode && currentTenantCode === declaredTenantCode;
+    // Scope estricto (Blueprint §5): solo ROOT ve stats de tenants ajenos.
+    const isTenantSelf = currentTenantCode && declaredTenantCode && currentTenantCode === declaredTenantCode;
+    const isTenantAdminRole = ['owner', 'owner pp', 'administrador', 'admin', 'ceo'].some(r => userRole === r || userRole.includes(r));
+    const isAdmin = rootUserCheck || (isTenantAdminRole && isTenantSelf);
 
-    if (!isAdmin && normalizeTenantCode(tenant.codigo) !== currentTenantCode) {
+    if (!isAdmin && !isTenantSelf) {
       return res.status(403).json({ error: 'Acceso no autorizado al tenant' });
     }
 
@@ -2301,15 +2678,36 @@ app.get('/api/tenant/:id/stats', authenticate, async (req, res) => {
   } catch (error) {
     return handleServerError(res, error);
   }
+});// ── PUT /api/empresa/profile — el Owner/Admin actualiza la configuración de SU empresa ──
+// El frontend (empresa/configuracion.html) enviaba PUT a /api/tenants/:id (404 del
+// verbo). Este endpoint reutiliza EXACTAMENTE la misma lógica de actualización,
+// pero el id SIEMPRE sale del JWT: el cliente no puede elegir el tenant.
+app.put('/api/empresa/profile', authenticate, requireTenantAdmin, async (req, res) => {
+  req.params.id = normalizeTenantCode(getTenantCode(req));
+  return handleTenantUpdate(req, res);
 });
 
 app.put('/api/tenants/:id', authenticate, requireTenantAdmin, async (req, res) => {
+  // El scope se decide por acceso: ROOT puede editar cualquier tenant;
+  // Owner/Admin solo el propio (assertTenantAccess lo valida más abajo).
+  return handleTenantUpdate(req, res);
+});
+
+async function handleTenantUpdate(req, res) {
   try {
     const { id } = req.params;
-    const { plan, estado, nombre_empresa, dominio, pais, zona_horaria } = req.body;
-
+    const { plan, estado, nombre_empresa, dominio, pais, zona_horaria, rtn, telefono, direccion, email_facturacion, moneda, formato_fecha, idioma } = req.body;
     if (!assertTenantAccess(req, id)) {
       return res.status(403).json({ error: 'No tienes permiso para modificar este tenant.' });
+    }
+
+    // RBAC/Billing (Bloques D+E): cambiar el plan de la propia empresa es una
+    // operación de facturación exclusiva de ROOT (el Owner contrata vía el
+    // flujo de pago confirmado, no auto-editando el registro). Un ADMIN nunca
+    // debe poder elevar su plan manipulando la petición.
+    if (plan && !isRootUser(req)) {
+      await registrarAuditoria(id, 'Cambio de plan bloqueado', `Usuario no-ROOT intentó cambiar plan a ${plan}`, 'seguridad', req.user?.email || '', req);
+      return res.status(403).json({ error: 'Cambiar el plan se realiza a través del proceso de pago. Contacta a soporte o usa la sección de suscripción.' });
     }
 
     const empresa = await findTenantByIdentifier(id);
@@ -2324,8 +2722,33 @@ app.put('/api/tenants/:id', authenticate, requireTenantAdmin, async (req, res) =
       if (dominio) supaUpdate.dominio = dominio;
       if (pais) supaUpdate.pais = pais;
       if (zona_horaria) supaUpdate.zona_horaria = zona_horaria;
+      // Info legal / configuración general del Portal Empresa (Bloque A).
+      // Columnas nuevas (migracion_portales_v2) se aplican en un segundo intento
+      // para que un esquema aún no migrado no descarte TODO el update.
+      const coreUpdate = {};
+      if (rtn !== undefined) coreUpdate.rtn = String(rtn).slice(0, 40);
+      if (telefono !== undefined) coreUpdate.telefono = String(telefono).slice(0, 40);
+      if (direccion !== undefined) coreUpdate.direccion = String(direccion).slice(0, 500);
+      Object.assign(supaUpdate, coreUpdate);
+      const newColsUpdate = {};
+      if (email_facturacion !== undefined) newColsUpdate.email_facturacion = String(email_facturacion).slice(0, 200);
+      if (moneda !== undefined) newColsUpdate.moneda = String(moneda).slice(0, 10);
+      if (formato_fecha !== undefined) newColsUpdate.formato_fecha = String(formato_fecha).slice(0, 20);
+      if (idioma !== undefined) newColsUpdate.idioma = String(idioma).slice(0, 10);
+      Object.assign(supaUpdate, newColsUpdate);
       if (Object.keys(supaUpdate).length > 0) {
-        await supabase.from('tenants').update(supaUpdate).eq('codigo', id);
+        let upErr = null;
+        const res1 = await supabase.from('tenants').update(supaUpdate).eq('codigo', id);
+        upErr = res1.error;
+        if (upErr && Object.keys(newColsUpdate).length) {
+          // Esquema sin las columnas nuevas: reintentar solo con las core.
+          const res2 = await supabase.from('tenants').update(coreUpdate).eq('codigo', id);
+          upErr = res2.error;
+        }
+        if (upErr) {
+          await registrarAuditoria(id, 'Error actualizando tenant', upErr.message, 'sistema', req.user?.email || '', req);
+          return res.status(500).json({ error: upErr.message });
+        }
       }
     }
 
@@ -2351,10 +2774,16 @@ app.put('/api/tenants/:id', authenticate, requireTenantAdmin, async (req, res) =
   } catch (error) {
     return handleServerError(res, error);
   }
-});
+}
 
 app.delete('/api/tenants/:id', authenticate, async (req, res) => {
   try {
+    // RBAC (Bloque I): eliminar un tenant destruye usuarios, empresa y datos
+    // asociados. Es una operación crítica exclusiva de ROOT; un OWNER de tenant
+    // nunca debe poder ejecutarla (ni manipulando la petición).
+    if (!isRootUser(req)) {
+      return res.status(403).json({ error: 'Eliminar un tenant es una operación exclusiva de ROOT.' });
+    }
     const { id } = req.params;
     const tenant = await findTenantByIdentifier(id);
     if (!tenant) return res.status(404).json({ error: 'Tenant no encontrado' });
@@ -2408,7 +2837,8 @@ app.delete('/api/tenants/:id', authenticate, async (req, res) => {
 
 app.get('/api/debug/tenants/:id', authenticate, async (req, res) => {
   try {
-    if (!isRootUser(req) && req.user?.rol !== 'Administrador') {
+    // DEBUG: solo ROOT puede inspeccionar tenants de terceros (evita fuga cross-tenant).
+    if (!isRootUser(req)) {
       return res.status(403).json({ error: 'No autorizado' });
     }
     const tenant = await findTenantByIdentifier(req.params.id);
@@ -2447,9 +2877,8 @@ app.post('/api/alerta-no-autorizado', alertaLimiter, async (req, res) => {
       </div>
     `;
 
-    await transporter.sendMail({
-      from: `"Seguridad Portal Pilot" <${process.env.EMAIL_USER}>`,
-      to: process.env.EMAIL_USER,
+    await enviarCorreo({
+      to: SMTP_USER || EMAIL_FROM,
       subject: '🚨 ALERTA: Intento de bypass detectado',
       html: htmlContent
     });
@@ -2522,8 +2951,7 @@ app.post('/api/recuperacion', recoveryLimiter, async (req, res) => {
     const formattedCode = `${code.slice(0, 3)} ${code.slice(3)}`;
     htmlContent = htmlContent.replace('842 915', formattedCode);
 
-    await transporter.sendMail({
-      from: `"Seguridad Portal Pilot" <${process.env.EMAIL_USER}>`,
+    await enviarCorreo({
       to: emailNorm,
       subject: '🔑 Código de Verificación',
       html: htmlContent
@@ -2752,7 +3180,7 @@ app.get('/api/users/:id/sessions', authenticate, async (req, res) => {
   try {
     const { data: usuario, error } = await supabase
       .from('usuarios')
-      .select('id, email, nombre, apellido, ultimo_acceso, updated_at, created_at, foto_perfil_url')
+      .select('id, email, nombre, apellido, empresa_codigo, ultimo_acceso, updated_at, created_at, foto_perfil_url')
       .eq('id', req.params.id)
       .single();
 
@@ -2766,63 +3194,38 @@ app.get('/api/users/:id/sessions', authenticate, async (req, res) => {
       }
     }
 
-    const now = new Date();
-    const lastActivity = usuario.ultimo_acceso ? new Date(usuario.ultimo_acceso) : null;
-    const updatedAt = usuario.updated_at ? new Date(usuario.updated_at) : null;
-    const createdAt = usuario.created_at ? new Date(usuario.created_at) : null;
-
-    // Sesión actual (basada en ultimo_acceso reciente)
-    const sessions = [];
-    
-    // Sesión actual si hay actividad reciente (< 30 min)
-    if (lastActivity && (now - lastActivity) < 30 * 60 * 1000) {
-      sessions.push({
-        id: `ses_${usuario.id}_current`,
-        deviceName: 'Dispositivo actual',
-        deviceType: 'desktop',
-        browser: 'Navegador actual',
-        os: 'Sistema actual',
-        ip: req.ip || 'Desconocida',
-        location: 'Ubicación actual',
-        lastActivity: usuario.ultimo_acceso,
-        isCurrent: true,
-        isActive: true
-      });
-    }
-
-    // Sesiones históricas basadas en updated_at (simuladas)
-    if (updatedAt && updatedAt.getTime() !== lastActivity?.getTime()) {
-      sessions.push({
-        id: `ses_${usuario.id}_prev`,
-        deviceName: 'Dispositivo anterior',
-        deviceType: 'mobile',
-        browser: 'Navegador anterior',
-        os: 'Sistema anterior',
-        ip: 'IP anterior',
-        location: 'Ubicación anterior',
-        lastActivity: usuario.updated_at,
+    // Datos REALES de tenant_sessions (Bloque J): nada de sesiones simuladas.
+    // Si la tabla aún no existe (drift), se devuelve lista vacía con flag —
+    // nunca sesiones inventadas.
+    let sessions = [];
+    let fallback = false;
+    try {
+      const { data: sesiones, error: sesErr } = await supabase.from('tenant_sessions')
+        .select('id, ip, dispositivo, ubicacion, ultimo_actividad, created_at, revocada')
+        .eq('usuario_id', usuario.id)
+        .order('ultimo_actividad', { ascending: false })
+        .limit(50);
+      if (sesErr) throw sesErr;
+      sessions = (sesiones || []).map(s => ({
+        id: s.id,
+        deviceName: s.dispositivo || 'Dispositivo no registrado',
+        deviceType: /m[oó]vil|mobile|android|iphone/i.test(s.dispositivo || '') ? 'mobile' : 'desktop',
+        browser: s.dispositivo || 'Desconocido',
+        os: s.dispositivo || 'Desconocido',
+        ip: s.ip || null,
+        location: s.ubicacion || null,
+        lastActivity: s.ultimo_actividad || s.created_at,
+        createdAt: s.created_at,
         isCurrent: false,
-        isActive: false
-      });
+        isActive: !s.revocada && s.ultimo_actividad && (Date.now() - new Date(s.ultimo_actividad).getTime() < 30 * 60 * 1000),
+        revocada: !!s.revocada
+      }));
+    } catch (e) {
+      fallback = true;
+      console.warn('[USER_SESSIONS] tenant_sessions no disponible:', e.message);
     }
 
-    // Si no hay actividad, crear sesión basada en created_at
-    if (sessions.length === 0 && createdAt) {
-      sessions.push({
-        id: `ses_${usuario.id}_first`,
-        deviceName: 'Primer acceso',
-        deviceType: 'desktop',
-        browser: 'Navegador inicial',
-        os: 'Sistema inicial',
-        ip: 'IP inicial',
-        location: 'Ubicación inicial',
-        lastActivity: usuario.created_at,
-        isCurrent: false,
-        isActive: false
-      });
-    }
-
-    res.json({ sessions, total: sessions.length });
+    res.json({ sessions, total: sessions.length, fallback });
   } catch (error) {
     return handleServerError(res, error);
   }
@@ -2849,13 +3252,20 @@ app.post('/api/users/:id/revoke-sessions', authenticate, async (req, res) => {
       }
     }
 
-    // Incrementar token_version para invalidar todos los tokens existentes
+    // Incrementar token_version para invalidar todos los tokens existentes.
+    // Si la columna aún no existe (drift de esquema), no se rompe la acción:
+    // la sesión se cierra del lado del cliente y queda el evento registrado.
     const { error: updateErr } = await supabase
       .from('usuarios')
       .update({ token_version: (usuario.token_version || 0) + 1 })
       .eq('id', id);
 
-    if (updateErr) throw updateErr;
+    if (updateErr) {
+      console.warn('[REVOKE_SESSIONS] token_version no disponible:', updateErr.message);
+    } else {
+      // La revocación surte efecto de inmediato (sin esperar la caché de 30s).
+      invalidateTokenVersionCache(id);
+    }
 
     // Si es el usuario actual, también limpiar su cookie
     if (req.user.sub === id) {
@@ -2962,13 +3372,23 @@ app.get('/api/users/:id/activity', authenticate, async (req, res) => {
       }
     }
 
-    // Consultar auditoria
+    // Consultar auditoria por nombre del usuario (la tabla registra 'usuario'
+    // como texto, no usuario_id) y SIEMPRE con scope de tenant.
+    const { data: target } = await supabase
+      .from('usuarios')
+      .select('nombre, apellido')
+      .eq('id', id)
+      .single();
+    const nombreUsuario = normalizeDisplayName(target?.nombre, target?.apellido);
+
     let query = supabase
       .from('auditoria')
-      .select('id, accion, detalles, ip, created_at, modulo, resultado')
-      .eq('usuario_id', id)
+      .select('id, accion, descripcion, tipo, usuario, ip, created_at')
       .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1);
+    const codigoActividad = normalizeTenantCode(usuario.empresa_codigo || '');
+    if (codigoActividad && !isRootUser(req)) query = query.eq('empresa_codigo', codigoActividad);
+    if (nombreUsuario) query = query.ilike('usuario', `%${nombreUsuario}%`);
 
     const { data: actividad, error: actErr } = await query;
 
@@ -2980,12 +3400,12 @@ app.get('/api/users/:id/activity', authenticate, async (req, res) => {
     const formatted = (actividad || []).map(a => ({
       id: a.id,
       action: a.accion,
-      details: a.detalles || '',
+      details: a.descripcion || '',
       ip: a.ip,
       timestamp: a.created_at,
-      module: a.modulo || 'Sistema',
-      result: a.resultado || 'success',
-      hash: a.id ? a.id.slice(0, 8) : ''
+      module: a.tipo || 'Sistema',
+      result: 'success',
+      hash: a.id ? String(a.id).slice(0, 8) : ''
     }));
 
     res.json({ activity: formatted, total: formatted.length });
@@ -3074,6 +3494,13 @@ app.post('/api/users', authenticate, requireTenantAdmin, requirePlanFeature('web
 
     // 1. Resolve empresa — buscar por código o nombre del tenant en Supabase
     let empresaCodigo = tenant || getTenantCode(req) || '';
+    // Scope estricto (Bloque D): cualquier declaración de tenant distinta al del
+    // JWT (en 'tenant' o 'empresa_codigo') es rechazada para no-ROOT, incluso
+    // si el campo sería ignorado — evita ambigüedades y fail-open futuros.
+    const declaredAlt = (req.body?.empresa_codigo || '').toString().trim().toUpperCase();
+    if (!isRootUser(req) && declaredAlt && declaredAlt !== normalizeTenantCode(getTenantCode(req))) {
+      return res.status(403).json({ error: 'No puedes crear usuarios fuera de tu tenant.' });
+    }
     if (!isRootUser(req) && empresaCodigo !== getTenantCode(req)) {
       return res.status(403).json({ error: 'No puedes crear usuarios fuera de tu tenant.' });
     }
@@ -3128,6 +3555,20 @@ app.post('/api/users', authenticate, requireTenantAdmin, requirePlanFeature('web
       return res.status(400).json({ error: 'El correo ya está registrado.' });
     }
 
+    // 4. Insertar perfil en tabla usuarios
+    // rol SIEMPRE explícito: la columna tiene default 'admin' en DB y heredarlo
+    // para un miembro sería una escalada de privilegios (Blueprint §6/§15).
+    const rolSolicitado = String(rol || 'miembro').trim().toLowerCase();
+    const rolCanonico = ['owner', 'administrador', 'admin', 'miembro', 'user'].includes(rolSolicitado) ? rolSolicitado : 'miembro';
+    // RBAC (Bloque D): solo el OWNER (o ROOT) puede crear OWNER/ADMIN.
+    // Un ADMIN nunca puede fabricar un OWNER ni otro ADMIN — ni manipulando
+    // el body de la petición. Se degrada a 'miembro' en vez de fallar duro
+    // para no romper flujos legítimos de alta de personal.
+    const requesterIsOwner = isOwnerUser(req);
+    const rolCanonicoFinal = ['owner', 'admin', 'administrador'].includes(rolCanonico) && !requesterIsOwner
+      ? 'miembro'
+      : rolCanonico;
+
     // 3. Crear usuario en Supabase Auth
     const passwordTemporal = password || generateSecurePassword();
     const { data: authData, error: authError } = await supabase.auth.admin.createUser({
@@ -3140,15 +3581,21 @@ app.post('/api/users', authenticate, requireTenantAdmin, requirePlanFeature('web
       return res.status(400).json({ error: `Error al crear cuenta: ${authError.message}` });
     }
 
-    // 4. Insertar perfil en tabla usuarios
+    // El login (/api/login) valida contra password_hash de la tabla usuarios:
+    // sin esto, el usuario NUNCA podría iniciar sesión (bug real detectado).
+    const saltInsert = await bcrypt.genSalt(10);
+    const passwordHashInsert = await bcrypt.hash(passwordTemporal, saltInsert);
     const { error: insertError } = await supabase.from('usuarios').insert({
       id: authData.user.id,
       empresa_id: empresaRecord.id,
       nombre: nombre.trim(),
       apellido: (apellido || '').trim(),
       email: email.toLowerCase().trim(),
-      rol_global: rol || 'user',
+      rol_global: rolCanonicoFinal,
+      rol: rolCanonicoFinal === 'user' ? 'miembro' : rolCanonicoFinal,
       empresa_codigo: empresaCodigo,
+      password_hash: passwordHashInsert,
+      password: passwordHashInsert,
       activo: true
     });
     if (insertError) {
@@ -3191,7 +3638,10 @@ app.post('/api/users', authenticate, requireTenantAdmin, requirePlanFeature('web
       nombre, email, rol: rol || 'user', empresaCodigo
     }).catch((e) => { console.warn('[AUTOMATION_HOOK] Non-critical:', e.message); });
 
-    await registrarAuditoria(empresaCodigo, 'Usuario creado', `Se creó el usuario ${email} con rol ${rol || 'user'}`, 'usuarios', req.user?.email || '', req);
+    if (rolCanonicoFinal !== rolCanonico) {
+      await registrarAuditoria(empresaCodigo, 'Rol degradado', `Se intentó crear ${email} como ${rolCanonico} sin ser Owner; se asignó miembro`, 'seguridad', req.user?.email || '', req);
+    }
+    await registrarAuditoria(empresaCodigo, 'Usuario creado', `Se creó el usuario ${email} con rol ${rolCanonicoFinal}`, 'usuarios', req.user?.email || '', req);
 
     res.status(201).json({
       message: 'Trabajador creado exitosamente',
@@ -3251,7 +3701,28 @@ app.put('/api/users/:id', authenticate, async (req, res) => {
     if (typeof nombre !== 'undefined') updateFields.nombre = nombre;
     if (typeof apellido !== 'undefined') updateFields.apellido = apellido;
     if (typeof email !== 'undefined') updateFields.email = email.toLowerCase().trim();
-    if (typeof rol !== 'undefined') updateFields.rol_global = rol;
+    if (typeof rol !== 'undefined') {
+      // RBAC (Bloque D): solo Owner (o ROOT) puede asignar roles privilegiados.
+      const rolSolicitado = String(rol || '').trim().toLowerCase();
+      const rolPrivilegiado = ['owner', 'admin', 'administrador'].includes(rolSolicitado);
+      if (rolPrivilegiado && !isRootUser(req) && !isOwnerUser(req)) {
+        await registrarAuditoria(codigo, 'Escalada bloqueada', `ADMIN intentó asignar rol ${rolSolicitado} a ${usuarioActual.email}`, 'seguridad', req.user?.email || '', req);
+        return res.status(403).json({ error: 'Solo el Owner de la empresa puede asignar roles Owner/Admin.' });
+      }
+      // Nadie puede editar al propio OWNER ni elevarlo: su único manejo es baja
+      // del usuario, que queda excluida por el bloqueo de borrado más abajo.
+      if (['owner', 'administrador', 'admin'].includes(String(usuarioActual.rol || usuarioActual.rol_global || '').toLowerCase())
+        && !isRootUser(req) && !isOwnerUser(req)) {
+        return res.status(403).json({ error: 'El Owner de la empresa solo puede ser gestionado por el mismo o por ROOT.' });
+      }
+      // OWNER: no puede (des)elevarse a sí mismo ni auto-remover su rol.
+      if (isSelf && ['owner', 'admin', 'administrador'].includes(rolSolicitado) === false
+        && ['owner', 'admin', 'administrador'].includes(String(usuarioActual.rol || usuarioActual.rol_global || '').toLowerCase())) {
+        return res.status(403).json({ error: 'No puedes quitarte a ti mismo el rol Owner.' });
+      }
+      updateFields.rol_global = rolSolicitado;
+      updateFields.rol = rolSolicitado;
+    }
     if (typeof notas !== 'undefined') updateFields.notas = notas;
     if (typeof status !== 'undefined') updateFields.activo = normalizeStatus(status) === 'active';
     if (typeof foto_perfil_url !== 'undefined') updateFields.foto_perfil_url = foto_perfil_url || null;
@@ -3331,8 +3802,6 @@ app.delete('/api/users/:id', authenticate, requireTenantAdmin, async (req, res) 
     const userTenant = getTenantCode(req);
     const userIsRoot = isRootUser(req);
     const isEmail = id.includes('@');
-    let targetTenant = '';
-    let targetUserId = null;
 
     // Resolve target user and its tenant (always, so we can cascade the tenant later)
     let targetUser = null;
@@ -3346,6 +3815,17 @@ app.delete('/api/users/:id', authenticate, requireTenantAdmin, async (req, res) 
       }
       targetUserId = targetUser.id || null;
       targetTenant = normalizeTenantCode(targetUser.empresa_codigo || '');
+    }
+
+    // OWNER exclusiva (estricta): solo el Owner real (o ROOT) puede eliminar
+    // usuarios. Un ADMIN queda excluido aunque isOwnerUser lo trate como
+    // admin-portal para navegación.
+    if (!isTrueOwner(req)) {
+      return res.status(403).json({ error: 'Eliminar usuarios es una acción exclusiva del Owner de la empresa.' });
+    }
+    // El OWNER nunca puede eliminarse a sí mismo.
+    if (String(req.user?.sub) === String(targetUserId) || id.toLowerCase() === String(req.user?.email || '').toLowerCase()) {
+      return res.status(400).json({ error: 'No puedes eliminar tu propia cuenta siendo Owner.' });
     }
 
     // Verify target user belongs to same tenant (unless ROOT)
@@ -3585,6 +4065,14 @@ async function filtrarBusquedaEnMemoria({ query, columnas, termino, orderCol, li
 }
 
 // ── API Keys por tenant ───────────────────────────────────────
+// ═══ API Keys por tenant ═══════════════════════════════════
+// Seguridad (Bloque K): el secreto de una API key NUNCA se vuelve a mostrar
+// ni se almacena en claro. En DB se guarda solo el hash SHA-256; el prefijo
+// (primeros caracteres) es lo único legible para identificar la clave.
+function hashApiKey(clave) {
+  return crypto.createHash('sha256').update(String(clave || '')).digest('hex');
+}
+
 app.get('/api/tenant/apikeys', authenticate, requireTenantAdmin, requirePlanFeature('api_keys'), async (req, res) => {
   if (!requireSupabase(res)) return;
   try {
@@ -3595,7 +4083,21 @@ app.get('/api/tenant/apikeys', authenticate, requireTenantAdmin, requirePlanFeat
       .eq('empresa_codigo', tenant)
       .order('created_at', { ascending: false });
     if (error) return res.status(500).json({ error: error.message });
-    return res.json({ keys: data || [] });
+    // Nunca se devuelve el material secreto (hash ni plaintext).
+    const keys = (data || []).map(k => {
+      const c = String(k.clave || '');
+      const esHash = /^[a-f0-9]{64}$/i.test(c);
+      return {
+        id: k.id,
+        nombre: k.nombre,
+        clave_prefix: k.clave_prefix || (esHash ? null : (c.slice(0, 14) || null)),
+        legacy_secret: !esHash && !!c,
+        ultimo_uso: k.ultimo_uso,
+        activa: k.activa,
+        created_at: k.created_at
+      };
+    });
+    return res.json({ keys });
   } catch (err) {
     return handleServerError(res, err);
   }
@@ -3610,17 +4112,23 @@ app.post('/api/tenant/apikeys', authenticate, requireTenantAdmin, requirePlanFea
     if (!nombre) return res.status(400).json({ error: 'El nombre de la clave es requerido' });
 
     const clave = 'pk_live_' + crypto.randomBytes(24).toString('hex');
-    const { data, error } = await supabase.from('api_keys').insert([{
-      empresa_codigo: tenant,
-      nombre,
-      clave,
-      activa: true
-    }]);
+    // Se persiste el hash; el plaintext viaja UNA sola vez en esta respuesta.
+    let insertPayload = { empresa_codigo: tenant, nombre, clave: hashApiKey(clave), clave_prefix: clave.slice(0, 14), activa: true };
+    let insertRes = await supabase.from('api_keys').insert([insertPayload]);
+    if (insertRes.error && /clave_prefix|column/i.test(String(insertRes.error.message || ''))) {
+      // Esquema sin clave_prefix: degradar sin exponer el secreto.
+      insertPayload = { empresa_codigo: tenant, nombre, clave: hashApiKey(clave), activa: true };
+      insertRes = await supabase.from('api_keys').insert([insertPayload]);
+    }
+    const { data, error } = insertRes;
     if (error) return res.status(500).json({ error: error.message });
 
-    const row = Array.isArray(data) ? data[0] : (data || { id: null, clave, nombre });
-    await registrarAuditoria(tenant, 'API Key creada', `Se generó la clave de API "${nombre}"`, 'config', req.user?.nombre || '', req);
-    return res.status(201).json({ key: row, clave });
+    const row = Array.isArray(data) ? data[0] : (data || { id: null, nombre });
+    await registrarAuditoria(tenant, 'API Key creada', `Se generó la clave de API "${nombre}" (${clave.slice(0, 14)}…)`, 'config', req.user?.nombre || '', req);
+    return res.status(201).json({
+      key: { id: row.id || null, nombre, clave_prefix: clave.slice(0, 14), activa: true, created_at: row.created_at || new Date().toISOString() },
+      clave
+    });
   } catch (err) {
     return handleServerError(res, err);
   }
@@ -3650,7 +4158,10 @@ const AI_PROVIDERS = {
     getKey: () => process.env.GROQ_API_KEY,
     models: {
       chat: 'openai/gpt-oss-20b',
-      vision: 'qwen/qwen3.6-27b',
+      // CRÍTICO corregido: 'qwen/qwen3.6-27b' NO existe en Groq (el endpoint
+      // devolvía model_not_found y TODA la ruta vision caía silenciosamente al
+      // fallback). Llama 4 Scout sí es multimodal y está servido por Groq.
+      vision: 'meta-llama/llama-4-scout-17b-16e-instruct',
       fast: 'openai/gpt-oss-20b'
     }
   },
@@ -3718,8 +4229,20 @@ async function callAIGateway({ provider, modelRole, messages, temperature, maxTo
   return { success: false, error: 'Todos los proveedores de IA fallaron o no están configurados' };
 }
 
+// Precios de referencia USD por 1M tokens (conservadores, para uso interno).
+const AI_TOKEN_COSTS_USD_PER_M = {
+  groq: { input: 0.15, output: 0.60 },
+  openrouter: { input: 0.10, output: 0.30 }
+};
+const DEFAULT_TOKEN_COST_PER_M = { input: 0.30, output: 0.60 };
+
 async function logAIUsage({ empresaCodigo, empresaId, usuarioId, provider, model, funcion, tokensInput, tokensOutput, tokensTotal, durationMs, success, errorMessage }) {
   try {
+    const tokensIn = Number(tokensInput) || 0;
+    const tokensOut = Number(tokensOutput) || 0;
+    const tokensAll = Number(tokensTotal) || (tokensIn + tokensOut);
+    const costTable = AI_TOKEN_COSTS_USD_PER_M[String(provider || '').toLowerCase()] || DEFAULT_TOKEN_COST_PER_M;
+    const costEstimated = Number(((tokensIn / 1000000) * costTable.input + (tokensOut / 1000000) * costTable.output).toFixed(6));
     if (supabase) {
       await supabase.from('ai_usage_log').insert({
         empresa_codigo: empresaCodigo,
@@ -3728,21 +4251,56 @@ async function logAIUsage({ empresaCodigo, empresaId, usuarioId, provider, model
         provider,
         model,
         funcion,
-        tokens_input: tokensInput,
-        tokens_output: tokensOutput,
-        tokens_total: tokensTotal,
+        tokens_input: tokensIn,
+        tokens_output: tokensOut,
+        tokens_total: tokensAll,
+        cost_estimated: costEstimated,
         duration_ms: durationMs,
         success,
         error_message: errorMessage || null
       });
+      // Metering de plan: acumula tokens IA consumidos por el tenant (periodo mensual).
+      await registrarUsoTenant(empresaCodigo, 'ai_tokens', tokensAll);
+      await registrarUsoTenant(empresaCodigo, 'api_requests', 1);
     }
   } catch (e) {
     console.warn('[AI_GATEWAY] Usage log failed:', e.message);
   }
 }
 
+// ── Presupuesto de tokens IA (server-side, Blueprint §11/§12) ──
+// El límite mensual del plan se aplica ANTES de llamar al proveedor: si el
+// tenant agotó su cuota de ai_tokens, la llamada ni siquiera sale.
+async function assertAiTokenBudget(req, res) {
+  if (!supabase) return true;
+  const tenant = normalizeTenantCode(getTenantCode(req));
+  if (!tenant || isRootUser(req)) return true;
+  try {
+    const ent = req.entitlements || await getTenantEntitlements(req);
+    const limite = Number(ent?.limits?.tokens) || 0;
+    if (!limite || limite <= 0) return true;
+    const mes = new Date().toISOString().slice(0, 7);
+    const { data: row } = await supabase.from('tenant_usage')
+      .select('cantidad').eq('empresa_codigo', tenant).eq('recurso', 'ai_tokens').eq('periodo', mes).maybeSingle();
+    const usados = Number(row?.cantidad) || 0;
+    if (usados >= limite) {
+      res.status(429).json({
+        error: `Has agotado tu cuota mensual de IA (${limite.toLocaleString('es-HN')} tokens del plan ${ent.plan}). Sube de plan o espera el siguiente periodo.`,
+        code: 'AI_TOKEN_LIMIT_REACHED',
+        usados,
+        limite
+      });
+      return false;
+    }
+  } catch (e) {
+    console.warn('[AI_BUDGET] check falló (se permite):', e.message);
+  }
+  return true;
+}
+
 // ── AI Chat (centralized) ──────────────────────────────────────
 app.post('/api/ai/chat', authenticate, requirePlanFeature('ia'), async (req, res) => {
+  if (!(await assertAiTokenBudget(req, res))) return;
   try {
     const { message, history, systemPrompt, temperature, provider } = req.body || {};
     const text = (message || '').toString().trim();
@@ -3787,6 +4345,7 @@ app.post('/api/ai/chat', authenticate, requirePlanFeature('ia'), async (req, res
 
 // ── AI Vision: image analysis (centralized) ────────────────────
 app.post('/api/ai/vision', authenticate, requirePlanFeature('ia'), async (req, res) => {
+  if (!(await assertAiTokenBudget(req, res))) return;
   try {
     const { image, prompt, systemPrompt, maxTokens, provider } = req.body || {};
     if (!image) return res.status(400).json({ error: 'Campo image (base64) requerido' });
@@ -3864,6 +4423,7 @@ app.get('/api/ai/barcode/:code', authenticate, requirePlanFeature('ia'), async (
 
 // ── AI: Dashboard natural language queries ────────────────────
 app.post('/api/ai/dashboard', authenticate, requirePlanFeature('ia'), async (req, res) => {
+  if (!(await assertAiTokenBudget(req, res))) return;
   try {
     if (!requireSupabase(res)) return;
     const tenant = normalizeTenantCode(getTenantCode(req));
@@ -3944,6 +4504,7 @@ Reglas:
 
 // ── AI: POS sales analysis ──────────────────────────────────
 app.post('/api/ai/pos/analyze', authenticate, requirePlanFeature('ia'), async (req, res) => {
+  if (!(await assertAiTokenBudget(req, res))) return;
   try {
     if (!requireSupabase(res)) return;
     const tenant = normalizeTenantCode(getTenantCode(req));
@@ -4065,6 +4626,7 @@ Instrucciones:
 
 // ── AI: POS upsell / cross-sell recomendations ──────────────
 app.post('/api/ai/pos/upsell', authenticate, requirePlanFeature('ia'), async (req, res) => {
+  if (!(await assertAiTokenBudget(req, res))) return;
   try {
     const { carrito, catalogo, maxTokens } = req.body || {};
     const cart = Array.isArray(carrito) ? carrito : [];
@@ -4134,6 +4696,7 @@ app.post('/api/ai/pos/upsell', authenticate, requirePlanFeature('ia'), async (re
 
 // ── AI: CRM customer summaries ──────────────────────────────
 app.post('/api/ai/crm/customer', authenticate, requirePlanFeature('ia'), async (req, res) => {
+  if (!(await assertAiTokenBudget(req, res))) return;
   try {
     if (!requireSupabase(res)) return;
     const tenant = normalizeTenantCode(getTenantCode(req));
@@ -4214,6 +4777,7 @@ Sé conciso y profesional.`;
 
 // ── AI: Support ticket assistant ─────────────────────────────
 app.post('/api/ai/support', authenticate, requirePlanFeature('ia'), async (req, res) => {
+  if (!(await assertAiTokenBudget(req, res))) return;
   try {
     if (!requireSupabase(res)) return;
     const tenant = normalizeTenantCode(getTenantCode(req));
@@ -4560,7 +5124,10 @@ app.patch('/api/fleet/:id', authenticate, requireTenantAdmin, requirePlanFeature
 });
 
 // ── Seguridad: auditoría con cadena de hashes ─────────────────
-app.get('/api/security/audit', authenticate, requireTenantAdmin, requirePlanFeature('seguridad_avanzada'), async (req, res) => {
+// Auditoría del tenant: todo Owner/Admin debe poder ver su registro.
+// La feature 'seguridad_avanzada' añade verificación de integridad (cadena de
+// hashes) para planes superiores, pero el log en sí no se oculta por plan.
+app.get('/api/security/audit', authenticate, requireTenantAdmin, async (req, res) => {
   if (!requireSupabase(res)) return;
   try {
     const tenant = normalizeTenantCode(getTenantCode(req));
@@ -5643,25 +6210,39 @@ app.post('/api/pos/ventas', authenticate, async (req, res) => {
     const isv = parseFloat(b.isv) || 0;
     const descuento = parseFloat(b.descuento) || 0;
     const total = parseFloat(b.total) || (subtotal + isv - descuento);
-    const { data: ventaData, error: ventaErr } = await supabase.from('transacciones').insert([{
-      empresa_id: empresa.id,
-      empresa_codigo: tenant,
-      usuario_id: req.user?.sub || null,
-      tipo: 'venta_pos',
-      categoria: 'venta',
-      descripcion: `Venta POS - ${items.length} item(s)`,
-      monto: total,
-      metodo_pago: (b.metodo_pago || 'efectivo').toString().slice(0, 50),
-      referencia: (b.referencia || '').toString().slice(0, 200),
-      metadata: JSON.stringify({
-        items, subtotal, isv, descuento,
-        cliente_nombre: b.cliente_nombre || '',
-        numero_venta: b.numero_venta || '',
-        sucursal_id: b.sucursal_id || null
-      }),
-      sucursal_id: b.sucursal_id || null,
-      fecha: new Date().toISOString()
-    }]).select().maybeSingle();
+    // CHECK productivo: tipo ∈ ('ingreso','gasto','transferencia','ajuste'). Una
+    // venta POS es un ingreso (tipo); el detalle de la venta se preserva en
+    // metadata y categoria NO se usa (columna libre). Se mapea 'venta_pos' → 'ingreso'
+    // conservando el marcador original en metadata.origen_tipo para trazabilidad.
+    const ventaRef = `venta_pos:${b.numero_venta || ''}`.trim();
+    const insertVenta = (withUsuario) => {
+      const payload = {
+        empresa_id: empresa.id,
+        empresa_codigo: tenant,
+        tipo: 'ingreso',
+        categoria: 'venta',
+        descripcion: `Venta POS - ${items.length} item(s)`,
+        monto: total,
+        metodo_pago: (b.metodo_pago || 'efectivo').toString().slice(0, 50),
+        referencia: ventaRef.slice(0, 200),
+        metadata: JSON.stringify({
+          items, subtotal, isv, descuento,
+          cliente_nombre: b.cliente_nombre || '',
+          numero_venta: b.numero_venta || '',
+          origen_tipo: 'venta_pos',
+          usuario_id: withUsuario ? (req.user?.sub || null) : null,
+          sucursal_id: b.sucursal_id || null
+        }),
+        sucursal_id: b.sucursal_id || null,
+        fecha: new Date().toISOString()
+      };
+      if (withUsuario) payload.usuario_id = req.user?.sub || null;
+      return supabase.from('transacciones').insert([payload]).select().maybeSingle();
+    };
+    // Esquema productivo vigente: transacciones SIN usuario_id. Intentar con él;
+    // si el schema cache no lo conoce, reintentar sin la columna (drift-tolerante).
+    let { data: ventaData, error: ventaErr } = await insertVenta(true);
+    if (ventaErr) ({ data: ventaData, error: ventaErr } = await insertVenta(false));
     if (ventaErr) return res.status(500).json({ error: ventaErr.message });
     for (const item of items) {
       if (item.producto_id) {
@@ -5793,8 +6374,12 @@ app.post('/api/notas-credito', authenticate, async (req, res) => {
     if (!empresa) return res.status(404).json({ error: 'Empresa no encontrada' });
     const body = req.body || {};
     if (!body.factura_id || !body.motivo || !(Number(body.total) > 0)) {
-      return res.status(400).json({ error: 'factura_id, motivo y total son requeridos' });
+      return res.status(400).json({ error: 'factura_id, motivo y monto/total son requeridos' });
     }
+    // Compatibilidad de nombres: el frontend históricamente envía 'monto';
+    // el backend almacena en 'total'. Ambos nombres son aceptados.
+    if (body.total === undefined && body.monto !== undefined) body.total = body.monto;
+    if (body.monto === undefined && body.total !== undefined) body.monto = body.total;
     const { data: invoice } = await supabase.from('facturas').select('id, total')
       .eq('id', body.factura_id).eq('empresa_id', empresa.id).maybeSingle();
     if (!invoice) return res.status(404).json({ error: 'Factura relacionada no encontrada' });
@@ -5930,7 +6515,7 @@ app.post('/api/facturas', authenticate, async (req, res) => {
     const isv = parseFloat(b.isv) || 0;
     const descuento = parseFloat(b.descuento) || 0;
     const total = parseFloat(b.total) || (subtotal + isv - descuento);
-    const { data, error } = await supabase.from('facturas').insert([{
+    const payloadFull = {
       empresa_id: empresa.id,
       empresa_codigo: tenant,
       usuario_id: req.user?.sub || null,
@@ -5941,13 +6526,47 @@ app.post('/api/facturas', authenticate, async (req, res) => {
       subtotal, isv, descuento, total,
       items: Array.isArray(b.items) ? b.items : [],
       estado: 'emitida',
-      tipo_documento: (b.tipo_documento || 'factura').toString().slice(0, 30),
+      tipo_documento: ({ 'factura': 'Factura', 'nota credito': 'Nota Crédito', 'nota crédito': 'Nota Crédito', 'nota debito': 'Nota Débito', 'nota débito': 'Nota Débito', 'factura exportacion': 'Factura Exportación' })[String(b.tipo_documento || 'factura').toLowerCase().trim()] || 'Factura',
       metodo_pago: (b.metodo_pago || '').toString().slice(0, 50),
       notas: (b.notas || '').toString().slice(0, 500),
       sucursal_id: b.sucursal_id || null,
       bodega_id: b.bodega_id || null,
       created_at: new Date().toISOString()
-    }]).select().maybeSingle();
+    };
+    // Fallback de compatibilidad: si el esquema productivo aún no tiene columnas
+    // opcionales (schema cache), reintentar con el payload base mínimo.
+    // Fallback progresivo: si el esquema productivo carece de alguna columna
+    // (drift de migraciones), se elimina esa columna del payload y se reintenta.
+    // También cubre columnas NOT NULL antiguas (p.ej. cai): se envía '' en vez
+    // de inventar datos fiscales.
+    let payload = payloadFull;
+    let r1 = await supabase.from('facturas').insert([payload]).select().maybeSingle();
+    let error = r1.error, data = r1.data;
+    let reintentos = 0;
+    while (error && reintentos < 15) {
+      const mMissing = /could not find the '([a-z_]+)' column/i.exec(error.message || '');
+      const mNotNull = /null value in column "([a-z_]+)"/i.exec(error.message || '');
+      // Constraint CHECK legado (p.ej. facturas_tipo_documento_check): los
+      // valores modernos no existen en el esquema viejo → omitir la columna
+      // para que aplique el DEFAULT del esquema productivo.
+      const mCheck = /check constraint "facturas_([a-z_]+)_check"/i.exec(error.message || '');
+      if (mMissing) {
+        const col = mMissing[1];
+        const { [col]: _omit, ...rest } = payload;
+        payload = rest;
+      } else if (mNotNull) {
+        const col = mNotNull[1];
+        if (payload[col] === undefined) payload[col] = '';
+        else if (payload[col] === null) payload[col] = '';
+        else break;
+      } else if (mCheck && payload[mCheck[1]] !== undefined) {
+        const { [mCheck[1]]: _omitChk, ...restChk } = payload;
+        payload = restChk;
+      } else break;
+      reintentos++;
+      const r = await supabase.from('facturas').insert([payload]).select().maybeSingle();
+      error = r.error; data = r.data;
+    }
     if (error) return res.status(500).json({ error: error.message });
     return res.status(201).json({ factura: data });
   } catch (err) { return handleServerError(res, err); }
@@ -6028,13 +6647,31 @@ app.post('/api/clientes', authenticate, async (req, res) => {
       email: (b.email || '').toString().slice(0, 100),
       telefono: (b.telefono || '').toString().slice(0, 30),
       direccion: (b.direccion || '').toString().slice(0, 300),
-      limite_credito: parseFloat(b.limite_credito) || 0,
-      saldo_pendiente: 0,
       notas: (b.notas || '').toString().slice(0, 500),
       activo: true,
       created_at: new Date().toISOString()
     }]).select().maybeSingle();
-    if (error) return res.status(500).json({ error: error.message });
+    // Esquema productivo vigente: clientes SIN limite_credito/saldo_pendiente
+    // (drift detectado en release audit). Si llegan a existir tras una migración,
+    // se reintenta incluyendo esos campos para no perder funcionalidad de crédito.
+    if (error) {
+      const r2 = await supabase.from('clientes').insert([{
+        empresa_id: empresa.id,
+        empresa_codigo: tenant,
+        nombre: b.nombre.toString().slice(0, 200),
+        rtn: (b.rtn || '').toString().slice(0, 20),
+        email: (b.email || '').toString().slice(0, 100),
+        telefono: (b.telefono || '').toString().slice(0, 30),
+        direccion: (b.direccion || '').toString().slice(0, 300),
+        limite_credito: parseFloat(b.limite_credito) || 0,
+        saldo_pendiente: 0,
+        notas: (b.notas || '').toString().slice(0, 500),
+        activo: true,
+        created_at: new Date().toISOString()
+      }]).select().maybeSingle();
+      if (r2.error) return res.status(500).json({ error: error.message });
+      return res.status(201).json({ cliente: r2.data });
+    }
     return res.status(201).json({ cliente: data });
   } catch (err) { return handleServerError(res, err); }
 });
@@ -7104,6 +7741,566 @@ app.post('/api/tenant/features', authenticate, requireTenantAdmin, async (req, r
 });
 
 // ═══════════════════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════
+// PORTAL EMPRESA — ENDPOINTS V2 (Bloques B–J)
+// Cadena única: authenticate → authorize → tenant scope → plan → DB
+// ═══════════════════════════════════════════════════════════════
+
+// ── Registro de eventos de seguridad (best-effort, nunca bloquea) ──
+async function registrarEventoSeguridad(empresaCodigo, evento, { usuarioId = null, usuarioEmail = '', severidad = 'info', req = null, descripcion = '', metadata = {} } = {}) {
+  if (!supabase) return;
+  const tenant = normalizeTenantCode(empresaCodigo || getTenantCode(req || { user: {} }));
+  if (!tenant) return;
+  try {
+    const ipRaw = req && (req.headers['x-forwarded-for']?.split(',')[0].trim() || req.socket?.remoteAddress) || '';
+    const ip = String(ipRaw).replace('::ffff:', '').slice(0, 60);
+    await supabase.from('seguridad_eventos').insert({
+      empresa_codigo: tenant,
+      usuario_id: usuarioId || (req?.user?.sub || null),
+      usuario_email: String(usuarioEmail || req?.user?.email || '').slice(0, 200),
+      evento: String(evento).slice(0, 80),
+      severidad,
+      ip,
+      dispositivo: obtenerDispositivo(req?.headers?.['user-agent']),
+      descripcion: String(descripcion).slice(0, 1000),
+      metadata
+    });
+  } catch (e) { console.warn('[SEC_EVENT] Non-critical:', e.message); }
+}
+
+// ── Sesiones: registrar sesión/dispositivo en login (best-effort) ──
+async function registrarSesionTenant(empresaCodigo, usuarioId, req) {
+  if (!supabase) return false;
+  try {
+    const ipRaw = req?.headers['x-forwarded-for']?.split(',')[0].trim() || req?.socket?.remoteAddress || '';
+    const ip = String(ipRaw).replace('::ffff:', '').slice(0, 60);
+    const dispositivo = obtenerDispositivo(req?.headers?.['user-agent']);
+    const userAgent = String(req?.headers?.['user-agent'] || '').slice(0, 300);
+    const { data: existente } = await supabase.from('tenant_sessions')
+      .select('id').eq('usuario_id', usuarioId).eq('ip', ip).eq('dispositivo', dispositivo).eq('revocada', false).maybeSingle();
+    if (existente) {
+      await supabase.from('tenant_sessions').update({ ultimo_actividad: new Date().toISOString() }).eq('id', existente.id);
+      return true;
+    }
+    let ubicacion = 'Desconocida';
+    try { ubicacion = await obtenerUbicacion(ip); } catch (e) { /* noop */ }
+    // Esquema productivo vigente: sin columna user_agent (drift detectado en
+    // release audit). Insertar SIN la columna; reintentar con ella si la
+    // migración llega a aplicarse — nunca dejar de registrar la sesión.
+    let insErr = null;
+    const r1 = await supabase.from('tenant_sessions').insert({
+      usuario_id: usuarioId, empresa_codigo: normalizeTenantCode(empresaCodigo), ip, dispositivo, ubicacion
+    });
+    insErr = r1.error;
+    if (insErr) {
+      const r2 = await supabase.from('tenant_sessions').insert({
+        usuario_id: usuarioId, empresa_codigo: normalizeTenantCode(empresaCodigo), ip, dispositivo, ubicacion, user_agent: userAgent
+      });
+      insErr = r2.error;
+    }
+    if (insErr) { console.warn('[SESSION_REG] Non-critical:', insErr.message); return false; }
+    return true;
+  } catch (e) { console.warn('[SESSION_REG] Non-critical:', e.message); return false; }
+}
+
+// ── GET /api/empresa/overview — datos reales para el dashboard empresa ──
+app.get('/api/empresa/overview', authenticate, requireTenantAdmin, async (req, res) => {
+  if (!requireSupabase(res)) return;
+  try {
+    const tenant = normalizeTenantCode(getTenantCode(req));
+    const mes = new Date().toISOString().slice(0, 7);
+    const ent = req.entitlements || await getTenantEntitlements(req);
+
+    const [tenRes, usrRes, facRes, recRes, ncRes, cliRes, prodRes, usageRes, aiRes, auditRes] = await Promise.all([
+      supabase.from('tenants').select('*').eq('codigo', tenant).maybeSingle(),
+      supabase.from('usuarios').select('id, nombre, apellido, email, rol, rol_global, activo, estado, ultimo_acceso, created_at').eq('empresa_codigo', tenant),
+      supabase.from('facturas').select('id, total, estado, created_at').eq('empresa_codigo', tenant),
+      supabase.from('recibos').select('id, total, created_at').eq('empresa_codigo', tenant),
+      supabase.from('notas_credito').select('id, total, created_at').eq('empresa_codigo', tenant),
+      supabase.from('clientes').select('id', { count: 'exact', head: true }).eq('empresa_codigo', tenant),
+      supabase.from('productos').select('id', { count: 'exact', head: true }).eq('empresa_codigo', tenant),
+      supabase.from('tenant_usage').select('recurso, cantidad').eq('empresa_codigo', tenant).eq('periodo', mes),
+      supabase.from('ai_usage_log').select('tokens_total, success').eq('empresa_codigo', tenant),
+      supabase.from('auditoria').select('accion, descripcion, tipo, usuario, created_at').eq('empresa_codigo', tenant).order('created_at', { ascending: false }).limit(12)
+    ]);
+
+    const usuarios = usrRes.data || [];
+    const facturas = facRes.data || [];
+    const uso = {};
+    (usageRes.data || []).forEach(r => { uso[r.recurso] = (uso[r.recurso] || 0) + (Number(r.cantidad) || 0); });
+    const aiRows = aiRes.data || [];
+    const aiTokens = aiRows.reduce((s, r) => s + (Number(r.tokens_total) || 0), 0);
+    const limiteTokens = ent.limits?.tokens || planLimitsFor(ent.plan).tokens;
+
+    // Alertas derivadas de datos reales — nunca inventadas
+    const alertas = [];
+    if (ent.status === 'expired') alertas.push({ severidad: 'alta', titulo: 'Prueba vencida', detalle: 'La plataforma está en modo solo lectura. Renueva tu plan para seguir operando.' });
+    else if (ent.trial?.endsAt) {
+      const dias = Math.max(0, Math.ceil((new Date(ent.trial.endsAt) - Date.now()) / 86400000));
+      if (dias <= 5) alertas.push({ severidad: dias <= 2 ? 'alta' : 'media', titulo: `Trial termina en ${dias} día(s)`, detalle: 'Elige un plan para conservar todas las funciones.' });
+    }
+    if (limiteTokens > 0 && aiTokens / limiteTokens >= 0.9) alertas.push({ severidad: 'alta', titulo: 'Consumo de IA próximo al límite', detalle: `${Math.round((aiTokens / limiteTokens) * 100)}% de los tokens del plan utilizados.` });
+    const usuariosLimite = Number(ent.maxUsers) || 0;
+    if (usuariosLimite > 0 && Number.isFinite(usuariosLimite) && usuarios.length / usuariosLimite >= 0.9) alertas.push({ severidad: 'media', titulo: 'Usuarios próximos al límite del plan', detalle: `${usuarios.length}/${usuariosLimite} usuarios.` });
+    const facPendientes = facturas.filter(f => (f.estado || '') === 'pendiente').length;
+    if (facPendientes > 0) alertas.push({ severidad: 'media', titulo: `${facPendientes} factura(s) pendiente(s)`, detalle: 'Revisa el módulo de Facturación.' });
+
+    const limiteDocs = Number(ent.customLimits?.documents || 0);
+    const docPct = limiteDocs > 0 ? Math.min(100, Math.round(((uso.documents || 0) / limiteDocs) * 100)) : 0;
+
+    return res.json({
+      empresa_codigo: tenant,
+      empresa: { nombre: tenRes.data?.nombre_empresa || tenant, rtn: tenRes.data?.rtn || null, plan: ent.plan, estado: tenRes.data?.estado || 'activo' },
+      plan: {
+        clave: ent.plan, estado: ent.status,
+        trial: ent.trial || null, trial_ends_at: ent.trial_ends_at || null,
+        dias_trial_restantes: ent.trial?.endsAt ? Math.max(0, Math.ceil((new Date(ent.trial.endsAt) - Date.now()) / 86400000)) : null,
+        max_users: ent.maxUsers, max_companies: ent.maxCompanies,
+        features_count: (ent.features || []).length
+      },
+      kpis: {
+        usuarios_total: usuarios.length,
+        usuarios_activos: usuarios.filter(u => u.activo !== false).length,
+        usuarios_limite: ent.maxUsers,
+        usuarios_porcentaje: (usuariosLimite > 0 && Number.isFinite(usuariosLimite)) ? Math.round((usuarios.filter(u => u.activo !== false).length / usuariosLimite) * 100) : 0,
+        facturas_total: facturas.length,
+        facturas_monto: facturas.reduce((s, f) => s + (Number(f.total) || 0), 0),
+        recibos_total: (recRes.data || []).length,
+        notas_credito_total: (ncRes.data || []).length,
+        clientes: cliRes.count || 0,
+        productos: prodRes.count || 0,
+        documentos_mes: uso.documents || 0,
+        documentos_porcentaje: docPct,
+        ia_tokens: aiTokens,
+        ia_limite: limiteTokens,
+        ia_porcentaje: limiteTokens > 0 ? Math.min(100, Math.round((aiTokens / limiteTokens) * 100)) : 0,
+        ia_solicitudes: aiRows.length,
+        api_requests: uso.api_requests || 0
+      },
+      usuarios_recientes: usuarios.slice(0, 5).map(u => ({ nombre: normalizeDisplayName(u.nombre, u.apellido), email: u.email, rol: u.rol || u.rol_global, activo: u.activo !== false, ultimo_acceso: u.ultimo_acceso, created_at: u.created_at })),
+      actividad_reciente: (auditRes.data || []).map(a => ({ accion: a.accion, descripcion: a.descripcion, tipo: a.tipo, usuario: a.usuario, fecha: a.created_at })),
+      alertas
+    });
+  } catch (err) { return handleServerError(res, err); }
+});
+
+// ── GET /api/empresa/entitlements — plan + features + límites (Plan Engine) ──
+app.get('/api/empresa/entitlements', authenticate, async (req, res) => {
+  try {
+    const ent = await getTenantEntitlements(req);
+    const tenant = normalizeTenantCode(getTenantCode(req));
+    let sub = null;
+    if (supabase && tenant) {
+      try { const { data } = await supabase.from('subscriptions').select('*').eq('empresa_codigo', tenant).maybeSingle(); sub = data; } catch (e) { /* tabla opcional */ }
+    }
+    return res.json({
+      plan: ent.plan,
+      estado: ent.status,
+      trial: ent.trial || null,
+      trial_ends_at: ent.trial_ends_at || null,
+      max_users: ent.maxUsers,
+      max_companies: ent.maxCompanies,
+      features: ent.features || [],
+      custom_limits: ent.customLimits || {},
+      limits: ent.limits || {},
+      suscripcion: sub ? {
+        estado: sub.estado,
+        trial_started_at: sub.trial_started_at,
+        trial_ends_at: sub.trial_ends_at,
+        current_period_start: sub.current_period_start,
+        current_period_end: sub.current_period_end,
+        cancel_at_period_end: sub.cancel_at_period_end || false
+      } : null
+    });
+  } catch (err) { return handleServerError(res, err); }
+});
+
+// ── GET /api/empresa/roles — matriz de roles del tenant (conteos reales) ──
+app.get('/api/empresa/roles', authenticate, requireTenantAdmin, async (req, res) => {
+  if (!requireSupabase(res)) return;
+  try {
+    const tenant = normalizeTenantCode(getTenantCode(req));
+    const { data: usuarios, error } = await supabase
+      .from('usuarios').select('id, rol, rol_global, activo').eq('empresa_codigo', tenant);
+    if (error) return res.status(500).json({ error: error.message });
+    const roles = { owner: 0, admin: 0, miembro: 0, otros: 0 };
+    (usuarios || []).forEach(u => {
+      const r = String(u.rol || u.rol_global || '').toLowerCase();
+      if (r === 'owner' || r === 'ceo') roles.owner++;
+      else if (r === 'admin' || r === 'administrador') roles.admin++;
+      else if (['miembro', 'member', 'user', 'operador'].includes(r)) roles.miembro++;
+      else roles.otros++;
+    });
+    return res.json({
+      roles,
+      total: (usuarios || []).length,
+      matriz: {
+        owner: { gestionar_empresa: true, usuarios: true, roles: true, suscripcion: true, facturacion: true, api_keys: true, eliminar_usuarios: true },
+        admin: { gestionar_empresa: true, usuarios: true, roles: false, suscripcion: false, facturacion: 'lectura', api_keys: true, eliminar_usuarios: false },
+        member: { gestionar_empresa: false, usuarios: false, roles: false, suscripcion: false, facturacion: false, api_keys: false, eliminar_usuarios: false }
+      }
+    });
+  } catch (err) { return handleServerError(res, err); }
+});
+
+// ── GET /api/empresa/modules — catálogo derivado de tenant → plan → entitlements ──
+const MODULO_CATALOGO = Object.freeze({
+  pos:             { nombre: 'POS',                     icono: 'fa-cash-register',       feature: 'pos' },
+  inventario:      { nombre: 'Inventario',              icono: 'fa-boxes-stacked',       feature: 'inventario' },
+  facturacion:     { nombre: 'Facturación',             icono: 'fa-file-invoice-dollar', feature: 'facturacion_sar' },
+  contabilidad:    { nombre: 'Contabilidad',            icono: 'fa-calculator',          feature: 'operacion_completa' },
+  crm:             { nombre: 'CRM',                     icono: 'fa-users',               feature: 'clientes' },
+  rrhh:            { nombre: 'RRHH',                    icono: 'fa-id-badge',            feature: 'operacion_completa' },
+  educacion:       { nombre: 'Educación',               icono: 'fa-graduation-cap',      feature: 'operacion_basica' },
+  soporte:         { nombre: 'Soporte',                 icono: 'fa-headset',             feature: 'operacion_basica' },
+  ia:              { nombre: 'Inteligencia Artificial', icono: 'fa-wand-magic-sparkles', feature: 'ia' },
+  reportes:        { nombre: 'Reportes',                icono: 'fa-chart-bar',           feature: 'reportes' },
+  sucursales:      { nombre: 'Sucursales',              icono: 'fa-store',               feature: 'sucursales' },
+  rutas:           { nombre: 'Rutas y Cobros',          icono: 'fa-route',               feature: 'rutas' },
+  automatizacion:  { nombre: 'Automatizaciones',        icono: 'fa-robot',               feature: 'automation' },
+  api:             { nombre: 'API',                     icono: 'fa-plug',                feature: 'api_keys' },
+  flota:           { nombre: 'Flota',                   icono: 'fa-truck',               feature: 'fleet' }
+});
+
+app.get('/api/empresa/modules', authenticate, requireTenantAdmin, async (req, res) => {
+  if (!requireSupabase(res)) return;
+  try {
+    const tenant = normalizeTenantCode(getTenantCode(req));
+    const ent = await getTenantEntitlements(req);
+    const features = ent.features || [];
+    // Activación real por tenant (override en tenant_features)
+    const { data: activadas } = await supabase.from('tenant_features')
+      .select('feature_key, enabled').eq('empresa_codigo', tenant);
+    const activadasMap = {};
+    (activadas || []).forEach(f => { activadasMap[f.feature_key] = f.enabled !== false; });
+
+    const modulos = Object.entries(MODULO_CATALOGO).map(([key, m]) => {
+      const enPlan = features.includes(m.feature);
+      const activada = activadasMap[key];
+      let estado = 'activo';
+      if (!enPlan) estado = 'requiere_upgrade';
+      else if (activada === false) estado = 'bloqueado';
+      else if (activada === undefined && key !== 'pos') estado = 'disponible';
+      return {
+        key,
+        nombre: m.nombre,
+        icono: m.icono,
+        estado,
+        en_plan: enPlan,
+        feature: m.feature,
+        limite: (ent.customLimits && ent.customLimits[key] !== undefined) ? ent.customLimits[key] : (key === 'sucursales' ? ent.maxCompanies : null)
+      };
+    });
+    return res.json({ plan: ent.plan, estado: ent.status, modulos });
+  } catch (err) { return handleServerError(res, err); }
+});
+
+// Activar/desactivar módulo del catálogo (persistido en tenant_features)
+app.put('/api/empresa/modules/:key', authenticate, requireTenantAdmin, async (req, res) => {
+  if (!requireSupabase(res)) return;
+  try {
+    const tenant = normalizeTenantCode(getTenantCode(req));
+    const key = String(req.params.key || '').trim();
+    const meta = MODULO_CATALOGO[key];
+    if (!meta) return res.status(404).json({ error: 'Módulo desconocido.' });
+    const enabled = req.body?.enabled !== false;
+    if (enabled) {
+      const ent = await getTenantEntitlements(req);
+      if (!(ent.features || []).includes(meta.feature)) {
+        return res.status(403).json({ error: `El módulo ${meta.nombre} requiere un plan superior.`, code: 'PLAN_LIMIT' });
+      }
+    }
+    const { data: existing } = await supabase.from('tenant_features')
+      .select('id').eq('empresa_codigo', tenant).eq('feature_key', key).maybeSingle();
+    if (existing) {
+      await supabase.from('tenant_features').update({ enabled, updated_at: new Date().toISOString() }).eq('id', existing.id);
+    } else {
+      await supabase.from('tenant_features').insert({ empresa_codigo: tenant, feature_key: key, enabled });
+    }
+    await registrarAuditoria(tenant, enabled ? 'Módulo activado' : 'Módulo desactivado', `${meta.nombre} (${key})`, 'configuracion', req.user?.email || '', req);
+    return res.json({ success: true, key, enabled });
+  } catch (err) { return handleServerError(res, err); }
+});
+
+// ── GET /api/empresa/billing/documents — historial fiscal real (Bloque F) ──
+// Factura fiscal ≠ Recibo ≠ Nota de crédito: tipos separados, nunca mezclados.
+app.get('/api/empresa/billing/documents', authenticate, requireTenantAdmin, async (req, res) => {
+  if (!requireSupabase(res)) return;
+  try {
+    const tenant = normalizeTenantCode(getTenantCode(req));
+    const limit = Math.min(parseInt(req.query.limit, 10) || 100, 300);
+    // Select resiliente por tabla: si el esquema productivo carece de alguna
+    // columna (drift), se reintenta con un subconjunto base en vez de
+    // devolver silenciosamente 0 documentos.
+    async function selectDocs(table, columnasFull, columnasBase) {
+      const build = (cols) => supabase.from(table).select(cols)
+        .eq('empresa_codigo', tenant).order('created_at', { ascending: false }).limit(limit);
+      let r = await build(columnasFull);
+      if (r.error) r = await build(columnasBase);
+      if (r.error) r = await build('id, total, created_at');
+      return r;
+    }
+    const [fac, rec, nc] = await Promise.all([
+      selectDocs('facturas', 'id, correlativo, cliente_nombre, total, isv, estado, tipo_documento, created_at', 'id, correlativo, cliente_nombre, total, estado, created_at'),
+      selectDocs('recibos', 'id, correlativo, cliente_nombre, total, created_at', 'id, total, created_at'),
+      selectDocs('notas_credito', 'id, correlativo, motivo, total, created_at', 'id, total, created_at')
+    ]);
+    const mapFactura = f => ({ tipo: 'factura', id: f.id, correlativo: f.correlativo || 's/n', contraparte: f.cliente_nombre || null, total: Number(f.total) || 0, isv: f.isv !== undefined && f.isv !== null ? Number(f.isv) : null, estado: f.estado || 'emitida', fecha: f.created_at });
+    const mapRecibo = r => ({ tipo: 'recibo', id: r.id, correlativo: r.correlativo || 's/n', contraparte: r.cliente_nombre || null, total: Number(r.total) || 0, isv: null, estado: 'recibido', fecha: r.created_at });
+    const mapNota = n => ({ tipo: 'nota_credito', id: n.id, correlativo: n.correlativo || 's/n', contraparte: n.motivo || null, total: Number(n.total) || 0, isv: null, estado: 'emitida', fecha: n.created_at });
+    const documentos = [
+      ...(fac.data || []).map(mapFactura),
+      ...(rec.data || []).map(mapRecibo),
+      ...(nc.data || []).map(mapNota)
+    ].sort((a, b) => new Date(b.fecha || 0) - new Date(a.fecha || 0));
+    const partialErrors = [fac.error && `facturas: ${fac.error.message}`, rec.error && `recibos: ${rec.error.message}`, nc.error && `notas_credito: ${nc.error.message}`].filter(Boolean);
+    return res.json({
+      resumen: {
+        facturas: { cantidad: (fac.data || []).length, monto: (fac.data || []).reduce((s, f) => s + (Number(f.total) || 0), 0) },
+        recibos: { cantidad: (rec.data || []).length, monto: (rec.data || []).reduce((s, r) => s + (Number(r.total) || 0), 0) },
+        notas_credito: { cantidad: (nc.data || []).length, monto: (nc.data || []).reduce((s, n) => s + (Number(n.total) || 0), 0) }
+      },
+      documentos,
+      ...(partialErrors.length ? { partial_errors: partialErrors } : {})
+    });
+  } catch (err) { return handleServerError(res, err); }
+});
+
+// ── GET /api/empresa/security/events — eventos de seguridad (Bloque I) ──
+app.get('/api/empresa/security/events', authenticate, requireTenantAdmin, async (req, res) => {
+  if (!requireSupabase(res)) return;
+  try {
+    const tenant = normalizeTenantCode(getTenantCode(req));
+    const limit = Math.min(parseInt(req.query.limit, 10) || 50, 200);
+    const { data, error } = await supabase.from('seguridad_eventos')
+      .select('*').eq('empresa_codigo', tenant)
+      .order('created_at', { ascending: false }).limit(limit);
+    if (error) {
+      // Tabla aún no migrada: fallback a auditoría con tipos de seguridad.
+      const { data: aud } = await supabase.from('auditoria')
+        .select('id, accion, descripcion, tipo, usuario, ip, created_at')
+        .eq('empresa_codigo', tenant).in('tipo', ['seguridad', 'usuarios'])
+        .order('created_at', { ascending: false }).limit(limit);
+      return res.json({
+        eventos: (aud || []).map(a => ({ id: a.id, evento: a.accion, severidad: (String(a.accion || '').toLowerCase().includes('fallido') || String(a.accion || '').toLowerCase().includes('bloqueado')) ? 'warning' : 'info', usuario_email: a.usuario, ip: a.ip, dispositivo: null, descripcion: a.descripcion, created_at: a.created_at })),
+        fallback: true
+      });
+    }
+    return res.json({ eventos: data || [] });
+  } catch (err) { return handleServerError(res, err); }
+});
+
+// ── GET /api/empresa/sessions — sesiones del tenant (Bloque I) ──
+app.get('/api/empresa/sessions', authenticate, requireTenantAdmin, async (req, res) => {
+  if (!requireSupabase(res)) return;
+  try {
+    const tenant = normalizeTenantCode(getTenantCode(req));
+    const { data, error } = await supabase.from('tenant_sessions')
+      .select('id, usuario_id, ip, dispositivo, ubicacion, ultimo_actividad, created_at, revocada')
+      .eq('empresa_codigo', tenant)
+      .order('ultimo_actividad', { ascending: false }).limit(100);
+    if (error) {
+      // Fallback: derivar de último_acceso real de usuarios (sin inventar datos).
+      const { data: users } = await supabase.from('usuarios')
+        .select('id, nombre, apellido, email, ultimo_acceso').eq('empresa_codigo', tenant);
+      return res.json({
+        sesiones: (users || []).filter(u => u.ultimo_acceso).slice(0, 50).map(u => ({
+          id: u.id, usuario: normalizeDisplayName(u.nombre, u.apellido), email: u.email,
+          ip: null, dispositivo: 'No registrado', ubicacion: null,
+          ultimo_actividad: u.ultimo_acceso, revocada: false, fallback: true
+        })),
+        fallback: true
+      });
+    }
+    const userIds = [...new Set((data || []).map(s => s.usuario_id).filter(Boolean))];
+    const { data: users } = userIds.length
+      ? await supabase.from('usuarios').select('id, nombre, apellido, email').in('id', userIds)
+      : { data: [] };
+    const umap = {};
+    (users || []).forEach(u => { umap[u.id] = { nombre: normalizeDisplayName(u.nombre, u.apellido), email: u.email }; });
+    const sesiones = (data || []).map(s => ({
+      id: s.id, usuario_id: s.usuario_id, usuario: umap[s.usuario_id]?.nombre || '—', email: umap[s.usuario_id]?.email || '—',
+      ip: s.ip, dispositivo: s.dispositivo, ubicacion: s.ubicacion,
+      ultimo_actividad: s.ultimo_actividad, revocada: !!s.revocada
+    }));
+    return res.json({ sesiones, fallback: false });
+  } catch (err) { return handleServerError(res, err); }
+});
+
+// Revocar una sesión concreta (sesión propia siempre permitida)
+app.delete('/api/empresa/sessions/:id', authenticate, async (req, res) => {
+  if (!requireSupabase(res)) return;
+  try {
+    const { data: sesion } = await supabase.from('tenant_sessions')
+      .select('id, usuario_id, empresa_codigo').eq('id', req.params.id).maybeSingle();
+    if (!sesion) return res.status(404).json({ error: 'Sesión no encontrada.' });
+    const esPropia = String(sesion.usuario_id) === String(req.user.sub);
+    if (!esPropia) {
+      if (!assertTenantAccess(req, sesion.empresa_codigo) || !isTrueOwner(req)) {
+        return res.status(403).json({ error: 'Solo el Owner puede revocar sesiones de otros usuarios.' });
+      }
+    }
+    const { error } = await supabase.from('tenant_sessions').update({ revocada: true }).eq('id', sesion.id);
+    if (error) return res.status(500).json({ error: error.message });
+    await registrarEventoSeguridad(sesion.empresa_codigo, 'session_revoked', { usuarioId: sesion.usuario_id, req, severidad: 'warning', descripcion: 'Sesión revocada por administrador' });
+    return res.json({ success: true });
+  } catch (err) { return handleServerError(res, err); }
+});
+
+// ── GET /api/empresa/activity — actividad operacional (Bloque J) ──
+app.get('/api/empresa/activity', authenticate, requireTenantAdmin, async (req, res) => {
+  if (!requireSupabase(res)) return;
+  try {
+    const tenant = normalizeTenantCode(getTenantCode(req));
+    const limit = Math.min(parseInt(req.query.limit, 10) || 50, 200);
+    const { data, error } = await supabase.from('auditoria')
+      .select('id, accion, descripcion, tipo, usuario, created_at')
+      .eq('empresa_codigo', tenant)
+      .in('tipo', ['facturacion', 'fleet', 'pos', 'compras', 'inventario', 'sistema', 'automatizacion'])
+      .order('created_at', { ascending: false }).limit(limit);
+    if (error) return res.status(500).json({ error: error.message });
+    return res.json({ eventos: data || [] });
+  } catch (err) { return handleServerError(res, err); }
+});
+
+// ── GET /api/empresa/profile — fila completa del tenant (info legal/config) ──
+app.get('/api/empresa/profile', authenticate, requireTenantAdmin, async (req, res) => {
+  if (!requireSupabase(res)) return;
+  try {
+    const tenant = normalizeTenantCode(getTenantCode(req));
+    const { data, error } = await supabase.from('tenants').select('*').eq('codigo', tenant).maybeSingle();
+    if (error) return res.status(500).json({ error: error.message });
+    if (!data) return res.status(404).json({ error: 'Empresa no encontrada.' });
+    return res.json({
+      empresa: {
+        codigo: data.codigo,
+        nombre_empresa: data.nombre_empresa || '',
+        dominio: data.dominio || '',
+        rtn: data.rtn || '',
+        telefono: data.telefono || '',
+        direccion: data.direccion || '',
+        email: data.email || '',
+        email_facturacion: data.email_facturacion || '',
+        pais: data.pais || '',
+        zona_horaria: data.zona_horaria || '',
+        moneda: data.moneda || 'HNL',
+        formato_fecha: data.formato_fecha || 'DD/MM/YYYY',
+        idioma: data.idioma || 'es',
+        area: data.area || '',
+        tamano: data.tamano || '',
+        logo_url: data.logo_url || null,
+        plan: data.plan || 'starter',
+        estado: data.estado || 'activo',
+        created_at: data.created_at
+      }
+    });
+  } catch (err) { return handleServerError(res, err); }
+});
+
+// ── PUT /api/empresa/profile — el Owner/Admin actualiza la configuración de SU empresa ──
+// El frontend (empresa/configuracion.html) enviaba PUT a /api/tenants/:id (404 del
+// verbo). Este endpoint aplica el scope del JWT y delega a la MISMA lógica de
+// PUT /api/tenants/:id mediante redirección interna 307 (preserva método, body
+// y headers; el id SIEMPRE sale del JWT, no del cliente).
+app.put('/api/empresa/profile', authenticate, requireTenantAdmin, (req, res) => {
+  const targetId = encodeURIComponent(normalizeTenantCode(getTenantCode(req)));
+  req.url = `/api/tenants/${targetId}`;
+  return app._router.handle(req, res, () => {});
+});
+
+// ── GET /api/auditoria/tenant — log administrativo del propio tenant ──
+// (El /api/auditoria global es ROOT-only; este es el equivalente scoped.)
+app.get('/api/auditoria/tenant', authenticate, requireTenantAdmin, async (req, res) => {
+  if (!requireSupabase(res)) return;
+  try {
+    const tenant = normalizeTenantCode(getTenantCode(req));
+    const limit = Math.min(parseInt(req.query.limit, 10) || 100, 500);
+    const { data, error } = await supabase.from('auditoria')
+      .select('id, accion, descripcion, tipo, usuario, ip, created_at')
+      .eq('empresa_codigo', tenant)
+      .order('created_at', { ascending: false }).limit(limit);
+    if (error) return res.status(500).json({ error: error.message });
+    return res.json({ eventos: data || [] });
+  } catch (err) { return handleServerError(res, err); }
+});
+
+// ── GET /api/empresa/support/tickets — tickets reales del tenant ──
+app.get('/api/empresa/support/tickets', authenticate, async (req, res) => {
+  if (!requireSupabase(res)) return;
+  try {
+    const tenant = normalizeTenantCode(getTenantCode(req));
+    const { data, error } = await supabase.from('support_tickets')
+      .select('id, nombre, email, empresa, categoria, prioridad, estado, asunto, mensaje, created_at')
+      .eq('empresa', tenant)
+      .order('created_at', { ascending: false }).limit(50);
+    if (error) return res.status(500).json({ error: error.message });
+    return res.json({ tickets: data || [] });
+  } catch (err) { return handleServerError(res, err); }
+});
+
+// ── Integraciones: catálogo + estado por tenant (Bloque K) ──
+// El catálogo es metadata de la plataforma; el estado por tenant vive en
+// tenant_integrations (migración). Sin credenciales de terceros aquí: las
+// conexiones reales se completan cuando exista el secreto correspondiente.
+const INTEGRACION_CATALOGO = Object.freeze({
+  whatsapp:  { nombre: 'WhatsApp Business',    descripcion: 'Notificaciones de pedidos y estados por WhatsApp.', icono: 'fa-brands fa-whatsapp',   categoria: 'mensajeria' },
+  telegram:  { nombre: 'Telegram',             descripcion: 'Alertas operativas a canales de Telegram.',         icono: 'fa-brands fa-telegram',   categoria: 'mensajeria' },
+  correo:    { nombre: 'Correo (SMTP)',        descripcion: 'Envío de facturas y notificaciones por correo.',    icono: 'fa-solid fa-envelope',    categoria: 'mensajeria' },
+  stripe:    { nombre: 'Stripe',               descripcion: 'Cobros con tarjeta para la tienda en línea.',       icono: 'fa-brands fa-stripe-s',   categoria: 'pagos' },
+  mercadopago:{ nombre: 'Mercado Pago',        descripcion: 'Pagos con tarjeta y transferencias (LATAM).',       icono: 'fa-solid fa-money-bill-transfer', categoria: 'pagos' },
+  googlecal: { nombre: 'Google Calendar',      descripcion: 'Sincronización de citas y reservas.',               icono: 'fa-brands fa-google',     categoria: 'productividad' },
+  sheets:    { nombre: 'Google Sheets',        descripcion: 'Exportación automática de reportes a hojas de cálculo.', icono: 'fa-solid fa-table',   categoria: 'productividad' }
+});
+
+app.get('/api/empresa/integrations', authenticate, requireTenantAdmin, async (req, res) => {
+  if (!requireSupabase(res)) return;
+  try {
+    const tenant = normalizeTenantCode(getTenantCode(req));
+    const { data, error } = await supabase.from('tenant_integrations')
+      .select('integration_key, enabled, connected_at').eq('empresa_codigo', tenant);
+    const estado = {};
+    if (!error) (data || []).forEach(r => { estado[r.integration_key] = { enabled: r.enabled !== false, connected_at: r.connected_at }; });
+    const integraciones = Object.entries(INTEGRACION_CATALOGO).map(([key, m]) => ({
+      key, ...m,
+      enabled: estado[key] ? estado[key].enabled : false,
+      connected_at: estado[key] ? estado[key].connected_at : null
+    }));
+    return res.json({ integraciones });
+  } catch (err) { return handleServerError(res, err); }
+});
+
+// Conectar/desconectar una integración (auditable; la config real de
+// credenciales por proveedor llegará cuando existan los secretos).
+app.put('/api/empresa/integrations/:key', authenticate, requireTenantAdmin, async (req, res) => {
+  if (!requireSupabase(res)) return;
+  try {
+    const tenant = normalizeTenantCode(getTenantCode(req));
+    const key = String(req.params.key || '').trim();
+    const meta = INTEGRACION_CATALOGO[key];
+    if (!meta) return res.status(404).json({ error: 'Integración desconocida.' });
+    const enabled = req.body?.enabled !== false;
+    const ahora = new Date().toISOString();
+    const { error } = await supabase.from('tenant_integrations').upsert({
+      empresa_codigo: tenant,
+      integration_key: key,
+      enabled,
+      connected_by: req.user?.sub || null,
+      connected_at: enabled ? ahora : null,
+      updated_at: ahora
+    }, { onConflict: 'empresa_codigo,integration_key' });
+    if (error) {
+      // Tabla aún no migrada: mensaje accionable en vez de 500 genérico.
+      if (/could not find the table/i.test(error.message || '')) {
+        return res.status(503).json({ error: 'Las integraciones requieren aplicar la migración migracion_portales_v2.sql (tabla tenant_integrations).', code: 'MIGRATION_PENDING' });
+      }
+      return res.status(500).json({ error: error.message });
+    }
+    await registrarAuditoria(tenant, enabled ? 'Integración conectada' : 'Integración desconectada', meta.nombre, 'configuracion', req.user?.email || '', req);
+    await registrarEventoSeguridad(tenant, enabled ? 'integration_connected' : 'integration_disconnected', { req, severidad: 'warning', descripcion: meta.nombre });
+    return res.json({ success: true, key, enabled });
+  } catch (err) { return handleServerError(res, err); }
+});
+
 // COMPAT APP (Workspace) — transacciones, cotizaciones, órdenes de compra,
 // notas y sincronización. La app (Flutter) usa estos mismos endpoints.
 // ═══════════════════════════════════════════════════════════════════════════
@@ -7344,6 +8541,410 @@ app.post('/api/sync', authenticate, async (req, res) => {
     await registrarAuditoria(tenant, 'Sincronización', `${op} de ${clean.length} fila(s) en ${tabla}`, 'sistema', req.user?.nombre || '', req);
     return res.json({ sincronizadas: clean.length, tabla, data: data || [] });
   } catch (err) { return handleServerError(res, err); }
+});
+
+// ═══════════════════════════════════════════════════════════════
+// PORTAL PILOT — PLAN ENGINE & USAGE METERING (Bloque 1)
+// ═══════════════════════════════════════════════════════════════
+
+// Registro de consumo acumulado en tenant_usage (periodo mensual YYYY-MM).
+// Recurso válido: ai_tokens, api_requests, storage, users, documents, automations.
+async function registrarUsoTenant(empresaCodigo, recurso, cantidad = 1, periodo = null) {
+  if (!supabase) return;
+  const tenant = normalizeTenantCode(empresaCodigo || '');
+  if (!tenant) return;
+  const recursoKey = String(recurso || '').trim().toLowerCase().slice(0, 50);
+  if (!recursoKey) return;
+  const mes = periodo || new Date().toISOString().slice(0, 7);
+  const delta = Math.max(0, Number(cantidad) || 0);
+  try {
+    const { error: rpcErr } = await supabase.rpc('incrementar_tenant_uso', {
+      p_empresa_codigo: tenant, p_recurso: recursoKey, p_periodo: mes, p_cantidad: delta
+    });
+    if (!rpcErr) return;
+    const { data: rows } = await supabase
+      .from('tenant_usage')
+      .select('cantidad')
+      .eq('empresa_codigo', tenant)
+      .eq('recurso', recursoKey)
+      .eq('periodo', mes)
+      .maybeSingle();
+    const actual = (rows && Number(rows.cantidad)) || 0;
+    await supabase
+      .from('tenant_usage')
+      .upsert({
+        empresa_codigo: tenant,
+        recurso: recursoKey,
+        periodo: mes,
+        cantidad: actual + delta,
+        updated_at: new Date().toISOString()
+      }, { onConflict: 'empresa_codigo,recurso,periodo' });
+  } catch (err) {
+    console.warn('[USAGE] No se pudo registrar consumo:', err.message);
+  }
+}
+
+// ── Estado de autenticación seguro (sin enumeración de correos) ──
+app.get('/api/auth/status', authenticate, async (req, res) => {
+  try {
+    const user = req.user || {};
+    const isRoot = isRootUser(req);
+    const rol = String(user.rol || '').trim().toLowerCase();
+    const tenant = normalizeTenantCode(user.empresa_codigo);
+    const area = isRoot ? 'pp' : (['owner', 'administrador', 'admin'].includes(rol) ? 'empresa' : 'workspace');
+    let plan = null;
+    if (tenant && supabase) {
+      const { data: ten } = await supabase.from('tenants').select('plan, estado, created_at').eq('codigo', tenant).maybeSingle();
+      if (ten) plan = normalizePlan(ten.plan);
+    }
+    return res.json({
+      authenticated: true,
+      sub: user.sub || null,
+      email: user.email || null,
+      nombre: user.nombre || null,
+      rol,
+      area,
+      empresa_codigo: tenant || null,
+      plan,
+      config: { area }
+    });
+  } catch (err) {
+    return handleServerError(res, err);
+  }
+});
+
+// ── Uso del tenant actual (por periodo YYYY-MM) ─────────────────
+app.get('/api/tenant/usage', authenticate, async (req, res) => {
+  if (!requireSupabase(res)) return;
+  try {
+    const tenant = normalizeTenantCode(getTenantCode(req));
+    if (!tenant) return res.status(400).json({ error: 'Empresa no identificada en la sesión' });
+    const mes = String(req.query?.periodo || '').trim() || new Date().toISOString().slice(0, 7);
+    const { data, error } = await supabase
+      .from('tenant_usage')
+      .select('recurso, cantidad, periodo')
+      .eq('empresa_codigo', tenant)
+      .eq('periodo', mes);
+    if (error) return res.status(500).json({ error: error.message });
+
+    const porRecurso = {};
+    for (const row of (data || [])) {
+      porRecurso[row.recurso] = (porRecurso[row.recurso] || 0) + (Number(row.cantidad) || 0);
+    }
+
+    const { data: ten } = await supabase.from('tenants').select('plan').eq('codigo', tenant).maybeSingle();
+    const plan = normalizePlan(ten?.plan);
+    const limites = planLimitsFor(plan);
+
+    return res.json({
+      empresa_codigo: tenant,
+      periodo: mes,
+      plan,
+      uso: porRecurso,
+      limites: {
+        ai_tokens: limites.tokens,
+        storage: limites.storage,
+        users: limites.usuarios,
+        automations: limites.bots,
+        api_requests: null,
+        documents: null
+      }
+    });
+  } catch (err) {
+    return handleServerError(res, err);
+  }
+});
+
+// ── Registro de consumo (llamado por interno/metering) ──────────
+app.post('/api/tenant/usage', authenticate, async (req, res) => {
+  try {
+    const tenant = normalizeTenantCode(getTenantCode(req));
+    if (!tenant) return res.status(400).json({ error: 'Empresa no identificada en la sesión' });
+    const { recurso, cantidad = 1, periodo } = req.body || {};
+    const permitidos = ['ai_tokens', 'api_requests', 'storage', 'users', 'documents', 'automations'];
+    const recursoKey = String(recurso || '').trim().toLowerCase();
+    if (!permitidos.includes(recursoKey)) {
+      return res.status(400).json({ error: `Recurso inválido. Permitidos: ${permitidos.join(', ')}` });
+    }
+    const delta = Math.max(0, Number(cantidad) || 0);
+    await registrarUsoTenant(tenant, recursoKey, delta, periodo);
+    return res.json({ success: true, empresa_codigo: tenant, recurso: recursoKey, cantidad: delta });
+  } catch (err) {
+    return handleServerError(res, err);
+  }
+});
+
+// ── Uso global agregado (solo ROOT, cross-tenant) ───────────────
+app.get('/api/usage', authenticate, requireRoot, async (req, res) => {
+  if (!requireSupabase(res)) return;
+  try {
+    const mes = String(req.query?.periodo || '').trim() || new Date().toISOString().slice(0, 7);
+    let q = supabase.from('tenant_usage').select('empresa_codigo, recurso, cantidad');
+    if (mes) q = q.eq('periodo', mes);
+    const { data, error } = await q;
+    if (error) return res.status(500).json({ error: error.message });
+    const global = {};
+    const porTenant = {};
+    for (const row of (data || [])) {
+      global[row.recurso] = (global[row.recurso] || 0) + (Number(row.cantidad) || 0);
+      porTenant[row.empresa_codigo] = porTenant[row.empresa_codigo] || {};
+      porTenant[row.empresa_codigo][row.recurso] = (porTenant[row.empresa_codigo][row.recurso] || 0) + (Number(row.cantidad) || 0);
+    }
+    return res.json({ periodo: mes, global, porTenant });
+  } catch (err) {
+    return handleServerError(res, err);
+  }
+});
+
+// ── Uso de IA agregado por tenant (solo ROOT) ───────────────────
+app.get('/api/ai/usage', authenticate, async (req, res) => {
+  if (!requireSupabase(res)) return;
+  try {
+    // ROOT: visión global. Owner/Admin: únicamente su tenant (scope del JWT).
+    const scopeAll = isRootUser(req);
+    let qU = supabase.from('ai_usage_log')
+      .select('empresa_codigo, tokens_total, provider, success, created_at');
+    if (!scopeAll) qU = qU.eq('empresa_codigo', normalizeTenantCode(getTenantCode(req)));
+    const { data, error } = await qU;
+    if (error) return res.status(500).json({ error: error.message });
+    const porTenant = {};
+    let totalTokens = 0, totalSolicitudes = 0, totalExitosas = 0, totalFallidas = 0;
+    for (const row of (data || [])) {
+      const t = normalizeTenantCode(row.empresa_codigo);
+      porTenant[t] = porTenant[t] || { tokens: 0, solicitudes: 0, exitosas: 0, fallidas: 0 };
+      const tokens = Number(row.tokens_total) || 0;
+      porTenant[t].tokens += tokens;
+      porTenant[t].solicitudes += 1;
+      if (row.success) porTenant[t].exitosas += 1; else porTenant[t].fallidas += 1;
+      totalTokens += tokens;
+      totalSolicitudes += 1;
+      if (row.success) totalExitosas += 1; else totalFallidas += 1;
+    }
+    return res.json({ porTenant, totalTokens, totalSolicitudes, totalExitosas, totalFallidas });
+  } catch (err) {
+    return handleServerError(res, err);
+  }
+});
+
+// ── Costos estimados de IA por tenant (solo ROOT) ───────────────
+app.get('/api/ai/costs', authenticate, async (req, res) => {
+  if (!requireSupabase(res)) return;
+  try {
+    // ROOT: visión global. Owner/Admin: únicamente su tenant (scope del JWT).
+    const scopeAllC = isRootUser(req);
+    let qC = supabase.from('ai_usage_log').select('empresa_codigo, cost_estimated');
+    if (!scopeAllC) qC = qC.eq('empresa_codigo', normalizeTenantCode(getTenantCode(req)));
+    const { data, error } = await qC;
+    if (error) return res.status(500).json({ error: error.message });
+    const porTenant = {};
+    let totalCost = 0;
+    for (const row of (data || [])) {
+      const t = normalizeTenantCode(row.empresa_codigo);
+      const c = Number(row.cost_estimated) || 0;
+      porTenant[t] = (porTenant[t] || 0) + c;
+      totalCost += c;
+    }
+    return res.json({ totalCost, porTenant });
+  } catch (err) {
+    return handleServerError(res, err);
+  }
+});
+
+// ── Proveedores de IA configurados (solo ROOT, nunca expone claves) ──
+app.get('/api/ai/providers', authenticate, requireRoot, async (req, res) => {
+  const providers = {};
+  for (const key of Object.keys(AI_PROVIDERS)) {
+    const p = AI_PROVIDERS[key];
+    providers[key] = {
+      name: p.name,
+      configurado: !!p.getKey(),
+      models: p.models
+    };
+  }
+  return res.json({ providers });
+});
+
+// ── Límites de tokens IA del tenant según su plan ───────────────
+app.get('/api/ai/limits', authenticate, async (req, res) => {
+  if (!requireSupabase(res)) return;
+  try {
+    const tenant = normalizeTenantCode(getTenantCode(req));
+    const { data: ten } = await supabase.from('tenants').select('plan').eq('codigo', tenant).maybeSingle();
+    const plan = normalizePlan(ten?.plan);
+    const limites = planLimitsFor(plan);
+    const { data } = await supabase
+      .from('ai_usage_log')
+      .select('tokens_total')
+      .eq('empresa_codigo', tenant);
+    const usados = (data || []).reduce((s, r) => s + (Number(r.tokens_total) || 0), 0);
+    return res.json({
+      plan,
+      limites: limites.tokens,
+      usados,
+      restantes: Math.max(0, limites.tokens - usados),
+      porcentaje: limites.tokens > 0 ? Math.min(100, Math.round((usados / limites.tokens) * 100)) : 0
+    });
+  } catch (err) {
+    return handleServerError(res, err);
+  }
+});
+
+// ── Suscripción del tenant actual ───────────────────────────────
+app.get('/api/tenant/subscription', authenticate, async (req, res) => {
+  if (!requireSupabase(res)) return;
+  try {
+    const tenant = normalizeTenantCode(getTenantCode(req));
+    if (!tenant) return res.status(400).json({ error: 'Empresa no identificada en la sesión' });
+    const { data: ten } = await supabase
+      .from('tenants')
+      .select('plan, estado, created_at')
+      .eq('codigo', tenant)
+      .maybeSingle();
+    if (!ten) return res.status(404).json({ error: 'Empresa no encontrada' });
+    const plan = normalizePlan(ten.plan);
+    const limites = planLimitsFor(plan);
+    const dias = ten.created_at ? Math.floor((Date.now() - new Date(ten.created_at).getTime()) / 86400000) : 0;
+    // State machine formal (Blueprint §14): la fila en `subscriptions` es la
+    // fuente del ciclo de vida; tenants.estado queda como vista derivada.
+    let sub = null;
+    try {
+      const { data: s } = await supabase.from('subscriptions').select('*').eq('empresa_codigo', tenant).maybeSingle();
+      sub = s;
+    } catch (e) { /* tabla opcional */ }
+    const trialEnds = sub?.trial_ends_at
+      || ((plan === 'starter' && ten.created_at) ? new Date(new Date(ten.created_at).getTime() + 15 * 86400000).toISOString() : null);
+    const trialVigente = plan === 'starter' && trialEnds ? Date.now() <= new Date(trialEnds).getTime() : false;
+    return res.json({
+      empresa_codigo: tenant,
+      plan,
+      estado: sub?.estado || normalizeStatus(ten.estado || 'active'),
+      suscripcion: {
+        estado: sub?.estado || null,
+        trial_started_at: sub?.trial_started_at || null,
+        trial_ends_at: sub?.trial_ends_at || null,
+        current_period_start: sub?.current_period_start || null,
+        current_period_end: sub?.current_period_end || null,
+        cancel_at_period_end: sub?.cancel_at_period_end || false,
+        proveedor_pago: sub?.proveedor_pago || null
+      },
+      creada_el: ten.created_at,
+      dias_desde_creacion: dias,
+      trial_activo: trialVigente,
+      trial_ends_at: trialEnds,
+      limites
+    });
+  } catch (err) {
+    return handleServerError(res, err);
+  }
+});
+
+// ── Catálogo de planes (público; DB primero, fallback constantes) ──
+app.get('/api/plans', async (req, res) => {
+  if (!requireSupabase(res)) return res.json({ plans: PLAN_LIMITS });
+  try {
+    const { data, error } = await supabase.from('planes').select('*').order('orden', { ascending: true });
+    if (!error && data && data.length) return res.json({ plans: data });
+    return res.json({ plans: PLAN_LIMITS });
+  } catch (err) {
+    return res.json({ plans: PLAN_LIMITS });
+  }
+});
+
+// ── Features y límites de un plan (solo ROOT: lectura + edición como datos) ──
+app.get('/api/plans/:id/features', authenticate, requireRoot, async (req, res) => {
+  if (!requireSupabase(res)) return;
+  try {
+    const { data: planRow } = await supabase.from('planes').select('*').eq('clave', req.params.id).maybeSingle();
+    if (!planRow) return res.status(404).json({ error: 'Plan no encontrado' });
+    const [{ data: feats }, { data: limits }] = await Promise.all([
+      supabase.from('plan_features').select('feature').eq('plan_id', planRow.id),
+      supabase.from('plan_limits').select('recurso, maximo, unidad').eq('plan_id', planRow.id)
+    ]);
+    return res.json({
+      plan: planRow,
+      features: (feats || []).map(f => f.feature),
+      limits: (limits || []).map(l => ({ recurso: l.recurso, maximo: Number(l.maximo), unidad: l.unidad }))
+    });
+  } catch (err) { return handleServerError(res, err); }
+});
+
+app.put('/api/plans/:id/features', authenticate, requireRoot, async (req, res) => {
+  if (!requireSupabase(res)) return;
+  try {
+    const { features } = req.body || {};
+    if (!Array.isArray(features)) return res.status(400).json({ error: 'features debe ser un arreglo' });
+    const { data: planRow } = await supabase.from('planes').select('id').eq('clave', req.params.id).maybeSingle();
+    if (!planRow) return res.status(404).json({ error: 'Plan no encontrado' });
+    const clean = [...new Set(features.map(f => String(f).trim()).filter(Boolean))];
+    await supabase.from('plan_features').delete().eq('plan_id', planRow.id);
+    if (clean.length) {
+      await supabase.from('plan_features').insert(clean.map(f => ({ plan_id: planRow.id, feature: f })));
+    }
+    await registrarAuditoria('ROOT', 'plan_features_actualizado', `Features del plan ${req.params.id} actualizados (${clean.length})`, 'configuracion', req.user?.email || '', req);
+    return res.json({ success: true, plan: req.params.id, features: clean });
+  } catch (err) { return handleServerError(res, err); }
+});
+
+// ── Analytics global (solo ROOT) ────────────────────────────────
+app.get('/api/analytics', authenticate, requireRoot, async (req, res) => {
+  if (!requireSupabase(res)) return;
+  try {
+    const [ten, usr, fac, tok] = await Promise.all([
+      supabase.from('tenants').select('id', { count: 'exact', head: true }),
+      supabase.from('usuarios').select('id', { count: 'exact', head: true }),
+      supabase.from('facturas').select('id', { count: 'exact', head: true }),
+      supabase.from('ai_usage_log').select('tokens_total')
+    ]);
+    const tokens = (tok.data || []).reduce((s, r) => s + (Number(r.tokens_total) || 0), 0);
+    return res.json({
+      tenants: ten.count || 0,
+      usuarios: usr.count || 0,
+      facturas: fac.count || 0,
+      tokensIA: tokens
+    });
+  } catch (err) {
+    return handleServerError(res, err);
+  }
+});
+
+// ── Auditoría global (solo ROOT, cross-tenant) ──────────────────
+app.get('/api/auditoria', authenticate, requireRoot, async (req, res) => {
+  if (!requireSupabase(res)) return;
+  try {
+    let q = supabase
+      .from('auditoria')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(Number(req.query?.limit) || 100);
+    if (req.query?.empresa) q = q.eq('empresa_codigo', normalizeTenantCode(String(req.query.empresa).trim()));
+    const { data, error } = await q;
+    if (error) return res.status(500).json({ error: error.message });
+    return res.json({ eventos: data || [] });
+  } catch (err) {
+    return handleServerError(res, err);
+  }
+});
+
+// ── Bots/RPA por empresa (solo ROOT, cross-tenant) ──────────────
+app.get('/api/bots', authenticate, requireRoot, async (req, res) => {
+  if (!requireSupabase(res)) return;
+  try {
+    const { data, error } = await supabase
+      .from('automatizaciones')
+      .select('empresa_codigo, estado, activo')
+      .limit(1000);
+    if (error) return res.status(500).json({ error: error.message });
+    const porEmpresa = {};
+    for (const b of (data || [])) {
+      const t = normalizeTenantCode(b.empresa_codigo);
+      porEmpresa[t] = porEmpresa[t] || { total: 0, activos: 0 };
+      porEmpresa[t].total += 1;
+      if (['activo', 'active'].includes(String(b.estado || b.activo || '').toLowerCase())) porEmpresa[t].activos += 1;
+    }
+    return res.json({ porEmpresa });
+  } catch (err) {
+    return handleServerError(res, err);
+  }
 });
 
 // 🔧 FIX VERCEL: Exportación limpia para serverless

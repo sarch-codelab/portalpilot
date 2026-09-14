@@ -69,7 +69,58 @@
     overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
   }
 
-  // Skeleton helpers
+  window.marcarSoloLectura = function (activo) {
+    localStorage.setItem('soloLectura', activo ? '1' : '0');
+    if (activo) injectReadOnlyBanner();
+    else {
+      const b = document.getElementById('ppReadOnlyBanner');
+      if (b) { b.remove(); if (document.body.style.paddingTop === '42px') document.body.style.paddingTop = ''; }
+    }
+  };
+
+  window.injectReadOnlyBanner = function () {
+    if (document.getElementById('ppReadOnlyBanner')) return;
+    const existing = ['.pp-read-only-banner', '#ppReadOnlyBanner'];
+    // Siempre lo más alto posible
+    const banner = document.createElement('div');
+    banner.id = 'ppReadOnlyBanner';
+    banner.className = 'pp-read-only-banner';
+    banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:20000;background:linear-gradient(90deg,#dc2626,#ef4444);color:#fff;padding:10px 16px;text-align:center;font-weight:600;font-size:13px;line-height:1.5;font-family:"DM Sans",system-ui,sans-serif;box-shadow:0 4px 14px rgba(220,38,38,.35);display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap';
+    banner.innerHTML = '<i class="fas fa-lock" style="font-size:13px"></i><span>Prueba vencida · Modo solo lectura: solo puedes consultar y exportar tus datos.</span>' +
+      '<a href="../pay_plan.html" style="color:#fff;text-decoration:underline;font-weight:800">Renovar plan</a>';
+    document.body.appendChild(banner);
+    if (parseInt(document.body.style.paddingTop || '0', 10) < 42) document.body.style.paddingTop = '42px';
+  };
+
+  window.injectReadOnlyBannerHide = function () { window.marcarSoloLectura(false); };
+
+  // Observador global de respuestas: si el backend devuelve 403 TRIAL_EXPIRED,
+  // marcamos el modo solo lectura para toda la sesión web.
+  (function installReadOnlyFetchWatcher() {
+    if (window.__ppReadOnlyWatcherInstalled) return;
+    window.__ppReadOnlyWatcherInstalled = true;
+    const origFetch = window.fetch.bind(window);
+    window.fetch = async function (input, init) {
+      const res = await origFetch(input, init);
+      if (res && res.status === 403 && res.headers) {
+        try {
+          const ct = (res.headers.get('content-type') || '');
+          if (ct.includes('json')) {
+            const clone = res.clone();
+            const body = await clone.json();
+            if (body && body.code === 'TRIAL_EXPIRED') {
+              window.marcarSoloLectura(true);
+            } else if (res.url && !res.ok && String(res.url).includes('/login')) {
+              // mantener
+            }
+          }
+        } catch (e) { /* no-op */ }
+      }
+      return res;
+    };
+  })();
+
+// Skeleton helpers
   window.renderSkeletonRows = function (container, count) {
     let html = '';
     for (let i = 0; i < count; i++) {
@@ -107,5 +158,11 @@
     window._currentPlan = plan;
     lockSidebar(plan);
     showPlanBadge(plan);
+    const owner = (localStorage.getItem('empresaCodigo') || '').toUpperCase() === 'ROOT';
+    const role = (localStorage.getItem('userRole') || '').toLowerCase();
+    const readonly = localStorage.getItem('soloLectura') === '1';
+    if (readonly && !owner && !(role.includes('root') || role === 'owner')) {
+      injectReadOnlyBanner();
+    }
   });
 })();

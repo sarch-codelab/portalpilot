@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/png" href="../img/iconos/robot_logo.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Actividad — Portal Pilot</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="stylesheet" href="../css/portales.css">
+<style>
+.filters{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:4px}
+.act-item{display:flex;gap:12px;padding:13px 16px;background:var(--card);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:var(--radius)}
+.act-item i.lead{color:var(--accent);margin-top:3px}
+.act-accion{font-size:13.5px;font-weight:600;color:var(--white)}
+.act-desc{font-size:12.5px;color:var(--gray);margin-top:2px}
+.act-meta{font-size:11px;color:var(--gray);margin-top:6px;display:flex;gap:12px;flex-wrap:wrap}
+</style>
+</head>
+<body class="pp-body">
+<div class="pp-dashboard">
+  <aside class="pp-sidebar" id="sidebar">
+    <div class="pp-sidebar-logo"><div class="logo-icon"><img src="../img/iconos/robot_logo.png" alt="Portal Pilot"></div><span>Portal Pilot</span></div>
+    <nav class="pp-nav">
+      <a href="dashboard.html" class="pp-nav-link"><i class="fas fa-home"></i> <span>Dashboard</span></a>
+      <a href="team.html" class="pp-nav-link"><i class="fas fa-users"></i> <span>Equipo</span></a>
+      <div class="pp-nav-sep">Transparencia</div>
+      <a href="audit.html" class="pp-nav-link"><i class="fas fa-clipboard-list"></i> <span>Auditoría</span></a>
+      <a href="activity.html" class="pp-nav-link active"><i class="fas fa-wave-square"></i> <span>Actividad</span></a>
+      <div class="pp-nav-sep">Cuenta</div>
+      <a href="suscripcion.html" class="pp-nav-link"><i class="fas fa-crown"></i> <span>Suscripción</span></a>
+      <a href="security.html" class="pp-nav-link"><i class="fas fa-shield-alt"></i> <span>Seguridad</span></a>
+      <a href="perfil.html" class="pp-nav-link"><i class="fas fa-user"></i> <span>Mi Perfil</span></a>
+    </nav>
+    <div class="pp-sidebar-footer">
+      <button class="pp-btn pp-btn-ghost pp-btn-sm" onclick="window.location.href='/login.html'"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</button>
+    </div>
+  </aside>
+  <main class="main-content">
+    <div class="pp-topbar"><div class="pp-topbar-title">Actividad de <span>MI EMPRESA</span></div></div>
+    <div class="pp-page-header">
+      <div>
+        <h1 class="pp-page-title">Actividad <span>operacional</span></h1>
+        <p class="pp-page-subtitle">Movimiento reciente del negocio del tenant: facturación, POS, compras, inventario, flota y automatizaciones. Los eventos administrativos (usuarios, roles, plan) viven en <a href="audit.html" style="color:var(--accent)">Auditoría</a>.</p>
+      </div>
+      <div class="pp-toolbar">
+        <select class="pp-select" id="fTipo" style="width:auto"><option value="">Todos los módulos</option></select>
+        <button class="pp-btn pp-btn-ghost pp-btn-sm" onclick="load()"><i class="fas fa-sync-alt"></i></button>
+      </div>
+    </div>
+    <div class="pp-content">
+      <div id="msg" class="pp-info-box"><i class="fas fa-spinner fa-spin"></i> Cargando actividad real…</div>
+      <div id="lista" style="display:none;flex-direction:column;gap:10px"></div>
+      <div id="empty" style="display:none"></div>
+    </div>
+  </main>
+</div>
+<script src="../js/plan-gate.js"></script>
+<script src="../js/portales.js"></script>
+<script>
+(async function () {
+  if (!window.PP.requireSession()) return;
+  const H = window.PP.escapeHtml, fmtDT = window.PP.fmtDateTime;
+  let eventos = [];
+  const ICONOS = { facturacion: 'fa-file-invoice-dollar', fleet: 'fa-truck', pos: 'fa-cash-register', compras: 'fa-cart-shopping', inventario: 'fa-boxes-stacked', sistema: 'fa-gear', automatizacion: 'fa-robot' };
+
+  function render() {
+    const tipo = document.getElementById('fTipo').value;
+    const rows = eventos.filter(e => !tipo || (e.tipo || '') === tipo);
+    const lista = document.getElementById('lista');
+    const empty = document.getElementById('empty');
+    if (!rows.length) {
+      lista.style.display = 'none';
+      empty.style.display = 'block';
+      empty.innerHTML = '<div class="pp-empty"><i class="fas fa-wave-square"></i><div class="pp-empty-title">Sin actividad operacional</div><p>Cuando el equipo opere el negocio (facturar, vender, inventariar) el movimiento aparecerá aquí.</p></div>';
+      return;
+    }
+    empty.style.display = 'none';
+    lista.style.display = 'flex';
+    lista.innerHTML = rows.map(e => `<div class="act-item">
+      <i class="fas ${ICONOS[e.tipo] || 'fa-bolt'} lead"></i>
+      <div style="flex:1;min-width:0">
+        <div class="act-accion">${H(e.accion)}</div>
+        <div class="act-desc">${H(e.descripcion || '')}</div>
+        <div class="act-meta"><span><i class="fas fa-clock"></i> ${fmtDT(e.created_at)}</span>${e.usuario ? `<span><i class="fas fa-user"></i> ${H(e.usuario)}</span>` : ''}<span class="tipo-badge">${H(e.tipo || 'sistema')}</span></div>
+      </div>
+    </div>`).join('');
+  }
+
+  async function load() {
+    const msg = document.getElementById('msg');
+    try {
+      const data = await window.PP.apiFetch('/api/empresa/activity?limit=100');
+      eventos = data.eventos || [];
+      msg.style.display = 'none';
+      const sel = document.getElementById('fTipo');
+      const tipos = [...new Set(eventos.map(e => e.tipo || 'sistema'))];
+      const current = sel.value;
+      sel.innerHTML = '<option value="">Todos los módulos</option>' + tipos.map(t => `<option value="${H(t)}">${H(t)}</option>`).join('');
+      sel.value = current;
+      render();
+    } catch (err) {
+      msg.className = 'pp-error';
+      msg.innerHTML = `<i class="fas fa-triangle-exclamation"></i><div><b>No se pudo cargar la actividad.</b><br>${H(err.message)}</div>`;
+    }
+  }
+  document.getElementById('fTipo').addEventListener('change', render);
+  window.load = load;
+  load();
+})();
+</script>
+</body>
+</html>

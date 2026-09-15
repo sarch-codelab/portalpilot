@@ -4490,7 +4490,7 @@ Reglas:
     messages.push({ role: 'user', content: message.slice(0, 4000) });
     const reply = await callAIGateway({ modelRole: 'chat', messages, maxTokens: 500 });
     if (!reply.success) {
-      return res.status(reply.status || 500).json({ error: reply.error });
+      return res.status(reply.status || 503).json({ error: reply.error });
     }
 
     await logAIUsage({ empresaCodigo: tenant, empresaId: empresa?.id, usuarioId: req.user?.sub, provider: reply.provider, model: reply.model, funcion: 'dashboard_query', tokensInput: reply.tokensInput, tokensOutput: reply.tokensOutput, tokensTotal: reply.tokensTotal, durationMs: reply.durationMs, success: true });
@@ -4613,7 +4613,7 @@ Instrucciones:
     messages.push({ role: 'system', content: sistema.slice(0, 4000) });
     messages.push({ role: 'user', content: message.slice(0, 4000) });
     const reply = await callAIGateway({ modelRole: 'chat', messages, maxTokens: 700 });
-    if (!reply.success) return res.status(reply.status || 500).json({ error: reply.error });
+    if (!reply.success) return res.status(reply.status || 503).json({ error: reply.error });
 
     await logAIUsage({ empresaCodigo: tenant, empresaId: empresa?.id, usuarioId: req.user?.sub, provider: reply.provider, model: reply.model, funcion: 'pos_analysis', tokensInput: reply.tokensInput, tokensOutput: reply.tokensOutput, tokensTotal: reply.tokensTotal, durationMs: reply.durationMs, success: true });
 
@@ -4662,7 +4662,7 @@ app.post('/api/ai/pos/upsell', authenticate, requirePlanFeature('ia'), async (re
     ];
 
     const reply = await callAIGateway({ modelRole: 'chat', messages, maxTokens: maxTokens || 600, temperature: 0.3 });
-    if (!reply.success) return res.status(reply.status || 500).json({ error: reply.error, reply: null, sugerencias: [] });
+    if (!reply.success) return res.status(reply.status || 503).json({ error: reply.error, reply: null, sugerencias: [] });
 
     let sugerencias = [];
     try {
@@ -4764,7 +4764,7 @@ Sé conciso y profesional.`;
     if (systemPrompt) messages.push({ role: 'system', content: systemPrompt.slice(0, 4000) });
     messages.push({ role: 'user', content: message.slice(0, 4000) });
     const reply = await callAIGateway({ modelRole: 'chat', messages, maxTokens: 500 });
-    if (!reply.success) return res.status(reply.status || 500).json({ error: reply.error });
+    if (!reply.success) return res.status(reply.status || 503).json({ error: reply.error });
 
     await logAIUsage({ empresaCodigo: tenant, empresaId: empresa?.id, usuarioId: req.user?.sub, provider: reply.provider, model: reply.model, funcion: 'crm_customer', tokensInput: reply.tokensInput, tokensOutput: reply.tokensOutput, tokensTotal: reply.tokensTotal, durationMs: reply.durationMs, success: true });
 
@@ -4813,7 +4813,7 @@ Sé conciso, empático y profesional.`;
     if (systemPrompt) messages.push({ role: 'system', content: systemPrompt.slice(0, 4000) });
     messages.push({ role: 'user', content: message.slice(0, 4000) });
     const reply = await callAIGateway({ modelRole: 'chat', messages, maxTokens: 500 });
-    if (!reply.success) return res.status(reply.status || 500).json({ error: reply.error });
+    if (!reply.success) return res.status(reply.status || 503).json({ error: reply.error });
 
     await logAIUsage({ empresaCodigo: tenant, empresaId: empresa?.id, usuarioId: req.user?.sub, provider: reply.provider, model: reply.model, funcion: 'support_assist', tokensInput: reply.tokensInput, tokensOutput: reply.tokensOutput, tokensTotal: reply.tokensTotal, durationMs: reply.durationMs, success: true });
 

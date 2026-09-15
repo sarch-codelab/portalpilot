@@ -13,7 +13,7 @@
   <link rel="icon" type="image/png" href="img/iconos/robot_logo.png">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Documentación — Portal Pilot</title>
-  <meta name="description" content="Documentación completa de Portal Pilot. Guías paso a paso, referencias API, tutoriales de Workspace, Manager y Serverless.">
+  <meta name="description" content="Documentación oficial de Portal Pilot: plataforma empresarial modular multi-empresa con POS, inventario, facturación SAR, CRM, IA y automatizaciones. Guías paso a paso por rol.">
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <style>
@@ -189,7 +189,6 @@
       .docs-footer{padding:16px 12px;gap:8px}
       footer{padding:16px 12px;font-size:11px}
     }
-
     @media(max-width:360px){
       .docs-main{padding:16px 8px 32px}
       .docs-main h1{font-size:clamp(16px,8vw,20px)}
@@ -256,9 +255,9 @@
       <div class="sidebar-cat" data-cat="getting-started">
         <div class="sidebar-cat-title" onclick="toggleSidebarCat(this.parentElement)">Primeros Pasos <i class="fas fa-chevron-down"></i></div>
         <div class="sidebar-cat-items">
-          <div class="sidebar-link active" data-section="intro" onclick="showSection(this,'intro')"><i class="fas fa-book-open"></i> Introducción</div>
-          <div class="sidebar-link" data-section="instalacion" onclick="showSection(this,'instalacion')"><i class="fas fa-download"></i> Instalación</div>
-          <div class="sidebar-link" data-section="primeros-pasos" onclick="showSection(this,'primeros-pasos')"><i class="fas fa-play"></i> Primeros pasos</div>
+          <div class="sidebar-link active" data-section="intro" onclick="showSection(this,'intro')"><i class="fas fa-book-open"></i> Qué es Portal Pilot</div>
+          <div class="sidebar-link" data-section="empezar" onclick="showSection(this,'empezar')"><i class="fas fa-flag-checkered"></i> Crear tu empresa</div>
+          <div class="sidebar-link" data-section="cuenta" onclick="showSection(this,'cuenta')"><i class="fas fa-user-shield"></i> Cuenta y sesiones</div>
         </div>
       </div>
 
@@ -267,28 +266,35 @@
         <div class="sidebar-cat-items">
           <div class="sidebar-link" data-section="ws-facturacion" onclick="showSection(this,'ws-facturacion')"><i class="fas fa-file-invoice"></i> Facturación SAR</div>
           <div class="sidebar-link" data-section="ws-inventario" onclick="showSection(this,'ws-inventario')"><i class="fas fa-boxes"></i> Inventario</div>
-          <div class="sidebar-link" data-section="ws-contabilidad" onclick="showSection(this,'ws-contabilidad')"><i class="fas fa-calculator"></i> Contabilidad</div>
-          <div class="sidebar-link" data-section="ws-nomina" onclick="showSection(this,'ws-nomina')"><i class="fas fa-users"></i> Nómina</div>
-          <div class="sidebar-link" data-section="ws-ia" onclick="showSection(this,'ws-ia')"><i class="fas fa-brain"></i> Asistente IA</div>
-          <div class="sidebar-link" data-section="ws-offline" onclick="showSection(this,'ws-offline')"><i class="fas fa-wifi"></i> Modo Offline</div>
+          <div class="sidebar-link" data-section="ws-pos" onclick="showSection(this,'ws-pos')"><i class="fas fa-cash-register"></i> Punto de Venta</div>
+          <div class="sidebar-link" data-section="ws-crm" onclick="showSection(this,'ws-crm')"><i class="fas fa-users"></i> CRM y cobros</div>
+          <div class="sidebar-link" data-section="ws-operacion" onclick="showSection(this,'ws-operacion')"><i class="fas fa-truck"></i> Rutas, Flota y Sucursales</div>
+          <div class="sidebar-link" data-section="ws-reportes" onclick="showSection(this,'ws-reportes')"><i class="fas fa-chart-bar"></i> Reportes y transacciones</div>
         </div>
       </div>
 
-      <div class="sidebar-cat" data-cat="enterprise">
-        <div class="sidebar-cat-title" onclick="toggleSidebarCat(this.parentElement)">Enterprise <span class="badge badge-beta">Bots</span> <i class="fas fa-chevron-down"></i></div>
+      <div class="sidebar-cat" data-cat="ia">
+        <div class="sidebar-cat-title" onclick="toggleSidebarCat(this.parentElement)">Inteligencia Artificial <i class="fas fa-chevron-down"></i></div>
         <div class="sidebar-cat-items">
-          <div class="sidebar-link" data-section="bots-intro" onclick="showSection(this,'bots-intro')"><i class="fas fa-robot"></i> Bots RPA</div>
-          <div class="sidebar-link" data-section="bots-flow" onclick="showSection(this,'bots-flow')"><i class="fas fa-project-diagram"></i> Editor de Flujos</div>
-          <div class="sidebar-link" data-section="bots-ia" onclick="showSection(this,'bots-ia')"><i class="fas fa-microchip"></i> Configuración IA</div>
-          <div class="sidebar-link" data-section="bots-triggers" onclick="showSection(this,'bots-triggers')"><i class="fas fa-bolt"></i> Triggers y Webhooks</div>
+          <div class="sidebar-link" data-section="ia-uso" onclick="showSection(this,'ia-uso')"><i class="fas fa-brain"></i> Asistente IA</div>
+          <div class="sidebar-link" data-section="ia-consumo" onclick="showSection(this,'ia-consumo')"><i class="fas fa-gauge-high"></i> Consumo y límites</div>
         </div>
       </div>
 
-      <div class="sidebar-cat" data-cat="serverless">
-        <div class="sidebar-cat-title" onclick="toggleSidebarCat(this.parentElement)">Serverless <i class="fas fa-chevron-down"></i></div>
+      <div class="sidebar-cat" data-cat="automation">
+        <div class="sidebar-cat-title" onclick="toggleSidebarCat(this.parentElement)">Automatizaciones <i class="fas fa-chevron-down"></i></div>
         <div class="sidebar-cat-items">
-          <div class="sidebar-link" data-section="sl-creates" onclick="showSection(this,'sl-creates')"><i class="fas fa-plus-circle"></i> Crear Serverless</div>
-          <div class="sidebar-link" data-section="sl-deploy" onclick="showSection(this,'sl-deploy')"><i class="fas fa-cloud-upload-alt"></i> Desplegar</div>
+          <div class="sidebar-link" data-section="auto-intro" onclick="showSection(this,'auto-intro')"><i class="fas fa-robot"></i> Reglas automáticas</div>
+        </div>
+      </div>
+
+      <div class="sidebar-cat" data-cat="empresa">
+        <div class="sidebar-cat-title" onclick="toggleSidebarCat(this.parentElement)">Portal Empresa <i class="fas fa-chevron-down"></i></div>
+        <div class="sidebar-cat-items">
+          <div class="sidebar-link" data-section="emp-usuarios" onclick="showSection(this,'emp-usuarios')"><i class="fas fa-user-gear"></i> Usuarios y roles</div>
+          <div class="sidebar-link" data-section="emp-suscripcion" onclick="showSection(this,'emp-suscripcion')"><i class="fas fa-credit-card"></i> Suscripción y consumo</div>
+          <div class="sidebar-link" data-section="emp-seguridad" onclick="showSection(this,'emp-seguridad')"><i class="fas fa-shield-halved"></i> Seguridad y sesiones</div>
+          <div class="sidebar-link" data-section="emp-apikeys" onclick="showSection(this,'emp-apikeys')"><i class="fas fa-key"></i> API Keys</div>
         </div>
       </div>
 
@@ -314,466 +320,404 @@
       <!-- INTRO -->
       <div class="doc-section active" id="sec-intro">
         <div class="eyebrow">PRIMEROS PASOS</div>
-        <h1>Introducción a Portal Pilot</h1>
-        <p>Portal Pilot es una plataforma SaaS ERP con inteligencia artificial integrada, diseñada para empresas hondureñas. Incluye facturación electrónica SAR, inventario, contabilidad, nómina y bots RPA automatizados.</p>
-        <div class="callout info"><i class="fas fa-info-circle"></i><p>Portal Pilot está disponible como <strong>aplicación múltiple</strong>: Web (navegador), Móvil (iOS/Android), Desktop (Windows/macOS/Linux) y Workspace (gestor de escritorio).</p></div>
+        <h1>Qué es Portal Pilot</h1>
+        <p>Portal Pilot es una <strong>plataforma empresarial modular, multi-empresa y multi-usuario</strong> para operar tu negocio en línea: punto de venta, inventario, facturación con CAI, CRM, cobros en ruta, flota, automatizaciones e inteligencia artificial — todo desde un mismo workspace con control de roles y consumo medido por plan.</p>
+        <div class="callout info"><i class="fas fa-info-circle"></i><p>Portal Pilot está disponible como <strong>aplicación Web</strong> (navegador, sin instalación) y como <strong>App móvil Workspace</strong> para operar en el día a día. La web es la fuente de verdad de tu empresa, usuarios y suscripción.</p></div>
+        <h3>¿Para quién es?</h3>
+        <p>Portal Pilot se adapta al tipo de negocio que eliges durante el onboarding. Los verticales soportados hoy son:</p>
+        <ul>
+          <li><strong>Pulpería / Mercadito</strong> — comercio de barrio y colonia</li>
+          <li><strong>Tienda / Supermercado</strong> — retail y abarrotes</li>
+          <li><strong>Área Comercial</strong> — distribución y venta mayorista</li>
+          <li><strong>Club / Membresía</strong> — socios y cobros recurrentes</li>
+        </ul>
+        <p>Y según tu operación: tienda física, venta online, distribución con rutas, autoservicio o modelos omnicanal (física + online).</p>
         <h3>¿Qué incluye?</h3>
         <ul>
-          <li><strong>Facturación Electrónica SAR/DEI</strong> — Cumplimiento normativo hondureño</li>
-          <li><strong>Inventario Multi-Almacén</strong> — Control en tiempo real con stock mínimo</li>
-          <li><strong>Contabilidad</strong> — Estados financieros, balances, impuestos</li>
-          <li><strong>Nómina Hondureña</strong> — IHSS, RAP, decimoctavo</li>
-          <li><strong>Asistente IA</strong> — Groq API (nube)</li>
-          <li><strong>Bots RPA</strong> — Automatización de tareas con editor visual</li>
-          <li><strong>Modo Offline</strong> — Funciona sin conexión a internet</li>
+          <li><strong>Facturación con CAI</strong> — correlativos, rangos autorizados, RTN, ISV 15%/18% y notas de crédito</li>
+          <li><strong>Inventario multi-bodega</strong> — productos, stock y kardex</li>
+          <li><strong>POS</strong> — ventas rápidas de mostrador con descuento de stock</li>
+          <li><strong>CRM</strong> — clientes y cobros (las <strong>ventas fiadas</strong> requieren plan Business o superior)</li>
+          <li><strong>Rutas y Cobros</strong> — visitas, cobranza en calle y cartera</li>
+          <li><strong>Flota</strong> — gestión de vehículos de reparto (plan Enterprise)</li>
+          <li><strong>Asistente IA</strong> — resúmenes, análisis de ventas y soporte (server-side, con límites por plan)</li>
+          <li><strong>Automatizaciones</strong> — reglas automáticas sobre tus operaciones (plan Enterprise)</li>
+          <li><strong>Portal Empresa</strong> — usuarios, roles, suscripción, consumo y seguridad (las <strong>API keys</strong> son del plan Enterprise)</li>
         </ul>
+        <div class="callout warn"><i class="fas fa-triangle-exclamation"></i><p><strong>Transparencia:</strong> el workspace <strong>web</strong> requiere conexión a internet. La <strong>app móvil/desktop</strong> funciona offline-first: guarda los datos localmente (SQLite) y sincroniza cuando haya conexión. La IA se ejecuta del lado del servidor y siempre requiere conexión; su cuota depende de tu plan.</p></div>
       </div>
 
-      <!-- INSTALACION -->
-      <div class="doc-section" id="sec-instalacion" style="display:none">
+      <!-- EMPEZAR -->
+      <div class="doc-section" id="sec-empezar" style="display:none">
         <div class="eyebrow">PRIMEROS PASOS</div>
-        <h1>Instalación de Portal Pilot</h1>
-        <p>Descarga e instala Portal Pilot en tu dispositivo (web, móvil o escritorio). Disponible para Android, iOS, Windows, macOS y Linux.</p>
-        <div class="step"><div class="step-num">1</div><div class="step-content"><h4>Descarga la app</h4><p>Ve a <a href="download.html" style="color:var(--accent-soft);text-decoration:underline;">portalpilot.hn/download</a> y selecciona tu sistema operativo.</p></div></div>
-        <div class="step"><div class="step-num">2</div><div class="step-content"><h4>Ejecuta el instalador</h4><p>Windows: haz doble clic en el .exe. macOS: arrastra a Applications. Linux: <code>chmod +x PortalPilot && ./PortalPilot</code></p></div></div>
-        <div class="step"><div class="step-num">3</div><div class="step-content"><h4>Completa el onboarding</h4><p>Selecciona el tipo de negocio, cliente y operación. Estas preferencias se guardan localmente y determinan los módulos sugeridos.</p></div></div>
-        <div class="step"><div class="step-num">4</div><div class="step-content"><h4>Crea o usa tu cuenta</h4><p>Al finalizar, la app te lleva a Acceder. Inicia sesión o abre el registro web para crear la cuenta y completar los datos de tu empresa.</p></div></div>
-        <div class="step"><div class="step-num">5</div><div class="step-content"><h4>Entra al panel</h4><p>Después de autenticarte, verás los módulos asignados según el área de negocio y los permisos de tu empresa.</p></div></div>
-        <div class="callout success"><i class="fas fa-check-circle"></i><p>El onboarding no crea una cuenta ni inicia sesión por sí solo. La cuenta debe completarse y validarse antes de usar el ERP.</p></div>
+        <h1>Crear tu empresa</h1>
+        <p>De la landing a tu workspace en pocos minutos. Este es el flujo real:</p>
+        <div class="step"><div class="step-num">1</div><div class="step-content"><h4>Regístrate en la web</h4><p>Entra a <a href="registrov2.html" style="color:var(--accent-soft);text-decoration:underline;">Registro</a> con tu nombre, correo y contraseña. Al confirmar se crea <strong>tu empresa</strong> con un código único (por ejemplo <code>PP-XXXXXX</code>) y tu usuario como <strong>Propietario (Owner)</strong>.</p></div></div>
+        <div class="step"><div class="step-num">2</div><div class="step-content"><h4>Recibes 15 días de prueba</h4><p>Tu empresa arranca en el plan <strong>Starter</strong> con un trial de 15 días con acceso completo. Puedes revisar el estado en <strong>Portal Empresa → Suscripción</strong>.</p></div></div>
+        <div class="step"><div class="step-num">3</div><div class="step-content"><h4>Inicia sesión</h4><p>Entra en <a href="login.html" style="color:var(--accent-soft);text-decoration:underline;">Iniciar Sesión</a>. El sistema te dirige automáticamente al área que corresponde a tu rol.</p></div></div>
+        <div class="step"><div class="step-num">4</div><div class="step-content"><h4>Completa el perfil de empresa</h4><p>En <strong>Portal Empresa → Configuración</strong> define nombre comercial, teléfono y dirección. Estos datos aparecen en tus documentos.</p></div></div>
+        <div class="step"><div class="step-num">5</div><div class="step-content"><h4>Carga tus productos y clientes</h4><p>Dá de alta productos en <strong>Inventario</strong> y clientes en <strong>CRM</strong>. Con eso ya puedes facturar, vender en POS y cobrar.</p></div></div>
+        <h3>¿Y si empezaste en la app?</h3>
+        <p>La app móvil te guía por un onboarding (tipo de negocio, tipo de cliente y operación). Después te lleva al registro web para crear la cuenta: <strong>no necesitas repetir el onboarding</strong> y tu cuenta de web funciona directamente en la app con el mismo correo y contraseña.</p>
+        <div class="callout success"><i class="fas fa-check-circle"></i><p>Si ya tienes cuenta y abres la app, con una sesión válida entras directo al workspace: la app no te vuelve a pedir registro.</p></div>
       </div>
 
-      <!-- PRIMEROS PASOS -->
-      <div class="doc-section" id="sec-primeros-pasos" style="display:none">
+      <!-- CUENTA -->
+      <div class="doc-section" id="sec-cuenta" style="display:none">
         <div class="eyebrow">PRIMEROS PASOS</div>
-        <h1>Tu primera factura</h1>
-        <p>Veamos cómo crear tu primera factura electrónica en menos de 2 minutos.</p>
-        <div class="step"><div class="step-num">1</div><div class="step-content"><h4>Ve a Facturación</h4><p>En el menú lateral, haz clic en <strong>Facturación → Nueva Factura</strong>.</p></div></div>
-        <div class="step"><div class="step-num">2</div><div class="step-content"><h4>Selecciona el cliente</h4><p>Elige un cliente existente o crea uno nuevo con su nombre y RTN. El sistema autocompleta datos si ya está registrado.</p></div></div>
-        <div class="step"><div class="step-num">3</div><div class="step-content"><h4>Agrega productos</h4><p>Busca productos por nombre o código de barras. La IA sugiere productos frecuentes para ese cliente.</p></div></div>
-        <div class="step"><div class="step-num">4</div><div class="step-content"><h4>Envía al SAR</h4><p>Haz clic en <strong>Enviar</strong>. El sistema genera automáticamente la factura electrónica con código QR y la almacena en el SAR.</p></div></div>
-        <div class="callout info"><i class="fas fa-lightbulb"></i><p><strong>Tip IA:</strong> El asistente detecta si falta información del CAI o rangos por agotarse y te alerta antes de enviar.</p></div>
+        <h1>Cuenta y sesiones</h1>
+        <h3>Verificación de correo</h3>
+        <p>Durante el registro el sistema puede enviarte un <strong>código de verificación</strong> a tu correo. Ingrésalo cuando se te pida; si no llega, revisa spam o reenvíalo desde la misma pantalla.</p>
+        <h3>Recuperación de contraseña</h3>
+        <p>En la pantalla de login usa <strong>Recuperar contraseña</strong>. Recibirás un código por correo que te permitirá definir una nueva. Por seguridad el código expira y los intentos están limitados.</p>
+        <h3>Sesiones activas</h3>
+        <p>Cada dispositivo que inicia sesión crea una <strong>sesión</strong> visible en <strong>Portal Empresa → Seguridad</strong>, con dispositivo, ubicación aproximada y fecha. Desde ahí puedes <strong>revocar</strong> cualquier sesión (o todas) y el acceso de ese dispositivo queda invalidado de inmediato.</p>
+        <h3>Cierre de sesión</h3>
+        <p>Usa <strong>Logout</strong> en la app o en la web. Tu token deja de usarse en ese dispositivo.</p>
+        <div class="callout info"><i class="fas fa-info-circle"></i><p>Las contraseñas se almacenan cifradas y nadie —ni soporte— puede verlas. Nunca compartas códigos de verificación.</p></div>
       </div>
 
       <!-- WS-FACTURACION -->
       <div class="doc-section" id="sec-ws-facturacion" style="display:none">
         <div class="eyebrow">WORKSPACE</div>
-        <h1>Facturación Electrónica SAR</h1>
-        <p>Portal Pilot genera facturas electrónicas conformes a la normativa del SAR (Servicio de Administración de Rentas) de Honduras, incluyendo códigos QR, CAI válido y formato DEI.</p>
-        <h2>Configurar CAI</h2>
-        <div class="step"><div class="step-num">1</div><div class="step-content"><h4>Ir a Configuración → Facturación SAR</h4><p>Selecciona "Configurar CAI" en el menú de empresa.</p></div></div>
-        <div class="step"><div class="step-num">2</div><div class="step-content"><h4>Ingresa tu CAI</h4><p>Escribe el CAI vigente tal como aparece en tu resolución. El sistema valida el formato automáticamente.</p></div></div>
-        <div class="step"><div class="step-num">3</div><div class="step-content"><h4>Define los rangos autorizados</h4><p>Establece el rango inicial y final de facturación. El sistema calcula automáticamente cuántas facturas puedes emitir.</p></div></div>
-        <div class="callout warn"><i class="fas fa-exclamation-triangle"></i><p>El sistema te notificará cuando te queden menos del 10% de facturas disponibles en tu rango actual.</p></div>
-        <h2>Generar Factura</h2>
+        <h1>Facturación (CAI / SAR)</h1>
+        <p>Portal Pilot genera <strong>facturas, recibos y notas de crédito</strong> con los campos exigidos por la normativa hondureña: <strong>CAI</strong>, rango autorizado, fecha límite de emisión, correlativo, RTN del cliente e <strong>ISV 15%/18%</strong>.</p>
+        <h2>Configurar tu CAI</h2>
+        <div class="step"><div class="step-num">1</div><div class="step-content"><h4>Ingresa tu resolución</h4><p>Al emitir tu primera factura la empresa solicita el <strong>CAI vigente</strong>, el rango autorizado (inicial y final) y la fecha límite de emisión, tal como aparecen en tu resolución del SAR.</p></div></div>
+        <div class="step"><div class="step-num">2</div><div class="step-content"><h4>El sistema administra el correlativo</h4><p>Cada documento usa el siguiente número disponible dentro de tu rango. No puedes emitir fuera del rango ni después de la fecha límite.</p></div></div>
+        <h2>Crear una factura</h2>
+        <div class="step"><div class="step-num">1</div><div class="step-content"><h4>Ve a Facturación</h4><p>En el Workspace abre <strong>Facturación → Nueva factura</strong>.</p></div></div>
+        <div class="step"><div class="step-num">2</div><div class="step-content"><h4>Selecciona el cliente</h4><p>Elige un cliente existente o créalo con nombre y <strong>RTN</strong>.</p></div></div>
+        <div class="step"><div class="step-num">3</div><div class="step-content"><h4>Agrega los items</h4><p>Productos con cantidad y precio. El <strong>ISV 15%</strong> (o 18%) se calcula automáticamente sobre el subtotal.</p></div></div>
+        <div class="step"><div class="step-num">4</div><div class="step-content"><h4>Guarda y comparte</h4><p>El documento queda registrado con su correlativo y estado. Puedes consultarlo, imprimirlo o anularlo con motivo (generando su registro de anulación).</p></div></div>
+        <h2>Recibos y notas de crédito</h2>
         <ul>
-          <li>Selecciona o crea un cliente (requiere nombre y RTN)</li>
-          <li>Agrega productos/servicios con cantidades y precios</li>
-          <li>Aplica impuestos (ISV 15% se calcula automáticamente)</li>
-          <li>Haz clic en "Enviar al SAR" — se genera factura electrónica con QR</li>
-          <li>Descarga PDF o comparte enlace directo al cliente</li>
+          <li><strong>Recibo</strong> — comprobante de pago simple, sin efectos fiscales de factura.</li>
+          <li><strong>Nota de crédito</strong> — ajuste o devolución asociada a tu operación; se registra como documento aparte, nunca mezclada con facturas.</li>
         </ul>
+        <div class="callout warn"><i class="fas fa-triangle-exclamation"></i><p>Cada tipo de documento (factura, recibo, nota de crédito) lleva su propia serie y correlativo. No se pueden sustituir entre sí.</p></div>
       </div>
 
       <!-- WS-INVENTARIO -->
       <div class="doc-section" id="sec-ws-inventario" style="display:none">
         <div class="eyebrow">WORKSPACE</div>
-        <h1>Gestión de Inventario</h1>
-        <p>Control total de productos, almacenes y stock en tiempo real con alertas automáticas de stock mínimo.</p>
-        <h2>Crear Producto</h2>
+        <h1>Inventario</h1>
+        <p>Control de productos con stock en tiempo real, múltiples <strong>bodegas</strong>, <strong>kardex</strong> de movimientos y <strong>transferencias</strong> entre bodegas.</p>
+        <h2>Crear producto</h2>
+        <div class="step"><div class="step-num">1</div><div class="step-content"><h4>Abre Inventario</h4><p>En el Workspace entra a <strong>Inventario → Nuevo producto</strong>.</p></div></div>
+        <div class="step"><div class="step-num">2</div><div class="step-content"><h4>Define los datos</h4><p>Nombre, código, precio de compra y <strong>precio de venta</strong>, y el <strong>stock inicial</strong>. El stock vive por bodega.</p></div></div>
+        <h2>Bodegas y transferencias</h2>
         <ul>
-          <li><strong>Nombre:</strong> Nombre descriptivo del producto</li>
-          <li><strong>Código SKU:</strong> Código único de identificación</li>
-          <li><strong>Precio de compra:</strong> Costo de adquisición</li>
-          <li><strong>Precio de venta:</strong> Precio al público</li>
-          <li><strong>Stock mínimo:</strong> Nivel mínimo de alerta</li>
-          <li><strong>Almacén:</strong> Ubicación física del producto</li>
+          <li>Crea tantas bodegas como necesites (por ejemplo: principal, vehículo de reparto).</li>
+          <li>Registra <strong>transferencias</strong> entre bodegas; el kardex refleja la salida y la entrada (<em>el módulo de transferencias se incluye en el plan Enterprise</em>).</li>
+          <li>Cada venta POS o factura descuenta stock automáticamente del almacén correspondiente.</li>
         </ul>
-        <h2>Multi-Almacén</h2>
-        <p>Administra múltiples ubicaciones físicas. Cada almacén tiene stock independiente y se pueden transferir productos entre ellos. Las transferencias quedan registradas en el historial con auditoría completa.</p>
-        <div class="callout info"><i class="fas fa-info-circle"></i><p>La IA detecta patrones de venta y sugiere reordenar productos antes de quedarse sin stock.</p></div>
+        <div class="callout info"><i class="fas fa-lightbulb"></i><p>El <strong>kardex</strong> te da la trazabilidad completa: quién movió qué, cuándo y por qué documento.</p></div>
       </div>
 
-      <!-- WS-CONTABILIDAD -->
-      <div class="doc-section" id="sec-ws-contabilidad" style="display:none">
+      <!-- WS-POS -->
+      <div class="doc-section" id="sec-ws-pos" style="display:none">
         <div class="eyebrow">WORKSPACE</div>
-        <h1>Contabilidad</h1>
-        <p>Módulo contable completo con estados financieros, balances y reportes fiscales automáticos.</p>
-        <h2>Funciones Principales</h2>
-        <ul>
-          <li>Estado de Resultados por período</li>
-          <li>Balance General</li>
-          <li>Libro de Compras y Ventas</li>
-          <li>Reporte de Retenciones</li>
-          <li>Cálculo automático de ISV</li>
-          <li>Conciliación Bancaria</li>
-        </ul>
-        <h2>Reportes</h2>
-        <p>Genera reportes en PDF o Excel para declaraciones fiscales. El sistema integra directamente los datos de facturación SAR, eliminando el doble registro.</p>
+        <h1>Punto de Venta (POS)</h1>
+        <p>El POS está pensado para la venta rápida de mostrador: pocos clics, ticket y stock descontado al instante.</p>
+        <div class="step"><div class="step-num">1</div><div class="step-content"><h4>Abre POS</h4><p>Entra al módulo <strong>POS</strong> desde el Workspace.</p></div></div>
+        <div class="step"><div class="step-num">2</div><div class="step-content"><h4>Arma la venta</h4><p>Agrega productos buscando por nombre. Ajusta cantidades y aplica descuentos si aplica.</p></div></div>
+        <div class="step"><div class="step-num">3</div><div class="step-content"><h4>Cobra</h4><p>Confirma la venta: se registra con su folio, se descuenta el stock y queda en el resumen del día.</p></div></div>
+        <h3>Resumen de ventas</h3>
+        <p><strong>POS → Resumen</strong> muestra el movimiento por periodo para cuadrar caja al cierre.</p>
+        <div class="callout info"><i class="fas fa-lightbulb"></i><p>La IA puede analizar tus ventas de POS para detectar patrones y sugerir <strong>upsell</strong> según el ticket (si tu plan incluye IA y tienes cuota disponible).</p></div>
       </div>
 
-      <!-- WS-NOMINA -->
-      <div class="doc-section" id="sec-ws-nomina" style="display:none">
+      <!-- WS-CRM -->
+      <div class="doc-section" id="sec-ws-crm" style="display:none">
         <div class="eyebrow">WORKSPACE</div>
-        <h1>Nómina Hondureña</h1>
-        <p>Cálculo automático de nómina con deducciones de ley hondureñas: IHSS, RAP, decimoctavo, decimocuarto.</p>
-        <h2>Deducciones Automáticas</h2>
+        <h1>CRM y cobros</h1>
+        <p>Administra tu cartera de clientes y el crédito que le extiendes.</p>
+        <h2>Clientes</h2>
         <ul>
-          <li><strong>IHSS:</strong> Instituto Hondureño de Seguridad Social — 2.5% salario, 1.5% patrono</li>
-          <li><strong>RAP:</strong> Retiro Alimentario para Pensionados — 1.5% empleado, 2% patrono</li>
-          <li><strong>Decimoctavo:</strong> Bono de 1 mes / 12 × días trabajados</li>
-          <li><strong>Decimocuarto:</strong> Bono de 1 mes / 12 × días trabajados</li>
-          <li><strong>ISR:</strong> Impuesto Sobre la Renta según tabla vigente</li>
+          <li>Alta de clientes con nombre, RTN, contacto y dirección.</li>
+          <li>Historial de documentos por cliente (facturas, recibos, notas).</li>
         </ul>
-        <div class="callout success"><i class="fas fa-check-circle"></i><p>El sistema genera automáticamente los reportes para INSS y RAP listos para presentar al patrono.</p></div>
+        <h2>Ventas fiadas y abonos</h2>`n        <p>Las ventas a crédito <strong>(fiado)</strong> y los abonos se incluyen en los planes <strong>Business</strong> y <strong>Enterprise</strong>.</p>
+        <div class="step"><div class="step-num">1</div><div class="step-content"><h4>Registra la venta fiada</h4><p>Un cliente lleva mercadería a crédito: la venta queda en <strong>fiados</strong> con su saldo pendiente.</p></div></div>
+        <div class="step"><div class="step-num">2</div><div class="step-content"><h4>Recibe abonos</h4><p>Los pagos parciales se registran como <strong>abonos</strong> y el saldo se actualiza solo. El resumen te muestra la cartera por cliente.</p></div></div>
+        <div class="callout info"><i class="fas fa-lightbulb"></i><p>La IA puede ayudarte a perfilar un cliente para decisión de crédito (según cuota de tu plan).</p></div>
       </div>
 
-      <!-- WS-IA -->
-      <div class="doc-section" id="sec-ws-ia" style="display:none">
+      <!-- WS-OPERACION -->
+      <div class="doc-section" id="sec-ws-operacion" style="display:none">
         <div class="eyebrow">WORKSPACE</div>
-        <h1>Asistente de Inteligencia Artificial</h1>
-        <p>Portal Pilot integra IA en la nube potenciada por Groq API para análisis inteligente, automatización de procesos y asistentes virtuales por módulo. Procesamiento rápido y seguro desde la nube.</p>
-        <h2>Modelos Disponibles</h2>
+        <h1>Rutas, Flota y Sucursales</h1>
+        <p>Si tu operación incluye reparto o varios puntos, estos módulos mantienen el control.</p>`n        <div class="callout info"><i class="fas fa-info-circle"></i><p><strong>Por plan:</strong> <strong>Rutas y Cobros</strong> están en todos los planes; <strong>Flota</strong> y <strong>Sucursales</strong> forman parte del plan <strong>Enterprise</strong>.</p></div>
+        <h2>Rutas y Cobros</h2>
+        <ul>
+          <li>Define <strong>rutas</strong> con sus clientes y frecuencia.</li>
+          <li>Registra <strong>visitas</strong> y cobros en calle; la cartera se descuenta al confirmar el abono.</li>
+        </ul>
+        <h2>Flota</h2>
+        <ul>
+          <li>Administra los <strong>vehículos</strong> de tu operación de reparto.</li>
+          <li>Asigna unidades a rutas y lleva su control operativo.</li>
+        </ul>
+        <h2>Sucursales</h2>
+        <ul>
+          <li>Dá de alta cada <strong>sucursal</strong> de tu empresa.</li>
+          <li>Los documentos y ventas pueden asociarse a la sucursal correspondiente.</li>
+        </ul>
+      </div>
+
+      <!-- WS-REPORTES -->
+      <div class="doc-section" id="sec-ws-reportes" style="display:none">
+        <div class="eyebrow">WORKSPACE</div>
+        <h1>Reportes y transacciones</h1>
+        <h2>Dashboard</h2>
+        <p>El <strong>dashboard</strong> resume tu operación: ventas del periodo, documentos emitidos y estado general de la empresa, calculado con tus datos reales.</p>
+        <h2>Transacciones (movimientos)</h2>
+        <p>El módulo de <strong>transacciones</strong> registra los movimientos operativos de tu negocio (por ejemplo, ingresos y gastos del área comercial) con su tipo y monto. Alimenta los reportes y el consumo del plan se mide por uso.</p>
+        <h2>Reportes del Portal Empresa</h2>
+        <p>En <strong>Portal Empresa → Reportes / Actividad</strong> el propietario y administradores ven la actividad de la empresa, el consumo por recurso y los eventos registrados.</p>
+        <div class="callout info"><i class="fas fa-info-circle"></i><p>Portal Pilot <strong>no incluye</strong> un módulo de contabilidad formal: registra <strong>transacciones y kardex</strong> operativos. Para asientos, libro diario y estados financieros, tu contador sigue siendo quien prepara y presenta las declaraciones.</p></div>
+      </div>
+
+      <!-- IA-USO -->
+      <div class="doc-section" id="sec-ia-uso" style="display:none">
+        <div class="eyebrow">INTELIGENCIA ARTIFICIAL</div>
+        <h1>Asistente IA</h1>
+        <p>El asistente de Portal Pilot funciona <strong>del lado del servidor</strong>: tu app nunca habla directo con los proveedores ni contiene claves. Tú conversas, el gateway elige el proveedor disponible.</p>
+        <h3>¿Qué puede hacer?</h3>
+        <ul>
+          <li><strong>Chat / consultas</strong> — preguntas sobre tu operación con contexto de tu empresa</li>
+          <li><strong>Resumen de dashboard</strong> — interpretación de tus métricas del periodo</li>
+          <li><strong>Análisis de POS</strong> — patrones de venta y sugerencias de <strong>upsell</strong></li>
+          <li><strong>Perfil de cliente CRM</strong> — apoyo para decisiones de crédito</li>
+          <li><strong>Soporte</strong> — asistencia guiada dentro de la plataforma</li>
+          <li><strong>Visión</strong> — análisis de imágenes (documentos, capturas de tickets)</li>
+        </ul>
+        <h3>¿Qué proveedores usa?</h3>
+        <p>Portal Pilot usa proveedores de IA en la nube con un <strong>gateway propio</strong>: si el proveedor principal no está disponible o no está configurado, intenta con el de respaldo; si ninguno está disponible, verás un mensaje claro de que la función de IA no está disponible en este momento — nunca un error técnico crudo.</p>
+        <div class="callout success"><i class="fas fa-shield-halved"></i><p>Tus datos de empresa se usan para responder <strong>tu</strong> consulta y el uso se registra bajo tu tenant. Las claves de los proveedores jamás salen del servidor.</p></div>
+      </div>
+
+      <!-- IA-CONSUMO -->
+      <div class="doc-section" id="sec-ia-consumo" style="display:none">
+        <div class="eyebrow">INTELIGENCIA ARTIFICIAL</div>
+        <h1>Consumo y límites de IA</h1>
+        <p>La IA es un recurso medido como los usuarios o los documentos: cada llamada consume <strong>tokens</strong> de la cuota mensual de tu plan.</p>
+        <h3>Cómo se controla</h3>
+        <ul>
+          <li>Antes de llamar al proveedor, el servidor verifica tu <strong>cuota disponible</strong> del mes.</li>
+          <li>Si la cuota está agotada, la respuesta es un límite claro (<code>429 AI_TOKEN_LIMIT_REACHED</code>) <strong>sin gastar</strong> ni llamar al proveedor.</li>
+          <li>Cada llamada registra proveedor, modelo, tokens y coste estimado bajo tu empresa.</li>
+        </ul>
+        <h3>Dónde ver mi consumo</h3>
+        <p>En <strong>Portal Empresa → Consumo</strong> (y <strong>IA</strong> si tu plan lo incluye) verás tu uso del periodo. Si llegaste al límite, puedes <strong>mejorar de plan</strong> o esperar el siguiente ciclo.</p>
+        <div class="callout warn"><i class="fas fa-triangle-exclamation"></i><p>Si tu periodo de prueba terminó y no has activado un plan, la empresa queda en <strong>modo solo lectura</strong>: puedes consultar y exportar, pero no registrar movimientos ni usar IA hasta pagar.</p></div>
+      </div>
+
+      <!-- AUTO -->
+      <div class="doc-section" id="sec-auto-intro" style="display:none">
+        <div class="eyebrow">AUTOMATIZACIONES</div>
+        <h1>Reglas automáticas</h1>
+        <p>El módulo de <strong>Automatizaciones</strong> te permite definir reglas sobre tus operaciones (por ejemplo, acciones al registrar una venta o al cambiar el stock) y ejecutarlas sin intervención manual. Es parte del plan <strong>Enterprise</strong>; en otros planes la sección indica cómo desbloquearlo.</p>
+        <h3>Cómo funciona</h3>
+        <ul>
+          <li><strong>Reglas</strong> — defines la condición y la acción desde <strong>Portal Empresa → Automatización</strong>.</li>
+          <li><strong>Ejecución</strong> — las reglas se ejecutan sobre los eventos de tu empresa y quedan registradas.</li>
+          <li><strong>Control</strong> — puedes activar, desactivar o eliminar reglas cuando quieras.</li>
+        </ul>
+        <div class="callout info"><i class="fas fa-info-circle"></i><p>Las automatizaciones son un recurso medido por plan: el uso incrementa tu consumo del periodo.</p></div>
+        <div class="callout warn"><i class="fas fa-triangle-exclamation"></i><p>El editor visual de flujos con nodos y webhooks externos <strong>no forma parte</strong> de la plataforma hoy. Si lo ves mencionado en algún material antiguo, esta página manda.</p></div>
+      </div>
+
+      <!-- EMP-USUARIOS -->
+      <div class="doc-section" id="sec-emp-usuarios" style="display:none">
+        <div class="eyebrow">PORTAL EMPRESA</div>
+        <h1>Usuarios y roles</h1>
+        <p>Solo el <strong>Propietario</strong> y administradores autorizados gestionan el equipo, desde <strong>Portal Empresa → Equipo</strong>.</p>
+        <h3>Roles disponibles</h3>
         <table>
-          <tr><th>Servicio</th><th>Uso Principal</th><th>Requisitos</th></tr>
-          <tr><td><strong>Groq API</strong></td><td>Contabilidad, facturación, análisis financiero, chat, reportes</td><td>Conexión a internet</td></tr>
+          <tr><th>Rol</th><th>Puede</th><th>No puede</th></tr>
+          <tr><td><strong>Owner (Propietario)</strong></td><td>Todo dentro de su empresa: usuarios, configuración, suscripción, consumo, seguridad</td><td>Acceder a otras empresas o a la administración global de la plataforma</td></tr>
+          <tr><td><strong>Admin</strong></td><td>Operar y administrar lo que el Owner le permita (equipo operativo, módulos)</td><td>Cambiar el plan, eliminar la empresa o escalar privilegios</td></tr>
+          <tr><td><strong>Member</strong></td><td>Usar el Workspace: facturar, vender en POS, inventario, clientes</td><td>Acceder al Portal Empresa, crear usuarios o ver la facturación de la suscripción</td></tr>
         </table>
-        <h2>Configurar</h2>
-        <p>Ve a Configuración → IA y selecciona tu proveedor. La IA se activa automáticamente según tu plan.</p>
-        <div class="callout warn"><i class="fas fa-exclamation-triangle"></i><p>Groq API es el proveedor recomendado. Ofrece procesamiento rápido y bajo costo para tareas contables hondureñas.</p></div>
+        <h3>Crear un usuario</h3>
+        <div class="step"><div class="step-num">1</div><div class="step-content"><h4>Equipo → Invitar</h4><p>Como Owner, define nombre, correo, rol y contraseña inicial. El límite de usuarios depende de tu plan y se valida en el servidor.</p></div></div>
+        <div class="step"><div class="step-num">2</div><div class="step-content"><h4>El usuario inicia sesión</h4><p>Con su correo y contraseña. Sus permisos se aplican en el servidor, no solo en la pantalla.</p></div></div>
+        <div class="callout success"><i class="fas fa-shield-halved"></i><p>Los permisos se verifican en cada llamada al servidor. Ocultar un botón no es la medida de seguridad: el backend rechaza la acción si tu rol no la permite.</p></div>
       </div>
 
-      <!-- WS-OFFLINE -->
-      <div class="doc-section" id="sec-ws-offline" style="display:none">
-        <div class="eyebrow">WORKSPACE</div>
-        <h1>Modo Offline</h1>
-        <p>Portal Pilot Workspace funciona completamente sin conexión a internet para operaciones esenciales.</p>
-        <h2>Disponible Offline</h2>
+      <!-- EMP-SUSCRIPCION -->
+      <div class="doc-section" id="sec-emp-suscripcion" style="display:none">
+        <div class="eyebrow">PORTAL EMPRESA</div>
+        <h1>Suscripción y consumo</h1>
+        <h3>Estado de tu suscripción</h3>
+        <p>En <strong>Portal Empresa → Suscripción</strong> ves tu plan actual, el estado (prueba, activo, vencido), las fechas del periodo y el <strong>consumo del mes</strong> por recurso (usuarios, documentos, API, IA).</p>
+        <h3>Trial de 15 días</h3>
         <ul>
-          <li>✅ Crear y enviar facturas (se sincronizan al reconectar)</li>
-          <li>✅ Gestionar inventario</li>
-          <li>✅ Consultas contables</li>
-          <li>✅ Generar reportes</li>
-          <li>✅ Usar IA local (Gemma 3N)</li>
+          <li>Tu empresa arranca con <strong>15 días de prueba</strong> del plan Starter.</li>
+          <li>Al vencer sin pago, la empresa entra en <strong>modo solo lectura</strong>: puedes consultar y exportar, pero no registrar operaciones nuevas.</li>
+          <li>Al <strong>pagar un plan</strong> (ver <a href="pay_plan.html" style="color:var(--accent-soft);text-decoration:underline;">Planes y Pago</a>), el acceso se reactiva <strong>de inmediato</strong>.</li>
         </ul>
-        <h2>Requiere Conexión</h2>
+        <h3>Cambiar de plan</h3>
+        <p>Como Owner, desde <strong>Suscripción</strong> eliges el plan y completas el pago. El cambio aplica al momento y tu cuota se ajusta al nuevo plan. Los administradores no pueden modificar el plan: esa decisión es del propietario.</p>
+        <div class="callout info"><i class="fas fa-info-circle"></i><p>El consumo de cada recurso se registra automáticamente por operación exitosa; una operación fallida no genera consumo.</p></div>
+      </div>
+
+      <!-- EMP-SEGURIDAD -->
+      <div class="doc-section" id="sec-emp-seguridad" style="display:none">
+        <div class="eyebrow">PORTAL EMPRESA</div>
+        <h1>Seguridad y sesiones</h1>
+        <h3>Qué ves aquí</h3>
         <ul>
-          <li>❌ Envío de facturas al SAR (se encola y envía al reconectar)</li>
-          <li>❌ Bots RPA y automatizaciones</li>
-          <li>❌ Sincronización multi-usuario</li>
-          <li>❌ Actualizaciones del sistema</li>
+          <li><strong>Sesiones activas</strong> — dispositivo, ubicación aproximada y último uso de cada acceso a tu empresa.</li>
+          <li><strong>Revocación</strong> — cierra cualquier sesión al instante (por ejemplo, un equipo perdido o un ex-colaborador).</li>
+          <li><strong>Eventos de seguridad</strong> — registros de accesos y acciones sensibles de tu empresa.</li>
         </ul>
-        <div class="callout info"><i class="fas fa-info-circle"></i><p>Cuando recuperas conexión, todas las operaciones offline se sincronizan automáticamente con el servidor.</p></div>
-      </div>
-
-      <!-- BOTS-RPA -->
-      <div class="doc-section" id="sec-bots-intro" style="display:none">
-        <div class="eyebrow">ENTERPRISE</div>
-        <h1>Bots RPA <span class="badge badge-beta">Enterprise</span></h1>
-        <p>Automatiza tareas repetitivas con bots de Robotic Process Automation. Crea agentes que ejecutan flujos de trabajo cuando ocurren eventos (emails, CRON, webhooks, manuales).</p>
-        <h2>Crear tu primer Bot</h2>
-        <div class="step"><div class="step-num">1</div><div class="step-content"><h4>Ir a Enterprise → Bots RPA</h4><p>Haz clic en "Nuevo Agente" para iniciar la configuración.</p></div></div>
-        <div class="step"><div class="step-num">2</div><div class="step-content"><h4>Selecciona el trigger</h4><p>Elige cuándo se activa el bot: al recibir un email, en una fecha/hora programada (CRON), al recibir un webhook HTTP, o manualmente.</p></div></div>
-        <div class="step"><div class="step-num">3</div><div class="step-content"><h4>Configura la acción IA</h4><p>Define qué modelo usar (Gemma 3N recomendado) y el prompt del sistema. Ejemplo: "Extrae el monto del email y genera una factura en el ERP".</p></div></div>
-        <div class="step"><div class="step-num">4</div><div class="step-content"><h4>Conecta pasos en el Flow Editor</h4><p>Usa el editor visual para encadenar acciones: condición → delay → webhook → acción DB. Arrastra nodos y conéctalos.</p></div></div>
-        <div class="step"><div class="step-num">5</div><div class="step-content"><h4>Activa el bot</h4><p>Guarda y activa. El bot aparecerá en la grilla de agentes con estado "Activo" y métricas en tiempo real.</p></div></div>
-        <div class="callout success"><i class="fas fa-check-circle"></i><p>Los bots se ejecutan en background. Monitorea su actividad en la consola de logs en tiempo real.</p></div>
-      </div>
-
-      <!-- BOTS-FLOW -->
-      <div class="doc-section" id="sec-bots-flow" style="display:none">
-        <div class="eyebrow">ENTERPRISE</div>
-        <h1>Editor de Flujos (Flow Editor)</h1>
-        <p>Editor visual drag & drop para construir pipelines de automatización con nodos conectados.</p>
-        <h2>Tipos de Nodos</h2>
-        <table>
-          <tr><th>Nodo</th><th>Descripción</th><th>Ejemplo</th></tr>
-          <tr><td><strong>Trigger</strong></td><td>Punto de inicio del flujo</td><td>Email recibido, CRON, Webhook</td></tr>
-          <tr><td><strong>Condición</strong></td><td>Evalúa una expresión</td><td>Si monto > 1000 → ruta A</td></tr>
-          <tr><td><strong>Delay</strong></td><td>Espera un tiempo determinado</td><td>Esperar 5 minutos</td></tr>
-          <tr><td><strong>Webhook</strong></td><td>Envía HTTP request</td><td>Notificar a Slack, Telegram</td></tr>
-          <tr><td><strong>DB</strong></td><td>Operación en base de datos</td><td>Crear registro, actualizar stock</td></tr>
-          <tr><td><strong>IA</strong></td><td>Procesamiento con modelo</td><td>Clasificar email, extraer datos</td></tr>
-        </table>
-        <h2>Ejemplo: Auto-facturar desde email</h2>
-        <pre><code>Trigger (Email) → IA (Extraer datos) → Condición (¿Cliente existe?) 
-  ├─ Sí → DB (Crear factura) → Webhook (Notificar)
-  └─ No → DB (Crear cliente) → DB (Crear factura) → Webhook (Notificar)</code></pre>
-      </div>
-
-      <!-- BOTS-IA -->
-      <div class="doc-section" id="sec-bots-ia" style="display:none">
-        <div class="eyebrow">ENTERPRISE</div>
-        <h1>Configuración de IA en Bots</h1>
-        <p>Cada bot puede usar un modelo de IA diferente. Configura el modelo, temperatura y prompt del sistema.</p>
-        <h2>Opciones de Configuración</h2>
+        <h3>Cómo protegemos tu empresa</h3>
         <ul>
-          <li><strong>Modelo:</strong> Groq API (nube) — configuración por defecto</li>
-          <li><strong>Temperatura:</strong> 0.0 (determinista) a 1.0 (creativo). Para contabilidad usa 0.0-0.2</li>
-          <li><strong>Prompt del sistema:</strong> Instrucciones específicas para el bot. Ej: "Eres un asistente contable. Extrae montos y conceptos de emails."</li>
-          <li><strong>Max tokens:</strong> Límite de respuesta del modelo (512-2048)</li>
+          <li>Contraseñas cifradas y verificación por código de correo.</li>
+          <li>Separación estricta entre empresas (una empresa nunca ve datos de otra).</li>
+          <li>Límites de intentos en login y recuperación para frenar abusos.</li>
+          <li>Revocación de sesión efectiva: el token invalidado deja de funcionar aunque alguien lo conserve.</li>
         </ul>
-        <div class="callout info"><i class="fas fa-lightbulb"></i><p>Groq API es el proveedor recomendado para bots. Ofrece procesamiento rápido y bajo costo para tareas de facturación y análisis financiero hondureño.</p></div>
+        <div class="callout warn"><i class="fas fa-triangle-exclamation"></i><p>Si detectas un acceso que no reconoces, revoca esa sesión y cambia tu contraseña de inmediato.</p></div>
       </div>
 
-      <!-- BOTS-TRIGGERS -->
-      <div class="doc-section" id="sec-bots-triggers" style="display:none">
-        <div class="eyebrow">ENTERPRISE</div>
-        <h1>Triggers y Webhooks</h1>
-        <p>Los triggers determinan cuándo se activa un bot. Webhooks permiten activar bots externamente.</p>
-        <h2>Tipos de Trigger</h2>
-        <table>
-          <tr><th>Trigger</th><th>Descripción</th><th>Uso típico</th></tr>
-          <tr><td><strong>Email</strong></td><td>Se activa al recibir un email</td><td>Auto-facturar desde solicitudes</td></tr>
-          <tr><td><strong>CRON</strong></td><td>Ejecuta en horario programado</td><td>Reportes diarios, recordatorios</td></tr>
-          <tr><td><strong>Webhook</strong></td><td>HTTP POST a una URL</td><td>Integraciones externas</td></tr>
-          <tr><td><strong>Manual</strong></td><td>Activación manual desde UI</td><td>Tareas bajo demanda</td></tr>
-        </table>
-        <h2>Endpoint de Webhook</h2>
-        <p>Cada bot genera una URL única tipo:</p>
-        <pre><code>POST https://api.portalpilot.hn/webhook/bot/{bot_id}</code></pre>
-        <p>Envía un POST con JSON y el bot procesará los datos según su flujo configurado.</p>
+      <!-- EMP-APIKEYS -->
+      <div class="doc-section" id="sec-emp-apikeys" style="display:none">
+        <div class="eyebrow">PORTAL EMPRESA</div>
+        <h1>API Keys</h1>
+        <p>Las API keys permiten que sistemas propios (tu tienda en línea, un ERP contable) consulten tu empresa de forma controlada. Es un módulo según plan: si tu plan no lo incluye, la sección indica cómo desbloquearlo.</p>
+        <h3>Crear una API key</h3>
+        <div class="step"><div class="step-num">1</div><div class="step-content"><h4>Portal Empresa → API</h4><p>Como Owner, crea una key y <strong>cópiala en ese momento</strong>: por seguridad solo se muestra una vez, después verás únicamente un prefijo identificador.</p></div></div>
+        <div class="step"><div class="step-num">2</div><div class="step-content"><h4>Úsala en tus integraciones</h4><p>Envíala en el encabezado de tus peticiones a la API (ver la sección API de esta documentación).</p></div></div>
+        <div class="step"><div class="step-num">3</div><div class="step-content"><h4>Revoca cuando quieras</h4><p>Una key revocada deja de funcionar de inmediato y no puede recuperarse; crea una nueva si la necesitas.</p></div></div>
+        <div class="callout warn"><i class="fas fa-triangle-exclamation"></i><p>Trata las API keys como contraseñas: no las subas a repositorios ni las incrustes en páginas web.</p></div>
       </div>
 
-      <!-- SERVERLESS -->
-      <div class="doc-section" id="sec-sl-creates" style="display:none">
-        <div class="eyebrow">SERVERLESS</div>
-        <h1>Crear Serverless Function</h1>
-        <p>Portal Pilot Serverless permite crear funciones backend personalizadas ejecutadas en la nube.</p>
-        <div class="step"><div class="step-num">1</div><div class="step-content"><h4>Ir a Serverless → Nueva Function</h4><p>Selecciona "Crear Function" en el dashboard.</p></div></div>
-        <div class="step"><div class="step-num">2</div><div class="step-content"><h4>Escribe tu código</h4><p>Usa el editor integrado. Soporta JavaScript/Node.js. Ejemplo: procesar pagos, transformar datos, integraciones API.</p></div></div>
-        <div class="step"><div class="step-num">3</div><div class="step-content"><h4>Configura el endpoint</h4><p>Define la ruta (ej: <code>/api/mi-funcion</code>), método HTTP y variables de entorno.</p></div></div>
-      </div>
-
-      <div class="doc-section" id="sec-sl-deploy" style="display:none">
-        <div class="eyebrow">SERVERLESS</div>
-        <h1>Desplegar Function</h1>
-        <p>Haz clic en "Deploy" para publicar tu function. Se ejecuta en entorno aislado con escalado automático.</p>
-        <div class="callout info"><i class="fas fa-info-circle"></i><p>Las functions se despliegan en subdominios únicos tipo: <code>mi-funcion.portalpilot.hn</code></p></div>
-        <h2>Monitoreo</h2>
-        <ul>
-          <li>Logs en tiempo real desde la consola</li>
-          <li>Métricas de invocaciones, latencia y errores</li>
-          <li>Alertas por email si hay fallos</li>
-        </ul>
-      </div>
-
-      <!-- API -->
+      <!-- API-AUTH -->
       <div class="doc-section" id="sec-api-auth" style="display:none">
         <div class="eyebrow">API</div>
-        <h1>Autenticación API</h1>
-        <p>Portal Pilot usa JWT (JSON Web Token) para autenticar peticiones API. El token se obtiene al iniciar sesión y se envía en cada petición.</p>
-        <h2>Headers Requeridos</h2>
-        <pre><code>Authorization: Bearer &lt;tu_token_jwt&gt;
-Content-Type: application/json</code></pre>
-        <h2>Login — Obtener Token</h2>
-        <div class="api-endpoint"><span class="api-method post">POST</span><span class="api-path">/api/login</span></div>
-        <pre><code>// Request
-{
-  "email": "usuario@empresa.com",
-  "password": "tu_password"
-}
-
-// Response 200
-{
-  "token": "eyJhbGciOiJIUzI1NiIs...",
-  "user": {
-    "id": "abc123",
-    "email": "usuario@empresa.com",
-    "nombre": "Juan Pérez",
-    "role": "admin"
-  }
-}
-
-// Response 401
-{ "error": "Credenciales inválidas" }</code></pre>
-        <div class="callout warn"><i class="fas fa-exclamation-triangle"></i><p><strong>Rate limit:</strong> 10 intentos de login cada 15 minutos por IP. Los tokens expiran en 24 horas. Usa <code>POST /api/refresh</code> para renovar.</p></div>
-
-        <h2>Refresh Token</h2>
-        <div class="api-endpoint"><span class="api-method post">POST</span><span class="api-path">/api/refresh</span></div>
-        <p>Renueva el token JWT antes de que expire. Requiere autenticación.</p>
-        <pre><code>// Response 200
-{ "token": "eyJhbGciOiJIUzI1NiIs...(nuevo)" }</code></pre>
-
-        <h2>Registro</h2>
-        <div class="api-endpoint"><span class="api-method post">POST</span><span class="api-path">/api/registro</span></div>
-        <pre><code>// Request
-{
-  "email": "nuevo@empresa.com",
-  "password": "password123",
-  "nombre": "María López",
-  "empresa": "Mi Empresa S.A."
-}
-
-// Response 201
-{ "message": "Cuenta creada. Verifica tu correo.", "userId": "abc123" }</code></pre>
-
-        <h2>Verificación de Email</h2>
-        <div class="api-endpoint"><span class="api-method post">POST</span><span class="api-path">/api/enviar-codigo-verificacion</span></div>
-        <p>Envía un código de verificación al correo registrado.</p>
-
-        <h2>Recuperación de Contraseña</h2>
-        <div class="api-endpoint"><span class="api-method post">POST</span><span class="api-path">/api/recuperacion</span></div>
-        <p>Envía un enlace de recuperación al correo. Rate limit: 3 req / 15 min.</p>
-        <div class="api-endpoint"><span class="api-method post">POST</span><span class="api-path">/api/recuperacion/verificar</span></div>
-        <p>Verifica el código de recuperación y restablece la contraseña.</p>
-
-        <h2>Verificar Email Existente</h2>
-        <div class="api-endpoint"><span class="api-method get">GET</span><span class="api-path">/api/check-email?email=correo@ejemplo.com</span></div>
-        <pre><code>// Response 200
-{ "exists": true }</code></pre>
-
-        <h2>Health Check</h2>
-        <div class="api-endpoint"><span class="api-method get">GET</span><span class="api-path">/api/health</span></div>
-        <p>Verifica el estado del servidor. No requiere autenticación.</p>
-        <pre><code>// Response 200
-{ "status": "ok", "uptime": 12345 }</code></pre>
+        <h1>Autenticación de la API</h1>
+        <p>Toda la plataforma habla una <strong>única API</strong>, la misma que usan la web y la app. Base URL:</p>
+        <pre><code>https://portal-pilot.vercel.app/api</code></pre>
+        <h3>Con sesión de usuario</h3>
+        <p>Tras <code>POST /api/login</code> recibes un token. Envíalo en cada llamada:</p>
+        <pre><code>Authorization: Bearer &lt;token&gt;</code></pre>
+        <p>El token identifica usuario, rol y empresa. Si la sesión se revoca, el token deja de funcionar.</p>
+        <h3>Con API key (integraciones)</h3>
+        <pre><code>X-API-Key: &lt;tu-key&gt;</code></pre>
+        <p>La key opera dentro de su empresa con los permisos definidos y queda registrada en la auditoría.</p>
+        <h3>Reglas de la casa</h3>
+        <ul>
+          <li>Toda operación verifica identidad, rol, empresa y plan en el servidor.</li>
+          <li>Las respuestas de error son consistentes (código + mensaje) para que puedas manejarlas.</li>
+          <li>Los límites de tasa protegen login, recuperación, soporte y pagos contra abuso.</li>
+        </ul>
       </div>
 
+      <!-- API-ENDPOINTS -->
       <div class="doc-section" id="sec-api-endpoints" style="display:none">
         <div class="eyebrow">API</div>
-        <h1>Referencia de Endpoints</h1>
-        <p>Todos los endpoints marcados con 🔒 requieren autenticación JWT en el header <code>Authorization</code>.</p>
+        <h1>Endpoints principales</h1>
+        <p>Referencia de los grupos de endpoints reales de la plataforma. Los endpoints marcados con 🔒 requieren sesión o API key.</p>
 
-        <h2>Tenants (Empresas)</h2>
-        <div class="api-endpoint"><span class="api-method get">GET</span><span class="api-path">/api/tenants 🔒</span></div>
-        <p>Lista todas las empresas. Soporta paginación y búsqueda.</p>
-        <pre><code>// Query params: ?page=1&limit=20&search=nombre
-// Response 200
-{
-  "tenants": [{ "id": "abc123", "nombre": "TechCorp", "plan": "business", ... }],
-  "total": 45,
-  "page": 1,
-  "pages": 3
-}</code></pre>
+        <h3>Cuenta</h3>
+        <div class="api-endpoint"><span class="api-method post">POST</span><span class="api-path">/api/login</span></div>
+        <div class="api-endpoint"><span class="api-method post">POST</span><span class="api-path">/api/registro</span></div>
+        <div class="api-endpoint"><span class="api-method post">POST</span><span class="api-path">/api/logout 🔒</span></div>
+        <div class="api-endpoint"><span class="api-method post">POST</span><span class="api-path">/api/refresh</span></div>
+        <div class="api-endpoint"><span class="api-method post">POST</span><span class="api-path">/api/enviar-codigo-verificacion</span></div>
+        <div class="api-endpoint"><span class="api-method post">POST</span><span class="api-path">/api/recuperacion</span></div>
 
-        <div class="api-endpoint"><span class="api-method post">POST</span><span class="api-path">/api/tenants 🔒</span></div>
-        <p>Crea una nueva empresa.</p>
-        <pre><code>// Request
-{
-  "nombre": "Nueva Empresa",
-  "rtn": "0801-1234-567890",
-  "direccion": "Tegucigalpa",
-  "giro": "Comercio",
-  "plan": "starter"
-}
+        <h3>Empresa (Portal Empresa)</h3>
+        <div class="api-endpoint"><span class="api-method get">GET</span><span class="api-path">/api/empresa/overview 🔒</span></div>
+        <div class="api-endpoint"><span class="api-method get">GET</span><span class="api-path">/api/empresa/modules 🔒</span></div>
+        <div class="api-endpoint"><span class="api-method get">GET</span><span class="api-path">/api/empresa/entitlements 🔒</span></div>
+        <div class="api-endpoint"><span class="api-method get">GET</span><span class="api-path">/api/tenant/subscription 🔒</span></div>
+        <div class="api-endpoint"><span class="api-method get">GET</span><span class="api-path">/api/tenant/usage 🔒</span></div>
+        <div class="api-endpoint"><span class="api-method get">GET</span><span class="api-path">/api/tenant/apikeys 🔒</span></div>
+        <div class="api-endpoint"><span class="api-method post">POST</span><span class="api-path">/api/tenant/apikeys 🔒</span></div>
+        <div class="api-endpoint"><span class="api-method delete">DELETE</span><span class="api-path">/api/tenant/apikeys/:id 🔒</span></div>
 
-// Response 201
-{ "id": "xyz789", "nombre": "Nueva Empresa", ... }</code></pre>
+        <h3>Operación</h3>
+        <div class="api-endpoint"><span class="api-method get">GET</span><span class="api-path">/api/dashboard/summary 🔒</span></div>
+        <div class="api-endpoint"><span class="api-method get">GET</span><span class="api-path">/api/productos 🔒</span></div>
+        <div class="api-endpoint"><span class="api-method post">POST</span><span class="api-path">/api/productos 🔒</span></div>
+        <div class="api-endpoint"><span class="api-method get">GET</span><span class="api-path">/api/clientes 🔒</span></div>
+        <div class="api-endpoint"><span class="api-method post">POST</span><span class="api-path">/api/clientes 🔒</span></div>
+        <div class="api-endpoint"><span class="api-method get">GET</span><span class="api-path">/api/facturas 🔒</span></div>
+        <div class="api-endpoint"><span class="api-method post">POST</span><span class="api-path">/api/facturas 🔒</span></div>
+        <div class="api-endpoint"><span class="api-method get">GET</span><span class="api-path">/api/recibos 🔒</span></div>
+        <div class="api-endpoint"><span class="api-method get">GET</span><span class="api-path">/api/notas-credito 🔒</span></div>
+        <div class="api-endpoint"><span class="api-method get">GET</span><span class="api-path">/api/pos/ventas 🔒</span></div>
+        <div class="api-endpoint"><span class="api-method post">POST</span><span class="api-path">/api/pos/ventas 🔒</span></div>
+        <div class="api-endpoint"><span class="api-method get">GET</span><span class="api-path">/api/kardex 🔒</span></div>
+        <div class="api-endpoint"><span class="api-method get">GET</span><span class="api-path">/api/bodegas 🔒</span></div>
+        <div class="api-endpoint"><span class="api-method get">GET</span><span class="api-path">/api/ventas-fiadas 🔒</span></div>
+        <div class="api-endpoint"><span class="api-method get">GET</span><span class="api-path">/api/abonos 🔒</span></div>
+        <div class="api-endpoint"><span class="api-method get">GET</span><span class="api-path">/api/rutas 🔒</span></div>
+        <div class="api-endpoint"><span class="api-method get">GET</span><span class="api-path">/api/sucursales 🔒</span></div>
 
-        <div class="api-endpoint"><span class="api-method get">GET</span><span class="api-path">/api/tenant/:id 🔒</span></div>
-        <p>Obtiene los detalles de una empresa específica.</p>
+        <h3>IA (según plan y cuota)</h3>
+        <div class="api-endpoint"><span class="api-method post">POST</span><span class="api-path">/api/ai/chat 🔒</span></div>
+        <div class="api-endpoint"><span class="api-method post">POST</span><span class="api-path">/api/ai/dashboard 🔒</span></div>
+        <div class="api-endpoint"><span class="api-method post">POST</span><span class="api-path">/api/ai/pos/analyze 🔒</span></div>
+        <div class="api-endpoint"><span class="api-method post">POST</span><span class="api-path">/api/ai/pos/upsell 🔒</span></div>
+        <div class="api-endpoint"><span class="api-method post">POST</span><span class="api-path">/api/ai/crm/customer 🔒</span></div>
+        <div class="api-endpoint"><span class="api-method post">POST</span><span class="api-path">/api/ai/vision 🔒</span></div>
+        <div class="api-endpoint"><span class="api-method post">POST</span><span class="api-path">/api/ai/support 🔒</span></div>
+        <div class="api-endpoint"><span class="api-method get">GET</span><span class="api-path">/api/ai/usage 🔒</span></div>
+        <div class="api-endpoint"><span class="api-method get">GET</span><span class="api-path">/api/ai/costs 🔒</span></div>
 
-        <div class="api-endpoint"><span class="api-method put">PUT</span><span class="api-path">/api/tenants/:id 🔒</span></div>
-        <p>Actualiza los datos de una empresa. Puede enviar solo los campos a modificar.</p>
-        <pre><code>// Request (parcial)
-{ "plan": "business", "nombre": "TechCorp Actualizado" }</code></pre>
+        <h3>Automatizaciones</h3>
+        <div class="api-endpoint"><span class="api-method get">GET</span><span class="api-path">/api/automation 🔒</span></div>
+        <div class="api-endpoint"><span class="api-method post">POST</span><span class="api-path">/api/automation/rules 🔒</span></div>
+        <div class="api-endpoint"><span class="api-method post">POST</span><span class="api-path">/api/automation/execute 🔒</span></div>
 
-        <div class="api-endpoint"><span class="api-method delete">DELETE</span><span class="api-path">/api/tenants/:id 🔒</span></div>
-        <p>Elimina una empresa y todos sus datos. Operación irreversible.</p>
+        <h3>Sistema</h3>
+        <div class="api-endpoint"><span class="api-method get">GET</span><span class="api-path">/api/health</span></div>
+        <div class="api-endpoint"><span class="api-method get">GET</span><span class="api-path">/api/plans</span></div>
+        <div class="api-endpoint"><span class="api-method post">POST</span><span class="api-path">/api/support-ticket</span></div>
 
-        <div class="api-endpoint"><span class="api-method get">GET</span><span class="api-path">/api/debug/tenants/:id 🔒</span></div>
-        <p>Información de debug de una empresa (solo para diagnosticar problemas).</p>
-
-        <h2>Usuarios</h2>
-        <div class="api-endpoint"><span class="api-method get">GET</span><span class="api-path">/api/users 🔒</span></div>
-        <p>Lista todos los usuarios. Soporta paginación y búsqueda por nombre o email.</p>
-        <pre><code>// Query params: ?page=1&limit=50&search=juan
-// Response 200
-{
-  "users": [{ "id": "u123", "email": "juan@...", "nombre": "Juan", "role": "user", ... }],
-  "total": 12,
-  "page": 1
-}</code></pre>
-
-        <div class="api-endpoint"><span class="api-method get">GET</span><span class="api-path">/api/users/:id 🔒</span></div>
-        <p>Obtiene los detalles de un usuario específico.</p>
-
-        <div class="api-endpoint"><span class="api-method post">POST</span><span class="api-path">/api/users 🔒</span></div>
-        <p>Crea un nuevo usuario. Requiere rol admin.</p>
-        <pre><code>// Request
-{
-  "email": "nuevo@empresa.com",
-  "password": "temporal123",
-  "nombre": "Carlos López",
-  "role": "user"
-}</code></pre>
-
-        <div class="api-endpoint"><span class="api-method put">PUT</span><span class="api-path">/api/users/:id 🔒</span></div>
-        <p>Actualiza un usuario (nombre, email, rol, avatar, banner). El usuario solo puede actualizar su propio perfil.</p>
-        <pre><code>// Request
-{ "nombre": "Carlos Actualizado", "role": "admin" }</code></pre>
-
-        <div class="api-endpoint"><span class="api-method delete">DELETE</span><span class="api-path">/api/users/:id 🔒</span></div>
-        <p>Elimina un usuario. No se puede eliminar a uno mismo.</p>
-
-        <h2>Archivos (Upload)</h2>
-        <div class="api-endpoint"><span class="api-method post">POST</span><span class="api-path">/api/upload 🔒</span></div>
-        <p>Sube archivos (avatars, banners) a Supabase Storage.</p>
-        <pre><code>// Request: multipart/form-data
-// Campo: file (imagen JPG/PNG, máx 5MB)
-// Campo: type (opcional: "avatar" | "banner")
-
-// Response 200
-{ "url": "https://storage.supabase.co/..." }</code></pre>
-
-        <h2>Seguridad</h2>
-        <div class="api-endpoint"><span class="api-method post">POST</span><span class="api-path">/api/alerta-no-autorizado</span></div>
-        <p>Reporta un intento de acceso no autorizado. Rate limit: 10 req / 15 min.</p>
-        <pre><code>// Request
-{
-  "email": "usuario@empresa.com",
-  "ip": "190.100.50.xx",
-  "reason": "Contraseña incorrecta"
-}</code></pre>
-
-        <h2>Notificaciones (Bots)</h2>
-        <div class="api-endpoint"><span class="api-method post">POST</span><span class="api-path">/api/notify/onboarding 🔒</span></div>
-        <p>Envía notificación de bienvenida al completar onboarding.</p>
-
-        <div class="api-endpoint"><span class="api-method post">POST</span><span class="api-path">/api/notify/activation 🔒</span></div>
-        <p>Envía notificación de activación de cuenta.</p>
-
-        <h2>Diagnóstico</h2>
-        <div class="api-endpoint"><span class="api-method get">GET</span><span class="api-path">/api/diagnostico</span></div>
-        <p>Estado detallado del sistema: Supabase, NocoDB, email, uptime. No requiere auth.</p>
-        <pre><code>// Response 200
-{
-  "supabase": { "connected": true },
-  "nocodb": { "configured": true },
-  "email": { "configured": true },
-  "uptime": 86400
-}</code></pre>
-
-        <h2>Test Email</h2>
-        <div class="api-endpoint"><span class="api-method get">GET</span><span class="api-path">/api/test-email</span></div>
-        <p>Envía un correo de prueba para verificar la configuración SMTP.</p>
-
-        <h2>Configuración Pública</h2>
-        <div class="api-endpoint"><span class="api-method get">GET</span><span class="api-path">/api/config</span></div>
-        <p>Información pública del servidor (versión, funcionalidades habilitadas). No requiere auth.</p>
-
-        <div class="callout info"><i class="fas fa-info-circle"></i><p><strong>Base URL:</strong> Todos los endpoints están bajo <code>https://portal-pilot.vercel.app/api/...</code></p></div>
+        <div class="callout info"><i class="fas fa-info-circle"></i><p>Los errores devuelven una estructura consistente con código y mensaje (por ejemplo <code>TRIAL_EXPIRED</code>, <code>PLAN_LIMIT_REACHED</code>, <code>AI_TOKEN_LIMIT_REACHED</code>) para que tu integración pueda reaccionar.</p></div>
       </div>
 
       <!-- PLANES -->
       <div class="doc-section" id="sec-planes" style="display:none">
         <div class="eyebrow">PLANES</div>
         <h1>Comparar Planes</h1>
-        <p>Elige el plan que mejor se adapte a tu negocio. Todos incluyen soporte por email.</p>
+        <p>Portal Pilot ofrece planes por empresa. Los valores oficiales vigentes los publica siempre la plataforma (<a href="index.html#pricing" style="color:var(--accent-soft);text-decoration:underline;">ver planes</a>); esta tabla refleja la configuración actual:</p>
         <table>
-          <tr><th>Característica</th><th>Prueba (Gratis 15 días)</th><th>Business (L1,499/mes)</th><th>Enterprise (L4,999/mes)</th></tr>
-          <tr><td>Usuarios</td><td>5</td><td>15</td><td>Ilimitados</td></tr>
-          <tr><td>Empresas</td><td>1</td><td>3</td><td>Ilimitadas</td></tr>
-          <tr><td>Facturación SAR/DEI</td><td>✅</td><td>✅</td><td>✅</td></tr>
-          <tr><td>Inventario Multi-Almacén</td><td>✅</td><td>✅</td><td>✅</td></tr>
-          <tr><td>Contabilidad</td><td>Básica</td><td>Completa</td><td>Completa + API</td></tr>
-          <tr><td>Nómina Hondureña</td><td>—</td><td>✅</td><td>✅</td></tr>
-          <tr><td>IA (Groq API)</td><td>Uso básico</td><td>Uso generoso</td><td>Avanzada / personalizada</td></tr>
-          <tr><td>Bots RPA</td><td>—</td><td>Automatizaciones estándar</td><td>Ilimitados</td></tr>
-          <tr><td>Auditoría / Logs</td><td>✅</td><td>✅</td><td>✅</td></tr>
-          <tr><td>Soporte</td><td>Email</td><td>Email prioritario</td><td>Prioritario 24/7</td></tr>
+          <tr><th>Característica</th><th>Starter (Prueba)</th><th>Business</th><th>Enterprise</th></tr>
+          <tr><td>Precio mensual (USD)</td><td>$0 — prueba 15 días</td><td>$29</td><td>$99</td></tr>
+          <tr><td>Precio anual (USD)</td><td>—</td><td>$290 (2 meses gratis)</td><td>$990 (2 meses gratis)</td></tr>
+          <tr><td>Usuarios</td><td>5</td><td>50</td><td>200</td></tr>
+          <tr><td>Empresas</td><td>1</td><td>3</td><td>5</td></tr>
+          <tr><td>Facturación con CAI</td><td>✅</td><td>✅</td><td>✅</td></tr>
+          <tr><td>Inventario multi-bodega</td><td>✅</td><td>✅</td><td>✅</td></tr>
+          <tr><td>POS</td><td>✅</td><td>✅</td><td>✅</td></tr>
+          <tr><td>CRM y clientes</td><td>✅</td><td>✅</td><td>✅</td></tr>
+          <tr><td>Ventas fiadas y abonos</td><td>—</td><td>✅</td><td>✅</td></tr>
+          <tr><td>Rutas y cobros</td><td>✅</td><td>✅</td><td>✅</td></tr>
+          <tr><td>Flota y sucursales</td><td>—</td><td>—</td><td>✅</td></tr>
+          <tr><td>Asistente IA — tokens al mes</td><td>100,000</td><td>2,000,000</td><td>10,000,000</td></tr>
+          <tr><td>Automatizaciones</td><td>—</td><td>—</td><td>✅ (hasta 50)</td></tr>
+          <tr><td>API / Integraciones</td><td>—</td><td>—</td><td>✅</td></tr>
+          <tr><td>Almacenamiento</td><td>5 GB</td><td>100 GB</td><td>500 GB</td></tr>
+          <tr><td>Seguridad avanzada, club de compras y puntos</td><td>—</td><td>—</td><td>✅</td></tr>
+          <tr><td>Al vencer la prueba</td><td>Modo solo lectura</td><td>—</td><td>—</td></tr>
         </table>
-        <div class="callout info"><i class="fas fa-info-circle"></i><p>El plan Prueba es gratuito por 15 días e incluye todos los módulos base con hasta 5 usuarios. Ideal para probar Portal Pilot sin compromiso.</p></div>
+        <h3>Cómo funcionan los límites</h3>
+        <ul>
+          <li>Los límites (usuarios, documentos, IA, automatizaciones) se aplican <strong>en el servidor</strong>; la interfaz los refleja pero no los decide.</li>
+          <li>Cada operación exitosa incrementa el consumo del periodo; las fallidas no consumen.</li>
+          <li>Al alcanzar un límite, la plataforma responde con un mensaje claro y la opción de mejorar de plan.</li>
+        </ul>
+        <div class="callout warn"><i class="fas fa-triangle-exclamation"></i><p>Los precios del catálogo se expresan en <strong>USD</strong>. Al momento de pagar se muestra el <strong>equivalente en moneda local</strong> (en Honduras, Lempiras) según la configuración activa de cobro.</p></div>
+        <div class="callout info"><i class="fas fa-info-circle"></i><p>Existe además un plan <strong>Custom</strong> para corporativos con necesidades a medida (más empresas, usuarios y cuotas). Contacta a <a href="support.html" style="color:var(--accent-soft);text-decoration:underline;">soporte</a>.</p></div>
+        <div class="callout success"><i class="fas fa-circle-check"></i><p>La activación por pago reactiva tu empresa <strong>de inmediato</strong>, sin esperas ni tickets.</p></div>
       </div>
 
     </main>

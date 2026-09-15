@@ -1297,8 +1297,8 @@
         </h1>
 
         <p class="error-desc reveal">
-          El agente Gemma 3N ha buscado en toda la infraestructura local, pero la página que intentas alcanzar no existe, 
-          fue movida o simplemente nunca existió en este universo. Tranquilo, tenemos varias rutas de escape.
+          No encontramos la página que buscas: puede que haya sido movida o que nunca haya existido. 
+          Tranquilo, tenemos varias rutas de escape.
         </p>
 
         <div class="error-actions reveal">
@@ -1342,7 +1342,7 @@
           </div>
           <div class="t-body" id="terminalBody">
             <div class="t-line"><span class="t-prompt">PP&gt;</span><span class="t-out">Portal Pilot Agent v1.0 — Iniciando diagnóstico de ruta...</span></div>
-            <div class="t-line"><span class="t-prompt">PP&gt;</span><span class="t-out"><span class="t-ok">[OK]</span> Modelo Gemma 3N cargado · Infraestructura local activa.</span></div>
+            <div class="t-line"><span class="t-prompt">PP&gt;</span><span class="t-out"><span class="t-ok">[OK]</span> Plataforma en línea · Workspace operativo.</span></div>
             <div class="t-line"><span class="t-prompt">PP&gt;</span><span class="t-out">Buscando ruta solicitada en el portal corporativo...</span></div>
             <div class="t-line"><span class="t-prompt">PP&gt;</span><span class="t-out"><span class="t-err">[ERROR]</span> Ruta no encontrada en el índice local. Código: <span class="t-hash">HTTP_404_NOT_FOUND</span></span></div>
             <div class="t-line"><span class="t-prompt">PP&gt;</span><span class="t-out"><span class="t-warn">[WARN]</span> Verificando blockchain audit trail... registro inmutable generado.</span></div>
@@ -1386,21 +1386,21 @@
         <a href="index.html" class="sugg-card reveal">
           <div class="sugg-icon"><i class="fas fa-house"></i></div>
           <h3>Inicio — Portal Principal</h3>
-          <p>Regresa al punto de partida. Descubre cómo Portal Pilot está transformando la automatización empresarial con IA local offline.</p>
+          <p>Regresa al punto de partida. Descubre cómo Portal Pilot está transformando la automatización empresarial con IA integrada y sincronización offline.</p>
           <span class="sugg-link">Ir al inicio <i class="fas fa-arrow-right"></i></span>
         </a>
 
         <a href="index.html#features" class="sugg-card reveal" style="transition-delay:.1s;">
           <div class="sugg-icon"><i class="fas fa-brain"></i></div>
           <h3>Características</h3>
-          <p>Explora Gemma 3N local, auditoría blockchain inmutable, RPA avanzado y la seguridad biométrica Cyberyx Vantage.</p>
+          <p>Descubre el POS, la facturación con CAI, el inventario multi-bodega, el CRM y el asistente IA de Portal Pilot.</p>
           <span class="sugg-link">Ver características <i class="fas fa-arrow-right"></i></span>
         </a>
 
         <a href="index.html#pricing" class="sugg-card reveal" style="transition-delay:.2s;">
           <div class="sugg-icon"><i class="fas fa-tags"></i></div>
           <h3>Planes y Precios</h3>
-          <p>Conoce los planes Startup, Business y Enterprise. Precios transparentes, sin costos ocultos, escalables a tu operación.</p>
+          <p>Conoce los planes Starter, Business y Enterprise. Precios transparentes, sin costos ocultos, escalables a tu operación.</p>
           <span class="sugg-link">Ver planes <i class="fas fa-arrow-right"></i></span>
         </a>
 
@@ -1432,7 +1432,7 @@
         <div class="sec-title" style="font-size:clamp(22px,3vw,30px);margin-bottom:20px;">Busca en el portal</div>
         <form class="search-box" onsubmit="handleSearch(event)">
           <i class="fas fa-magnifying-glass"></i>
-          <input type="text" placeholder="Ej: Gemma 3N, precios, blockchain, RPA..." id="searchInput">
+          <input type="text" placeholder="Ej: POS, facturación, inventario, IA..." id="searchInput">
           <button type="submit">Buscar</button>
         </form>
       </div>
@@ -1582,8 +1582,8 @@
       e.preventDefault();
       const q = document.getElementById('searchInput').value.trim();
       if (!q) return;
-      // Simulate search — redirect to home with query
-      alert('🔍 Buscando: "' + q + '"\n\nEl agente Gemma 3N está procesando tu búsqueda en la infraestructura local...');
+      // Búsqueda real: lleva la consulta a la landing (ancla de características)
+      window.location.href = 'index.html#features';
     }
 
     // ── Konami code easter egg ───────────────────────────

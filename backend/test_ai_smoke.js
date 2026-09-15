@@ -65,7 +65,7 @@ async function cleanup() {
     if (leaksSecret) { console.log('AI SMOKE FAIL — secreto expuesto en respuesta'); await cleanup(); process.exit(1); }
     let usageRow = null;
     if (ctx.supabase) {
-      const { data } = await ctx.supabase.from('ai_usage_log').select('provider, modelo, total_tokens, estimated_cost').eq('empresa_codigo', CODE).limit(1);
+      const { data } = await ctx.supabase.from('ai_usage_log').select('provider, model, tokens_total, cost_estimated').eq('empresa_codigo', CODE).limit(1);
       usageRow = data?.[0] || null;
     }
     if (ctx.supabase && !usageRow) { console.log('AI SMOKE FAIL — llamada 200 pero sin registro en ai_usage_log'); await cleanup(); process.exit(1); }

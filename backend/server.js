@@ -1622,6 +1622,10 @@ app.post('/api/registro', async (req, res) => {
     }
 
     const emailNorm = String(email).trim().toLowerCase();
+    // El código de empresa se normaliza a UPPERCASE en origen para que coincida
+    // con resolverEmpresaSupabase (normaliza a mayúsculas) y con la comprobación
+    // de unicidad que ya usa toUpperCase (release audit §21).
+    const codigoNorm = normalizeTenantCode(empresaCodigo);
 
     // Consultar existencia previa en Supabase
     if (supabase) {
@@ -1640,7 +1644,7 @@ app.post('/api/registro', async (req, res) => {
 
       // Crear tenant en Supabase
       await supabase.from('tenants').upsert({
-        codigo: empresaCodigo,
+        codigo: codigoNorm,
         nombre_empresa: empresaNombre || 'Portal Pilot',
         dominio: (dominioWorkspace && dominioWorkspace.trim()) ? dominioWorkspace.trim() : null,
         plan: plan || 'starter',
@@ -1664,7 +1668,7 @@ app.post('/api/registro', async (req, res) => {
         apellido: usuarioApellido || '',
         rol: 'owner',
         rol_global: 'owner',
-        empresa_codigo: empresaCodigo,
+        empresa_codigo: codigoNorm,
         estado: 'activo',
         activo: true,
         foto_perfil_url: profile_pic || company_logo || null
@@ -1680,7 +1684,7 @@ app.post('/api/registro', async (req, res) => {
         const planClave = normalizePlan(plan || 'starter');
         const { data: planRow } = await supabase.from('planes').select('id').eq('clave', planClave).maybeSingle();
         await supabase.from('subscriptions').upsert({
-          empresa_codigo: empresaCodigo,
+          empresa_codigo: codigoNorm,
           plan_id: planRow?.id || null,
           estado: planClave === 'starter' ? 'trial' : 'active',
           trial_started_at: new Date().toISOString(),
@@ -1693,11 +1697,11 @@ app.post('/api/registro', async (req, res) => {
     }
 
     // AUTOMATION HOOK: tenant_creado
-    dispatchAutomationEvent(empresaCodigo, 'tenant_creado', { empresaCodigo, plan, email }).catch(err => console.warn('[REGISTRO] automation hook error:', err.message));
+    dispatchAutomationEvent(codigoNorm, 'tenant_creado', { empresaCodigo: codigoNorm, plan, email }).catch(err => console.warn('[REGISTRO] automation hook error:', err.message));
 
     return res.status(201).json({ 
       message: 'Tenant creado con éxito',
-      empresaCodigo,
+      empresaCodigo: codigoNorm,
       dominioWorkspace: dominioWorkspace || null,
       plan: plan || null
     });
@@ -2216,7 +2220,7 @@ app.post('/api/tigo-money-reference', emailLimiter, async (req, res) => {
       }).eq('codigo', empresa);
     }
 
-    const amountMap = { STARTER: 'L.499.00', BUSINESS: 'L.1,499.00', ENTERPRISE: 'L.4,999.00' };
+    const amountMap = { STARTER: 'L.0.00', BUSINESS: 'L.1,499.00', ENTERPRISE: 'L.4,999.00' };
     const amount = amountMap[planNombre] || 'L.1,499.00';
 
     return res.json({
@@ -3951,11 +3955,17 @@ async function registrarAuditoria(empresaCodigo, accion, descripcion, tipo = 'si
 async function resolverEmpresaSupabase(empresaCodigo) {
   if (!supabase || !empresaCodigo) return null;
   try {
-    const { data, error } = await supabase
+    const norm = normalizeTenantCode(empresaCodigo);
+    const raw = String(empresaCodigo).trim();
+    let { data, error } = await supabase
       .from('empresas')
       .select('id, codigo, nombre')
-      .eq('codigo', normalizeTenantCode(empresaCodigo))
+      .eq('codigo', norm)
       .maybeSingle();
+    if ((!data || error) && raw && raw !== norm) {
+      const r = await supabase.from('empresas').select('id, codigo, nombre').eq('codigo', raw).maybeSingle();
+      data = r.data; error = r.error;
+    }
     return (data && !error) ? data : null;
   } catch (err) {
     return null;
@@ -4244,7 +4254,7 @@ async function logAIUsage({ empresaCodigo, empresaId, usuarioId, provider, model
     const costTable = AI_TOKEN_COSTS_USD_PER_M[String(provider || '').toLowerCase()] || DEFAULT_TOKEN_COST_PER_M;
     const costEstimated = Number(((tokensIn / 1000000) * costTable.input + (tokensOut / 1000000) * costTable.output).toFixed(6));
     if (supabase) {
-      await supabase.from('ai_usage_log').insert({
+      const row = {
         empresa_codigo: empresaCodigo,
         empresa_id: empresaId,
         usuario_id: usuarioId,
@@ -4257,14 +4267,20 @@ async function logAIUsage({ empresaCodigo, empresaId, usuarioId, provider, model
         cost_estimated: costEstimated,
         duration_ms: durationMs,
         success,
-        error_message: errorMessage || null
-      });
-      // Metering de plan: acumula tokens IA consumidos por el tenant (periodo mensual).
+        error_message: errorMessage || null,
+        created_at: new Date().toISOString()
+      };
+      try {
+        await supabase.from('ai_usage_log').insert(row);
+      } catch (insertErr) {
+        console.error('[AI_USAGE] Insert falló (reintento 1):', insertErr.message, JSON.stringify({ empresa_codigo: empresaCodigo, provider, model, funcion, tokensAll }));
+        await supabase.from('ai_usage_log').insert(row);
+      }
       await registrarUsoTenant(empresaCodigo, 'ai_tokens', tokensAll);
       await registrarUsoTenant(empresaCodigo, 'api_requests', 1);
     }
   } catch (e) {
-    console.warn('[AI_GATEWAY] Usage log failed:', e.message);
+    console.error('[AI_USAGE] Fallo total de log de uso IA (no bloquea respuesta):', e.message);
   }
 }
 
@@ -7070,6 +7086,110 @@ app.patch('/api/ventas-fiadas/:id', authenticate, requirePlanFeature('fiado'), a
   } catch (err) { return handleServerError(res, err); }
 });
 
+
+// ── CRM Ventas (pipeline de oportunidades: cotizacion/en_proceso/ganada/perdida) ──
+app.get('/api/ventas-crm', authenticate, async (req, res) => {
+  if (!requireSupabase(res)) return;
+  try {
+    const tenant = normalizeTenantCode(getTenantCode(req));
+    const empresa = await resolverEmpresaSupabase(tenant);
+    if (!empresa) return res.status(404).json({ error: 'Empresa no encontrada' });
+    let query = supabase.from('ventas_crm').select('*').eq('empresa_codigo', tenant);
+    if (req.query.estado) query = query.eq('estado', req.query.estado);
+    if (req.query.buscar) {
+      const termino = String(req.query.buscar).trim().toLowerCase();
+      const { data } = await supabase.from('ventas_crm').select('*').eq('empresa_codigo', tenant);
+      const filtradas = (data || []).filter(v => (v.cliente || '').toLowerCase().includes(termino) || (v.descripcion || '').toLowerCase().includes(termino));
+      return res.json({ ventas: filtradas.sort((a, b) => new Date(b.created_at || b.fecha) - new Date(a.created_at || a.fecha)) });
+    }
+    const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 100, 1), 500);
+    const { data, error } = await query.order('created_at', { ascending: false }).limit(limit);
+    if (error) return res.status(500).json({ error: error.message });
+    return res.json({ ventas: data || [] });
+  } catch (err) { return handleServerError(res, err); }
+});
+
+app.get('/api/ventas-crm/resumen', authenticate, async (req, res) => {
+  if (!requireSupabase(res)) return;
+  try {
+    const tenant = normalizeTenantCode(getTenantCode(req));
+    const { data, error } = await supabase.from('ventas_crm').select('estado, monto').eq('empresa_codigo', tenant);
+    if (error) return res.status(500).json({ error: error.message });
+    const rows = data || [];
+    const sum = (f) => rows.filter(f).reduce((acc, r) => acc + (Number(r.monto) || 0), 0);
+    return res.json({
+      num_cotizacion: rows.filter(r => r.estado === 'cotizacion').length,
+      num_en_proceso: rows.filter(r => r.estado === 'en_proceso').length,
+      num_ganada: rows.filter(r => r.estado === 'ganada').length,
+      num_perdida: rows.filter(r => r.estado === 'perdida').length,
+      monto_ganada: sum(r => r.estado === 'ganada'),
+      monto_pipeline: sum(r => r.estado !== 'perdida')
+    });
+  } catch (err) { return handleServerError(res, err); }
+});
+
+app.post('/api/ventas-crm', authenticate, async (req, res) => {
+  if (!requireSupabase(res)) return;
+  try {
+    const tenant = normalizeTenantCode(getTenantCode(req));
+    const empresa = await resolverEmpresaSupabase(tenant);
+    if (!empresa) return res.status(404).json({ error: 'Empresa no encontrada' });
+    const b = req.body || {};
+    if (!b.cliente || !String(b.cliente).trim()) return res.status(400).json({ error: 'cliente es requerido' });
+    const estadosValidos = ['cotizacion', 'en_proceso', 'ganada', 'perdida'];
+    const estado = estadosValidos.includes(b.estado) ? b.estado : 'cotizacion';
+    const { data, error } = await supabase.from('ventas_crm').insert([{
+      empresa_codigo: tenant,
+      empresa_id: empresa.id,
+      usuario_id: req.user?.sub || null,
+      cliente: String(b.cliente).slice(0, 200),
+      descripcion: (b.descripcion || '').toString().slice(0, 1000),
+      monto: Math.max(0, parseFloat(b.monto) || 0),
+      estado,
+      fecha: b.fecha || new Date().toISOString(),
+      creado_por: req.user?.nombre || ''
+    }]).select().maybeSingle();
+    if (error) return res.status(500).json({ error: error.message });
+    await registrarAuditoria(tenant, 'Nueva venta CRM', String(b.cliente).slice(0, 120), 'crm', req.user?.nombre || '', req);
+    return res.status(201).json({ venta: data });
+  } catch (err) { return handleServerError(res, err); }
+});
+
+app.patch('/api/ventas-crm/:id', authenticate, async (req, res) => {
+  if (!requireSupabase(res)) return;
+  try {
+    const tenant = normalizeTenantCode(getTenantCode(req));
+    const b = req.body || {};
+    const campos = {};
+    if (b.cliente !== undefined) campos.cliente = String(b.cliente).slice(0, 200);
+    if (b.descripcion !== undefined) campos.descripcion = (b.descripcion || '').toString().slice(0, 1000);
+    if (b.monto !== undefined) campos.monto = Math.max(0, parseFloat(b.monto) || 0);
+    if (b.estado !== undefined) {
+      const estadosValidos = ['cotizacion', 'en_proceso', 'ganada', 'perdida'];
+      if (!estadosValidos.includes(b.estado)) return res.status(400).json({ error: 'Estado inválido', validos: estadosValidos });
+      campos.estado = b.estado;
+    }
+    campos.updated_at = new Date().toISOString();
+    const { data, error } = await supabase.from('ventas_crm').update(campos).eq('id', req.params.id).eq('empresa_codigo', tenant).select().maybeSingle();
+    if (error) return res.status(500).json({ error: error.message });
+    if (!data) return res.status(404).json({ error: 'Venta no encontrada' });
+    await registrarAuditoria(tenant, 'Actualizó venta CRM', (campos.estado || 'cambio').slice(0, 80), 'crm', req.user?.nombre || '', req);
+    return res.json({ venta: data });
+  } catch (err) { return handleServerError(res, err); }
+});
+
+app.delete('/api/ventas-crm/:id', authenticate, async (req, res) => {
+  if (!requireSupabase(res)) return;
+  try {
+    const tenant = normalizeTenantCode(getTenantCode(req));
+    const { data, error } = await supabase.from('ventas_crm').delete().eq('id', req.params.id).eq('empresa_codigo', tenant).select().maybeSingle();
+    if (error) return res.status(500).json({ error: error.message });
+    if (!data) return res.status(404).json({ error: 'Venta no encontrada' });
+    await registrarAuditoria(tenant, 'Eliminó venta CRM', String(data.cliente || '').slice(0, 80), 'crm', req.user?.nombre || '', req);
+    return res.json({ ok: true, venta: data });
+  } catch (err) { return handleServerError(res, err); }
+});
+
 // ═══════════════════════════════════════════════════════════════
 // ABONOS
 // ═══════════════════════════════════════════════════════════════
@@ -8338,7 +8458,7 @@ app.post('/api/transacciones', authenticate, async (req, res) => {
       categoria: (t.categoria || '').toString().slice(0, 100),
       descripcion: (t.descripcion || '').toString().slice(0, 1000),
       monto: parseFloat(t.monto) || 0,
-      metodo_pago: (t.metodo_pago || '').toString().slice(0, 50),
+      metodo_pago: t.metodo_pago ? String(t.metodo_pago).slice(0, 50) : null,
       referencia: (t.referencia || '').toString().slice(0, 200),
       fecha: t.fecha || new Date().toISOString(),
       created_at: new Date().toISOString()
@@ -8839,11 +8959,19 @@ app.get('/api/tenant/subscription', authenticate, async (req, res) => {
 });
 
 // ── Catálogo de planes (público; DB primero, fallback constantes) ──
+// Moneda operativa: HNL. /api/plans expone el catálogo de referencia (USD) + los montos
+// efectivos de facturación local (HNL). El cobro real lo hace amountMap del checkout.
+const HNL_MONTHLY = { starter: 0, business: 1499, enterprise: 4999, custom: null };
+function toPlanPricing(p) {
+  const cl = String(p?.clave || '').toLowerCase();
+  const mes = Object.prototype.hasOwnProperty.call(HNL_MONTHLY, cl) ? HNL_MONTHLY[cl] : null;
+  return { ...p, moneda: 'HNL', precio_mensual_hnl: mes, precio_anual_hnl: null };
+}
 app.get('/api/plans', async (req, res) => {
   if (!requireSupabase(res)) return res.json({ plans: PLAN_LIMITS });
   try {
     const { data, error } = await supabase.from('planes').select('*').order('orden', { ascending: true });
-    if (!error && data && data.length) return res.json({ plans: data });
+    if (!error && data && data.length) return res.json({ moneda: 'HNL', plans: data.map(toPlanPricing) });
     return res.json({ plans: PLAN_LIMITS });
   } catch (err) {
     return res.json({ plans: PLAN_LIMITS });

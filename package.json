@@ -1,6 +1,6 @@
 {
   "name": "portal-pilot-web",
-  "version": "1.0.0",
+  "version": "1.0.7",
   "description": "Portal Pilot - Enterprise Management Platform",
   "main": "backend/server.js",
   "scripts": {

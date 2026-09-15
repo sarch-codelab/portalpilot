@@ -1149,9 +1149,7 @@
         <div class="sec-title">Precios transparentes para PyMES</div>
         <div class="sec-sub" style="margin:0 auto 24px;">Soluciones escalables para cada nivel de operación. Sin costos ocultos, sin sorpresas.</div>
         <div class="pricing-toggle">
-          <button class="pt-btn active" onclick="setPricingToggle(this,'monthly')">Mensual</button>
-          <button class="pt-btn" onclick="setPricingToggle(this,'yearly')">Anual <span
-              style="font-size:10px;color:var(--green);margin-left:4px;">−15%</span></button>
+          <button class="pt-btn active" onclick="setPricingToggle(this,'monthly')">Facturación mensual · en Lempiras (HNL)</button>
         </div>
       </div>
 
@@ -1384,19 +1382,19 @@
 
   <script>
   // Fix pricing toggle — robusto, 15% dto., fuerza repaint del gradient
-  window.prices = { monthly: { p1: '1,499', p2: '4,999' }, yearly: { p1: '1,274', p2: '4,249' } };
+  window.prices = { monthly: { p1: '1,499', p2: '4,999' } };
   window.setPricingToggle = function(btn, mode){
     try{
       document.querySelectorAll('.pt-btn').forEach(b=>b.classList.remove('active'));
       var target = document.querySelector('.pt-btn[onclick*="\''+mode+'\'"]') || btn;
       if(target) target.classList.add('active');
-      var p=window.prices[mode];
+      var p=window.prices[mode] || window.prices.monthly;
       var el1=document.getElementById('p1'), el2=document.getElementById('p2');
       if(el1){ el1.textContent=p.p1; el1.style.display='none'; void el1.offsetHeight; el1.style.display=''; }
       if(el2){ el2.textContent=p.p2; el2.style.display='none'; void el2.offsetHeight; el2.style.display=''; }
       document.querySelectorAll('.pricing-card-subtitle').forEach(function(el, idx){
         if(idx===1 || idx===2){
-          el.innerHTML = (mode==='yearly' ? 'Facturación anual<br>Todos los módulos incluidos' : 'Facturación mensual<br>Todos los módulos incluidos');
+          el.innerHTML = 'Facturación mensual<br>Todos los módulos incluidos';
         }
       });
     }catch(e){ console.error(e); }

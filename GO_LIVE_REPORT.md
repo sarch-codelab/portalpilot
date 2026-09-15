@@ -5,12 +5,13 @@
 ## RELEASE STATUS
 
 ```text
-RELEASE CANDIDATE → casi READY
+RELEASE CANDIDATE
 ```
 
-Producción desplegada y validada end-to-end (69/69 E2E, 30/30 seguridad). El gate a
-**READY** requiere exclusivamente: (1) credenciales IA del propietario y (2) owner
-decision sobre flujos que dependen de email.
+Producción desplegada y validada end-to-end (69/69 E2E, 30/30 seguridad,
+18/18 esquema). El gate a **READY** requiere: (1) credenciales IA del
+propietario, (2) owner decision sobre flujos que dependen de email y
+(3) decisión del owner sobre moneda de facturación (USD vs HNL).
 
 ## PRODUCTION URL
 
@@ -23,17 +24,28 @@ https://portal-pilot.vercel.app — HTTPS OK, `/` 200, `/login` 200, `/registro`
 |---|---|---|---|
 | `f54cc0d` | portalpilot | hardening go-live + suites E2E + docs | Deployed, Ready |
 | `396e55c` | portalpilot | test_ai_smoke | Deployed |
+| `8df2c09` | portalpilot | planes/offline/IA en web + schema-drift + unificación 503 | Deployed (`vercel --prod`) |
 | `3253a92` | portalpilot-app | cliente fino API única + README | Pushed (deploy móvil no aplicado a la tienda) |
 
-Método: integración Git → Vercel. Los workflows de GitHub Actions no pudieron
-pushearse (PAT sin scope `workflow`); quedan en disco en ambos repos, listos para
-que el owner los suba con una cuenta con scope: `git add .github && git commit && git push`.
+Método: `8df2c09` (y el workflow `ci.yml` del commit local `0bf091d`) NO pudieron
+pushearse: el PAT no tiene scope `workflow` y el push incluye archivos
+`.github/workflows`. El deploy de `8df2c09` se hizo vía `vercel --prod`
+directamente (método alternativo). Workflows listos en disco; el owner debe
+subirlos con un PAT con scope: `git add .github && git commit && git push`.
 
 ## SUPABASE
 
-- Esquema productivo verificado (`check_schema.js` ✓) + introspección MCP directa.
-- Drifts ya migradas previamente (`clientes.limite_credito/saldo_pendiente`,
-  `transacciones.usuario_id`, `tenant_sessions.user_agent`).
+- Esquema productivo verificado: `check_schema.js` **18/18 ✓** + introspección MCP
+  directa.
+- Drift restante cerrada en esta sesión con migración idempotente aditiva
+  `add_cliente_credit_and_transaccion_usuario_columns` (sin datos):
+  `clientes.limite_credito`, `clientes.saldo_pendiente`, `transacciones.usuario_id`.
+  - `transacciones.usuario_id`: el backend ya era drift-tolerante (reintento sin la
+    columna); la columna añadida habilita atribución por usuario.
+  - `clientes.limite_credito/saldo_pendiente`: requeridas por la ruta AI CRM
+    (`/api/ai/crm/customer`), que ahora consulta contexto de cliente sin error.
+  Nota de exactitud: el reporte previo afirmaba el todo migrado; solo pasa con los
+  dos drifts efímeros previos de `tenant_sessions`/sesiones (verificado 18/18).
 - RLS: defensa secundaria; frontera real en Express (service_role por diseño).
 - E2E creó y **limpió** tenants efímeros en producción sin dejar residuos.
 
@@ -93,17 +105,35 @@ pago (`confirmar-pago`, ambos formatos de campo) → **reactivación inmediata**
 
 ## AI
 
-**BLOCKED — OWNER CONFIGURATION REQUIRED.**
-Smoke test real contra producción: tenant efímero → `/api/ai/chat` → **503
-controlado** "Todos los proveedores de IA fallaron o no están configurados".
-No hay `GROQ_API_KEY` ni `OPENROUTER_API_KEY` en Vercel. El gateway NO finge
-éxito y NO llama a proveedores sin clave. Comportamiento con cuota agotada
-(429 pre-llamada) ya verificado previamente con clave real.
+**BLOCKED — OWNER CONFIGURATION REQUIRED.** Infraestructura validada; solo falta
+la clave real en Vercel. Smoke real contra producción: TODAS las rutas IA
+(`chat`, `vision`, `pos/analyze`, `pos/upsell`, `crm/customer`, `dashboard`,
+`support`) responden **503 controlado** "Todos los proveedores de IA fallaron o no
+están configurados" — unificado (antes 500 en 4 rutas). `crm/customer` ya ejecuta
+su consulta de contexto a `clientes` OK (gracias a la migración); único pendiente:
+la API key. Metring (429 pre-llamada) y coste (`ai_usage_log`) ya verificados con
+claves anteriores. El gateway NO finge éxito y nunca llama a un proveedor sin key.
 
 ## WEB
 
 Landing, login, registro, redirect por rol (server-side), 404, todos los CTAs a
 `registrov2.html`. Portales `pp/` y `empresa/` con endpoints reales (41/41).
+
+Reconciliación final contra fuentes canónicas (`/api/plans`, `plan_features`,
+`plan_limits`), desplegada y verificada en producción:
+- **index.html**: Starter 5 GB · Business 50 usuarios + 100 GB + "Ventas fiadas y
+  abonos" · Enterprise "hasta 200" usuarios + "hasta 5" empresas + 500 GB.
+- **documentacion.html**: tabla de planes coherente (USD $29/$99, anual
+  $290/$990, usuarios 5/50/200, empresas 1/3/5, 5/100/500 GB, IA 100k/2M/10M
+  tokens, fiado Business+, automations/API/flota/sucursales Enterprise, solo
+  lectura al vencer trial); eliminado el claim falso de "módulo de contabilidad";
+  gating de módulos; notas offline corregidas (web SaaS requiere internet; app
+  móvil/desktop offline-first con sync; IA siempre server-side).
+- **404/registrov2**: copy alineado (Starter, 50/200 usuarios, "API completa +
+  automatizaciones", trial → módulos del plan Starter).
+- **pay_plan.html**: 100% Lempiras (L.0 / L.1,499 / L.4,999), consistente con el
+  `amountMap` del backend. Catalogos publican USD: discrepancia USD↔HNL real →
+  decisión del owner (no se cambian montos autónomamente).
 
 ## FLUTTER
 
@@ -135,8 +165,9 @@ Incluye ciclo de pago real y reactivación inmediata en serverless.
 
 | Suite | Local | Producción |
 |---|---|---|
-| E2E release (69) | PASS | **PASS** |
-| Seguridad ataque (30) | PASS | **PASS** |
+| E2E release (69) | PASS | **PASS** (re-ejecutado post-deploy) |
+| Seguridad ataque (30) | PASS | **PASS** (re-ejecutado post-deploy) |
+| check_schema (18) | PASS | **18/18** (post-migración) |
 | Bloques (29) | PASS | PASS (pre-deploy) |
 | Portales (41) | PASS | PASS (pre-deploy) |
 | Flutter test (40) | PASS | n/a |
@@ -147,12 +178,23 @@ Incluye ciclo de pago real y reactivación inmediata en serverless.
 1. `loginLimiter.skipSuccessfulRequests` (logins válidos no agotan el límite).
 2. Cleanup de log de debug `PAYDEBUG`.
 3. Nuevo `backend/test_ai_smoke.js` (llamada real + verificación `ai_usage_log`).
+4. Migración idempotente aditiva `add_cliente_credit_and_transaccion_usuario_columns`
+   (`clientes.limite_credito/saldo_pendiente`, `transacciones.usuario_id`): cierre
+   definitivo del drift de esquema en producción.
+5. Unificación de error IA: las 5 rutas AI devuelven **503** (service unavailable)
+   sin proveedor configurado (antes 500 en 4 de ellas).
+6. Correcciones de contenido web (planes, offline, IA, contabilidad) y omisión de
+   claims falsos en documentación.
 
 ## REMAINING BLOCKERS
 
 1. **IA sin credenciales** en producción → 503 controlado. El resto del producto
    funciona; los endpoints IA responden con error claro.
-2. **CI no activado** (limitación de scope del PAT).
+2. **CI no activado** y push web bloqueado (PAT sin scope `workflow`); producción
+   cubierta por deploy `vercel --prod`.
+3. **Moneda de facturación USD↔HNL**: catálogo/API publican USD $29/$99;
+   checkout/pay_plan cobran L.1,499/L.4,999 (HNL). Internamente consistente
+   (`amountMap` == pay_plan), pero la doble moneda requiere decisión del owner.
 
 ## TECHNICAL DEBT
 
@@ -171,9 +213,16 @@ Incluye ciclo de pago real y reactivación inmediata en serverless.
    `git add .github && git commit -m "ci: activate workflows" && git push` en ambos repos.
 3. Confirmar recepción del correo de prueba en su buzón y validar el flujo de
    recuperación de contraseña con un correo real.
+4. **Decidir moneda de facturación** (USD catálogo vs HNL checkout). Opciones:
+   (a) cobrar en USD acorde al catálogo, (b) mantener Lempiras mostrando el tipo
+   de cambio vigente, (c) ajustar el catálogo a Lempiras. No se cambian montos
+   sin esta decisión.
 
 ## FINAL DECISION
 
-**RELEASE CANDIDATE con producción viva y validada.** La brecha hasta READY es
-estrictamente de configuración del propietario (claves IA) y confirmación humana
-de recepción de email. No quedan defectos de código conocidos abiertos.
+**RELEASE CANDIDATE con producción viva y validada.** E2E 69/69, seguridad
+30/30, esquema 18/18, contenido web reconciliado con los planes reales, IA con
+503 controlado hasta que el owner configure proveedor. La brecha hasta READY es
+de configuración del propietario (claves IA), confirmación humana (recepción de
+email) y una decisión de negocio (moneda de facturación). No quedan defectos de
+código conocidos abiertos.

@@ -1,0 +1,51 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+
+jobs:
+  syntax-and-schema:
+    name: Sintaxis backend + verificación de esquema
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Instalar dependencias
+        run: npm ci
+      - name: Sintaxis del backend
+        run: node --check backend/server.js
+      - name: Verificación de esquema (check_schema.js)
+        if: ${{ env.SUPABASE_URL != '' && env.SUPABASE_SERVICE_ROLE_KEY != '' }}
+        run: node backend/check_schema.js
+
+  backend-tests:
+    name: Tests HTTP (bloques + portales + seguridad)
+    runs-on: ubuntu-latest
+    needs: syntax-and-schema
+    if: ${{ github.event_name == 'workflow_dispatch' }}
+    env:
+      TEST_BASE: ${{ secrets.TEST_BASE }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm ci
+      - name: Tests contra entorno remoto provisionado
+        run: |
+          node backend/test_bloques.js
+          node backend/test_portales_v2.js
+          node backend/test_seguridad_ataque.js
+        # Nota: los limiter en memoria del backend comparten IP por runner →
+        # suites secuenciales sin solapamiento. El E2E (test_release_e2e.js)
+        # requiere service-role para crear/limpiar tenants efímeros y se
+        # ejecuta vía workflow_dispatch contra un entorno de staging.

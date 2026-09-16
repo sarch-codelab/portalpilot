@@ -4168,10 +4168,10 @@ const AI_PROVIDERS = {
     getKey: () => process.env.GROQ_API_KEY,
     models: {
       chat: 'openai/gpt-oss-20b',
-      // CRÍTICO corregido: 'qwen/qwen3.6-27b' NO existe en Groq (el endpoint
-      // devolvía model_not_found y TODA la ruta vision caía silenciosamente al
-      // fallback). Llama 4 Scout sí es multimodal y está servido por Groq.
-      vision: 'meta-llama/llama-4-scout-17b-16e-instruct',
+      // CORREGIDO (2026-09-16): Groq eliminó 'meta-llama/llama-4-scout-17b-16e-instruct'
+      // de su oferta de visión 2026 (model_not_found → toda la ruta vision caía a 503).
+      // Los modelos de visión vigentes en GroqCloud son la serie Qwen 3.6/3.8 27B.
+      vision: 'qwen/qwen3.6-27b',
       fast: 'openai/gpt-oss-20b'
     }
   },

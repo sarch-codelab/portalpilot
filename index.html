@@ -182,8 +182,8 @@
         <img src="img/iconos/Portal Pilot.png" alt="Portal Pilot" style="height:22px;width:auto;object-fit:contain;display:block;">
       </div>
       <div class="nav-right">
-        <a href="login.html" class="btn btn-ghost btn-sm glow-on-hover glow-ghost">Acceder</a>
-        <a href="download.html" class="btn btn-acc btn-sm glow-on-hover glow-accent"><i class="fas fa-rocket"></i> Descargar APP</a>
+        <a href="login.html" class="btn btn-ghost btn-sm glow-on-hover glow-ghost nav-btn-login">Acceder</a>
+        <a href="download.html" class="btn btn-acc btn-sm glow-on-hover glow-accent nav-btn-download"><i class="fas fa-rocket"></i> Descargar APP</a>
       </div>
       <button class="sm-toggle" id="smToggle" aria-label="Open menu" aria-expanded="false" type="button">
         <span class="sm-toggle-textWrap" aria-hidden="true">
@@ -340,7 +340,7 @@
                   instrucción...<span class="t-cursor"></span></span></div>
             </div>
           </div>
-          <div style="position:absolute;bottom:-20px;right:-10px;z-index:3;">
+          <div class="hero-navi-curioso-wrap" style="position:absolute;bottom:-20px;right:0;z-index:3;">
             <img src="img/img-index/navi-curioso.png" alt="Navi curioso" style="width:100px;height:auto;filter:drop-shadow(0 4px 16px rgba(139,92,246,0.3));">
           </div>
           </div><!-- /hero-right-col -->
@@ -451,13 +451,13 @@
       </div>
 
       <!-- Team Grid -->
-      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:24px;">
+      <div class="team-grid-responsive">
 
         <!-- Member 1 -->
         <div class="card-profile reveal" style="--delay:0s">
           <div class="prof-photo" style="background:#8b5cf6;">
             <div class="prof-photo-num">JS</div>
-            <div class="prof-avatar">JS</div>
+            <div class="prof-avatar" style="overflow:hidden;"><img src="img/img-index/Joseph.png" alt="Joseph Sanchez" style="width:100%;height:100%;object-fit:cover;object-position:50% 0;max-width:none;display:block;"></div>
             <div class="prof-status-badge">● ONLINE</div>
           </div>
           <div class="prof-body">
@@ -471,7 +471,7 @@
             <div class="pstat"><span class="psv">★ 4.9</span><span class="psl">Rating</span></div>
           </div>
           <div class="prof-social">
-            <a href="#" class="prof-social-btn" title="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+            <a href="https://instagram.com/elsanchezok" class="prof-social-btn" title="Instagram"><i class="fab fa-instagram"></i></a>
             <a href="#" class="prof-social-btn" title="Twitter"><i class="fab fa-twitter"></i></a>
             <a href="#" class="prof-social-btn" title="Email"><i class="fas fa-envelope"></i></a>
           </div>
@@ -481,7 +481,7 @@
         <div class="card-profile reveal" style="--delay:.1s">
           <div class="prof-photo" style="background:#10b981;">
             <div class="prof-photo-num">AF</div>
-            <div class="prof-avatar">AF</div>
+            <div class="prof-avatar" style="overflow:hidden;"><img src="img/img-index/Amy.png" alt="Amy Fajardo" style="width:100%;height:100%;object-fit:cover;object-position:50% 0;max-width:none;display:block;"></div>
             <div class="prof-status-badge">● ONLINE</div>
           </div>
           <div class="prof-body">
@@ -496,7 +496,7 @@
           </div>
           <div class="prof-social">
             <a href="#" class="prof-social-btn" title="GitHub"><i class="fab fa-github"></i></a>
-            <a href="#" class="prof-social-btn" title="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+            <a href="https://instagram.com/_amyvfajardo" class="prof-social-btn" title="Instagram"><i class="fab fa-instagram"></i></a>
             <a href="#" class="prof-social-btn" title="Blog"><i class="fas fa-rss"></i></a>
           </div>
         </div>
@@ -505,7 +505,7 @@
         <div class="card-profile reveal" style="--delay:.2s">
           <div class="prof-photo" style="background:#f59e0b;">
             <div class="prof-photo-num">SG</div>
-            <div class="prof-avatar">SG</div>
+            <div class="prof-avatar" style="overflow:hidden;"><img src="img/img-index/Sofia.png" alt="Sofia Guzman" style="width:100%;height:100%;object-fit:cover;object-position:50% 0;max-width:none;display:block;"></div>
             <div class="prof-status-badge">● ONLINE</div>
           </div>
           <div class="prof-body">
@@ -519,7 +519,7 @@
             <div class="pstat"><span class="psv">★ 4.8</span><span class="psl">Rating</span></div>
           </div>
           <div class="prof-social">
-            <a href="#" class="prof-social-btn" title="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+            <a href="https://instagram.com/guzmang.sofia" class="prof-social-btn" title="Instagram"><i class="fab fa-instagram"></i></a>
             <a href="#" class="prof-social-btn" title="Certificaciones"><i class="fas fa-certificate"></i></a>
             <a href="#" class="prof-social-btn" title="Email"><i class="fas fa-envelope"></i></a>
           </div>
@@ -980,7 +980,7 @@
         style="background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: clamp(24px, 5vw, 60px) clamp(16px, 3vw, 40px); margin-bottom: 48px; position: relative; z-index: 2;">
 
         <div class="db-flow-wrapper"
-          style="display: flex; justify-content: space-around; align-items: center; flex-wrap: wrap; gap: clamp(16px, 3vw, 40px); position: relative; z-index: 2;">
+          style="position: relative; z-index: 2;">
 
           <div class="db-engine-box"
             style="text-align: center; width: 100%; max-width: 190px; padding: clamp(20px, 3vw, 30px) 20px; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-lg); transition: all 0.3s ease;">
@@ -995,8 +995,7 @@
               style="font-size: 0.8rem; color: #3ECF8E; font-family: monospace; background: rgba(62,207,142,0.12); padding: 2px 10px; border-radius: 100px;">Base de Datos App</span>
           </div>
 
-          <div class="db-connector-line"
-            style="flex: 1; min-width: 30px; height: 2px; background: linear-gradient(90deg, #3ECF8E, #8cc84b); position: relative; max-width: 90px;">
+          <div class="db-connector-line db-line-1">
             <div class="data-pulse"></div>
           </div>
 
@@ -1014,8 +1013,7 @@
               Serverless</span>
           </div>
 
-          <div class="db-connector-line"
-            style="flex: 1; min-width: 30px; height: 2px; background: linear-gradient(90deg, #8cc84b, #3FB6D3); position: relative; max-width: 90px;">
+          <div class="db-connector-line db-line-2">
             <div class="data-pulse"></div>
           </div>
 
@@ -1033,8 +1031,7 @@
               Multiplataforma</span>
           </div>
 
-          <div class="db-connector-line"
-            style="flex: 1; min-width: 30px; height: 2px; background: linear-gradient(90deg, #3FB6D3, #00C4B3); position: relative; max-width: 90px;">
+          <div class="db-connector-line db-line-3">
             <div class="data-pulse"></div>
           </div>
 

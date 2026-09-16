@@ -1,5 +1,6 @@
 {
   "version": 2,
+  "cleanUrls": true,
   "builds": [
     {
       "src": "api/ping-search-engines.js",
@@ -113,10 +114,6 @@
     {
       "src": "/api/(.*)",
       "dest": "/backend/server.js"
-    },
-    {
-      "src": "/(.*\\.html)",
-      "dest": "/$1"
     },
     {
       "src": "/(.*\\.js)",

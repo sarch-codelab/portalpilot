@@ -68,6 +68,16 @@
   /* ── Form submit ── */
   const form = document.getElementById('supportForm');
   const successEl = document.getElementById('formSuccess');
+  const errorEl = document.getElementById('formError');
+  const ERROR_FALLBACK = 'No se pudo enviar el ticket. Intenta de nuevo o escribe a portalpilot.hn@gmail.com.';
+
+  function showError(msg) {
+    if (!errorEl) return;
+    errorEl.querySelector('span').textContent = msg;
+    errorEl.classList.add('show');
+    errorEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
   if (form) {
     form.addEventListener('submit', function(e){
       e.preventDefault();
@@ -77,6 +87,7 @@
       const message = document.getElementById('sfMessage').value.trim();
       if (!name || !email || !category || !message) return;
 
+      if (errorEl) errorEl.classList.remove('show');
       const submitBtn = document.getElementById('sfSubmit');
       submitBtn.disabled = true;
       submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
@@ -92,12 +103,17 @@
           priority: document.getElementById('sfPriority').value,
           message
         })
-      }).then(r => r.json()).then(data => {
+      }).then(r => r.json().then(data => ({ ok: r.ok, data }))).then(({ ok, data }) => {
+        if (!ok) {
+          throw new Error(data.error || ERROR_FALLBACK);
+        }
         form.style.display = 'none';
         successEl.classList.add('show');
-      }).catch(() => {
-        form.style.display = 'none';
-        successEl.classList.add('show');
+      }).catch(err => {
+        console.error('Error al enviar ticket:', err);
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Enviar Ticket';
+        showError(err && err.message ? err.message : ERROR_FALLBACK);
       });
     });
   }

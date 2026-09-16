@@ -1,6 +1,5 @@
 {
   "version": 2,
-  "cleanUrls": true,
   "builds": [
     {
       "src": "api/ping-search-engines.js",
@@ -186,6 +185,20 @@
     {
       "src": "^/$",
       "dest": "/index.html"
+    },
+    {
+      "src": "^/index\\.html$",
+      "headers": { "Location": "/" },
+      "status": 308
+    },
+    {
+      "src": "^/([^/]+)\\.html$",
+      "headers": { "Location": "/$1" },
+      "status": 308
+    },
+    {
+      "src": "^/([^/.]+)$",
+      "dest": "/$1.html"
     }
   ]
 }

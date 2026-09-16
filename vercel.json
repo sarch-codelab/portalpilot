@@ -67,12 +67,22 @@
   ],
   "routes": [
     {
-      "src": "/enterprise/(.*)",
-      "dest": "/empresa/$1"
+      "src": "^/enterprise/([^/]+)\\.html$",
+      "headers": { "Location": "/enterprise/$1" },
+      "status": 308
     },
     {
-      "src": "/pp/(.*)\\.html",
-      "dest": "/pp/$1.html"
+      "src": "^/enterprise/([^/.]+)$",
+      "dest": "/empresa/$1.html"
+    },
+    {
+      "src": "^/enterprise/(.*)\\.(css|js|png|jpg|jpeg|svg|webp|ico)$",
+      "dest": "/empresa/$1.$2"
+    },
+    {
+      "src": "^/pp/([^/]+)\\.html$",
+      "headers": { "Location": "/pp/$1" },
+      "status": 308
     },
     {
       "src": "/pp/(.*)\\.css",
@@ -87,8 +97,21 @@
       "dest": "/pp/$1.$2"
     },
     {
+      "src": "^/pp/([^/.]+)$",
+      "dest": "/pp/$1.html"
+    },
+    {
       "src": "/pp(/.*)?",
       "dest": "/backend/server.js"
+    },
+    {
+      "src": "^/empresa/([^/]+)\\.html$",
+      "headers": { "Location": "/empresa/$1" },
+      "status": 308
+    },
+    {
+      "src": "^/empresa/([^/.]+)$",
+      "dest": "/empresa/$1.html"
     },
     {
       "src": "/empresa(/.*)?",

@@ -6,6 +6,109 @@
    los componentes específicos de estas páginas.
    ═══════════════════════════════════════════════════════════════ */
 
+/* ─── PRELOADER COMPARTIDO ─────────────────────── */
+.preloader {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: grid;
+  place-items: center;
+  background: radial-gradient(circle at 50% 50%, #12121e 0%, #08080f 55%, #050509 100%);
+  opacity: 1;
+  transition: opacity .5s ease, visibility .5s ease;
+}
+
+.preloader.hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.preloader-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 32px;
+}
+
+.preloader-logo {
+  color: rgba(216, 210, 240, .55);
+  font-family: 'Syne', sans-serif;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: .4em;
+  text-transform: uppercase;
+}
+
+.preloader-logo span { color: #a78bfa; }
+
+.device {
+  position: relative;
+  width: 4em;
+  height: 4em;
+}
+
+.device__a,
+.device__a-1,
+.device__a-2,
+.device__b,
+.device__c,
+.device__d,
+.device__e,
+.device__f,
+.device__g {
+  position: absolute;
+  animation: pp-device-a 3s cubic-bezier(.65, 0, .35, 1) infinite;
+  transition: background-color .3s, box-shadow .3s;
+}
+
+.device__a,
+.device__d,
+.device__e {
+  background: hsl(264, 12%, 26%);
+  box-shadow: 0 0 0 .25em inset;
+}
+
+.device__a {
+  top: 0;
+  width: 4em;
+  height: 2.5em;
+  border-radius: .375em;
+  z-index: 1;
+}
+
+.device__a-1,
+.device__a-2 { visibility: hidden; }
+.device__a-1 { top: 2.25em; left: 1.5em; width: 1em; height: .25em; animation-name: pp-device-a1; }
+.device__a-2 { top: .625em; right: 0; width: .25em; height: .75em; animation-name: pp-device-a2; }
+
+.device__a-1,
+.device__a-2,
+.device__b,
+.device__c,
+.device__f,
+.device__g {
+  background: #d8d2f0;
+  border-radius: .125em;
+}
+
+.device__b { top: 2.25em; left: .5em; width: .75em; height: 1.5em; animation-name: pp-device-b; }
+.device__c { top: 2.25em; left: 1.5em; width: .75em; height: 1.5em; animation-name: pp-device-c; }
+.device__d { top: 2.25em; right: .5em; width: .75em; height: 1.5em; animation-name: pp-device-d; }
+.device__e { top: 2.25em; left: .5em; width: .75em; height: 1.5em; animation-name: pp-device-e; }
+.device__f { top: 2.25em; left: 1.5em; width: .75em; height: 1.5em; animation-name: pp-device-f; }
+.device__g { top: 2.25em; right: .5em; width: .75em; height: 1.5em; animation-name: pp-device-g; }
+
+@keyframes pp-device-a { 0%, 25% { transform: translate(0); } 50%, 75% { transform: translate(1.5em, 0); } 100% { transform: translate(0); } }
+@keyframes pp-device-a1 { 0%, 25% { visibility: hidden; } 50%, 75% { visibility: visible; } }
+@keyframes pp-device-a2 { 0%, 25% { visibility: visible; } 50%, 75% { visibility: hidden; } }
+@keyframes pp-device-b { 0%, 25% { transform: translateY(0); } 50%, 75% { transform: translateY(-1.5em); } }
+@keyframes pp-device-c { 0%, 25% { transform: translateY(0); } 50%, 75% { transform: translateY(1.5em); } }
+@keyframes pp-device-d { 0%, 25% { transform: translateY(0); } 50%, 75% { transform: translateY(-1.5em); } }
+@keyframes pp-device-e { 0%, 25% { transform: translateY(0); } 50%, 75% { transform: translateY(1.5em); } }
+@keyframes pp-device-f { 0%, 25% { transform: translateY(0); } 50%, 75% { transform: translateY(-1.5em); } }
+@keyframes pp-device-g { 0%, 25% { transform: translateY(0); } 50%, 75% { transform: translateY(1.5em); } }
+
 /* ─── GRIDS DE CONTENIDO ─────────────────────────── */
 .pp-kpi-grid {
   display: grid;

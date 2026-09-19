@@ -2,6 +2,110 @@
    Pinta la navegación agrupada en <nav id="sidebarNav"> y resalta
    la página activa según el nombre del archivo. */
 (function () {
+  const SIDEBAR_STYLE_ID = 'pp-sidebar-shared-style';
+  if (!document.getElementById(SIDEBAR_STYLE_ID)) {
+    const style = document.createElement('style');
+    style.id = SIDEBAR_STYLE_ID;
+    style.textContent = `
+      .dashboard {
+        grid-template-columns: 260px minmax(0, 1fr) !important;
+      }
+      .dashboard.sidebar-collapsed {
+        grid-template-columns: 72px minmax(0, 1fr) !important;
+      }
+      .sidebar {
+        width: 260px !important;
+        min-width: 260px !important;
+        padding: 20px 16px !important;
+      }
+      .sidebar.collapsed {
+        width: 72px !important;
+        min-width: 72px !important;
+        padding: 20px 8px !important;
+      }
+      .sidebar-header {
+        min-height: 24px;
+        margin-bottom: 16px !important;
+      }
+      .sidebar-nav {
+        gap: 6px !important;
+        overflow-y: auto;
+      }
+      .pp-nav-group {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+      .pp-nav-group + .pp-nav-group {
+        margin-top: 12px;
+      }
+      .pp-nav-title {
+        padding: 0 10px 4px;
+        color: var(--gray2, #9ca3af);
+        font-size: 12px;
+        font-weight: 600;
+      }
+      .sidebar-link {
+        min-height: 40px;
+        padding: 11px 14px !important;
+      }
+      .sidebar-link.active {
+        padding-left: 12px !important;
+      }
+      .sidebar.collapsed .logo,
+      .sidebar.collapsed .profile-info,
+      .sidebar.collapsed .sidebar-link span,
+      .sidebar.collapsed .footer-btn span,
+      .sidebar.collapsed .pp-nav-title {
+        display: none !important;
+      }
+      .sidebar.collapsed .sidebar-link {
+        justify-content: center;
+        padding: 11px !important;
+      }
+      .sidebar.collapsed .sidebar-link.active {
+        padding-left: 11px !important;
+        border-left: 0;
+        border-bottom: 2px solid var(--accent, #8b5cf6);
+      }
+      .sidebar.collapsed .pp-nav-group + .pp-nav-group {
+        margin-top: 8px;
+      }
+      .sidebar.collapsed .footer-btn {
+        justify-content: center;
+        padding: 11px !important;
+      }
+      @media (max-width: 900px) {
+        .dashboard {
+          grid-template-columns: 1fr !important;
+        }
+        .sidebar,
+        .sidebar.collapsed {
+          width: 260px !important;
+          min-width: 260px !important;
+          padding: 20px 16px !important;
+        }
+        .sidebar.collapsed .logo,
+        .sidebar.collapsed .profile-info,
+        .sidebar.collapsed .sidebar-link span,
+        .sidebar.collapsed .footer-btn span,
+        .sidebar.collapsed .pp-nav-title {
+          display: block !important;
+        }
+        .sidebar.collapsed .sidebar-link {
+          justify-content: flex-start;
+          padding: 11px 14px !important;
+        }
+        .sidebar.collapsed .sidebar-link.active {
+          padding-left: 12px !important;
+          border-left: 2px solid var(--accent, #8b5cf6);
+          border-bottom: 0;
+        }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
   const GRUPOS = [
     {
       titulo: 'Supervisión', items: [

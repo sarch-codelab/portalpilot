@@ -3344,7 +3344,7 @@ const row = document.createElement('tr');
         function hidePreloader() {
             if (preloaderEl && !preloaderEl.classList.contains('hidden')) {
                 const elapsed = Date.now() - preloaderStart;
-                const delay = Math.max(0, 900 - elapsed);
+                const delay = Math.max(0, 3200 - elapsed);
                 setTimeout(() => preloaderEl.classList.add('hidden'), delay);
             }
         }

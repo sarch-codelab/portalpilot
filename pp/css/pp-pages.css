@@ -1,10 +1,15 @@
 /* ═══════════════════════════════════════════════════════════════
-   PP-PAGES.CSS — Estilos compartidos de las nuevas páginas del
-   panel admin (Portal Pilot /pp). Los tokens (:root), el layout
-   (dashboard/sidebar/topbar), botones, tablas, modales, paginación
-   y detail-panel ya vienen de css/auditoria.css; aquí solo están
-   los componentes específicos de estas páginas.
-   ═══════════════════════════════════════════════════════════════ */
+  PP-PAGES.CSS — Componentes compartidos del portal admin.
+
+  Esta hoja se carga después de los estilos base de cada página. Contiene
+  componentes reutilizables para las pantallas nuevas: preloader, KPI,
+  tarjetas, badges, paneles y utilidades de contenido.
+
+  Regla de mantenimiento: los tokens y el layout base pertenecen a la hoja
+  de la familia correspondiente; los componentes comunes pertenecen aquí.
+  La sidebar transversal se normaliza desde js/pp-sidebar.js porque algunas
+  páginas históricas todavía tienen CSS local diferente.
+  ═══════════════════════════════════════════════════════════════ */
 
 /* ─── PRELOADER (device loader) ──────────────── */
     .preloader {

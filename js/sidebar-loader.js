@@ -1,7 +1,13 @@
-// ═══ SIDEBAR LOADER COMPARTIDO ═══
-// Incluir este script en todas las páginas con barra lateral.
-// Funciona con avatar <img> o <div>, con o sin IDs; si no hay foto
-// de perfil muestra las iniciales del nombre y apellido (nada de imágenes aleatorias).
+/**
+ * Hidratador de identidad para sidebars.
+ *
+ * Lee nombre, rol y foto desde localStorage y actualiza cualquier variante
+ * histórica del markup de perfil. En rutas /pp/ también carga el renderer de
+ * navegación compartido cuando una página antigua no lo declaró explícitamente.
+ *
+ * Este archivo no decide permisos ni genera enlaces: la autorización pertenece
+ * a auth-check.js/backend y la navegación a pp/js/pp-sidebar.js.
+ */
 
 (function() {
   function readUser() {

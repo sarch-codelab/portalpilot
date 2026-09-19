@@ -1,6 +1,14 @@
-/* ── Sidebar compartido del panel admin (PP) ──
-   Pinta la navegación agrupada en <nav id="sidebarNav"> y resalta
-   la página activa según el nombre del archivo. */
+/**
+ * Sidebar compartido del portal administrativo.
+ *
+ * Responsabilidades:
+ * - Inyectar el estilo canónico de la sidebar en páginas PP antiguas y nuevas.
+ * - Renderizar grupos, enlaces y estado activo desde una sola definición.
+ * - Mantener el comportamiento de sidebar abierta, contraída y móvil.
+ *
+ * Contrato HTML: necesita un elemento #sidebarNav o .sidebar-nav dentro de
+ * #sidebar. Los enlaces son relativos a la carpeta pp/.
+ */
 (function () {
   const SIDEBAR_STYLE_ID = 'pp-sidebar-shared-style';
   if (!document.getElementById(SIDEBAR_STYLE_ID)) {

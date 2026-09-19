@@ -462,6 +462,8 @@
         .sidebar.collapsed .profile-info,
         .sidebar.collapsed .sidebar-link span,
         .sidebar.collapsed .footer-btn span {
+        .sidebar.collapsed .footer-btn span,
+        .sidebar.collapsed .pp-nav-title {
             display: none;
         }
 
@@ -760,6 +762,7 @@
         .users-table {
             width: 100%;
             min-width: 760px;
+            table-layout: fixed;
             border-collapse: separate;
             border-spacing: 0;
             background: var(--card);
@@ -2457,6 +2460,15 @@
             <!-- TABLE -->
             <div class="table-container">
                 <table class="users-table">
+                    <colgroup>
+                        <col style="width:6%;">
+                        <col style="width:28%;">
+                        <col style="width:12%;">
+                        <col style="width:14%;">
+                        <col style="width:13%;">
+                        <col style="width:12%;">
+                        <col style="width:15%;">
+                    </colgroup>
                     <thead>
                         <tr>
                             <th><label class="checkbox-container"><input type="checkbox" id="selectAll" onchange="toggleSelectAll()"><div class="checkmark"></div></label></th>

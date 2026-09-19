@@ -192,8 +192,7 @@ async function loadDashboardNotifications() {
   try {
     const token = localStorage.getItem('token');
     if (!token) return;
-    const isLocalhost = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
-    const API_ROOT = isLocalhost ? 'https://portal-pilot.vercel.app' : '';
+    const API_ROOT = '';
     const res = await fetch(`${API_ROOT}/api/notificaciones`, {
       headers: { 'Authorization': `Bearer ${token}` }
     });
@@ -285,8 +284,7 @@ async function loadDashboardMessages() {
   try {
     const token = localStorage.getItem('token');
     if (!token) return;
-    const isLocalhost = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
-    const API_ROOT = isLocalhost ? 'https://portal-pilot.vercel.app' : '';
+    const API_ROOT = '';
 
     // Mensajes = últimas notificaciones de tipo info/warning relevantes
     const res = await fetch(`${API_ROOT}/api/notificaciones`, {
@@ -388,8 +386,7 @@ async function fetchTenantsCount() {
   try {
     const token = localStorage.getItem('token');
     if (!token) return 0;
-    const isLocalhost = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
-    const API_ROOT = isLocalhost ? 'https://portal-pilot.vercel.app' : '';
+    const API_ROOT = '';
     const res = await fetch(`${API_ROOT}/api/tenants`, {
       headers: { 'Authorization': `Bearer ${token}` }
     });
@@ -407,8 +404,7 @@ async function fetchDashboardData() {
   try {
     const token = localStorage.getItem('token');
     if (!token) return;
-    const isLocalhost = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
-    const API_ROOT = isLocalhost ? 'https://portal-pilot.vercel.app' : '';
+    const API_ROOT = '';
     const res = await fetch(`${API_ROOT}/api/dashboard/summary?period=30`, {
       headers: { 'Authorization': `Bearer ${token}` }
     });
@@ -570,8 +566,7 @@ async function fetchUserCount() {
   try {
     const token = localStorage.getItem('token');
     if (!token) return;
-    const isLocalhost = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
-    const API_ROOT = isLocalhost ? 'https://portal-pilot.vercel.app' : '';
+    const API_ROOT = '';
     const res = await fetch(`${API_ROOT}/api/users`, {
       headers: { 'Authorization': `Bearer ${token}` }
     });
@@ -616,7 +611,7 @@ setInterval(toggleUserStatus, 30000);
 document.getElementById('createTenantBtn')?.addEventListener('click', () => window.location.href = 'tenants.html');
 document.getElementById('deployBotBtn')?.addEventListener('click', () => window.location.href = 'bots_rpa.html');
 document.getElementById('exportAuditBtn')?.addEventListener('click', () => {
-  showToast('Exportando', 'Descargando...', 'success');
+  PPPrinter.run(function () { showToast('Exportando', 'Descargando...', 'success'); });
 });
 document.getElementById('managePermissionsBtn')?.addEventListener('click', () => window.location.href = 'usuarios.html');
 document.getElementById('newBotBtn')?.addEventListener('click', () => window.location.href = 'bots_rpa.html');
@@ -643,8 +638,7 @@ async function loadSearchData() {
     const token = localStorage.getItem('token');
     if (!token) return;
     const headers = { 'Authorization': `Bearer ${token}` };
-    const isLocalhost = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
-    const API_ROOT = isLocalhost ? 'https://portal-pilot.vercel.app' : '';
+    const API_ROOT = '';
 
     const [tenantsRes, usersRes] = await Promise.all([
       fetch(`${API_ROOT}/api/tenants`, { headers }).then(r => r.ok ? r.json() : []),
@@ -905,7 +899,7 @@ contextMenu.addEventListener('click', e => {
       if (widgetType === 'services') document.getElementById('checkServices').click();
       break;
     case 'export':
-      showToast('Exportando', 'Descarga iniciada.', 'success');
+      PPPrinter.run(function () { showToast('Exportando', 'Descarga iniciada.', 'success'); });
       break;
     case 'settings':
       showToast('Configuración', 'Abriendo ajustes del widget...', 'info');
@@ -1041,6 +1035,7 @@ function createApexChart(containerId, data, chartType, title) {
 
   const categories = data.map(d => d.label);
   const values = data.map(d => d.value);
+  const labelStep = categories.length > 21 ? Math.ceil(categories.length / 7) : categories.length > 10 ? 2 : 1;
 
   const options = {
     series: [{
@@ -1082,7 +1077,7 @@ function createApexChart(containerId, data, chartType, title) {
         fontFamily: 'DM Sans'
       },
       formatter: function (val) {
-        return val;
+        return Number(val) > 0 ? val : '';
       }
     },
     xaxis: {
@@ -1093,7 +1088,13 @@ function createApexChart(containerId, data, chartType, title) {
           fontSize: '11px',
           fontFamily: 'DM Sans'
         },
-        rotate: -45
+        rotate: 0,
+        hideOverlappingLabels: true,
+        trim: true,
+        formatter: function (value, timestamp, opts) {
+          const index = Number.isInteger(opts?.i) ? opts.i : 0;
+          return index % labelStep === 0 ? value : '';
+        }
       },
       axisBorder: {
         show: false
@@ -1311,8 +1312,7 @@ async function loadCalendarEvents() {
   try {
     const token = localStorage.getItem('token');
     if (!token) return;
-    const isLocalhost = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
-    const API_ROOT = isLocalhost ? 'https://portal-pilot.vercel.app' : '';
+    const API_ROOT = '';
     const res = await fetch(`${API_ROOT}/api/dashboard/summary?period=90`, {
       headers: { 'Authorization': `Bearer ${token}` }
     });
@@ -1494,8 +1494,7 @@ async function fetchRealKPIs() {
   try {
     const token = localStorage.getItem('token');
     if (!token) return;
-    const isLocalhost = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
-    const API_ROOT = isLocalhost ? 'https://portal-pilot.vercel.app' : '';
+    const API_ROOT = '';
     const headers = { 'Authorization': `Bearer ${token}` };
 
     const [tRes, uRes] = await Promise.all([
@@ -1518,8 +1517,7 @@ async function fetchRealKPIs() {
 
 async function fetchHealth() {
   try {
-    const isLocalhost = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
-    const API_ROOT = isLocalhost ? 'https://portal-pilot.vercel.app' : '';
+    const API_ROOT = '';
     const res = await fetch(`${API_ROOT}/api/health`);
     if (!res.ok) throw new Error('health error');
     const h = await res.json();

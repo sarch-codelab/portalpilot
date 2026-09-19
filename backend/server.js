@@ -19,6 +19,10 @@ const helmet = require('helmet');
 const { supabase, requireSupabase, getSupabaseUrl, getSupabaseKey } = require('./supabaseClient');
 console.log(`[STARTUP] Supabase client: ${supabase ? 'ACTIVO' : 'INACTIVO'}`);
 
+// Panel admin pp/: endpoints /api/admin/* (requieren ROOT) que alimentan las
+// nuevas páginas de supervisión (tickets, bots, renovaciones, KYC, etc.).
+const adminPortal = require('./adminPortalEndpoints');
+
 
 
 const app = express();
@@ -48,6 +52,17 @@ const corsOptions = {
       callback(null, true);
       return;
     }
+    // Desarrollo local: cualquier puerto de localhost/127.0.0.1 es válido.
+    // En producción (serverless) se mantiene el allowlist estricto.
+    if (!IS_SERVERLESS) {
+      try {
+        const { hostname } = new URL(origin);
+        if (hostname === 'localhost' || hostname === '127.0.0.1') {
+          callback(null, true);
+          return;
+        }
+      } catch (e) { /* origen inválido → rechazo normal */ }
+    }
     callback(new Error('Origen no permitido por CORS'));
   },
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
@@ -60,18 +75,23 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       ...helmet.contentSecurityPolicy.getDefaultDirectives(),
-      "script-src": ["'self'", "'unsafe-inline'"],
+      "script-src": ["'self'", "'unsafe-inline'", "https://www.googletagmanager.com", "https://cdn.jsdelivr.net", "https://unpkg.com"],
       "script-src-attr": ["'self'", "'unsafe-inline'"],
       "style-src": ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://cdnjs.cloudflare.com"],
       "style-src-attr": ["'self'", "'unsafe-inline'"],
       "style-src-elem": ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://cdnjs.cloudflare.com"],
       "font-src": ["'self'", "https://fonts.gstatic.com", "https://cdnjs.cloudflare.com"],
-      "img-src": ["'self'", "data:", "blob:", "https://images.unsplash.com", "https://raw.githubusercontent.com"],
+      "img-src": ["'self'", "data:", "blob:", "https://images.unsplash.com", "https://raw.githubusercontent.com", "https://api.dicebear.com", "https://api.producthunt.com", "https://www.google-analytics.com", "https://www.googletagmanager.com"],
       "connect-src": [
         "'self'",
         "https://fonts.googleapis.com",
         "https://fonts.gstatic.com",
         "https://cdnjs.cloudflare.com",
+        "https://cdn.jsdelivr.net",
+        "https://www.google-analytics.com",
+        "https://*.google-analytics.com",
+        "https://*.analytics.google.com",
+        "https://*.g.doubleclick.net",
         "https://portal-pilot.vercel.app",
       ],
     },
@@ -216,10 +236,27 @@ function parseCookies(req) {
   return cookies;
 }
 
+// Alias de URL limpia raíz → página dentro del área protegida. Se resuelven en
+// el backend (no como estáticos) para que el guard de /pp/ aplique igual.
+const PORTAL_ALIASES = {
+  '/tenants': '/pp/tenants',
+  '/dashboard': '/pp/dashboard',
+  '/usuarios': '/pp/usuarios',
+  '/global_settings': '/pp/global_settings',
+  '/billing_plans': '/pp/billing_plans',
+  '/bots_rpa': '/pp/bots_rpa',
+  '/auditoria': '/pp/auditoria',
+  '/analytics': '/pp/analytics',
+  '/system_health': '/pp/system_health',
+  '/perfil': '/pp/perfil',
+  '/inicio': '/pp/welcome',
+};
+
 function isProtectedAreaPath(path) {
   return path === '/pp' || path.startsWith('/pp/')
     || path === '/empresa' || path.startsWith('/empresa/')
-    || path === '/enterprise' || path.startsWith('/enterprise/');
+    || path === '/enterprise' || path.startsWith('/enterprise/')
+    || PORTAL_ALIASES[path];
 }
 
 // Middleware de ciberseguridad: NO entrega ningún archivo de pp/ (admin) ni
@@ -272,7 +309,8 @@ function protectPortalArea(req, res, next) {
   const isTenantUser = Boolean(codigo) && codigo !== 'ROOT' && codigo !== 'ROOT PP';
 
   // /pp/* solo para administradores raíz; /empresa/* para usuarios de tenant o raíz.
-  const isAdminArea = req.path === '/pp' || req.path.startsWith('/pp/');
+  const resolvedPath = PORTAL_ALIASES[req.path] || req.path;
+  const isAdminArea = resolvedPath === '/pp' || resolvedPath.startsWith('/pp/');
   if (isAdminArea) {
     if (!isRoot) return isHtmlRequest ? res.redirect('/login.html') : forbidden();
   } else {
@@ -395,9 +433,32 @@ app.post('/api/session/sync', async (req, res) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
   if (!token) return res.status(401).json({ error: 'Token no provisto' });
+
+  // NUNCA setear la cookie de sesión con un token inválido: si se hacía, el
+  // navegador quedaba en un loop infinito (/login → panel → /login) cuando el
+  // localStorage tenía un token caducado o firmado con un secreto anterior.
+  let decoded;
   try {
-    const decoded = jwt.verify(token, localJwtSecret);
-    if (decoded.sub) {
+    decoded = jwt.verify(token, localJwtSecret);
+  } catch (e) {
+    return res.status(401).json({ error: 'Token inválido', code: 'SESSION_INVALID' });
+  }
+
+  // Revocación de sesiones: si el token_version del usuario avanzó, el token
+  // ya no es válido y no debe reestablecer la cookie.
+  try {
+    if (decoded?.sub && supabase) {
+      const current = await getTokenVersionCached(decoded.sub);
+      if (current != null && (decoded.token_version || 0) < current) {
+        return res.status(401).json({ error: 'Sesión revocada. Inicia sesión de nuevo.', code: 'SESSION_REVOKED' });
+      }
+    }
+  } catch (e) {
+    console.warn('[SESSION_SYNC] token_version check falló (se permite):', e.message);
+  }
+
+  if (decoded.sub) {
+    try {
       const now = new Date().toISOString();
       const restUrl = `${getSupabaseUrl()}/rest/v1/usuarios?id=eq.${decoded.sub}`;
       const key = getSupabaseKey();
@@ -408,9 +469,9 @@ app.post('/api/session/sync', async (req, res) => {
         Prefer: 'return=minimal'
       };
       await axios.patch(restUrl, { updated_at: now, ultimo_acceso: now }, { headers, timeout: 8000 });
+    } catch (e) {
+      console.warn('[SESSION_SYNC] No se pudo actualizar ultimo_acceso:', e.message);
     }
-  } catch (e) {
-    console.warn('[SESSION_SYNC] Exception:', e.message);
   }
   setSessionCookie(res, token);
   return res.json({ ok: true });
@@ -749,9 +810,11 @@ function getTotpCode(secret, offset = 0) {
   return String(number % 1000000).padStart(6, '0');
 }
 
-function verifyTotp(secret, code) {
+function verifyTotp(secret, code, ventana = 1) {
   const candidate = String(code || '').trim();
-  return [-1, 0, 1].some(offset => {
+  const offsets = [];
+  for (let i = -ventana; i <= ventana; i++) offsets.push(i);
+  return offsets.some(offset => {
     const expected = getTotpCode(secret, offset);
     return candidate.length === expected.length && crypto.timingSafeEqual(Buffer.from(candidate), Buffer.from(expected));
   });
@@ -763,6 +826,41 @@ function createBackupCodes() {
 
 function hashBackupCode(code) {
   return crypto.createHash('sha256').update(String(code || '').trim().toUpperCase()).digest('hex');
+}
+
+function normalizarSecretoTotp(value) {
+  return String(value || '').toUpperCase().replace(/[^A-Z2-7]/g, '');
+}
+
+function esUsuarioAdmin(userRow) {
+  const roles = [userRow && userRow.rol, userRow && userRow.rol_global].map(r => String(r || '').trim().toLowerCase());
+  const adminRoles = ['owner', 'admin', 'administrador', 'superadmin', 'root', 'root pp'];
+  return roles.some(r => adminRoles.includes(r));
+}
+
+function verificarSetupToken(setupToken) {
+  try {
+    const payload = jwt.verify(setupToken, localJwtSecret);
+    if (!payload || payload.purpose !== 'mfa_setup') return null;
+    return payload;
+  } catch (e) {
+    return null;
+  }
+}
+
+let _flag2faAdminsCache = { value: null, expiresAt: 0 };
+async function flagDosFaAdminsActivo() {
+  if (!supabase) return false;
+  if (_flag2faAdminsCache.value !== null && Date.now() < _flag2faAdminsCache.expiresAt) return _flag2faAdminsCache.value;
+  let value = false;
+  try {
+    const { data } = await supabase.from('configuraciones_globales').select('valor').eq('clave', 'FLAG_2FA_ADMINS').maybeSingle();
+    value = !!data && String(data.valor).trim().toLowerCase() === 'true';
+  } catch (e) {
+    value = false;
+  }
+  _flag2faAdminsCache = { value, expiresAt: Date.now() + 60000 };
+  return value;
 }
 
 function assertTenantAccess(req, targetTenantCode) {
@@ -819,7 +917,40 @@ function isDeletedStatus(rawStatus) {
 // Debe registrarse ANTES de express.static para que ningún recurso de esas
 // carpetas se sirva sin autenticación previa.
 app.use(protectPortalArea);
-app.use(express.static(path.join(__dirname, '..')));
+// Resuelve alias y /enterprise/* a su archivo real dentro del área protegida,
+// DESPUÉS del guard: /tenants → /pp/tenants(.html), /enterprise/x → /empresa/x(.html).
+app.use((req, res, next) => {
+  if (PORTAL_ALIASES[req.path]) {
+    req.url = PORTAL_ALIASES[req.path];
+  } else if (req.path.startsWith('/enterprise/')) {
+    req.url = '/empresa/' + req.path.slice('/enterprise/'.length);
+  }
+  next();
+});
+// Blindaje: nunca servir como estático código fuente, configs ni secretos.
+// El bundle serverless contiene server.js (el entrypoint) en la raíz, por lo
+// que sin este guard `GET /backend/server.js` devolvía el código del backend.
+app.use((req, res, next) => {
+  let p = req.path || '';
+  try { p = decodeURIComponent(p); } catch (e) { /* path no decodificable */ }
+  p = p.toLowerCase();
+  const blocked =
+    p.startsWith('/backend/') ||
+    p.startsWith('/scripts/') ||
+    p.startsWith('/supabase/') ||
+    p.startsWith('/node_modules/') ||
+    p.startsWith('/.git') ||
+    p === '/.env' || p.startsWith('/.env') ||
+    p === '/package.json' || p === '/package-lock.json' || p === '/vercel.json' ||
+    /^\/api\/[^/]+\.(js|jsx|ts|tsx|json|map)$/.test(p);
+  if (blocked) return res.status(404).send('Not found');
+  next();
+});
+// express.static con extensions:['html'] → soporta URLs limpias
+// (/pp/tenants → pp/tenants.html, /empresa/team → empresa/team.html,
+// /tenants → pp/tenants.html) SIN exponerlas: el guard de auth corre
+// antes y ambas rutas (limpia y .html) pasan por él.
+app.use(express.static(path.join(__dirname, '..'), { extensions: ['html'] }));
 
 function generateSecurePassword() {
   return crypto.randomBytes(8).toString('hex');
@@ -1277,16 +1408,18 @@ async function enviarCorreoPortalPilot(emailDestinatario, asunto, titulo, subtit
 // RUTAS
 // ======================================================================
 
+// ── Panel admin pp/: endpoints /api/admin/* (ROOT) ──
+// Debe montarse ANTES de authenticate global alguno; el router aplica su
+// propio guard ROOT por request. Rutas: tickets, bots, renovaciones,
+// cobranza, alertas, consumo_planes, planes, provisionar, integraciones,
+// seguridad, consumo_ia, incidentes, kyc, finanzas, comunicados, reglas,
+// stream y respaldos.
+if (adminPortal) app.use('/api/admin', authenticate, adminPortal);
+
 // 🔧 FIX VERCEL: Health check endpoint
+// No revelar configuración interna (Supabase/JWT/entorno) a clientes anónimos.
 app.get('/api/health', async (req, res) => {
-  res.json({
-    status: 'ok',
-    timestamp: new Date().toISOString(),
-    supabase_configured: !!(process.env.SUPABASE_URL &&
-      (process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)),
-    jwt_configured: !!process.env.JWT_SECRET,
-    environment: IS_SERVERLESS ? 'serverless' : 'local'
-  });
+  res.json({ status: 'ok' });
 });
 
 // ======================================================================
@@ -1640,6 +1773,25 @@ app.post('/api/registro', async (req, res) => {
         return res.status(409).json({ error: 'El código de empresa ya existe. Elige otro nombre/código.' });
       }
 
+      // Autenticación en dos pasos (TOTP) elegida durante el registro: se valida
+      // el código en el servidor ANTES de crear nada y se persiste el secreto.
+      let campos2fa = { two_factor_enabled: false, two_factor_secret: null, two_factor_confirmed_at: null, two_factor_backup_codes: [] };
+      if (dosFaActivo === true || String(dosFaActivo) === 'true') {
+        const secreto = normalizarSecretoTotp(dosFaSecret);
+        let codigoValido = false;
+        try { codigoValido = secreto.length >= 16 && verifyTotp(secreto, req.body.dosFaCode, 2); } catch (e) { codigoValido = false; }
+        if (!codigoValido) {
+          return res.status(400).json({ error: 'No se pudo verificar el código 2FA. Escanea de nuevo el código e inténtalo otra vez.' });
+        }
+        const codigosRespaldo = Array.isArray(dosFaBackupCodes) ? dosFaBackupCodes.filter(Boolean).map(hashBackupCode) : [];
+        campos2fa = {
+          two_factor_enabled: true,
+          two_factor_secret: secreto,
+          two_factor_confirmed_at: new Date().toISOString(),
+          two_factor_backup_codes: codigosRespaldo
+        };
+      }
+
       const { company_banner, company_logo, profile_banner, profile_pic } = req.body || {};
 
       // Crear tenant en Supabase
@@ -1671,7 +1823,8 @@ app.post('/api/registro', async (req, res) => {
         empresa_codigo: codigoNorm,
         estado: 'activo',
         activo: true,
-        foto_perfil_url: profile_pic || company_logo || null
+        foto_perfil_url: profile_pic || company_logo || null,
+        ...campos2fa
       });
 
       if (userErr) {
@@ -1774,6 +1927,12 @@ function getModulesForAreaAndPlan(area = '', plan = 'pro') {
   return modulos;
 }
 
+// Mensaje genérico: nunca revelar si el correo existe (evita enumeración de usuarios).
+const LOGIN_ERROR_GENERIC = 'Credenciales inválidas. Verifica tu correo y contraseña.';
+// Hash señuelo válido: se compara cuando el usuario no existe para igualar el
+// tiempo de respuesta y evitar distinguir correos registrados por timing.
+const LOGIN_DUMMY_HASH = '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy';
+
 app.post('/api/login', loginLimiter, async (req, res) => {
   try {
     const { email, password } = req.body || {};
@@ -1801,27 +1960,18 @@ app.post('/api/login', loginLimiter, async (req, res) => {
     }
 
     if (!userRow) {
-      return res.status(401).json({ error: 'Credenciales inválidas. El usuario no está registrado en el sistema.' });
+      // Comparación señuelo para no filtrar la existencia del correo por timing.
+      try { await bcrypt.compare(String(password || ''), LOGIN_DUMMY_HASH); } catch (e) { /* noop */ }
+      return res.status(401).json({ error: LOGIN_ERROR_GENERIC });
     }
 
     let isMatch = false;
     const storedHash = userRow.password_hash || userRow.password;
-    if (storedHash) {
-      if (storedHash.startsWith('$2')) {
-        isMatch = await bcrypt.compare(password, storedHash);
-      } else {
-        console.warn(`[LOGIN] Password stored in plaintext for user ${emailNorm} — auto-hashing now`);
-        isMatch = (password === storedHash);
-        if (isMatch) {
-          const newHash = await bcrypt.hash(password, await bcrypt.genSalt(10));
-          try {
-            await supabase.from('usuarios').update({ password_hash: newHash, password: newHash }).eq('id', userRow.id);
-            console.log(`[LOGIN] Auto-hashed plaintext password for ${emailNorm}`);
-          } catch (hashErr) {
-            console.error(`[LOGIN] Failed to auto-hash password for ${emailNorm}:`, hashErr.message);
-          }
-        }
-      }
+    if (storedHash && storedHash.startsWith('$2')) {
+      isMatch = await bcrypt.compare(password, storedHash);
+    } else if (storedHash) {
+      // Contraseñas en texto plano (legado) ya no se aceptan: deben restablecerse.
+      console.warn(`[LOGIN] Hash inválido (texto plano) para ${emailNorm} — se requiere restablecer contraseña.`);
     }
 
     if (!isMatch) {
@@ -1831,7 +1981,7 @@ app.post('/api/login', loginLimiter, async (req, res) => {
           await registrarEventoSeguridad(userRow.empresa_codigo, 'login_fallido', { usuarioId: userRow.id, usuarioEmail: userRow.email, req, severidad: 'warning', descripcion: 'Intento de inicio de sesión fallido' });
         }
       } catch (e) { console.warn('[LOGIN] No se pudo auditar intento fallido:', e.message); }
-      return res.status(401).json({ error: 'Contraseña incorrecta. Por favor, verifica tus datos.' });
+      return res.status(401).json({ error: LOGIN_ERROR_GENERIC });
     }
 
     if (userRow.two_factor_enabled && userRow.two_factor_secret) {
@@ -1841,6 +1991,18 @@ app.post('/api/login', loginLimiter, async (req, res) => {
         { expiresIn: '5m' }
       );
       return res.status(202).json({ requiresTwoFactor: true, mfaToken });
+    }
+
+    // FLAG_2FA_ADMINS: si está activo, los administradores sin 2FA deben
+    // inscribirse antes de recibir sesión (se emite un token temporal de
+    // inscripción, así nadie queda bloqueado).
+    if (await flagDosFaAdminsActivo() && esUsuarioAdmin(userRow)) {
+      const setupToken = jwt.sign(
+        { purpose: 'mfa_setup', sub: userRow.id, email: userRow.email },
+        localJwtSecret,
+        { expiresIn: '10m' }
+      );
+      return res.status(202).json({ requiresTwoFactorSetup: true, setupToken });
     }
 
     let tenantData = null;
@@ -1947,7 +2109,7 @@ app.post('/api/login/2fa', loginLimiter, async (req, res) => {
 
     const backupHash = hashBackupCode(code);
     const backupCodes = Array.isArray(userRow.two_factor_backup_codes) ? userRow.two_factor_backup_codes : [];
-    const isTotpValid = verifyTotp(userRow.two_factor_secret, code);
+    const isTotpValid = verifyTotp(userRow.two_factor_secret, code, 2);
     const backupIndex = backupCodes.indexOf(backupHash);
     if (!isTotpValid && backupIndex < 0) return res.status(401).json({ error: 'Código 2FA inválido.' });
     if (backupIndex >= 0) {
@@ -2001,6 +2163,97 @@ app.post('/api/login/2fa', loginLimiter, async (req, res) => {
   }
 });
 
+app.post('/api/login/2fa/setup', loginLimiter, async (req, res) => {
+  try {
+    const challenge = verificarSetupToken(req.body && req.body.setupToken);
+    if (!challenge) return res.status(401).json({ error: 'La verificación expiró. Inicia sesión de nuevo.' });
+    if (!supabase) return res.status(503).json({ error: '2FA no disponible.' });
+    const { data: user, error } = await supabase.from('usuarios').select('id, email, two_factor_enabled').eq('id', challenge.sub).maybeSingle();
+    if (error || !user) return res.status(404).json({ error: 'Usuario no encontrado.' });
+    if (user.two_factor_enabled) return res.status(409).json({ error: '2FA ya está activado.' });
+    const secret = createBase32Secret();
+    await supabase.from('usuarios').update({ two_factor_secret: secret, two_factor_confirmed_at: null }).eq('id', user.id);
+    const label = encodeURIComponent(`Portal Pilot:${user.email}`);
+    return res.json({ secret, otpauthUri: `otpauth://totp/${label}?secret=${secret}&issuer=Portal%20Pilot&algorithm=SHA1&digits=6&period=30` });
+  } catch (error) {
+    return handleServerError(res, error);
+  }
+});
+
+app.post('/api/login/2fa/setup-confirm', loginLimiter, async (req, res) => {
+  try {
+    const { setupToken, code } = req.body || {};
+    const challenge = verificarSetupToken(setupToken);
+    if (!challenge) return res.status(401).json({ error: 'La verificación expiró. Inicia sesión de nuevo.' });
+    if (!supabase) return res.status(503).json({ error: '2FA no disponible.' });
+    const { data: user, error } = await supabase.from('usuarios').select('*').eq('id', challenge.sub).maybeSingle();
+    if (error || !user || !user.two_factor_secret) return res.status(400).json({ error: 'Primero inicia la configuración de 2FA.' });
+    if (!verifyTotp(user.two_factor_secret, code, 2)) return res.status(400).json({ error: 'Código 2FA inválido.' });
+    const backupCodes = createBackupCodes();
+    await supabase.from('usuarios').update({
+      two_factor_enabled: true,
+      two_factor_confirmed_at: new Date().toISOString(),
+      two_factor_backup_codes: backupCodes.map(hashBackupCode)
+    }).eq('id', user.id);
+
+    let tenantData = null;
+    if (user.empresa_codigo) {
+      const { data } = await supabase.from('tenants').select('*').eq('codigo', user.empresa_codigo).maybeSingle();
+      tenantData = data;
+    }
+    const userArea = tenantData?.area || user.area || 'Área Comercial';
+    const userPlan = normalizePlan(tenantData?.plan);
+    const token = jwt.sign({
+      sub: user.id, email: user.email, rol: resolveDisplayRole(user, tenantData),
+      empresa_codigo: user.empresa_codigo || 'ROOT', token_version: user.token_version || 0
+    }, localJwtSecret, { expiresIn: '30d' });
+    setSessionCookie(res, token);
+
+    try {
+      const now = new Date().toISOString();
+      const restUrl = `${getSupabaseUrl()}/rest/v1/usuarios?id=eq.${user.id}`;
+      const key = getSupabaseKey();
+      await axios.patch(restUrl, { updated_at: now, ultimo_acceso: now }, {
+        headers: { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+        timeout: 8000
+      });
+    } catch (e) { /* best-effort */ }
+
+    try {
+      if (user.empresa_codigo) {
+        await registrarAuditoria(user.empresa_codigo, '2fa_activado', '2FA activado durante el inicio de sesión', 'seguridad', normalizeDisplayName(user.nombre, user.apellido), req);
+        await registrarEventoSeguridad(user.empresa_codigo, 'login_exitoso', { usuarioId: user.id, usuarioEmail: user.email, req, descripcion: 'Inicio de sesión con 2FA recién activado' });
+        await registrarSesionTenant(user.empresa_codigo, user.id, req);
+      }
+    } catch (e) { console.warn('[LOGIN] No se pudo auditar 2FA forzado:', e.message); }
+
+    return res.json({
+      message: 'Login exitoso', token, backupCodes,
+      user: {
+        id: user.id, nombre: user.nombre || '', apellido: user.apellido || '', email: user.email,
+        rol: resolveDisplayRole(user, tenantData), empresa_codigo: user.empresa_codigo || 'ROOT',
+        tenant: user.empresa_codigo || 'ROOT', area: userArea, plan: userPlan,
+        features: PLAN_ENTITLEMENTS[userPlan]?.features || [],
+        modulos_activos: getModulesForAreaAndPlan(userArea, userPlan),
+        status: user.estado || 'activo', token
+      }
+    });
+  } catch (error) {
+    return handleServerError(res, error);
+  }
+});
+
+app.get('/api/security/2fa/status', authenticate, async (req, res) => {
+  try {
+    if (!supabase) return res.status(503).json({ error: '2FA no disponible.' });
+    const { data: user, error } = await supabase.from('usuarios').select('two_factor_enabled, two_factor_confirmed_at').eq('id', req.user.sub).maybeSingle();
+    if (error || !user) return res.status(404).json({ error: 'Usuario no encontrado.' });
+    return res.json({ enabled: !!user.two_factor_enabled, confirmed_at: user.two_factor_confirmed_at || null });
+  } catch (error) {
+    return handleServerError(res, error);
+  }
+});
+
 app.post('/api/security/2fa/setup', authenticate, async (req, res) => {
   try {
     if (!supabase) return res.status(503).json({ error: '2FA no disponible.' });
@@ -2021,7 +2274,7 @@ app.post('/api/security/2fa/confirm', authenticate, async (req, res) => {
     const { code } = req.body || {};
     const { data: user, error } = await supabase.from('usuarios').select('id, two_factor_secret').eq('id', req.user.sub).maybeSingle();
     if (error || !user?.two_factor_secret) return res.status(400).json({ error: 'Primero inicia la configuración de 2FA.' });
-    if (!verifyTotp(user.two_factor_secret, code)) return res.status(400).json({ error: 'Código 2FA inválido.' });
+    if (!verifyTotp(user.two_factor_secret, code, 2)) return res.status(400).json({ error: 'Código 2FA inválido.' });
     const backupCodes = createBackupCodes();
     await supabase.from('usuarios').update({
       two_factor_enabled: true, two_factor_confirmed_at: new Date().toISOString(),
@@ -2038,7 +2291,7 @@ app.post('/api/security/2fa/disable', authenticate, async (req, res) => {
     const { code } = req.body || {};
     const { data: user, error } = await supabase.from('usuarios').select('id, two_factor_secret, two_factor_enabled').eq('id', req.user.sub).maybeSingle();
     if (error || !user?.two_factor_enabled) return res.status(400).json({ error: '2FA no está activado.' });
-    if (!verifyTotp(user.two_factor_secret, code)) return res.status(400).json({ error: 'Código 2FA inválido.' });
+    if (!verifyTotp(user.two_factor_secret, code, 2)) return res.status(400).json({ error: 'Código 2FA inválido.' });
     await supabase.from('usuarios').update({ two_factor_enabled: false, two_factor_secret: null, two_factor_confirmed_at: null, two_factor_backup_codes: [] }).eq('id', user.id);
     return res.json({ success: true });
   } catch (error) {
@@ -3952,6 +4205,8 @@ async function registrarAuditoria(empresaCodigo, accion, descripcion, tipo = 'si
   }
 }
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 async function resolverEmpresaSupabase(empresaCodigo) {
   if (!supabase || !empresaCodigo) return null;
   try {
@@ -3965,6 +4220,19 @@ async function resolverEmpresaSupabase(empresaCodigo) {
     if ((!data || error) && raw && raw !== norm) {
       const r = await supabase.from('empresas').select('id, codigo, nombre').eq('codigo', raw).maybeSingle();
       data = r.data; error = r.error;
+    }
+    // Los clientes (p.ej. pp/tenant_detail) identifican al tenant por UUID;
+    // resolverlo vía tenants.id → codigo para no devolver 404 falsos.
+    if (!data && UUID_RE.test(raw)) {
+      const { data: tenant } = await supabase.from('tenants').select('codigo').eq('id', raw).maybeSingle();
+      if (tenant?.codigo) {
+        const r = await supabase.from('empresas').select('id, codigo, nombre').eq('codigo', normalizeTenantCode(tenant.codigo)).maybeSingle();
+        data = r.data; error = r.error;
+      }
+      if (!data) {
+        const e = await supabase.from('empresas').select('id, codigo, nombre').eq('id', raw).maybeSingle();
+        data = e.data; error = e.error;
+      }
     }
     return (data && !error) ? data : null;
   } catch (err) {
@@ -4168,11 +4436,22 @@ const AI_PROVIDERS = {
     getKey: () => process.env.GROQ_API_KEY,
     models: {
       chat: 'openai/gpt-oss-20b',
-      // CRÍTICO corregido: 'qwen/qwen3.6-27b' NO existe en Groq (el endpoint
-      // devolvía model_not_found y TODA la ruta vision caía silenciosamente al
-      // fallback). Llama 4 Scout sí es multimodal y está servido por Groq.
-      vision: 'meta-llama/llama-4-scout-17b-16e-instruct',
+      // CRÍTICO corregido: 'meta-llama/llama-4-scout-17b-16e-instruct' NO existe
+      // en el catálogo de Groq (model_not_found). qwen/qwen3.8-27b sí está servido
+      // por Groq y es multimodal (verificado con imagen). Si falla, el gateway
+      // degrada al fallback (Hugging Face, que sí sirve Llama 4 Scout).
+      vision: 'qwen/qwen3.8-27b',
       fast: 'openai/gpt-oss-20b'
+    }
+  },
+  huggingface: {
+    name: 'Hugging Face',
+    baseUrl: 'https://router.huggingface.co/v1/chat/completions',
+    getKey: () => process.env.HUGGINGFACE_API_KEY || process.env.HF_TOKEN,
+    models: {
+      chat: 'meta-llama/Llama-3.3-70B-Instruct',
+      vision: 'meta-llama/Llama-4-Scout-17B-16E-Instruct',
+      fast: 'meta-llama/Llama-3.3-70B-Instruct'
     }
   },
   openrouter: {
@@ -4187,7 +4466,7 @@ const AI_PROVIDERS = {
   }
 };
 
-const AI_PROVIDER_ORDER = ['groq', 'openrouter'];
+const AI_PROVIDER_ORDER = ['groq', 'huggingface', 'openrouter'];
 
 async function callAIGateway({ provider, modelRole, messages, temperature, maxTokens, imageBase64 }) {
   const providers = provider ? [provider] : AI_PROVIDER_ORDER;
@@ -4242,6 +4521,7 @@ async function callAIGateway({ provider, modelRole, messages, temperature, maxTo
 // Precios de referencia USD por 1M tokens (conservadores, para uso interno).
 const AI_TOKEN_COSTS_USD_PER_M = {
   groq: { input: 0.15, output: 0.60 },
+  huggingface: { input: 0.10, output: 0.30 },
   openrouter: { input: 0.10, output: 0.30 }
 };
 const DEFAULT_TOKEN_COST_PER_M = { input: 0.30, output: 0.60 };

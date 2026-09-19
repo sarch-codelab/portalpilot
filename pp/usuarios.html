@@ -263,7 +263,7 @@
         /* ─── LAYOUT ──────────────────────── */
         .dashboard {
             display: grid;
-            grid-template-columns: var(--sidebar-width) 1fr;
+            grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
             min-height: 100vh;
             transition: grid-template-columns 0.3s ease;
             width: 100%;
@@ -531,6 +531,7 @@
             flex-direction: column;
             width: 100%;
             min-width: 0;
+            overflow: hidden;
             transition: all 0.3s ease;
         }
 
@@ -753,6 +754,7 @@
             padding: 24px clamp(12px, 3vw, 32px);
             overflow-x: auto;
             min-width: 0;
+            width: 100%;
         }
 
         .users-table {
@@ -1999,7 +2001,7 @@
         .notif-time { font-size: 10px; color: var(--gray); margin-top: 2px; }
 
         /* ─── CUSTOM CHECKBOXES ────────────────── */
-        .container {
+        .checkbox-container {
             display: inline-block;
             position: relative;
             cursor: pointer;
@@ -2008,7 +2010,7 @@
             -webkit-tap-highlight-color: transparent;
         }
 
-        .container input {
+        .checkbox-container input {
             position: absolute;
             opacity: 0;
             cursor: pointer;
@@ -2036,7 +2038,7 @@
             transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        .container:hover input:not(:checked) ~ .checkmark {
+        .checkbox-container:hover input:not(:checked) ~ .checkmark {
             background: rgba(255, 255, 255, 0.2);
             border-color: rgba(255, 255, 255, 0.4);
             transform: translateY(-1px);
@@ -2046,7 +2048,7 @@
                 inset 0 1.5px 3px rgba(255, 255, 255, 0.7);
         }
 
-        .container input:checked ~ .checkmark {
+        .checkbox-container input:checked ~ .checkmark {
             transform: scale(1.22);
             background: linear-gradient(145deg, #a855f7 0%, #8b5cf6 50%, #ec4899 100%);
             border-color: rgba(255, 255, 255, 0.45);
@@ -2073,12 +2075,12 @@
             transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
-        .container input:checked ~ .checkmark:after {
+        .checkbox-container input:checked ~ .checkmark:after {
             opacity: 1;
             transform: rotate(45deg) scale(1);
         }
 
-        .container:active input ~ .checkmark {
+        .checkbox-container:active input ~ .checkmark {
             transform: scale(0.92);
             transition: transform 0.15s ease-out;
         }
@@ -2349,17 +2351,7 @@
             </a>
 
             <!-- Nav -->
-            <nav class="sidebar-nav">
-                <a href="dashboard.html" class="sidebar-link"><i class="fas fa-home"></i> <span>Dashboard</span></a>
-                <a href="tenants.html" class="sidebar-link"><i class="fas fa-building"></i> <span>Tenants</span></a>
-                <a href="usuarios.html" class="sidebar-link active"><i class="fas fa-users"></i> <span>Usuarios</span></a>
-                <a href="bots_rpa.html" class="sidebar-link"><i class="fas fa-robot"></i> <span>Bots RPA</span></a>
-                <a href="auditoria.html" class="sidebar-link"><i class="fas fa-link"></i> <span>Auditoría</span></a>
-                <a href="analytics.html" class="sidebar-link"><i class="fas fa-chart-line"></i> <span>Analytics</span></a>
-                <a href="billing_plans.html" class="sidebar-link"><i class="fas fa-credit-card"></i> <span>Billing &amp; Planes</span></a>
-                <a href="system_health.html" class="sidebar-link"><i class="fas fa-heartbeat"></i> <span>System Health</span></a>
-                <a href="global_settings.html" class="sidebar-link"><i class="fas fa-cog"></i> <span>Configuración Global</span></a>
-            </nav>
+            <nav class="sidebar-nav" id="sidebarNav"></nav>
 
             <!-- Footer -->
             <div class="sidebar-footer">
@@ -2395,6 +2387,7 @@
                             </div>
                         </div>
                     </div>
+                    </div>
             </header>
 
             <!-- PAGE HEADER -->
@@ -2407,7 +2400,7 @@
                 <div class="page-actions">
                     <button class="btn btn-acc btn-sm" onclick="openModal('createUserModal')"><i class="fas fa-user-plus"></i>
                         Nuevo Usuario</button>
-                    <button class="btn btn-outline btn-sm" onclick="exportUsers()"><i class="fas fa-download"></i>
+                    <button class="btn btn-outline btn-sm" onclick="PPPrinter.run(exportUsers)"><i class="fas fa-download"></i>
                         Exportar CSV</button>
                     <button class="btn btn-ghost btn-sm" onclick="refreshUsers()"><i class="fas fa-sync-alt"></i>
                         Actualizar</button>
@@ -2466,7 +2459,7 @@
                 <table class="users-table">
                     <thead>
                         <tr>
-                            <th><label class="container"><input type="checkbox" id="selectAll" onchange="toggleSelectAll()"><div class="checkmark"></div></label></th>
+                            <th><label class="checkbox-container"><input type="checkbox" id="selectAll" onchange="toggleSelectAll()"><div class="checkmark"></div></label></th>
                             <th class="sortable asc" data-sort="name">Usuario</th>
                             <th class="sortable" data-sort="role">Rol</th>
                             <th class="sortable" data-sort="tenant">Tenant</th>
@@ -2860,7 +2853,7 @@ const row = document.createElement('tr');
                     row.style.setProperty('--banner-url', `url('${bannerSrc}')`);
                 }
                 row.innerHTML = `
-            <td data-label="Seleccionar"><label class="container"><input type="checkbox" class="user-checkbox" data-id="${u.id}" ${selectedUsers.has(u.id) ? 'checked' : ''} onclick="event.stopPropagation();toggleUserSelection('${u.id}')"><div class="checkmark"></div></label></td>
+            <td data-label="Seleccionar"><label class="checkbox-container"><input type="checkbox" class="user-checkbox" data-id="${u.id}" ${selectedUsers.has(u.id) ? 'checked' : ''} onclick="event.stopPropagation();toggleUserSelection('${u.id}')"><div class="checkmark"></div></label></td>
             <td data-label="Usuario"><div class="user-info"><div class="user-avatar">${avatarHtml}<span class="online-dot ${isOnline ? 'online' : 'offline'}"></span></div><div><div class="user-name">${cleanNombre} ${cleanApellido}</div><div class="user-email">${u.email}</div></div></div></td>
             <td data-label="Rol"><span class="role-badge ${u.rol}">${u.rol.charAt(0).toUpperCase() + u.rol.slice(1)}</span></td>
             <td data-label="Tenant"><span class="user-tenant">${u.tenant || u.tenant_code || 'N/A'}</span></td>
@@ -3366,6 +3359,8 @@ const row = document.createElement('tr');
     </script>
     <script src="../js/notifications.js"></script>
     <script src="../js/sidebar-loader.js"></script>
+  <script src="js/pp-sidebar.js"></script>
+    <script src="../js/printer-loader.js"></script>
 </body>
 
 </html>

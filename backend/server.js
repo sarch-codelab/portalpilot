@@ -4436,11 +4436,10 @@ const AI_PROVIDERS = {
     getKey: () => process.env.GROQ_API_KEY,
     models: {
       chat: 'openai/gpt-oss-20b',
-      // CRÍTICO corregido: 'meta-llama/llama-4-scout-17b-16e-instruct' NO existe
-      // en el catálogo de Groq (model_not_found). qwen/qwen3.8-27b sí está servido
-      // por Groq y es multimodal (verificado con imagen). Si falla, el gateway
-      // degrada al fallback (Hugging Face, que sí sirve Llama 4 Scout).
-      vision: 'qwen/qwen3.8-27b',
+      // CORREGIDO (2026-09-16): Groq eliminó 'meta-llama/llama-4-scout-17b-16e-instruct'
+      // de su oferta de visión 2026 (model_not_found → toda la ruta vision caía a 503).
+      // Los modelos de visión vigentes en GroqCloud son la serie Qwen 3.6/3.8 27B.
+      vision: 'qwen/qwen3.6-27b',
       fast: 'openai/gpt-oss-20b'
     }
   },
@@ -4468,8 +4467,98 @@ const AI_PROVIDERS = {
 
 const AI_PROVIDER_ORDER = ['groq', 'huggingface', 'openrouter'];
 
+// ── Auto-descubrimiento de modelos vivos (Groq depreca modelos seguido) ──────
+// Consulta https://api.groq.com/openai/v1/models y cachea 5 min. Si un modelo
+// preferido ya no existe, se usa automáticamente el siguiente disponible.
+const _pickCache = { models: null, at: 0 };
+const _PICK_CACHE_MS = 5 * 60 * 1000;
+
+const _CHAT_PRIORITY = [
+  'openai/gpt-oss-20b',
+  'openai/gpt-oss-120b',
+  'meta-llama/llama-3.3-70b-versatile',
+  'llama-3.3-70b-versatile',
+  'meta-llama/llama-3.1-8b-instant',
+  'llama-3.1-8b-instant',
+];
+
+const _VISION_PRIORITY = [
+  'qwen/qwen3.6-27b',
+  'qwen/qwen3.8-27b',
+  'qwen/qwen3.5-27b',
+  'llama-3.2-11b-vision-preview',
+  'llama-3.2-90b-vision-preview',
+];
+
+async function _fetchLiveGroqModels(apiKey) {
+  try {
+    const r = await axios.get('https://api.groq.com/openai/v1/models', {
+      headers: { Authorization: `Bearer ${apiKey}` },
+      timeout: 5000,
+    });
+    const ids = (r.data && r.data.data || [])
+      .map((m) => m && m.id)
+      .filter(Boolean);
+    return ids.length ? ids : null;
+  } catch (err) {
+    console.warn('[AI_PICK] fallback a lista estática:', err.response?.status || err.message);
+    return null;
+  }
+}
+
+// Devuelve { chat: [...], vision: [...] } cadenas de fallback con modelos vivos.
+async function pickLiveModels(requested) {
+  const providers = AI_PROVIDERS;
+  const pk = providers.groq && providers.groq.getKey();
+  const now = Date.now();
+  if (pk && (!_pickCache.models || now - _pickCache.at > _PICK_CACHE_MS)) {
+    const live = await _fetchLiveGroqModels(pk);
+    if (live && live.length) {
+      _pickCache.models = new Set(live.map((id) => String(id).trim()));
+      _pickCache.at = now;
+    }
+  }
+  const liveIds = _pickCache.models;
+
+  const buildChain = (priority, filter) => {
+    const chain = [];
+    const push = (id) => {
+      if (!id) return;
+      id = String(id).trim();
+      if (!id || chain.includes(id)) return;
+      if (liveIds && !liveIds.has(id) && id !== requested) return;
+      chain.push(id);
+    };
+    if (requested) push(requested);
+    for (const id of priority) push(id);
+    if (liveIds) {
+      for (const id of Array.from(liveIds)) {
+        if (chain.length >= 5) break;
+        if (filter && !filter(id)) continue;
+        push(id);
+      }
+    }
+    return chain;
+  };
+
+  const chat = buildChain(_CHAT_PRIORITY, (id) => {
+    const l = id.toLowerCase();
+    if (/whisper|guard|compound|sarif|safety/i.test(l)) return false;
+    return /gpt-oss|llama-3|qwen/i.test(l);
+  });
+
+  const vision = buildChain(_VISION_PRIORITY, (id) => {
+    const l = id.toLowerCase();
+    if (/whisper|guard|compound|safety/i.test(l)) return false;
+    return l.includes('qwen') || l.includes('vision');
+  });
+
+  return { chat, vision, live: liveIds ? Array.from(liveIds) : null };
+}
+
 async function callAIGateway({ provider, modelRole, messages, temperature, maxTokens, imageBase64 }) {
   const providers = provider ? [provider] : AI_PROVIDER_ORDER;
+  const picked = await pickLiveModels('');
 
   for (const provKey of providers) {
     const prov = AI_PROVIDERS[provKey];
@@ -4477,41 +4566,57 @@ async function callAIGateway({ provider, modelRole, messages, temperature, maxTo
     const apiKey = prov.getKey();
     if (!apiKey) continue;
 
-    const modelId = modelRole ? (prov.models[modelRole] || prov.models.chat) : prov.models.chat;
+    // Cadena de modelos: primero los vivos auto-descubiertos, luego el hardcodeado.
+    let modelChain = null;
+    if (provKey === 'groq') {
+      modelChain = modelRole === 'vision'
+        ? (picked.vision.length ? picked.vision : [prov.models.vision])
+        : (picked.chat.length ? picked.chat : [prov.models.chat]);
+    } else {
+      modelChain = modelRole ? [prov.models[modelRole] || prov.models.chat] : [prov.models.chat];
+    }
 
-    try {
-      const startTime = Date.now();
-      const response = await axios.post(
-        prov.baseUrl,
-        {
-          model: modelId,
-          messages,
-          temperature: typeof temperature === 'number' ? temperature : 0.7,
-          max_tokens: maxTokens || 800
-        },
-        {
-          headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-          timeout: 30000
+    for (const modelId of modelChain) {
+      try {
+        const startTime = Date.now();
+        const response = await axios.post(
+          prov.baseUrl,
+          {
+            model: modelId,
+            messages,
+            temperature: typeof temperature === 'number' ? temperature : 0.7,
+            max_tokens: maxTokens || 800
+          },
+          {
+            headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+            timeout: 30000
+          }
+        );
+
+        const reply = (response.data?.choices?.[0]?.message?.content || '').trim();
+        const usage = response.data?.usage || {};
+        const durationMs = Date.now() - startTime;
+
+        return {
+          success: true,
+          reply,
+          provider: provKey,
+          model: response.data?.model || modelId,
+          tokensInput: usage.prompt_tokens || 0,
+          tokensOutput: usage.completion_tokens || 0,
+          tokensTotal: usage.total_tokens || 0,
+          durationMs
+        };
+      } catch (err) {
+        const errMsg = (err.response?.data?.error?.message || err.message || '').toString().toLowerCase();
+        console.warn(`[AI_GATEWAY] ${prov.name} model ${modelId} failed:`, err.response?.status || err.message);
+        // Modelo deprecado/inexistente: probar el siguiente de la cadena.
+        if (!/does not exist|model_not_found|decommissioned|not found/.test(errMsg) &&
+            err.response?.status !== 404) {
+          break; // error no relacionado con el modelo: pasar al siguiente provider
         }
-      );
-
-      const reply = (response.data?.choices?.[0]?.message?.content || '').trim();
-      const usage = response.data?.usage || {};
-      const durationMs = Date.now() - startTime;
-
-      return {
-        success: true,
-        reply,
-        provider: provKey,
-        model: response.data?.model || modelId,
-        tokensInput: usage.prompt_tokens || 0,
-        tokensOutput: usage.completion_tokens || 0,
-        tokensTotal: usage.total_tokens || 0,
-        durationMs
-      };
-    } catch (err) {
-      console.warn(`[AI_GATEWAY] ${prov.name} failed:`, err.response?.status || err.message);
-      continue;
+        continue;
+      }
     }
   }
 
@@ -4668,7 +4773,11 @@ app.post('/api/ai/vision', authenticate, requirePlanFeature('ia'), async (req, r
 
     const result = await callAIGateway({ provider, modelRole: 'vision', messages, temperature: 0.3, maxTokens: maxTokens || 800 });
 
-    if (!result.success) return res.status(503).json({ error: result.error });
+if (!result.success) return res.status(503).json({ error: result.error });
+
+    // Qwen (modelo de vision de Groq) antepone bloques  thinking... /response.
+    // Limpiarlos para devolver solo el JSON al cliente.
+    const reply = String(result.reply || '').replace(/<\/?(thinking|think|response)[\s\S]*?>/gi, '').trim();
 
     await logAIUsage({
       empresaCodigo: tenant, empresaId: empresa?.id, usuarioId: req.user?.sub,
@@ -4676,9 +4785,9 @@ app.post('/api/ai/vision', authenticate, requirePlanFeature('ia'), async (req, r
       tokensInput: result.tokensInput, tokensOutput: result.tokensOutput, tokensTotal: result.tokensTotal,
       durationMs: result.durationMs, success: true
     });
-    await registrarAuditoria(tenant, 'Vision IA', 'Análisis de imagen de producto', 'ai', req.user?.nombre || '', req);
+    await registrarAuditoria(tenant, 'Vision IA', 'An�lisis de imagen de producto', 'ai', req.user?.nombre || '', req);
 
-    return res.json({ reply: result.reply, model: result.model, provider: result.provider });
+    return res.json({ reply, model: result.model, provider: result.provider });
   } catch (err) {
     console.error('[AI/VISION] Error:', err.response?.data || err.message);
     const status = err.response?.status;

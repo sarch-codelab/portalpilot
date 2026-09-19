@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="icon" type="image/png" href="../img/iconos/robot_logo.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Respaldos y Rotación — Portal Pilot</title>
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+  <link rel="stylesheet" href="css/auditoria.css">
+  <link rel="stylesheet" href="css/pp-pages.css">
+  <link rel="stylesheet" href="../css/notifications.css">
+  <style>
+    body {
+      background-color: var(--bg, #04040a);
+      background-image: url('../img/fondo-principal.jpg');
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+      background-repeat: no-repeat;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- PRELOADER -->
+  <div class="preloader" id="preloader">
+    <div class="preloader-inner">
+      <div class="device">
+        <div class="device__a">
+          <div class="device__a-1"></div>
+          <div class="device__a-2"></div>
+        </div>
+        <div class="device__b"></div>
+        <div class="device__c"></div>
+        <div class="device__d"></div>
+        <div class="device__e"></div>
+        <div class="device__f"></div>
+        <div class="device__g"></div>
+      </div>
+      <div class="preloader-logo">PORTAL <span>PILOT</span></div>
+    </div>
+  </div>
+
+  <div id="progress">
+    <div id="progress-fill"></div>
+  </div>
+  <div id="cursor-dot"></div>
+  <div id="cursor-ring"></div>
+  <div id="cursor-glow"></div>
+  <div class="overlay" id="overlay"></div>
+
+  <div class="dashboard" id="dashboard">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <h2 class="logo">PORTAL PILOT</h2>
+      </div>
+      <a href="perfil.html" class="profile-section" style="text-decoration:none;cursor:pointer;" title="Ver perfil">
+        <img src="../img/asuka.png" alt="Perfil" class="avatar"
+          onerror="this.src='https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80'">
+        <div class="profile-info">
+          <span class="name">Admin</span>
+          <span class="role">Super Administrador</span>
+        </div>
+      </a>
+      <nav class="sidebar-nav" id="sidebarNav"></nav>
+      <div class="sidebar-footer">
+        <button class="footer-btn" id="darkModeToggle"><i class="fas fa-moon"></i> <span>Dark Mode</span></button>
+        <button class="footer-btn logout" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> <span>Cerrar Sesión</span></button>
+      </div>
+      <button class="toggle-btn" id="toggleSidebar" aria-label="Toggle Sidebar"><i class="fas fa-chevron-right"></i></button>
+    </aside>
+
+    <main class="main-content">
+      <header class="topbar">
+        <div class="topbar-left">
+          <div class="topbar-title">Respaldos y <span>Rotación</span></div>
+        </div>
+        <div class="topbar-right">
+          <button class="topbar-btn" title="Notificaciones"><i class="fas fa-bell"></i><span class="badge" data-notif-badge style="display:none;">0</span></button>
+          <button class="btn btn-ghost btn-sm" onclick="loadData()"><i class="fas fa-sync-alt"></i> Actualizar</button>
+        </div>
+      </header>
+
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Operativa de <span>seguridad</span></h1>
+          <p class="page-subtitle">Edad de las API keys con sugerencia de rotación, sesiones antiguas listas para purga y estado exportable del system_health. Todo lo que hoy está disperso, en un panel.</p>
+        </div>
+        <div class="page-actions">
+          <button class="btn btn-outline btn-sm" onclick="exportarEstado()"><i class="fas fa-download"></i> Exportar estado (JSON)</button>
+        </div>
+      </div>
+
+      <div class="pp-kpi-grid">
+        <div class="pp-kpi">
+          <div class="pp-kpi-head"><div class="pp-kpi-icon" style="background:rgba(248,113,113,.15);color:var(--red);"><i class="fas fa-key"></i></div></div>
+          <div class="pp-kpi-value red" id="kpiRotar">—</div>
+          <div class="pp-kpi-label">API keys listas para rotar (&gt; 90 días)</div>
+        </div>
+        <div class="pp-kpi">
+          <div class="pp-kpi-head"><div class="pp-kpi-icon" style="background:rgba(251,191,36,.15);color:var(--yellow);"><i class="fas fa-clock"></i></div></div>
+          <div class="pp-kpi-value yellow" id="kpiSesionesViejas">—</div>
+          <div class="pp-kpi-label">Sesiones inactivas &gt; 30 días</div>
+        </div>
+        <div class="pp-kpi">
+          <div class="pp-kpi-head"><div class="pp-kpi-icon"><i class="fas fa-shield-halved"></i></div></div>
+          <div class="pp-kpi-value" id="kpiKeysActivas">—</div>
+          <div class="pp-kpi-label">API keys activas totales</div>
+        </div>
+        <div class="pp-kpi">
+          <div class="pp-kpi-head"><div class="pp-kpi-icon" style="background:rgba(52,211,153,.15);color:var(--green);"><i class="fas fa-heart-pulse"></i></div></div>
+          <div class="pp-kpi-value green" id="kpiHealth">—</div>
+          <div class="pp-kpi-label">Salud del sistema (último check)</div>
+        </div>
+      </div>
+
+      <div class="pp-grid-2 pp-section">
+        <div class="pp-card">
+          <div class="pp-card-title"><i class="fas fa-arrows-rotate"></i> Rotación de API keys <span class="pp-section-hint">Política sugerida: rotar cada 90 días</span></div>
+          <div class="table-container" style="padding:0;">
+            <table class="audit-table pp-table-compact">
+              <thead>
+                <tr><th>Empresa</th><th>Nombre</th><th>Prefijo</th><th>Edad</th><th>Estado</th><th>Último uso</th></tr>
+              </thead>
+              <tbody id="keysBody"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="pp-card">
+          <div class="pp-card-title"><i class="fas fa-broom"></i> Sesiones para purgar <span class="pp-section-hint">Inactivas &gt; 30 días</span></div>
+          <div class="table-container" style="padding:0;">
+            <table class="audit-table pp-table-compact">
+              <thead>
+                <tr><th>Empresa</th><th>Usuario</th><th>IP / dispositivo</th><th>Última actividad</th><th></th></tr>
+              </thead>
+              <tbody id="sesionesBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="pp-section">
+        <div class="pp-card">
+          <div class="pp-card-title" style="justify-content:space-between;">
+            <span><i class="fas fa-heart-pulse"></i> Estado de system_health</span>
+            <span style="font-size:11px;color:var(--gray);" id="healthTime"></span>
+          </div>
+          <div class="pp-timeline" id="healthList"></div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div class="modal-overlay" id="confirmModal">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">Confirmar</div>
+        <button class="modal-close" onclick="closeModal('confirmModal')"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="modal-body"><p id="confirmMessage" style="font-size:14px;color:var(--gray);line-height:1.6;"></p></div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="closeModal('confirmModal')">Cancelar</button>
+        <button class="btn btn-danger" id="confirmActionBtn">Confirmar</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../auth-check.js"></script>
+  <script src="js/portal-admin-guard.js"></script>
+  <script src="js/notif-badge.js"></script>
+  <script src="../js/notifications.js"></script>
+  <script src="../js/sidebar-loader.js"></script>
+  <script src="js/pp-sidebar.js"></script>
+  <script src="js/respaldos_y_rotacion.js"></script>
+  <script src="../js/printer-loader.js"></script>
+  <script>
+    (function () {
+      const dot = document.getElementById('cursor-dot'), ring = document.getElementById('cursor-ring'), glow = document.getElementById('cursor-glow');
+      if (!dot || !ring || !glow) return;
+      let mx = 0, my = 0, rx = 0, ry = 0;
+      document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; dot.style.left = mx + 'px'; dot.style.top = my + 'px'; glow.style.left = mx + 'px'; glow.style.top = my + 'px'; });
+      function animRing() { rx += (mx - rx) * 0.12; ry += (my - ry) * 0.12; ring.style.left = rx + 'px'; ring.style.top = ry + 'px'; requestAnimationFrame(animRing); }
+      animRing();
+    })();
+    (function () {
+      var preloader = document.getElementById('preloader');
+      var start = Date.now();
+      function hide() {
+        if (!preloader || preloader.classList.contains('hidden')) return;
+        var delay = Math.max(0, 900 - (Date.now() - start));
+        setTimeout(function () { preloader.classList.add('hidden'); }, delay);
+      }
+      if (document.readyState === 'complete') { hide(); }
+      window.addEventListener('load', hide);
+      setTimeout(hide, 3200);
+    })();
+  </script>
+</body>
+
+</html>

@@ -19,7 +19,7 @@
         var tenantId = params.get('id') || params.get('tenant') || localStorage.getItem('empresaCodigo') || '';
         var myCode = (localStorage.getItem('empresaCodigo') || '').toString().trim().toUpperCase();
         var isRoot = (myCode === 'ROOT' || myCode === 'ROOT PP' || myCode === '');
-        var API_ROOT = (location.hostname === 'localhost' || location.hostname === '127.0.0.1') ? 'https://portal-pilot.vercel.app' : '';
+        var API_ROOT = '';
 
         fetch(API_ROOT + '/api/users', { headers: { 'Authorization': 'Bearer ' + (token || '') } })
             .then(function (res) { if (!res.ok) throw new Error('HTTP ' + res.status); return res.json(); })

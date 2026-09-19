@@ -6,8 +6,7 @@
   var token = localStorage.getItem('token');
   if (!token) { badge.style.display = 'none'; return; }
 
-  var isLocalhost = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
-  var API_ROOT = isLocalhost ? 'https://portal-pilot.vercel.app' : '';
+  var API_ROOT = '';
 
   var notifs = [];
   var panel = null;

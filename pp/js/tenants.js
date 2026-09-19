@@ -1,5 +1,5 @@
 // ── Custom Cursor ─────────────────
-const API_ROOT = (location.hostname === 'localhost' || location.hostname === '127.0.0.1') ? 'https://portal-pilot.vercel.app' : '';
+const API_ROOT = '';
 const dot = document.getElementById('cursor-dot');
 const ring = document.getElementById('cursor-ring');
 const glow = document.getElementById('cursor-glow');
@@ -791,7 +791,7 @@ async function openDetailPanel(tenant) {
     <div style="display:flex;gap:12px;margin-top:24px;">
       <button class="btn btn-ghost btn-sm" style="flex:1;justify-content:center;" onclick="exportTenantLogs('${tenant.id}')"><i class="fas fa-file-export"></i> Exportar Logs</button>
       <button class="btn btn-outline btn-sm" style="flex:1;justify-content:center;" onclick="contactSupport()"><i class="fas fa-headset"></i> Contactar Soporte</button>
-      <button class="btn btn-acc btn-sm" style="flex:1;justify-content:center;" onclick="window.location.href='tenant_detail.html?id=${tenant.id}&token=' + encodeURIComponent(localStorage.getItem('token') || '')"><i class="fas fa-arrow-right"></i> Ver Detalle Completo</button>
+      <button class="btn btn-acc btn-sm" style="flex:1;justify-content:center;" onclick="window.location.href='tenant_detail.html?id=${tenant.id}'"><i class="fas fa-arrow-right"></i> Ver Detalle Completo</button>
     </div>`;
 
   document.getElementById('detailPanel').classList.add('active');

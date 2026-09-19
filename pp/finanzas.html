@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="icon" type="image/png" href="../img/iconos/robot_logo.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Finanzas — Portal Pilot</title>
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+
+  <link rel="stylesheet" href="css/auditoria.css">
+  <link rel="stylesheet" href="css/pp-pages.css">
+  <link rel="stylesheet" href="../css/notifications.css">
+  <style>
+    body {
+      background-color: var(--bg, #04040a);
+      background-image: url('../img/fondo-principal.jpg');
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+      background-repeat: no-repeat;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- PRELOADER -->
+  <div class="preloader" id="preloader">
+    <div class="preloader-inner">
+      <div class="device">
+        <div class="device__a">
+          <div class="device__a-1"></div>
+          <div class="device__a-2"></div>
+        </div>
+        <div class="device__b"></div>
+        <div class="device__c"></div>
+        <div class="device__d"></div>
+        <div class="device__e"></div>
+        <div class="device__f"></div>
+        <div class="device__g"></div>
+      </div>
+      <div class="preloader-logo">PORTAL <span>PILOT</span></div>
+    </div>
+  </div>
+
+  <div id="progress">
+    <div id="progress-fill"></div>
+  </div>
+  <div id="cursor-dot"></div>
+  <div id="cursor-ring"></div>
+  <div id="cursor-glow"></div>
+  <div class="overlay" id="overlay"></div>
+
+  <div class="dashboard" id="dashboard">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <h2 class="logo">PORTAL PILOT</h2>
+      </div>
+      <a href="perfil.html" class="profile-section" style="text-decoration:none;cursor:pointer;" title="Ver perfil">
+        <img src="../img/asuka.png" alt="Perfil" class="avatar"
+          onerror="this.src='https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80'">
+        <div class="profile-info">
+          <span class="name">Admin</span>
+          <span class="role">Super Administrador</span>
+        </div>
+      </a>
+      <nav class="sidebar-nav" id="sidebarNav"></nav>
+      <div class="sidebar-footer">
+        <button class="footer-btn" id="darkModeToggle"><i class="fas fa-moon"></i> <span>Dark Mode</span></button>
+        <button class="footer-btn logout" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> <span>Cerrar Sesión</span></button>
+      </div>
+      <button class="toggle-btn" id="toggleSidebar" aria-label="Toggle Sidebar"><i class="fas fa-chevron-right"></i></button>
+    </aside>
+
+    <main class="main-content">
+      <header class="topbar">
+        <div class="topbar-left">
+          <div class="topbar-title">Finanzas del <span>Negocio</span></div>
+        </div>
+        <div class="topbar-right">
+          <button class="topbar-btn" title="Notificaciones"><i class="fas fa-bell"></i><span class="badge" data-notif-badge style="display:none;">0</span></button>
+          <button class="btn btn-ghost btn-sm" onclick="loadData()"><i class="fas fa-sync-alt"></i> Actualizar</button>
+        </div>
+      </header>
+
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Métricas <span>ejecutivas</span></h1>
+          <p class="page-subtitle">¿Cuánto nos pagan y quién está dejando de pagar? MRR, ARPU, churn y cobranza proyectada. Fuente: billing_payments + subscriptions + facturas.</p>
+        </div>
+        <div class="page-actions">
+          <button class="btn btn-outline btn-sm" onclick="PPPrinter.run(exportCsv)"><i class="fas fa-download"></i> Exportar CSV</button>
+          <a href="facturas_cliente.html" class="btn btn-ghost btn-sm"><i class="fas fa-file-invoice-dollar"></i> Cobranza por cliente</a>
+        </div>
+      </div>
+
+      <div class="pp-kpi-grid">
+        <div class="pp-kpi">
+          <div class="pp-kpi-head"><div class="pp-kpi-icon" style="background:rgba(52,211,153,.15);color:var(--green);"><i class="fas fa-money-bill-trend-up"></i></div></div>
+          <div class="pp-kpi-value green" id="kpiMrr">—</div>
+          <div class="pp-kpi-label">MRR — ingreso mensual recurrente</div>
+        </div>
+        <div class="pp-kpi">
+          <div class="pp-kpi-head"><div class="pp-kpi-icon"><i class="fas fa-user-group"></i></div></div>
+          <div class="pp-kpi-value" id="kpiArpu">—</div>
+          <div class="pp-kpi-label">ARPU — ingreso promedio por cliente</div>
+        </div>
+        <div class="pp-kpi">
+          <div class="pp-kpi-head"><div class="pp-kpi-icon" style="background:rgba(248,113,113,.15);color:var(--red);"><i class="fas fa-person-running"></i></div></div>
+          <div class="pp-kpi-value red" id="kpiChurn">—</div>
+          <div class="pp-kpi-label">Churn de clientes (90 días)</div>
+        </div>
+        <div class="pp-kpi">
+          <div class="pp-kpi-head"><div class="pp-kpi-icon" style="background:rgba(251,191,36,.15);color:var(--yellow);"><i class="fas fa-bullseye"></i></div></div>
+          <div class="pp-kpi-value yellow" id="kpiCobranza">—</div>
+          <div class="pp-kpi-label">Cobranza proyectada 30 días</div>
+        </div>
+      </div>
+
+      <div class="pp-grid-2 pp-section">
+        <div class="pp-card">
+          <div class="pp-card-title"><i class="fas fa-chart-area"></i> Cobranza mensual (últimos 12 meses)</div>
+          <div id="chartIngresos"></div>
+        </div>
+        <div class="pp-card">
+          <div class="pp-card-title"><i class="fas fa-chart-pie"></i> Distribución del MRR por plan</div>
+          <div id="chartPlanes"></div>
+        </div>
+      </div>
+
+      <div class="pp-grid-2 pp-section">
+        <div class="pp-card">
+          <div class="pp-card-title"><i class="fas fa-arrow-down-wide-short"></i> Top clientes por ingreso</div>
+          <div class="table-container" style="padding:0;">
+            <table class="audit-table pp-table-compact">
+              <thead>
+                <tr><th>Cliente</th><th>Plan</th><th>Pagado (12m)</th><th>Estado</th></tr>
+              </thead>
+              <tbody id="topBody"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="pp-card">
+          <div class="pp-card-title"><i class="fas fa-triangle-exclamation"></i> Señales de churn</div>
+          <div class="table-container" style="padding:0;">
+            <table class="audit-table pp-table-compact">
+              <thead>
+                <tr><th>Cliente</th><th>Señal</th><th>Detalle</th></tr>
+              </thead>
+              <tbody id="churnBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="../auth-check.js"></script>
+  <script src="js/portal-admin-guard.js"></script>
+  <script src="js/notif-badge.js"></script>
+  <script src="../js/notifications.js"></script>
+  <script src="../js/sidebar-loader.js"></script>
+  <script src="js/pp-sidebar.js"></script>
+  <script src="js/finanzas.js"></script>
+  <script src="../js/printer-loader.js"></script>
+  <script>
+    (function () {
+      const dot = document.getElementById('cursor-dot'), ring = document.getElementById('cursor-ring'), glow = document.getElementById('cursor-glow');
+      if (!dot || !ring || !glow) return;
+      let mx = 0, my = 0, rx = 0, ry = 0;
+      document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; dot.style.left = mx + 'px'; dot.style.top = my + 'px'; glow.style.left = mx + 'px'; glow.style.top = my + 'px'; });
+      function animRing() { rx += (mx - rx) * 0.12; ry += (my - ry) * 0.12; ring.style.left = rx + 'px'; ring.style.top = ry + 'px'; requestAnimationFrame(animRing); }
+      animRing();
+    })();
+    (function () {
+      var preloader = document.getElementById('preloader');
+      var start = Date.now();
+      function hide() {
+        if (!preloader || preloader.classList.contains('hidden')) return;
+        var delay = Math.max(0, 900 - (Date.now() - start));
+        setTimeout(function () { preloader.classList.add('hidden'); }, delay);
+      }
+      if (document.readyState === 'complete') { hide(); }
+      window.addEventListener('load', hide);
+      setTimeout(hide, 3200);
+    })();
+  </script>
+</body>
+
+</html>

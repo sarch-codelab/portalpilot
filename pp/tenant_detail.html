@@ -672,17 +672,7 @@
                 </div>
             </a>
 
-            <nav class="sidebar-nav">
-                <a href="dashboard.html" class="sidebar-link"><i class="fas fa-home"></i> <span>Dashboard</span></a>
-                <a href="tenants.html" class="sidebar-link active"><i class="fas fa-building"></i> <span>Tenants</span></a>
-                <a href="usuarios.html" class="sidebar-link"><i class="fas fa-users"></i> <span>Usuarios</span></a>
-                <a href="bots_rpa.html" class="sidebar-link"><i class="fas fa-robot"></i> <span>Bots RPA</span></a>
-                <a href="auditoria.html" class="sidebar-link"><i class="fas fa-link"></i> <span>Auditoría</span></a>
-                <a href="analytics.html" class="sidebar-link"><i class="fas fa-chart-line"></i> <span>Analytics</span></a>
-                <a href="billing_plans.html" class="sidebar-link"><i class="fas fa-credit-card"></i> <span>Billing &amp; Planes</span></a>
-                <a href="system_health.html" class="sidebar-link"><i class="fas fa-heartbeat"></i> <span>System Health</span></a>
-                <a href="global_settings.html" class="sidebar-link"><i class="fas fa-cog"></i> <span>Configuración Global</span></a>
-            </nav>
+            <nav class="sidebar-nav" id="sidebarNav"></nav>
 
             <div class="sidebar-footer">
                 <button class="footer-btn" id="darkModeToggle"><i class="fas fa-moon"></i> <span>Dark
@@ -1135,11 +1125,11 @@
                                     </tr>
                                 </table>
                                 <div style="margin-top:20px;display:flex;gap:12px;flex-wrap:wrap;">
-                                    <button class="btn btn-outline btn-sm" id="viewInvoiceBtn" onclick="openCurrentDocument('factura.html')" disabled><i
+                                    <button class="btn btn-outline btn-sm" id="viewInvoiceBtn" onclick="PPPrinter.run(function(){ openCurrentDocument('factura.html'); })" disabled><i
                                             class="fas fa-file-invoice"></i> Ver factura</button>
-                                    <button class="btn btn-ghost btn-sm" id="viewReceiptBtn" onclick="openCurrentDocument('recibo.html')" disabled><i
+                                    <button class="btn btn-ghost btn-sm" id="viewReceiptBtn" onclick="PPPrinter.run(function(){ openCurrentDocument('recibo.html'); })" disabled><i
                                             class="fas fa-receipt"></i> Recibo</button>
-                                    <button class="btn btn-ghost btn-sm" id="viewCreditNoteBtn" onclick="openCurrentDocument('nota-credito.html')" disabled><i
+                                    <button class="btn btn-ghost btn-sm" id="viewCreditNoteBtn" onclick="PPPrinter.run(function(){ openCurrentDocument('nota-credito.html'); })" disabled><i
                                             class="fas fa-file-circle-minus"></i> Nota de crédito</button>
                                     <button class="btn btn-ghost btn-sm" onclick="openModal('billingHistoryModal')"><i
                                             class="fas fa-history"></i> Historial</button>
@@ -1213,7 +1203,7 @@
                                 <option value="api">API Calls</option>
                                 <option value="config">Configuración</option>
                             </select>
-                            <button class="btn btn-outline btn-sm" onclick="exportLogs()"><i
+                            <button class="btn btn-outline btn-sm" onclick="PPPrinter.run(exportLogs)"><i
                                     class="fas fa-download"></i> Exportar</button>
                         </div>
                     </div>
@@ -1630,8 +1620,10 @@
     <script src="js/portal-admin-guard.js"></script>
 <script src="js/tenant-users-loader.js"></script>
     <script src="js/tenant_detail.js"></script>
+    <script src="../js/printer-loader.js"></script>
     <script src="../js/notifications.js"></script>
     <script src="../js/sidebar-loader.js"></script>
+  <script src="js/pp-sidebar.js"></script>
     <script>
     (function () {
         var preloader = document.getElementById('preloader');

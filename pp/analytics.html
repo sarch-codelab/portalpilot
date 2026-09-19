@@ -288,18 +288,7 @@
         </div>
       </a>
 
-      <nav class="sidebar-nav">
-        <a href="dashboard.html" class="sidebar-link"><i class="fas fa-home"></i> <span>Dashboard</span></a>
-        <a href="tenants.html" class="sidebar-link"><i class="fas fa-building"></i> <span>Tenants</span></a>
-        <a href="usuarios.html" class="sidebar-link"><i class="fas fa-users"></i> <span>Usuarios</span></a>
-        <a href="bots_rpa.html" class="sidebar-link"><i class="fas fa-robot"></i> <span>Bots RPA</span></a>
-        <a href="auditoria.html" class="sidebar-link"><i class="fas fa-link"></i> <span>Auditoría</span></a>
-        <a href="analytics.html" class="sidebar-link active"><i class="fas fa-chart-line"></i> <span>Analytics</span></a>
-        <a href="billing_plans.html" class="sidebar-link"><i class="fas fa-credit-card"></i> <span>Billing &amp; Planes</span></a>
-        <a href="system_health.html" class="sidebar-link"><i class="fas fa-heartbeat"></i> <span>System Health</span></a>
-        <a href="global_settings.html" class="sidebar-link"><i class="fas fa-cog"></i> <span>Configuración
-            Global</span></a>
-      </nav>
+      <nav class="sidebar-nav" id="sidebarNav"></nav>
 
       <div class="sidebar-footer">
         <button class="footer-btn" id="darkModeToggle"><i class="fas fa-moon"></i> <span>Dark Mode</span></button>
@@ -337,7 +326,7 @@
           <p class="page-subtitle">Análisis detallado de uso, rendimiento y crecimiento de la plataforma Portal Pilot.</p>
         </div>
         <div class="page-actions">
-          <button class="btn btn-outline btn-sm" onclick="window.print()"><i class="fas fa-file-pdf"></i> Exportar PDF</button>
+          <button class="btn btn-outline btn-sm" onclick="PPPrinter.run(function(){ window.print(); })"><i class="fas fa-file-pdf"></i> Exportar PDF</button>
           <button class="btn btn-ghost btn-sm"><i class="fas fa-sync-alt"></i> Actualizar</button>
         </div>
       </div>
@@ -523,7 +512,9 @@
 <script src="js/notif-badge.js"></script>
   <script src="../js/notifications.js"></script>
   <script src="../js/sidebar-loader.js"></script>
+  <script src="js/pp-sidebar.js"></script>
   <script src="js/analytics.js"></script>
+  <script src="../js/printer-loader.js"></script>
   <script>
     (function () {
       const dot = document.getElementById('cursor-dot'), ring = document.getElementById('cursor-ring'), glow = document.getElementById('cursor-glow');

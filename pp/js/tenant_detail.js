@@ -1,5 +1,5 @@
 // ── Custom Cursor (OPTIMIZADO) ─────────────────────
-const API_ROOT = (location.hostname === 'localhost' || location.hostname === '127.0.0.1') ? 'https://portal-pilot.vercel.app' : '';
+const API_ROOT = '';
 const dot = document.getElementById('cursor-dot');
 const ring = document.getElementById('cursor-ring');
 let mouseX = 0, mouseY = 0;

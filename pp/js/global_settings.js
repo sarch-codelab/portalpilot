@@ -15,7 +15,7 @@ var GS_FLAG_DESC = {
 };
 var GS_DEFAULTS = {
   'FLAG_BETA': 'true',
-  'FLAG_2FA_ADMINS': 'true',
+  'FLAG_2FA_ADMINS': 'false',
   'FLAG_DASH_ANALYTICS': 'false',
   'FLAG_MULTIREGION': 'false',
   'FLAG_AUTOSCALING_BOTS': 'true'
@@ -38,8 +38,7 @@ function gsTiempoDesde(iso) {
 }
 function gsApi(url, opts) {
   opts = opts || {};
-  var local = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
-  var apiUrl = (local ? 'https://portal-pilot.vercel.app' : '') + (String(url).charAt(0) === '/' ? url : '/' + url);
+  var apiUrl = String(url).charAt(0) === '/' ? url : '/' + url;
   opts.headers = Object.assign({}, opts.headers || {}, { 'Authorization': 'Bearer ' + (localStorage.getItem('token') || '') });
   if (opts.body && typeof opts.body !== 'string') {
     opts.headers['Content-Type'] = 'application/json';

@@ -1,5 +1,5 @@
 // ── Auditoría — Data & Interaction ─────────────────
-const API_ROOT = (location.hostname === 'localhost' || location.hostname === '127.0.0.1') ? 'https://portal-pilot.vercel.app' : '';
+const API_ROOT = '';
 const API_BASE = API_ROOT + '/api';
 let allLogs = [];
 let filteredLogs = [];

@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="icon" type="image/png" href="../img/iconos/robot_logo.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Consumo de IA — Portal Pilot</title>
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+
+  <link rel="stylesheet" href="css/auditoria.css">
+  <link rel="stylesheet" href="css/pp-pages.css">
+  <link rel="stylesheet" href="../css/notifications.css">
+  <style>
+    body {
+      background-color: var(--bg, #04040a);
+      background-image: url('../img/fondo-principal.jpg');
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+      background-repeat: no-repeat;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- PRELOADER -->
+  <div class="preloader" id="preloader">
+    <div class="preloader-inner">
+      <div class="device">
+        <div class="device__a">
+          <div class="device__a-1"></div>
+          <div class="device__a-2"></div>
+        </div>
+        <div class="device__b"></div>
+        <div class="device__c"></div>
+        <div class="device__d"></div>
+        <div class="device__e"></div>
+        <div class="device__f"></div>
+        <div class="device__g"></div>
+      </div>
+      <div class="preloader-logo">PORTAL <span>PILOT</span></div>
+    </div>
+  </div>
+
+  <div id="progress">
+    <div id="progress-fill"></div>
+  </div>
+  <div id="cursor-dot"></div>
+  <div id="cursor-ring"></div>
+  <div id="cursor-glow"></div>
+  <div class="overlay" id="overlay"></div>
+
+  <div class="dashboard" id="dashboard">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <h2 class="logo">PORTAL PILOT</h2>
+      </div>
+      <a href="perfil.html" class="profile-section" style="text-decoration:none;cursor:pointer;" title="Ver perfil">
+        <img src="../img/asuka.png" alt="Perfil" class="avatar"
+          onerror="this.src='https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80'">
+        <div class="profile-info">
+          <span class="name">Admin</span>
+          <span class="role">Super Administrador</span>
+        </div>
+      </a>
+      <nav class="sidebar-nav" id="sidebarNav"></nav>
+      <div class="sidebar-footer">
+        <button class="footer-btn" id="darkModeToggle"><i class="fas fa-moon"></i> <span>Dark Mode</span></button>
+        <button class="footer-btn logout" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> <span>Cerrar Sesión</span></button>
+      </div>
+      <button class="toggle-btn" id="toggleSidebar" aria-label="Toggle Sidebar"><i class="fas fa-chevron-right"></i></button>
+    </aside>
+
+    <main class="main-content">
+      <header class="topbar">
+        <div class="topbar-left">
+          <div class="topbar-title">Consumo de <span>IA</span></div>
+        </div>
+        <div class="topbar-right">
+          <button class="topbar-btn" title="Notificaciones"><i class="fas fa-bell"></i><span class="badge" data-notif-badge style="display:none;">0</span></button>
+          <button class="btn btn-ghost btn-sm" onclick="loadData()"><i class="fas fa-sync-alt"></i> Actualizar</button>
+        </div>
+      </header>
+
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Uso de IA por <span>cliente</span></h1>
+          <p class="page-subtitle">Llamadas, tokens y costo imputado por tenant y mes, con tope del plan (plan_limits → ai_tokens). Clave para el enforcement de planes. Fuente: ai_usage_log.</p>
+        </div>
+        <div class="page-actions">
+          <div class="filter-group" style="margin-right:8px;">
+            <label>Mes:</label>
+            <input type="month" class="filter-input" id="filterMes" onchange="loadData()">
+          </div>
+          <button class="btn btn-outline btn-sm" onclick="PPPrinter.run(exportCsv)"><i class="fas fa-download"></i> Exportar CSV</button>
+        </div>
+      </div>
+
+      <div class="pp-kpi-grid">
+        <div class="pp-kpi">
+          <div class="pp-kpi-head"><div class="pp-kpi-icon"><i class="fas fa-brain"></i></div></div>
+          <div class="pp-kpi-value" id="kpiTokens">—</div>
+          <div class="pp-kpi-label">Tokens totales del mes</div>
+        </div>
+        <div class="pp-kpi">
+          <div class="pp-kpi-head"><div class="pp-kpi-icon" style="background:rgba(167,139,250,.15);color:var(--cyan);"><i class="fas fa-paper-plane"></i></div></div>
+          <div class="pp-kpi-value accent" id="kpiLlamadas">—</div>
+          <div class="pp-kpi-label">Llamadas a modelos</div>
+        </div>
+        <div class="pp-kpi">
+          <div class="pp-kpi-head"><div class="pp-kpi-icon" style="background:rgba(251,191,36,.15);color:var(--yellow);"><i class="fas fa-coins"></i></div></div>
+          <div class="pp-kpi-value yellow" id="kpiCosto">—</div>
+          <div class="pp-kpi-label">Costo imputado estimado</div>
+        </div>
+        <div class="pp-kpi">
+          <div class="pp-kpi-head"><div class="pp-kpi-icon" style="background:rgba(248,113,113,.15);color:var(--red);"><i class="fas fa-ban"></i></div></div>
+          <div class="pp-kpi-value red" id="kpiTopes">—</div>
+          <div class="pp-kpi-label">Clientes sobre el tope del plan</div>
+        </div>
+      </div>
+
+      <div class="pp-grid-2 pp-section">
+        <div class="pp-card">
+          <div class="pp-card-title"><i class="fas fa-chart-bar"></i> Tokens por cliente (top 10)</div>
+          <div id="chartTokens"></div>
+        </div>
+        <div class="pp-card">
+          <div class="pp-card-title"><i class="fas fa-chart-pie"></i> Distribución de llamadas por función</div>
+          <div id="chartFunciones"></div>
+        </div>
+      </div>
+
+      <div class="pp-section">
+        <div class="pp-section-title"><i class="fas fa-table-list"></i> Detalle por cliente</div>
+        <div class="table-container" style="padding:0;">
+          <table class="audit-table pp-table-compact">
+            <thead>
+              <tr>
+                <th>Cliente</th>
+                <th>Llamadas</th>
+                <th>Exitosas</th>
+                <th>Fallidas</th>
+                <th>Tokens</th>
+                <th>Tope del plan</th>
+                <th>% del tope</th>
+                <th>Costo imputado</th>
+              </tr>
+            </thead>
+            <tbody id="iaBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="../auth-check.js"></script>
+  <script src="js/portal-admin-guard.js"></script>
+  <script src="js/notif-badge.js"></script>
+  <script src="../js/notifications.js"></script>
+  <script src="../js/sidebar-loader.js"></script>
+  <script src="js/pp-sidebar.js"></script>
+  <script src="js/consumo_ia.js"></script>
+  <script src="../js/printer-loader.js"></script>
+  <script>
+    (function () {
+      const dot = document.getElementById('cursor-dot'), ring = document.getElementById('cursor-ring'), glow = document.getElementById('cursor-glow');
+      if (!dot || !ring || !glow) return;
+      let mx = 0, my = 0, rx = 0, ry = 0;
+      document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; dot.style.left = mx + 'px'; dot.style.top = my + 'px'; glow.style.left = mx + 'px'; glow.style.top = my + 'px'; });
+      function animRing() { rx += (mx - rx) * 0.12; ry += (my - ry) * 0.12; ring.style.left = rx + 'px'; ring.style.top = ry + 'px'; requestAnimationFrame(animRing); }
+      animRing();
+    })();
+    (function () {
+      var preloader = document.getElementById('preloader');
+      var start = Date.now();
+      function hide() {
+        if (!preloader || preloader.classList.contains('hidden')) return;
+        var delay = Math.max(0, 900 - (Date.now() - start));
+        setTimeout(function () { preloader.classList.add('hidden'); }, delay);
+      }
+      if (document.readyState === 'complete') { hide(); }
+      window.addEventListener('load', hide);
+      setTimeout(hide, 3200);
+    })();
+  </script>
+</body>
+
+</html>

@@ -1,6 +1,5 @@
 // ── API Config ─────────────────────────────────────
-const _isLocalhost = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
-const _API_ROOT = _isLocalhost ? 'https://portal-pilot.vercel.app' : '';
+const _API_ROOT = '';
 
 // ── Custom Cursor (OPTIMIZADO) ─────────────────────
 const dot = document.getElementById('cursor-dot');
@@ -791,12 +790,6 @@ async function changePassword() {
         btn.innerHTML = 'Actualizar Contraseña';
         btn.disabled = false;
     }
-}
-
-// ── 2FA Toggle ─────────────────────────────────────
-function toggle2FA() {
-    const enabled = document.getElementById('toggle2fa').checked;
-    showToast(enabled ? '✓ 2FA activado' : '2FA desactivado', enabled ? 'success' : 'info');
 }
 
 // ── Sessions ───────────────────────────────────────

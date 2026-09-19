@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="icon" type="image/png" href="../img/iconos/robot_logo.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reglas de Alertas — Portal Pilot</title>
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+  <link rel="stylesheet" href="css/auditoria.css">
+  <link rel="stylesheet" href="css/pp-pages.css">
+  <link rel="stylesheet" href="../css/notifications.css">
+  <style>
+    body {
+      background-color: var(--bg, #04040a);
+      background-image: url('../img/fondo-principal.jpg');
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+      background-repeat: no-repeat;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- PRELOADER -->
+  <div class="preloader" id="preloader">
+    <div class="preloader-inner">
+      <div class="device">
+        <div class="device__a">
+          <div class="device__a-1"></div>
+          <div class="device__a-2"></div>
+        </div>
+        <div class="device__b"></div>
+        <div class="device__c"></div>
+        <div class="device__d"></div>
+        <div class="device__e"></div>
+        <div class="device__f"></div>
+        <div class="device__g"></div>
+      </div>
+      <div class="preloader-logo">PORTAL <span>PILOT</span></div>
+    </div>
+  </div>
+
+  <div id="progress">
+    <div id="progress-fill"></div>
+  </div>
+  <div id="cursor-dot"></div>
+  <div id="cursor-ring"></div>
+  <div id="cursor-glow"></div>
+  <div class="overlay" id="overlay"></div>
+
+  <div class="dashboard" id="dashboard">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <h2 class="logo">PORTAL PILOT</h2>
+      </div>
+      <a href="perfil.html" class="profile-section" style="text-decoration:none;cursor:pointer;" title="Ver perfil">
+        <img src="../img/asuka.png" alt="Perfil" class="avatar"
+          onerror="this.src='https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80'">
+        <div class="profile-info">
+          <span class="name">Admin</span>
+          <span class="role">Super Administrador</span>
+        </div>
+      </a>
+      <nav class="sidebar-nav" id="sidebarNav"></nav>
+      <div class="sidebar-footer">
+        <button class="footer-btn" id="darkModeToggle"><i class="fas fa-moon"></i> <span>Dark Mode</span></button>
+        <button class="footer-btn logout" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> <span>Cerrar Sesión</span></button>
+      </div>
+      <button class="toggle-btn" id="toggleSidebar" aria-label="Toggle Sidebar"><i class="fas fa-chevron-right"></i></button>
+    </aside>
+
+    <main class="main-content">
+      <header class="topbar">
+        <div class="topbar-left">
+          <div class="topbar-title">Reglas de <span>Alertas</span></div>
+        </div>
+        <div class="topbar-right">
+          <button class="topbar-btn" title="Notificaciones"><i class="fas fa-bell"></i><span class="badge" data-notif-badge style="display:none;">0</span></button>
+          <button class="btn btn-acc btn-sm" onclick="openNueva()"><i class="fas fa-plus"></i> Nueva regla</button>
+        </div>
+      </header>
+
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Umbrales <span>automáticos</span></h1>
+          <p class="page-subtitle">"Que revise solo": uso &gt; 80% del plan → notificar, ticket sin respuesta &gt; 8h → escalar, renovación en &lt; 15 días → avisar. Las reglas disparan notificaciones a los admins ROOT.</p>
+        </div>
+        <div class="page-actions">
+          <button class="btn btn-outline btn-sm" onclick="evaluarAhora()"><i class="fas fa-bolt"></i> Evaluar ahora</button>
+        </div>
+      </div>
+
+      <div class="pp-section">
+        <div id="reglasList"></div>
+      </div>
+    </main>
+  </div>
+
+  <!-- MODAL NUEVA/EDITAR REGLA -->
+  <div class="modal-overlay" id="reglaModal">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title" id="reglaModalTitle">Nueva regla</div>
+        <button class="modal-close" onclick="closeModal('reglaModal')"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Condición <span class="req">*</span></label>
+          <select id="reglaTipo">
+            <option value="uso_plan">Uso del plan alcanza X% del límite</option>
+            <option value="ticket_sla">Ticket abierto sin respuesta &gt; X horas</option>
+            <option value="renovacion_proxima">Renovación en &lt; X días</option>
+            <option value="fallos_bot">Bot con ≥ X fallos en 24h</option>
+            <option value="logins_fallidos">≥ X logins fallidos en 1h (mismo tenant)</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Umbral</label>
+            <input type="number" id="reglaUmbral" value="80" min="1" step="1">
+            <div class="help" id="reglaUmbralHelp">Porcentaje del límite del plan.</div>
+          </div>
+          <div class="form-group">
+            <label>Severidad de la alerta</label>
+            <select id="reglaSev">
+              <option value="warning">Advertencia</option>
+              <option value="critical" selected>Crítica</option>
+              <option value="info">Informativa</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Nombre descriptivo</label>
+          <input type="text" id="reglaNombre" placeholder="Uso &gt; 80% del plan">
+        </div>
+        <div class="form-group">
+          <label class="pp-check" style="margin:0;">
+            <input type="checkbox" id="reglaActiva" checked>
+            <span>Regla activa</span>
+          </label>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="closeModal('reglaModal')">Cancelar</button>
+        <button class="btn btn-acc" id="reglaSaveBtn" onclick="guardarRegla()"><i class="fas fa-save"></i> Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="confirmModal">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">Confirmar</div>
+        <button class="modal-close" onclick="closeModal('confirmModal')"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="modal-body"><p id="confirmMessage" style="font-size:14px;color:var(--gray);line-height:1.6;"></p></div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="closeModal('confirmModal')">Cancelar</button>
+        <button class="btn btn-danger" id="confirmActionBtn">Eliminar</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../auth-check.js"></script>
+  <script src="js/portal-admin-guard.js"></script>
+  <script src="js/notif-badge.js"></script>
+  <script src="../js/notifications.js"></script>
+  <script src="../js/sidebar-loader.js"></script>
+  <script src="js/pp-sidebar.js"></script>
+  <script src="js/reglas_alertas.js"></script>
+  <script>
+    (function () {
+      const dot = document.getElementById('cursor-dot'), ring = document.getElementById('cursor-ring'), glow = document.getElementById('cursor-glow');
+      if (!dot || !ring || !glow) return;
+      let mx = 0, my = 0, rx = 0, ry = 0;
+      document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; dot.style.left = mx + 'px'; dot.style.top = my + 'px'; glow.style.left = mx + 'px'; glow.style.top = my + 'px'; });
+      function animRing() { rx += (mx - rx) * 0.12; ry += (my - ry) * 0.12; ring.style.left = rx + 'px'; ring.style.top = ry + 'px'; requestAnimationFrame(animRing); }
+      animRing();
+    })();
+    (function () {
+      var preloader = document.getElementById('preloader');
+      var start = Date.now();
+      function hide() {
+        if (!preloader || preloader.classList.contains('hidden')) return;
+        var delay = Math.max(0, 900 - (Date.now() - start));
+        setTimeout(function () { preloader.classList.add('hidden'); }, delay);
+      }
+      if (document.readyState === 'complete') { hide(); }
+      window.addEventListener('load', hide);
+      setTimeout(hide, 3200);
+    })();
+  </script>
+</body>
+
+</html>

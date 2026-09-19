@@ -1,6 +1,6 @@
 // Puebla el select de tenants (#u-tenant) con datos reales de /api/tenants
 (function () {
-    var API_ROOT = (location.hostname === 'localhost' || location.hostname === '127.0.0.1') ? 'https://portal-pilot.vercel.app' : '';
+    var API_ROOT = '';
     function populate() {
         var sel = document.getElementById('u-tenant');
         if (!sel) return;

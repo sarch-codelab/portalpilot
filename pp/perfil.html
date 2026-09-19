@@ -273,17 +273,7 @@
             </div>
 
             <!-- Nav -->
-            <nav class="sidebar-nav">
-                <a href="dashboard.html" class="sidebar-link active"><i class="fas fa-home"></i> <span>Dashboard</span></a>
-                <a href="tenants.html" class="sidebar-link"><i class="fas fa-building"></i> <span>Tenants</span></a>
-                <a href="usuarios.html" class="sidebar-link"><i class="fas fa-users"></i> <span>Usuarios</span></a>
-                <a href="bots_rpa.html" class="sidebar-link"><i class="fas fa-robot"></i> <span>Bots RPA</span></a>
-                <a href="auditoria.html" class="sidebar-link"><i class="fas fa-link"></i> <span>Auditoría</span></a>
-                <a href="analytics.html" class="sidebar-link"><i class="fas fa-chart-line"></i> <span>Analytics</span></a>
-                <a href="billing_plans.html" class="sidebar-link"><i class="fas fa-credit-card"></i> <span>Billing &amp; Planes</span></a>
-                <a href="system_health.html" class="sidebar-link"><i class="fas fa-heartbeat"></i> <span>System Health</span></a>
-                <a href="global_settings.html" class="sidebar-link"><i class="fas fa-cog"></i> <span>Configuración Global</span></a>
-            </nav>
+            <nav class="sidebar-nav" id="sidebarNav"></nav>
 
             <!-- Footer -->
             <div class="sidebar-footer">
@@ -313,7 +303,7 @@
                         <i class="fas fa-bell"></i>
                         <span class="badge" id="notifBadge" style="display:none;">0</span>
                     </button>
-                    <button class="btn btn-outline btn-sm" onclick="openIdCard()">
+                    <button class="btn btn-outline btn-sm" onclick="PPPrinter.run(openIdCard)">
                         <i class="fas fa-id-card"></i> Identificación
                     </button>
                     <button class="btn btn-acc btn-sm" id="saveBtn" onclick="saveProfile()" style="display:none;">
@@ -352,7 +342,7 @@
                             aria-label="Cambiar Banner de Perfil">
                             <i class="fas fa-image"></i> Cambiar Banner
                         </button>
-                        <button class="btn btn-ghost btn-sm" onclick="exportProfile()">
+                        <button class="btn btn-ghost btn-sm" onclick="PPPrinter.run(exportProfile)">
                             <i class="fas fa-download"></i> Exportar Datos
                         </button>
                     </div>
@@ -429,7 +419,7 @@
                                 <div class="security-desc">Protege tu cuenta con un código adicional</div>
                             </div>
                             <label class="toggle-switch">
-                                <input type="checkbox" id="toggle2fa" checked onchange="toggle2FA()">
+                                <input type="checkbox" id="toggle2fa" onchange="toggle2FA()">
                                 <span class="toggle-slider"></span>
                             </label>
                         </div>
@@ -543,11 +533,11 @@
                                 onclick="openModal('sessionsModal')">
                                 <i class="fas fa-laptop" style="width:20px;color:var(--cyan)"></i> Cerrar otras sesiones
                             </button>
-                            <button class="btn btn-ghost" style="justify-content:flex-start;" onclick="downloadData()">
+                            <button class="btn btn-ghost" style="justify-content:flex-start;" onclick="PPPrinter.run(downloadData)">
                                 <i class="fas fa-file-export" style="width:20px;color:var(--green)"></i> Descargar mis
                                 datos
                             </button>
-                            <button class="btn btn-ghost" style="justify-content:flex-start;" onclick="openIdCard()">
+                            <button class="btn btn-ghost" style="justify-content:flex-start;" onclick="PPPrinter.run(openIdCard)">
                                 <i class="fas fa-id-card" style="width:20px;color:var(--yellow)"></i> Ver identificación
                             </button>
                             <button class="btn btn-danger" style="justify-content:flex-start;"
@@ -784,8 +774,12 @@
     <script src="../auth-check.js"></script>
     <script src="js/portal-admin-guard.js"></script>
     <script src="js/perfil.js"></script>
+    <script src="../js/qrcode.min.js"></script>
+    <script src="../js/two-factor.js"></script>
+    <script src="../js/printer-loader.js"></script>
     <script src="../js/notifications.js"></script>
     <script src="../js/sidebar-loader.js"></script>
+  <script src="js/pp-sidebar.js"></script>
     <script>
     (function() {
       const name = localStorage.getItem('userName') || 'Admin';

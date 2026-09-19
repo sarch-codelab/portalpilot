@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="icon" type="image/png" href="../img/iconos/robot_logo.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Centro de Reportes — Portal Pilot</title>
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+  <link rel="stylesheet" href="css/auditoria.css">
+  <link rel="stylesheet" href="css/pp-pages.css">
+  <link rel="stylesheet" href="../css/notifications.css">
+  <style>
+    body {
+      background-color: var(--bg, #04040a);
+      background-image: url('../img/fondo-principal.jpg');
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+      background-repeat: no-repeat;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- PRELOADER -->
+  <div class="preloader" id="preloader">
+    <div class="preloader-inner">
+      <div class="device">
+        <div class="device__a">
+          <div class="device__a-1"></div>
+          <div class="device__a-2"></div>
+        </div>
+        <div class="device__b"></div>
+        <div class="device__c"></div>
+        <div class="device__d"></div>
+        <div class="device__e"></div>
+        <div class="device__f"></div>
+        <div class="device__g"></div>
+      </div>
+      <div class="preloader-logo">PORTAL <span>PILOT</span></div>
+    </div>
+  </div>
+
+  <div id="progress">
+    <div id="progress-fill"></div>
+  </div>
+  <div id="cursor-dot"></div>
+  <div id="cursor-ring"></div>
+  <div id="cursor-glow"></div>
+  <div class="overlay" id="overlay"></div>
+
+  <div class="dashboard" id="dashboard">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <h2 class="logo">PORTAL PILOT</h2>
+      </div>
+      <a href="perfil.html" class="profile-section" style="text-decoration:none;cursor:pointer;" title="Ver perfil">
+        <img src="../img/asuka.png" alt="Perfil" class="avatar"
+          onerror="this.src='https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80'">
+        <div class="profile-info">
+          <span class="name">Admin</span>
+          <span class="role">Super Administrador</span>
+        </div>
+      </a>
+      <nav class="sidebar-nav" id="sidebarNav"></nav>
+      <div class="sidebar-footer">
+        <button class="footer-btn" id="darkModeToggle"><i class="fas fa-moon"></i> <span>Dark Mode</span></button>
+        <button class="footer-btn logout" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> <span>Cerrar Sesión</span></button>
+      </div>
+      <button class="toggle-btn" id="toggleSidebar" aria-label="Toggle Sidebar"><i class="fas fa-chevron-right"></i></button>
+    </aside>
+
+    <main class="main-content">
+      <header class="topbar">
+        <div class="topbar-left">
+          <div class="topbar-title">Centro de <span>Reportes</span></div>
+        </div>
+        <div class="topbar-right">
+          <button class="topbar-btn" title="Notificaciones"><i class="fas fa-bell"></i><span class="badge" data-notif-badge style="display:none;">0</span></button>
+        </div>
+      </header>
+
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Generador de <span>reportes</span></h1>
+          <p class="page-subtitle">Exportaciones consolidadas para revisión y cobranza: auditoría, analíticas, cobranza, soporte y renovaciones. Por cliente o global, en CSV o PDF imprimible.</p>
+        </div>
+      </div>
+
+      <div class="pp-section">
+        <div class="pp-grid-2">
+          <!-- Configuración -->
+          <div class="pp-card">
+            <div class="pp-card-title"><i class="fas fa-sliders"></i> Configuración del reporte</div>
+            <div class="form-group">
+              <label>Alcance</label>
+              <select id="rAlcance">
+                <option value="global" selected>Global (todos los clientes)</option>
+                <option value="tenant">Un cliente específico</option>
+              </select>
+            </div>
+            <div class="form-group" id="wrapTenant" style="display:none;">
+              <label>Cliente</label>
+              <select id="rTenant"></select>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Desde</label>
+                <input type="date" id="rDesde">
+              </div>
+              <div class="form-group">
+                <label>Hasta</label>
+                <input type="date" id="rHasta">
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Secciones a incluir</label>
+              <div class="pp-check-grid">
+                <label class="pp-check on"><input type="checkbox" class="r-seccion" value="resumen" checked><span>Resumen ejecutivo</span></label>
+                <label class="pp-check on"><input type="checkbox" class="r-seccion" value="auditoria" checked><span>Auditoría (eventos)</span></label>
+                <label class="pp-check on"><input type="checkbox" class="r-seccion" value="cobranza" checked><span>Cobranza y documentos</span></label>
+                <label class="pp-check on"><input type="checkbox" class="r-seccion" value="soporte" checked><span>Tickets de soporte</span></label>
+                <label class="pp-check on"><input type="checkbox" class="r-seccion" value="renovaciones" checked><span>Renovaciones</span></label>
+                <label class="pp-check"><input type="checkbox" class="r-seccion" value="seguridad"><span>Seguridad y accesos</span></label>
+              </div>
+            </div>
+            <button class="btn btn-acc" style="width:100%;justify-content:center;" onclick="generarReporte()"><i class="fas fa-file-arrow-down"></i> Generar reporte</button>
+          </div>
+
+          <!-- Vista previa -->
+          <div class="pp-card">
+            <div class="pp-card-title" style="justify-content:space-between;">
+              <span><i class="fas fa-eye"></i> Vista previa</span>
+              <span>
+                <button class="btn btn-ghost btn-xs" id="btnCsv" style="display:none;" onclick="descargarCsv()"><i class="fas fa-file-csv"></i> CSV</button>
+                <button class="btn btn-ghost btn-xs" id="btnPdf" style="display:none;" onclick="descargarPdf()"><i class="fas fa-file-pdf"></i> PDF</button>
+              </span>
+            </div>
+            <div id="reportePreview" style="min-height:300px;">
+              <div style="text-align:center;padding:60px 20px;color:var(--gray);font-size:13px;">
+                <i class="fas fa-file-lines" style="font-size:40px;display:block;margin-bottom:14px;opacity:.4;"></i>
+                Configura el alcance y las secciones, luego genera el reporte.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="../auth-check.js"></script>
+  <script src="js/portal-admin-guard.js"></script>
+  <script src="js/notif-badge.js"></script>
+  <script src="../js/notifications.js"></script>
+  <script src="../js/sidebar-loader.js"></script>
+  <script src="js/pp-sidebar.js"></script>
+  <script src="js/reportes.js"></script>
+  <script src="../js/printer-loader.js"></script>
+  <script>
+    (function () {
+      const dot = document.getElementById('cursor-dot'), ring = document.getElementById('cursor-ring'), glow = document.getElementById('cursor-glow');
+      if (!dot || !ring || !glow) return;
+      let mx = 0, my = 0, rx = 0, ry = 0;
+      document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; dot.style.left = mx + 'px'; dot.style.top = my + 'px'; glow.style.left = mx + 'px'; glow.style.top = my + 'px'; });
+      function animRing() { rx += (mx - rx) * 0.12; ry += (my - ry) * 0.12; ring.style.left = rx + 'px'; ring.style.top = ry + 'px'; requestAnimationFrame(animRing); }
+      animRing();
+    })();
+    (function () {
+      var preloader = document.getElementById('preloader');
+      var start = Date.now();
+      function hide() {
+        if (!preloader || preloader.classList.contains('hidden')) return;
+        var delay = Math.max(0, 900 - (Date.now() - start));
+        setTimeout(function () { preloader.classList.add('hidden'); }, delay);
+      }
+      if (document.readyState === 'complete') { hide(); }
+      window.addEventListener('load', hide);
+      setTimeout(hide, 3200);
+    })();
+  </script>
+</body>
+
+</html>

@@ -824,7 +824,7 @@
         }
 
         .users-table tbody tr::before {
-            content: '';
+            content: none;
             position: absolute;
             inset: 0;
             background-size: cover;
@@ -840,6 +840,12 @@
             opacity: 1;
             background-image: var(--banner-url, none);
             background: linear-gradient(rgba(4,4,10,0.85), rgba(4,4,10,0.9)), var(--banner-url, none);
+            background-size: cover;
+            background-position: center;
+        }
+
+        .users-table tbody tr.has-banner {
+            background-image: linear-gradient(rgba(4, 4, 10, 0.85), rgba(4, 4, 10, 0.9)), var(--banner-url, none);
             background-size: cover;
             background-position: center;
         }

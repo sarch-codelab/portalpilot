@@ -1,3 +1,8 @@
+/**
+ * pp/js/portal-admin-guard.js
+ * Logica de portal-admin-guard: estado, eventos, renderizado y consumo de API.
+ * Mantener separadas autenticacion, datos y presentacion. */
+
 (function () {
   const role = (localStorage.getItem('userRole') || '').toString().trim().toLowerCase();
   const empresaCodigo = (localStorage.getItem('empresaCodigo') || '').toString().trim().toUpperCase();

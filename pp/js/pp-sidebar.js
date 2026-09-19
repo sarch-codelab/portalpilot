@@ -164,7 +164,7 @@
   }
 
   function render() {
-    const nav = document.getElementById('sidebarNav');
+    const nav = document.getElementById('sidebarNav') || document.querySelector('.sidebar-nav');
     if (!nav) return;
     const actual = paginaActual();
     nav.innerHTML = GRUPOS.map(g => {

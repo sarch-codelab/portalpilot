@@ -62,6 +62,13 @@
 
   renderSidebar();
 
+  // Older PP pages do not declare the shared sidebar script yet.
+  if (window.location.pathname.startsWith('/pp/') && !document.querySelector('script[src*="pp-sidebar.js"]')) {
+    const sharedSidebar = document.createElement('script');
+    sharedSidebar.src = '/pp/js/pp-sidebar.js';
+    document.head.appendChild(sharedSidebar);
+  }
+
   // Hacer clic en el perfil → ir a perfil.html
   const clickTarget = document.querySelector('.profile-section, .sidebar-user') || null;
   if (clickTarget) {

@@ -4262,6 +4262,8 @@ function normalizeDisplayName(nombre, apellido) {
 function resolveDisplayRole(userRow, tenantRow) {
   const userEmail = String(userRow && (userRow.email || '')).toLowerCase().trim();
   const tenEmail = String(tenantRow && (tenantRow.email || tenantRow.correo || tenantRow.email_representante || tenantRow.correo_representante || '')).toLowerCase().trim();
+  const globalRole = String(userRow && (userRow.rol_global || '')).trim().toLowerCase();
+  if (['root', 'root pp', 'superadmin'].includes(globalRole)) return globalRole;
   if (userEmail && tenEmail && userEmail === tenEmail) return 'Owner';
   return userRow.rol || userRow.rol_global || 'admin';
 }

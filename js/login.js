@@ -3,8 +3,12 @@
 // ═══════════════════════════════════════════════════════════════
 
 // Detectar si estamos en localhost y apuntar al API de producción
-const isLocalhost = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
-const API_ROOT = isLocalhost ? 'https://portal-pilot.vercel.app' : '';
+const API_ROOT = '';
+
+function isGlobalPortalRole(role) {
+  const normalized = String(role || '').trim().toLowerCase().replace(/[_-]+/g, ' ').replace(/\s+/g, ' ');
+  return ['root', 'root pp', 'superadmin', 'super admin'].includes(normalized);
+}
 
 // Única declaración de supabase (evita el error "already been declared")
 let supabase = null;
@@ -324,7 +328,7 @@ document.addEventListener('DOMContentLoaded', function () {
             localStorage.setItem('trialExpired', 'false');
             localStorage.removeItem('linkedAccounts');
             showMessage('Acceso concedido (2FA). Redirigiendo...', 'success');
-            setTimeout(() => { window.location.href = 'pp/welcome.html'; }, 1200);
+            setTimeout(() => { window.location.href = isGlobalPortalRole(user2.rol) ? 'pp/dashboard.html' : 'empresa/dashboard.html'; }, 1200);
           } catch (err2) {
             showMessage('Error al verificar 2FA.', 'error');
             btn2.innerHTML = '<i class="fas fa-check"></i> Verificar código'; btn2.disabled = false;
@@ -383,7 +387,7 @@ document.addEventListener('DOMContentLoaded', function () {
         localStorage.removeItem('pendingEmail');
         showMessage('Acceso concedido. Redirigiendo...', 'success');
         setTimeout(() => {
-          window.location.href = 'pp/welcome.html';
+          window.location.href = isGlobalPortalRole(user.rol) ? 'pp/dashboard.html' : 'empresa/dashboard.html';
         }, 1200);
       }
 

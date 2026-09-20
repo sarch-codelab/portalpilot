@@ -125,9 +125,9 @@
               }
             } catch (e) { /* usar la identidad cacheada como fallback */ }
           }
-          const role = String(sessionRole).toLowerCase().trim();
+          const role = String(sessionRole).toLowerCase().trim().replace(/[_-]+/g, ' ').replace(/\s+/g, ' ');
           const codigo = String(sessionCode).trim().toUpperCase();
-          const isRoot = ['root', 'root pp', 'superadmin'].includes(role);
+          const isRoot = ['root', 'root pp', 'superadmin', 'super admin'].includes(role);
           const target = isRoot ? 'pp/welcome.html' : 'empresa/dashboard.html';
           window.location.replace(target);
           return;
@@ -142,7 +142,8 @@
   }
   // Disponible globalmente para otros scripts
   window.loginPath = loginPath;
-  const isRootUser = Boolean(userRole) && ['root', 'root pp', 'superadmin'].includes(userRole.toLowerCase().trim());
+  const normalizedUserRole = String(userRole || '').toLowerCase().trim().replace(/[_-]+/g, ' ').replace(/\s+/g, ' ');
+  const isRootUser = Boolean(userRole) && ['root', 'root pp', 'superadmin', 'super admin'].includes(normalizedUserRole);
   const isEnterpriseUser = Boolean(empresaCodigo && empresaCodigo.trim() !== '');
   const linkedAccounts = (() => {
     try {

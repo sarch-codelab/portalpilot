@@ -28,8 +28,8 @@
       if (!response.ok) return redirectToLogin();
       const data = await response.json();
       const user = data.user || {};
-      const role = String(user.rol || '').trim().toLowerCase();
-      const isPortalPilotAdmin = ['root', 'root pp', 'superadmin'].includes(role);
+      const role = String(user.rol || '').trim().toLowerCase().replace(/[_-]+/g, ' ').replace(/\s+/g, ' ');
+      const isPortalPilotAdmin = ['root', 'root pp', 'superadmin', 'super admin'].includes(role);
       if (!isPortalPilotAdmin) return redirectToLogin();
       if (data.token) localStorage.setItem('token', data.token);
       if (user.id) localStorage.setItem('currentAccountId', String(user.id));

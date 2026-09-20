@@ -305,7 +305,7 @@ async function protectPortalArea(req, res, next) {
   // Revalidar el rol global evita que una cookie antigua de "admin" expulse
   // a una cuenta que ya fue promovida a administradora de Portal Pilot.
   const cachedRole = String(sessionUser.rol || '').trim().toLowerCase();
-  if (!['root', 'root pp', 'superadmin'].includes(cachedRole) && sessionUser.sub && supabase) {
+  if (!isGlobalAdminRole(cachedRole) && sessionUser.sub && supabase) {
     try {
       const { data: currentUser } = await supabase.from('usuarios')
         .select('id, email, rol, rol_global, empresa_codigo, token_version')
@@ -326,7 +326,7 @@ async function protectPortalArea(req, res, next) {
   }
   const codigo = normalizeTenantCode(req.user.empresa_codigo);
   const role = (req.user.rol || '').toString().trim().toLowerCase();
-  const isRoot = ['root', 'root pp', 'superadmin'].includes(role);
+  const isRoot = isGlobalAdminRole(role);
   const isTenantUser = Boolean(codigo);
 
   // /pp/* solo para administradores raíz; /empresa/* para usuarios de tenant o raíz.
@@ -573,8 +573,7 @@ function invalidateTokenVersionCache(userId) {
 
 function isRootUser(req) {
   const role = (req.user?.rol || '').toString().trim().toLowerCase();
-  const rootRoles = ['root', 'root pp', 'superadmin'];
-  return rootRoles.includes(role);
+  return isGlobalAdminRole(role);
 }
 
 function requireRoot(req, res, next) {
@@ -590,6 +589,14 @@ function getTenantCode(req) {
 
 function normalizeTenantCode(code) {
   return (code || '').toString().trim().toUpperCase();
+}
+
+function normalizeRole(role) {
+  return String(role || '').trim().toLowerCase().replace(/[_-]+/g, ' ').replace(/\s+/g, ' ');
+}
+
+function isGlobalAdminRole(role) {
+  return ['root', 'root pp', 'superadmin', 'super admin'].includes(normalizeRole(role));
 }
 
 function slugifyDominio(value) {
@@ -4310,8 +4317,8 @@ function normalizeDisplayName(nombre, apellido) {
 function resolveDisplayRole(userRow, tenantRow) {
   const userEmail = String(userRow && (userRow.email || '')).toLowerCase().trim();
   const tenEmail = String(tenantRow && (tenantRow.email || tenantRow.correo || tenantRow.email_representante || tenantRow.correo_representante || '')).toLowerCase().trim();
-  const globalRole = String(userRow && (userRow.rol_global || '')).trim().toLowerCase();
-  if (['root', 'root pp', 'superadmin'].includes(globalRole)) return globalRole;
+  const globalRole = normalizeRole(userRow && userRow.rol_global);
+  if (isGlobalAdminRole(globalRole)) return globalRole === 'super admin' ? 'superadmin' : globalRole;
   if (userEmail && tenEmail && userEmail === tenEmail) return 'Owner';
   return userRow.rol || userRow.rol_global || 'admin';
 }

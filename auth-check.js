@@ -333,7 +333,7 @@
   window._SESSION_VALIDATED = true;
 
   // Sincronizar la cookie httpOnly de sesión cuando hay token válido
-  syncSessionCookie();
+  window._SESSION_SYNC_PROMISE = syncSessionCookie();
 
   // Si el token está expirado desde el inicio
   const initialRemaining = getTokenRemainingTime(token);

@@ -472,8 +472,34 @@ app.post('/api/session/sync', async (req, res) => {
       console.warn('[SESSION_SYNC] No se pudo actualizar ultimo_acceso:', e.message);
     }
   }
-  setSessionCookie(res, token);
-  return res.json({ ok: true });
+  // Rehidratar el rol desde la base de datos. Un token antiguo puede tener
+  // rol "admin" aunque la cuenta ya sea administradora global.
+  let sessionToken = token;
+  let sessionUser = { rol: decoded.rol, empresa_codigo: decoded.empresa_codigo };
+  if (decoded.sub && supabase) {
+    try {
+      const { data: row } = await supabase.from('usuarios')
+        .select('id, email, rol, rol_global, empresa_codigo, token_version')
+        .eq('id', decoded.sub).maybeSingle();
+      if (row) {
+        const tenantData = row.empresa_codigo
+          ? (await supabase.from('tenants').select('email').eq('codigo', row.empresa_codigo).maybeSingle()).data
+          : null;
+        sessionUser = { rol: resolveDisplayRole(row, tenantData), empresa_codigo: row.empresa_codigo || 'ROOT' };
+        sessionToken = jwt.sign({
+          sub: row.id,
+          email: row.email,
+          rol: sessionUser.rol,
+          empresa_codigo: sessionUser.empresa_codigo,
+          token_version: row.token_version || 0
+        }, localJwtSecret, { expiresIn: '30d' });
+      }
+    } catch (e) {
+      console.warn('[SESSION_SYNC] No se pudo rehidratar el rol:', e.message);
+    }
+  }
+  setSessionCookie(res, sessionToken);
+  return res.json({ ok: true, token: sessionToken, user: sessionUser });
 });
 
 app.post('/api/logout', (req, res) => {

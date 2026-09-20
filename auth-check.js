@@ -66,7 +66,14 @@
         method: 'POST',
         headers: { 'Authorization': `Bearer ${t}` }
       });
-      return r.ok;
+      if (!r.ok) return false;
+      const data = await r.json().catch(() => ({}));
+      if (data.token) localStorage.setItem('token', data.token);
+      if (data.user) {
+        if (data.user.rol) localStorage.setItem('userRole', data.user.rol);
+        if (data.user.empresa_codigo) localStorage.setItem('empresaCodigo', data.user.empresa_codigo);
+      }
+      return true;
     } catch (e) { return false; }
   }
 
@@ -94,9 +101,10 @@
     // cookie httpOnly y reincorporamos al usuario a su panel de inmediato.
     // Si no hay sesión, simplemente se limpia cualquier cookie residual.
     (async () => {
-      const t = localStorage.getItem('token');
+      let t = localStorage.getItem('token');
       if (t) {
         const synced = await syncSessionCookie();
+        t = localStorage.getItem('token') || t;
         if (synced && getTokenRemainingTime(t) > 0) {
           // No confiar en userRole cacheado: una cuenta puede haber sido
           // promovida a ROOT mientras el navegador conserva un token antiguo.

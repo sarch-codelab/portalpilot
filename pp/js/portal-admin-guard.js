@@ -15,30 +15,24 @@
     }
   }
 
-  function tokenSubject(value) {
-    try {
-      const part = String(value || '').split('.')[1];
-      if (!part) return '';
-      return JSON.parse(atob(part.replace(/-/g, '+').replace(/_/g, '/'))).sub || '';
-    } catch (e) {
-      return '';
-    }
-  }
-
   async function validatePortalAdmin() {
     if (!token) return redirectToLogin();
-    const id = localStorage.getItem('currentAccountId') || tokenSubject(token);
-    if (!id) return redirectToLogin();
     try {
-      const response = await fetch(`/api/users/${encodeURIComponent(id)}`, {
+      // Este endpoint rehidrata el rol desde usuarios. /api/users/:id aplica
+      // aislamiento de tenant y puede rechazar una cookie antigua antes de
+      // que podamos reconocer a un administrador global.
+      const response = await fetch('/api/session/sync', {
+        method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (!response.ok) return redirectToLogin();
-      const user = await response.json();
+      const data = await response.json();
+      const user = data.user || {};
       const role = String(user.rol || '').trim().toLowerCase();
       const isPortalPilotAdmin = ['root', 'root pp', 'superadmin'].includes(role);
       if (!isPortalPilotAdmin) return redirectToLogin();
-      localStorage.setItem('currentAccountId', String(user.id || id));
+      if (data.token) localStorage.setItem('token', data.token);
+      if (user.id) localStorage.setItem('currentAccountId', String(user.id));
       localStorage.setItem('userRole', role);
       if (user.tenant_code) localStorage.setItem('empresaCodigo', user.tenant_code);
     } catch (e) {

@@ -3246,7 +3246,7 @@ const row = document.createElement('tr');
           </div>
         </div>
         <div class="detail-stats">
-          <div class="detail-stat"><div class="detail-stat-value">-</div><div class="detail-stat-label">Sesiones</div></div>
+          <div class="detail-stat"><div class="detail-stat-value" id="detailSessionsCount">-</div><div class="detail-stat-label">Sesiones</div></div>
           <div class="detail-stat"><div class="detail-stat-value">-</div><div class="detail-stat-label">Bots Ejecutados</div></div>
           <div class="detail-stat"><div class="detail-stat-value">-</div><div class="detail-stat-label">Tokens IA</div></div>
           <div class="detail-stat"><div class="detail-stat-value">${user.registered ? new Date(user.registered).toLocaleDateString('es-ES', { month: 'short', year: 'numeric' }) : '-'}</div><div class="detail-stat-label">Registro</div></div>
@@ -3255,11 +3255,11 @@ const row = document.createElement('tr');
           <div class="info-item"><div class="info-label">Email</div><div class="info-value">${user.email}</div></div>
           <div class="info-item"><div class="info-label">Tenant</div><div class="info-value">${user.tenant}</div></div>
           <div class="info-item"><div class="info-label">Último Login</div><div class="info-value">${user.lastActivity ? formatRelativeTime(user.lastActivity) : 'Nunca'}</div></div>
-          <div class="info-item"><div class="info-label">IP Última</div><div class="info-value">No disponible</div></div>
+          <div class="info-item"><div class="info-label">IP Última</div><div class="info-value" id="detailLastIp">Cargando...</div></div>
         </div>
         <div class="detail-section">
           <div class="detail-section-title"><i class="fas fa-history"></i> Actividad Reciente</div>
-                    <div class="activity-list"><div class="empty-state">La actividad detallada no está disponible para este usuario.</div></div>
+                    <div class="activity-list" id="detailActivityList"><div class="empty-state">Cargando actividad...</div></div>
         </div>
         <div class="detail-actions">
           <button class="btn btn-ghost" onclick="editUser('${user.id}')"><i class="fas fa-edit"></i> Editar</button>
@@ -3268,6 +3268,38 @@ const row = document.createElement('tr');
           <button class="btn btn-outline" onclick="confirmAction('Eliminar usuario','¿Eliminar permanentemente a ${user.nombre} ${user.apellido}?',()=>deleteUser('${user.id}'),'../img/navi/navi-eliminar.png')"><i class="fas fa-trash"></i> Eliminar</button>
         </div>`;
             document.getElementById('detailPanel').classList.add('active');
+            loadDetailPanelData(user.id);
+        }
+        async function loadDetailPanelData(userId) {
+            const token = localStorage.getItem('token');
+            if (!token) return;
+            const headers = { 'Authorization': `Bearer ${token}` };
+            const ipEl = document.getElementById('detailLastIp');
+            const sessionsEl = document.getElementById('detailSessionsCount');
+            const activityEl = document.getElementById('detailActivityList');
+            try {
+                const [sessionsResponse, activityResponse] = await Promise.all([
+                    fetch(`/api/users/${encodeURIComponent(userId)}/sessions`, { headers }),
+                    fetch(`/api/users/${encodeURIComponent(userId)}/activity?limit=10`, { headers })
+                ]);
+                const sessionsData = sessionsResponse.ok ? await sessionsResponse.json() : { sessions: [] };
+                const activityData = activityResponse.ok ? await activityResponse.json() : { activity: [] };
+                const sessions = Array.isArray(sessionsData.sessions) ? sessionsData.sessions : [];
+                const activity = Array.isArray(activityData.activity) ? activityData.activity : [];
+                const latestIp = sessions.find(s => s.ip)?.ip || activity.find(a => a.ip)?.ip;
+                const safe = value => String(value == null ? '' : value).replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
+                if (sessionsEl) sessionsEl.textContent = String(sessions.length);
+                if (ipEl) ipEl.textContent = latestIp || 'No registrada';
+                if (activityEl) {
+                    activityEl.innerHTML = activity.length
+                        ? activity.slice(0, 5).map(a => `<div class="activity-item"><div class="activity-icon"><i class="fas fa-history"></i></div><div class="activity-content"><div class="activity-text">${safe(a.action || 'Actividad')}</div><div class="activity-time">${a.timestamp ? safe(formatRelativeTime(a.timestamp)) : ''}${a.details ? ` · ${safe(a.details)}` : ''}${a.ip ? ` · IP: ${safe(a.ip)}` : ''}</div></div></div>`).join('')
+                        : '<div class="empty-state">Sin actividad registrada</div>';
+                }
+            } catch (error) {
+                if (ipEl) ipEl.textContent = 'No disponible';
+                if (activityEl) activityEl.innerHTML = '<div class="empty-state">No se pudo cargar la actividad</div>';
+                console.warn('[USUARIOS] No se pudo cargar detalle:', error);
+            }
         }
         function closeDetailPanel() { document.getElementById('detailPanel').classList.remove('active'); }
         document.getElementById('detailPanel').addEventListener('click', e => { if (e.target.id === 'detailPanel') closeDetailPanel(); });

@@ -541,6 +541,7 @@
       display: flex;
       align-items: center;
       gap: 16px;
+      min-width: 0;
     }
 
     .topbar-title {
@@ -548,6 +549,7 @@
       font-size: 18px;
       font-weight: 700;
       color: var(--white);
+      white-space: nowrap;
     }
 
     .topbar-title span {
@@ -563,6 +565,7 @@
       border-radius: 40px;
       padding: 8px 16px;
       width: 280px;
+      min-width: 0;
     }
 
     .topbar-search input {
@@ -665,7 +668,7 @@
     .settings-grid {
       padding: 24px clamp(16px, 4vw, 40px);
       display: grid;
-      grid-template-columns: 5fr 4fr;
+      grid-template-columns: minmax(0, 5fr) minmax(0, 4fr);
       gap: 20px;
     }
 
@@ -677,6 +680,7 @@
       display: flex;
       flex-direction: column;
       gap: 16px;
+      min-width: 0;
     }
 
     .settings-card.full {
@@ -914,6 +918,7 @@
       border-collapse: separate;
       border-spacing: 0;
       table-layout: auto;
+      min-width: 0;
     }
 
     .env-table th {
@@ -1425,6 +1430,16 @@
         border-radius: 14px;
       }
 
+      .topbar-title {
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .settings-grid {
+        padding-top: 16px;
+        gap: 16px;
+      }
+
       .form-input,
       .form-select,
       .form-textarea {
@@ -1475,6 +1490,14 @@
       .page-actions {
         flex-direction: column;
         gap: 8px;
+      }
+
+      .topbar-left {
+        flex: 1;
+      }
+
+      .topbar-right {
+        gap: 6px;
       }
 
       .form-switch {
@@ -2090,7 +2113,7 @@
     function updateBannerPreview() {
       const type = document.getElementById('bannerType').value, msg = document.getElementById('bannerMessage').value, container = document.getElementById('bannerPreviewContainer');
       if (!msg.trim()) { container.innerHTML = ''; return; }
-      container.innerHTML = '<div class="banner-preview ' + type + '">' + msg + '<button class="close" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button></div>';
+      container.innerHTML = '<div class="banner-preview ' + type + '">' + gsEsc(msg) + '<button class="close" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button></div>';
     }
     function toggleBanner() {
       const active = document.getElementById('bannerActive').checked;

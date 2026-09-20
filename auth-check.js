@@ -60,13 +60,21 @@
   // el contenido. Silencioso y no bloqueante.
   async function syncSessionCookie() {
     const t = localStorage.getItem('token');
-    if (!t) return;
+    if (!t) return false;
     try {
-      await fetch(apiSyncPath, {
+      const r = await fetch(apiSyncPath, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${t}` }
       });
-    } catch (e) { /* no crítico */ }
+      return r.ok;
+    } catch (e) { return false; }
+  }
+
+  // Limpia solo las claves de sesión (evita el loop sin borrar preferencias).
+  function clearSessionStorage() {
+    ['token', 'userRole', 'userName', 'userEmail', 'userApellido', 'userFoto', 'userBanner',
+      'empresaCodigo', 'empresaNombre', 'currentAccountId', 'linkedAccounts', 'soloLectura']
+      .forEach(k => localStorage.removeItem(k));
   }
 
   // Cierre de sesión completo: invalida la cookie de sesión en el servidor y
@@ -88,15 +96,18 @@
     (async () => {
       const t = localStorage.getItem('token');
       if (t) {
-        await syncSessionCookie();
-        if (getTokenRemainingTime(t) > 0) {
+        const synced = await syncSessionCookie();
+        if (synced && getTokenRemainingTime(t) > 0) {
           const role = (localStorage.getItem('userRole') || '').toString().toLowerCase();
           const codigo = (localStorage.getItem('empresaCodigo') || '').toString().trim().toUpperCase();
-          const isRoot = !codigo || codigo === 'ROOT' || ['root', 'root pp', 'superadmin'].includes(role);
+          const isRoot = ['root', 'root pp', 'superadmin'].includes(role);
           const target = isRoot ? 'pp/welcome.html' : 'empresa/dashboard.html';
           window.location.replace(target);
           return;
         }
+        // Token caducado/inválido o revocado: descartarlo para romper el loop
+        // (antes se redirigía igual y el panel devolvía a /login infinitamente).
+        clearSessionStorage();
       }
       try { await fetch(apiLogoutPath, { method: 'POST' }); } catch (e) { /* no crítico */ }
     })();
@@ -104,8 +115,8 @@
   }
   // Disponible globalmente para otros scripts
   window.loginPath = loginPath;
-  const isRootUser = !empresaCodigo || empresaCodigo.toUpperCase() === 'ROOT' || (userRole && userRole.toLowerCase().includes('root'));
-  const isEnterpriseUser = empresaCodigo && empresaCodigo.toUpperCase() !== 'ROOT' && empresaCodigo.trim() !== '';
+  const isRootUser = Boolean(userRole) && ['root', 'root pp', 'superadmin'].includes(userRole.toLowerCase().trim());
+  const isEnterpriseUser = Boolean(empresaCodigo && empresaCodigo.trim() !== '');
   const linkedAccounts = (() => {
     try {
       return JSON.parse(localStorage.getItem('linkedAccounts') || '[]');
@@ -133,14 +144,15 @@
   window.fetchWithAuth = fetchWithAuth;
 
   function getAccountDisplayName(account) {
-    const isRoot = !account.empresa_codigo || account.empresa_codigo.toString().trim().toUpperCase() === 'ROOT';
+    const isRoot = ['root', 'root pp', 'superadmin'].includes(String(account.rol || '').trim().toLowerCase());
     const name = isRoot ? 'Portal Pilot' : account.empresa_nombre || account.empresa_codigo || 'Tenant';
     const email = account.email ? ` - ${account.email}` : '';
     return `${name}${email}`;
   }
 
   function getSwitchTarget(account) {
-    if (account.empresa_codigo && account.empresa_codigo.toString().trim().toUpperCase() !== 'ROOT') {
+    const isRoot = ['root', 'root pp', 'superadmin'].includes(String(account.rol || '').trim().toLowerCase());
+    if (!isRoot) {
       return isSubDir ? '../empresa/dashboard.html' : 'empresa/dashboard.html';
     }
     return isSubDir ? '../pp/welcome.html' : 'pp/welcome.html';
@@ -196,8 +208,8 @@
     localStorage.setItem('userRole', account.rol);
     localStorage.setItem('userName', account.nombre || account.email);
     localStorage.setItem('userEmail', account.email);
-    localStorage.setItem('empresaCodigo', account.empresa_codigo || 'ROOT');
-    localStorage.setItem('empresaNombre', account.empresa_nombre || (account.empresa_codigo === 'ROOT' ? 'Portal Pilot' : account.empresa_codigo));
+    localStorage.setItem('empresaCodigo', account.empresa_codigo || '');
+    localStorage.setItem('empresaNombre', account.empresa_nombre || (account.empresa_codigo || 'Tenant'));
     localStorage.setItem('currentAccountId', account.id);
     await syncSessionCookie();
     const target = getSwitchTarget(account);

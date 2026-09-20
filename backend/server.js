@@ -302,11 +302,10 @@ function protectPortalArea(req, res, next) {
   }
 
   req.user = sessionUser;
-  const rootCodes = ['ROOT', 'ROOT PP'];
   const codigo = normalizeTenantCode(sessionUser.empresa_codigo);
   const role = (sessionUser.rol || '').toString().trim().toLowerCase();
-  const isRoot = rootCodes.includes(codigo) || ['root', 'root pp', 'superadmin'].includes(role);
-  const isTenantUser = Boolean(codigo) && codigo !== 'ROOT' && codigo !== 'ROOT PP';
+  const isRoot = ['root', 'root pp', 'superadmin'].includes(role);
+  const isTenantUser = Boolean(codigo);
 
   // /pp/* solo para administradores raíz; /empresa/* para usuarios de tenant o raíz.
   const resolvedPath = PORTAL_ALIASES[req.path] || req.path;
@@ -525,12 +524,9 @@ function invalidateTokenVersionCache(userId) {
 }
 
 function isRootUser(req) {
-  const rawCodigo = req.user?.empresa_codigo;
-  const codigo = normalizeTenantCode(rawCodigo);
   const role = (req.user?.rol || '').toString().trim().toLowerCase();
-  const rootCodes = ['ROOT', 'ROOT PP'];
   const rootRoles = ['root', 'root pp', 'superadmin'];
-  return rootCodes.includes(codigo) || rootRoles.some(r => role === r);
+  return rootRoles.includes(role);
 }
 
 function requireRoot(req, res, next) {
@@ -1608,7 +1604,7 @@ app.get('/api/global/admins', authenticate, requireRoot, async (req, res) => {
       .filter(function (u) {
         const rg = String(u.rol_global || '').toLowerCase();
         const r = String(u.rol || '').toLowerCase();
-        return normalizeTenantCode(u.empresa_codigo) === 'ROOT' || ['root', 'root pp', 'superadmin'].includes(rg) || ['root', 'root pp', 'superadmin'].includes(r);
+        return ['root', 'root pp', 'superadmin'].includes(rg) || ['root', 'root pp', 'superadmin'].includes(r);
       })
       .map(function (u) {
         return {
@@ -3323,6 +3319,9 @@ app.get('/api/users', authenticate, async (req, res) => {
             const email = (u.email || '').toLowerCase();
             if (email && !seenEmails.has(email)) {
               seenEmails.add(email);
+              const rolGlobal = String(u.rol_global || '').trim().toLowerCase();
+              const rolUsuario = String(u.rol || '').trim().toLowerCase();
+              const esAdminPortal = ['root', 'root pp', 'superadmin'].includes(rolGlobal) || ['root', 'root pp', 'superadmin'].includes(rolUsuario);
               allUsers.push({
                 id: u.id,
                 displayId: u.id,
@@ -3330,8 +3329,9 @@ app.get('/api/users', authenticate, async (req, res) => {
                 apellido: u.apellido || '',
                 email: email,
                 rol: ownerEmails.has(email) ? 'Owner' : (u.rol || u.rol_global || 'Owner'),
-                tenant_code: u.empresa_codigo || 'ROOT',
-                tenant: u.empresa_codigo || 'Portal Pilot',
+                tenant_code: esAdminPortal ? null : (u.empresa_codigo || null),
+                tenant: esAdminPortal ? 'Portal Pilot (Global)' : (u.empresa_codigo || 'Sin tenant'),
+                scope: esAdminPortal ? 'global' : 'tenant',
                 status: 'active',
                 registered: u.created_at || new Date().toISOString(),
                 lastActivity: u.ultimo_acceso || u.updated_at || null,
@@ -3395,6 +3395,10 @@ app.get('/api/users/:id', authenticate, async (req, res) => {
     const nombreCompleto = normalizeDisplayName(usuario.nombre, usuario.apellido);
     const stats = await computeUserStats(usuario.id, codigo, nombreCompleto, usuario);
 
+    const rolGlobal = String(usuario.rol_global || '').trim().toLowerCase();
+    const rolUsuario = String(usuario.rol || '').trim().toLowerCase();
+    const esAdminPortal = ['root', 'root pp', 'superadmin'].includes(rolGlobal) || ['root', 'root pp', 'superadmin'].includes(rolUsuario);
+
     res.json({
       id: usuario.id,
       displayId: usuario.id,
@@ -3403,8 +3407,9 @@ app.get('/api/users/:id', authenticate, async (req, res) => {
       apellido: usuario.apellido || '',
       email: usuario.email || '',
       rol: resolveDisplayRole(usuario, { email: tenantEmail }),
-      tenant_code: codigo || 'ROOT',
-      tenant: empNombre || codigo || 'N/A',
+      tenant_code: esAdminPortal ? null : (codigo || null),
+      tenant: esAdminPortal ? 'Portal Pilot (Global)' : (empNombre || codigo || 'Sin tenant'),
+      scope: esAdminPortal ? 'global' : 'tenant',
       status: ['inactivo', 'suspendido', 'blocked'].includes(String(usuario.estado || '').toLowerCase())
         ? 'inactive'
         : (usuario.activo ? 'active' : 'inactive'),

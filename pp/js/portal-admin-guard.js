@@ -8,9 +8,8 @@
   const empresaCodigo = (localStorage.getItem('empresaCodigo') || '').toString().trim().toUpperCase();
   const token = localStorage.getItem('token');
 
-  const esRoot = ['ROOT', 'ROOT PP'].includes(empresaCodigo);
   const esRolRoot = ['root', 'root pp', 'superadmin'].includes(role);
-  const isPortalPilotAdmin = Boolean(token) && (!empresaCodigo || esRoot || esRolRoot);
+  const isPortalPilotAdmin = Boolean(token) && esRolRoot;
 
   if (!isPortalPilotAdmin) {
     const redirectUrl = '../login.html';

@@ -263,7 +263,7 @@ function isProtectedAreaPath(path) {
 // empresa/ (tenant) sin una sesión autenticada. Redirige de inmediato a
 // /login.html sin servir ni siquiera el HTML, para no exponer la estructura
 // ni ningún recurso del área protegida.
-function protectPortalArea(req, res, next) {
+async function protectPortalArea(req, res, next) {
   if (!isProtectedAreaPath(req.path)) return next();
 
   // Distinguir navegación de páginas (Accept: text/html) de sub-recursos
@@ -302,8 +302,30 @@ function protectPortalArea(req, res, next) {
   }
 
   req.user = sessionUser;
-  const codigo = normalizeTenantCode(sessionUser.empresa_codigo);
-  const role = (sessionUser.rol || '').toString().trim().toLowerCase();
+  // Revalidar el rol global evita que una cookie antigua de "admin" expulse
+  // a una cuenta que ya fue promovida a administradora de Portal Pilot.
+  const cachedRole = String(sessionUser.rol || '').trim().toLowerCase();
+  if (!['root', 'root pp', 'superadmin'].includes(cachedRole) && sessionUser.sub && supabase) {
+    try {
+      const { data: currentUser } = await supabase.from('usuarios')
+        .select('id, email, rol, rol_global, empresa_codigo, token_version')
+        .eq('id', sessionUser.sub).maybeSingle();
+      if (currentUser) {
+        const currentRole = resolveDisplayRole(currentUser, null);
+        req.user = {
+          ...sessionUser,
+          email: currentUser.email || sessionUser.email,
+          rol: currentRole,
+          empresa_codigo: currentUser.empresa_codigo || sessionUser.empresa_codigo,
+          token_version: currentUser.token_version || sessionUser.token_version || 0
+        };
+      }
+    } catch (e) {
+      console.warn('[PORTAL_GUARD] No se pudo revalidar el rol:', e.message);
+    }
+  }
+  const codigo = normalizeTenantCode(req.user.empresa_codigo);
+  const role = (req.user.rol || '').toString().trim().toLowerCase();
   const isRoot = ['root', 'root pp', 'superadmin'].includes(role);
   const isTenantUser = Boolean(codigo);
 

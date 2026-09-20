@@ -426,35 +426,10 @@
         // Obtener datos del usuario desde localStorage
         const storedName = localStorage.getItem('userName') || "Usuario";
         const firstName = storedName.split(' ')[0] || "Usuario";
-        const storedTenant = localStorage.getItem('empresaCodigo') || "ROOT";
-        const storedTenantName = localStorage.getItem('empresaNombre') || null;
-        const storedRole = (localStorage.getItem('userRole') || '').trim().toLowerCase();
-        const isPortalPilotAdmin = ["root", "root pp", "superadmin"].includes(storedRole);
-        
-        let tenantName = "Portal Pilot";
-        let targetPath = "dashboard.html";
-        
-        if (!isPortalPilotAdmin && storedTenant.toUpperCase() !== "ROOT" && storedTenant.trim() !== "") {
-            tenantName = storedTenantName || storedTenant; // Usar el nombre real si existe
-            targetPath = "../empresa/dashboard.html"; // Dashboard de empresa
-        } else {
-            tenantName = "Portal Pilot";
-            targetPath = "dashboard.html"; // Dashboard Admin de Portal Pilot
-        }
-
-        // auth-check sincroniza el rol desde la base de datos en segundo plano.
-        // Recalcular el destino evita enviar a empresa a un superadmin cuyo
-        // localStorage todavía contiene el tenant de una sesión anterior.
-        if (window._SESSION_SYNC_PROMISE) {
-            window._SESSION_SYNC_PROMISE.then(() => {
-                const currentRole = (localStorage.getItem('userRole') || '').trim().toLowerCase();
-                const currentTenant = localStorage.getItem('empresaCodigo') || '';
-                const currentIsRoot = ["root", "root pp", "superadmin"].includes(currentRole);
-                targetPath = currentIsRoot || currentTenant.toUpperCase() === "ROOT" || !currentTenant.trim()
-                    ? "dashboard.html"
-                    : "../empresa/dashboard.html";
-            }).catch(() => {});
-        }
+        // Esta pantalla solo existe dentro del portal global. El middleware
+        // del servidor decide quién puede entrar; nunca se deriva a empresa.
+        const tenantName = "Portal Pilot";
+        const targetPath = "dashboard.html";
 
         const phrases = ["Bienvenido/a", "a", tenantName, firstName + "."];
         const wordDisplay = document.getElementById('wordDisplay');

@@ -98,8 +98,27 @@
       if (t) {
         const synced = await syncSessionCookie();
         if (synced && getTokenRemainingTime(t) > 0) {
-          const role = (localStorage.getItem('userRole') || '').toString().toLowerCase();
-          const codigo = (localStorage.getItem('empresaCodigo') || '').toString().trim().toUpperCase();
+          // No confiar en userRole cacheado: una cuenta puede haber sido
+          // promovida a ROOT mientras el navegador conserva un token antiguo.
+          const currentId = localStorage.getItem('currentAccountId');
+          let sessionRole = localStorage.getItem('userRole') || '';
+          let sessionCode = localStorage.getItem('empresaCodigo') || '';
+          if (currentId) {
+            try {
+              const profileResponse = await fetch(`/api/users/${encodeURIComponent(currentId)}`, {
+                headers: { 'Authorization': `Bearer ${t}` }
+              });
+              if (profileResponse.ok) {
+                const profile = await profileResponse.json();
+                sessionRole = profile.rol || sessionRole;
+                sessionCode = profile.tenant_code || sessionCode;
+                localStorage.setItem('userRole', sessionRole);
+                localStorage.setItem('empresaCodigo', sessionCode || '');
+              }
+            } catch (e) { /* usar la identidad cacheada como fallback */ }
+          }
+          const role = String(sessionRole).toLowerCase().trim();
+          const codigo = String(sessionCode).trim().toUpperCase();
           const isRoot = ['root', 'root pp', 'superadmin'].includes(role);
           const target = isRoot ? 'pp/welcome.html' : 'empresa/dashboard.html';
           window.location.replace(target);

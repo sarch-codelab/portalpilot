@@ -29,7 +29,13 @@
         position: absolute;
         inset: 0;
         z-index: 0;
-        background: linear-gradient(180deg, rgba(4,4,10,0.05), rgba(4,4,10,0.72));
+        background: linear-gradient(180deg, rgba(4,4,10,0.35), rgba(4,4,10,0.88));
+      }
+      .profile-section.has-banner .name {
+        text-shadow: 0 1px 4px rgba(0,0,0,0.6);
+      }
+      .profile-section.has-banner .role {
+        text-shadow: 0 1px 3px rgba(0,0,0,0.5);
       }
       .profile-section.has-banner > * {
         position: relative;

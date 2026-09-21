@@ -1,6 +1,8 @@
 /* ═══ NOTIFICACIONES COMPARTIDAS — Portal Pilot ═══ */
+/* Look estilo Sileo: píldora clara, badge circular, física de resorte */
 
 #pp-notif-container {
+  --resorte: linear(0,0.002 0.6%,0.007 1.2%,0.015 1.8%,0.026 2.4%,0.041 3.1%,0.06 3.8%,0.108 5.3%,0.157 6.6%,0.214 8%,0.467 13.7%,0.577 16.3%,0.631 17.7%,0.682 19.1%,0.73 20.5%,0.771 21.8%,0.808 23.1%,0.844 24.5%,0.874 25.8%,0.903 27.2%,0.928 28.6%,0.952 30.1%,0.972 31.6%,0.988 33.1%,1.01 35.7%,1.025 38.5%,1.034 41.6%,1.038 45%,1.035 50.1%,1.012 64.2%,1.003 73%,0.999 83.7%,1);
   position: fixed;
   top: 16px;
   left: 50%;
@@ -11,7 +13,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
 }
 
 #pp-notif-counter {
@@ -38,15 +40,12 @@
 .pp-notif {
   width: 100%;
   min-height: 52px;
-  background: rgba(17,17,20,0.88);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-radius: 35px;
-  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.97);
+  border-radius: 999px;
   display: flex;
   align-items: center;
-  padding: 0 14px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.35), 0 1px 3px rgba(255,255,255,0.05) inset;
+  padding: 0 20px 0 10px;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.45), 0 2px 0 rgba(0,0,0,0.08) inset;
   overflow: hidden;
   position: relative;
   pointer-events: none;
@@ -68,10 +67,8 @@
 .pp-notif.visible .pp-notif-content { opacity: 1; }
 
 .pp-notif-icon {
-  width: 36px;
-  height: 36px;
-  background: rgba(255,255,255,0.06);
-  box-shadow: inset 2px 2px 5px rgba(0,0,0,0.2), inset -1px -1px 3px rgba(255,255,255,0.03);
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
   display: flex;
   justify-content: center;
@@ -79,24 +76,29 @@
   margin-right: 12px;
   flex-shrink: 0;
   overflow: hidden;
+  animation: ppNotifIconPop .6s var(--resorte) both;
 }
 .pp-notif-icon img {
-  width: 22px;
-  height: 22px;
+  width: 18px;
+  height: 18px;
   object-fit: contain;
-  animation: ppNotifFloat 2s ease-in-out infinite alternate;
 }
+.pp-notif.error .pp-notif-icon { background: rgba(199,48,44,0.14); }
+.pp-notif.success .pp-notif-icon { background: rgba(26,127,75,0.15); }
+.pp-notif.info .pp-notif-icon { background: rgba(37,99,235,0.14); }
+.pp-notif.warning .pp-notif-icon { background: rgba(180,83,9,0.16); }
 
 .pp-notif-text {
   margin: 0;
-  color: rgba(255,255,255,0.9);
+  color: #1a1a1e;
   font-family: 'DM Sans', sans-serif;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
-  letter-spacing: -0.3px;
+  letter-spacing: -0.2px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  line-height: 1.35;
 }
 
 .pp-notif-body {
@@ -106,7 +108,7 @@
 
 .pp-notif-sub {
   margin: 2px 0 0;
-  color: rgba(255,255,255,0.65);
+  color: rgba(26,26,30,0.6);
   font-family: 'DM Sans', sans-serif;
   font-size: 12px;
   font-weight: 400;
@@ -123,39 +125,37 @@
   height: 3px;
   width: 100%;
   transform-origin: left;
+  border-radius: 0 0 999px 999px;
 }
-.pp-notif-bar.error  { background: linear-gradient(90deg, #ff453a, #ff6b6b); }
-.pp-notif-bar.success { background: linear-gradient(90deg, #30d158, #5fe67a); }
-.pp-notif-bar.info   { background: linear-gradient(90deg, #007aff, #00c6ff); }
-.pp-notif-bar.warning { background: linear-gradient(90deg, #ff9f0a, #ffd60a); }
+.pp-notif-bar.error  { background: linear-gradient(90deg, #c7302c, #ff6b6b); }
+.pp-notif-bar.success { background: linear-gradient(90deg, #1a7f4b, #5fe67a); }
+.pp-notif-bar.info   { background: linear-gradient(90deg, #2563eb, #00c6ff); }
+.pp-notif-bar.warning { background: linear-gradient(90deg, #b45309, #ffd60a); }
 
-/* ── Animaciones ── */
+/* ── Animaciones (resorte estilo Sileo) ── */
 .pp-notif.entering {
-  animation: ppNotifEnter 1.5s forwards cubic-bezier(0.28, 0.84, 0.42, 1);
+  animation: ppNotifEnter .7s var(--resorte) forwards;
   z-index: 100;
 }
 .pp-notif.leaving {
-  animation: ppNotifLeave 0.8s forwards cubic-bezier(0.76, 0.05, 0.86, 0.06);
+  animation: ppNotifLeave .45s var(--resorte) forwards;
   z-index: 100;
 }
 
 @keyframes ppNotifEnter {
   0%   { opacity: 0; transform: translateY(-60px) scaleY(1) scaleX(1); }
-  35%  { opacity: 1; transform: translateY(-5px) scaleY(1.1) scaleX(0.85); }
-  65%  { opacity: 1; transform: translateY(3px) scaleY(0.85) scaleX(1.15); }
-  80%  { opacity: 1; transform: translateY(-1px) scaleY(1.03) scaleX(0.97); }
   100% { opacity: 1; transform: translateY(0) scaleY(1) scaleX(1); }
 }
 
 @keyframes ppNotifLeave {
   0%   { opacity: 1; transform: translateY(0) scaleY(1) scaleX(1); }
-  30%  { opacity: 0.7; transform: translateY(5px) scaleY(0.85) scaleX(1.05); }
-  100% { opacity: 0; transform: translateY(-60px) scaleY(1.2) scaleX(0.8); }
+  100% { opacity: 0; transform: translateY(14px) scaleY(1) scaleX(0.92); }
 }
 
-@keyframes ppNotifFloat {
-  0%   { transform: translateY(0px) rotate(0deg); }
-  100% { transform: translateY(-1.5px) rotate(3deg); }
+@keyframes ppNotifIconPop {
+  0% { transform: scale(0); }
+  60% { transform: scale(1.12); }
+  100% { transform: scale(1); }
 }
 
 /* ── Responsive ── */

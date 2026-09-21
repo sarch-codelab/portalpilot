@@ -424,7 +424,7 @@ a{text-decoration:none;color:inherit}ul{list-style:none}img{max-width:100%;displ
         <p class="page-subtitle">Administra tu equipo, asigna roles y controla el acceso. Administra tu equipo, asigna roles y controla el acceso seg&uacute;n tu plan.</p>
       </div>
       <div class="page-actions">
-        <button class="btn btn-outline btn-sm" onclick="exportTeam()"><i class="fas fa-download"></i> Exportar CSV</button>
+        <button class="btn btn-outline btn-sm" onclick="PPPrinter.run(exportTeam)"><i class="fas fa-download"></i> Exportar CSV</button>
       </div>
     </div>
 
@@ -909,6 +909,7 @@ document.addEventListener('keydown', e => {
 <script src="../js/portales.js"></script>
 <script src="../js/sidebar-empresa.js"></script>
 <script src="../js/sidebar-loader.js"></script>
+<script src="../js/printer-loader.js"></script>
 <script src="../auth-check.js"></script>
 </body>
 </html>

@@ -72,17 +72,17 @@ ALTER TABLE public.tenant_integrations ENABLE ROW LEVEL SECURITY;
 
 DO $$ BEGIN
   DROP POLICY IF EXISTS tenant_sessions_service ON public.tenant_sessions;
-  CREATE POLICY tenant_sessions_service ON public.tenant_sessions FOR ALL USING (true);
+  CREATE POLICY tenant_sessions_service ON public.tenant_sessions FOR ALL TO service_role USING (true);
 END $$;
 
 DO $$ BEGIN
   DROP POLICY IF EXISTS seguridad_eventos_service ON public.seguridad_eventos;
-  CREATE POLICY seguridad_eventos_service ON public.seguridad_eventos FOR ALL USING (true);
+  CREATE POLICY seguridad_eventos_service ON public.seguridad_eventos FOR ALL TO service_role USING (true);
 END $$;
 
 DO $$ BEGIN
   DROP POLICY IF EXISTS tenant_integrations_service ON public.tenant_integrations;
-  CREATE POLICY tenant_integrations_service ON public.tenant_integrations FOR ALL USING (true);
+  CREATE POLICY tenant_integrations_service ON public.tenant_integrations FOR ALL TO service_role USING (true);
 END $$;
 
 -- ═══════════════════════════════════════════════════════════════════

@@ -45,14 +45,27 @@
     return data;
   }
 
-  // ── Toast global ──
+  // ── Toast global (estilo Sileo) ──
   window.ppToast = function (message, type) {
+    let stack = document.getElementById('ppToastStack');
+    if (!stack) {
+      stack = document.createElement('div');
+      stack.id = 'ppToastStack';
+      document.body.appendChild(stack);
+    }
+    const kind = type === 'err' || type === 'error' ? 'err'
+      : (type === 'warn' || type === 'warning' ? 'warn'
+        : (type === 'info' || type === 'loading' ? 'info' : 'ok'));
+    const icons = { ok: 'fa-check', err: 'fa-xmark', warn: 'fa-triangle-exclamation', info: 'fa-circle-info' };
     const t = document.createElement('div');
-    t.className = 'pp-toast ' + (type === 'err' ? 'err' : 'ok');
-    t.innerHTML = '<i class="fas ' + (type === 'err' ? 'fa-exclamation-circle' : 'fa-check-circle') + '"></i><span></span>';
-    t.querySelector('span').textContent = message;
-    document.body.appendChild(t);
-    setTimeout(() => { t.style.opacity = '0'; t.style.transition = 'opacity .3s'; setTimeout(() => t.remove(), 320); }, 3600);
+    t.className = 'pp-toast ' + kind;
+    t.innerHTML = '<span class="pp-toast-badge"><i class="fas ' + icons[kind] + '"></i></span><span class="pp-toast-msg"></span>';
+    t.querySelector('.pp-toast-msg').textContent = message;
+    stack.appendChild(t);
+    setTimeout(() => {
+      t.classList.add('leaving');
+      setTimeout(() => t.remove(), 480);
+    }, 3800);
   };
 
   // ── Formatters ──

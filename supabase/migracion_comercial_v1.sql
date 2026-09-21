@@ -532,87 +532,87 @@ ALTER TABLE renovaciones ENABLE ROW LEVEL SECURITY;
 -- RLS Policies (backend service role — same pattern as existing migrations)
 DO $$ BEGIN
   PERFORM 1 FROM pg_policies WHERE policyname = 'service_role_tenant_features';
-  IF NOT FOUND THEN CREATE POLICY service_role_tenant_features ON tenant_features FOR ALL USING (true); END IF;
+  IF NOT FOUND THEN CREATE POLICY service_role_tenant_features ON tenant_features FOR ALL TO service_role USING (true); END IF;
 END $$;
 DO $$ BEGIN
   PERFORM 1 FROM pg_policies WHERE policyname = 'service_role_sucursales';
-  IF NOT FOUND THEN CREATE POLICY service_role_sucursales ON sucursales FOR ALL USING (true); END IF;
+  IF NOT FOUND THEN CREATE POLICY service_role_sucursales ON sucursales FOR ALL TO service_role USING (true); END IF;
 END $$;
 DO $$ BEGIN
   PERFORM 1 FROM pg_policies WHERE policyname = 'service_role_bodegas';
-  IF NOT FOUND THEN CREATE POLICY service_role_bodegas ON bodegas FOR ALL USING (true); END IF;
+  IF NOT FOUND THEN CREATE POLICY service_role_bodegas ON bodegas FOR ALL TO service_role USING (true); END IF;
 END $$;
 DO $$ BEGIN
   PERFORM 1 FROM pg_policies WHERE policyname = 'service_role_kardex';
-  IF NOT FOUND THEN CREATE POLICY service_role_kardex ON kardex FOR ALL USING (true); END IF;
+  IF NOT FOUND THEN CREATE POLICY service_role_kardex ON kardex FOR ALL TO service_role USING (true); END IF;
 END $$;
 DO $$ BEGIN
   PERFORM 1 FROM pg_policies WHERE policyname = 'service_role_proveedores';
-  IF NOT FOUND THEN CREATE POLICY service_role_proveedores ON proveedores FOR ALL USING (true); END IF;
+  IF NOT FOUND THEN CREATE POLICY service_role_proveedores ON proveedores FOR ALL TO service_role USING (true); END IF;
 END $$;
 DO $$ BEGIN
   PERFORM 1 FROM pg_policies WHERE policyname = 'service_role_compras';
-  IF NOT FOUND THEN CREATE POLICY service_role_compras ON compras FOR ALL USING (true); END IF;
+  IF NOT FOUND THEN CREATE POLICY service_role_compras ON compras FOR ALL TO service_role USING (true); END IF;
 END $$;
 DO $$ BEGIN
   PERFORM 1 FROM pg_policies WHERE policyname = 'service_role_compras_detalle';
-  IF NOT FOUND THEN CREATE POLICY service_role_compras_detalle ON compras_detalle FOR ALL USING (true); END IF;
+  IF NOT FOUND THEN CREATE POLICY service_role_compras_detalle ON compras_detalle FOR ALL TO service_role USING (true); END IF;
 END $$;
 DO $$ BEGIN
   PERFORM 1 FROM pg_policies WHERE policyname = 'service_role_listas_precios';
-  IF NOT FOUND THEN CREATE POLICY service_role_listas_precios ON listas_precios FOR ALL USING (true); END IF;
+  IF NOT FOUND THEN CREATE POLICY service_role_listas_precios ON listas_precios FOR ALL TO service_role USING (true); END IF;
 END $$;
 DO $$ BEGIN
   PERFORM 1 FROM pg_policies WHERE policyname = 'service_role_productos_precio';
-  IF NOT FOUND THEN CREATE POLICY service_role_productos_precio ON productos_precio FOR ALL USING (true); END IF;
+  IF NOT FOUND THEN CREATE POLICY service_role_productos_precio ON productos_precio FOR ALL TO service_role USING (true); END IF;
 END $$;
 DO $$ BEGIN
   PERFORM 1 FROM pg_policies WHERE policyname = 'service_role_promociones';
-  IF NOT FOUND THEN CREATE POLICY service_role_promociones ON promociones FOR ALL USING (true); END IF;
+  IF NOT FOUND THEN CREATE POLICY service_role_promociones ON promociones FOR ALL TO service_role USING (true); END IF;
 END $$;
 DO $$ BEGIN
   PERFORM 1 FROM pg_policies WHERE policyname = 'service_role_ventas_fiadas';
-  IF NOT FOUND THEN CREATE POLICY service_role_ventas_fiadas ON ventas_fiadas FOR ALL USING (true); END IF;
+  IF NOT FOUND THEN CREATE POLICY service_role_ventas_fiadas ON ventas_fiadas FOR ALL TO service_role USING (true); END IF;
 END $$;
 DO $$ BEGIN
   PERFORM 1 FROM pg_policies WHERE policyname = 'service_role_ventas_fiadas_detalle';
-  IF NOT FOUND THEN CREATE POLICY service_role_ventas_fiadas_detalle ON ventas_fiadas_detalle FOR ALL USING (true); END IF;
+  IF NOT FOUND THEN CREATE POLICY service_role_ventas_fiadas_detalle ON ventas_fiadas_detalle FOR ALL TO service_role USING (true); END IF;
 END $$;
 DO $$ BEGIN
   PERFORM 1 FROM pg_policies WHERE policyname = 'service_role_abonos';
-  IF NOT FOUND THEN CREATE POLICY service_role_abonos ON abonos FOR ALL USING (true); END IF;
+  IF NOT FOUND THEN CREATE POLICY service_role_abonos ON abonos FOR ALL TO service_role USING (true); END IF;
 END $$;
 DO $$ BEGIN
   PERFORM 1 FROM pg_policies WHERE policyname = 'service_role_rutas';
-  IF NOT FOUND THEN CREATE POLICY service_role_rutas ON rutas FOR ALL USING (true); END IF;
+  IF NOT FOUND THEN CREATE POLICY service_role_rutas ON rutas FOR ALL TO service_role USING (true); END IF;
 END $$;
 DO $$ BEGIN
   PERFORM 1 FROM pg_policies WHERE policyname = 'service_role_visitas';
-  IF NOT FOUND THEN CREATE POLICY service_role_visitas ON visitas FOR ALL USING (true); END IF;
+  IF NOT FOUND THEN CREATE POLICY service_role_visitas ON visitas FOR ALL TO service_role USING (true); END IF;
 END $$;
 DO $$ BEGIN
   PERFORM 1 FROM pg_policies WHERE policyname = 'service_role_transferencias';
-  IF NOT FOUND THEN CREATE POLICY service_role_transferencias ON transferencias FOR ALL USING (true); END IF;
+  IF NOT FOUND THEN CREATE POLICY service_role_transferencias ON transferencias FOR ALL TO service_role USING (true); END IF;
 END $$;
 DO $$ BEGIN
   PERFORM 1 FROM pg_policies WHERE policyname = 'service_role_transferencias_detalle';
-  IF NOT FOUND THEN CREATE POLICY service_role_transferencias_detalle ON transferencias_detalle FOR ALL USING (true); END IF;
+  IF NOT FOUND THEN CREATE POLICY service_role_transferencias_detalle ON transferencias_detalle FOR ALL TO service_role USING (true); END IF;
 END $$;
 DO $$ BEGIN
   PERFORM 1 FROM pg_policies WHERE policyname = 'service_role_planes_membresia';
-  IF NOT FOUND THEN CREATE POLICY service_role_planes_membresia ON planes_membresia FOR ALL USING (true); END IF;
+  IF NOT FOUND THEN CREATE POLICY service_role_planes_membresia ON planes_membresia FOR ALL TO service_role USING (true); END IF;
 END $$;
 DO $$ BEGIN
   PERFORM 1 FROM pg_policies WHERE policyname = 'service_role_socios';
-  IF NOT FOUND THEN CREATE POLICY service_role_socios ON socios FOR ALL USING (true); END IF;
+  IF NOT FOUND THEN CREATE POLICY service_role_socios ON socios FOR ALL TO service_role USING (true); END IF;
 END $$;
 DO $$ BEGIN
   PERFORM 1 FROM pg_policies WHERE policyname = 'service_role_puntos_historial';
-  IF NOT FOUND THEN CREATE POLICY service_role_puntos_historial ON puntos_historial FOR ALL USING (true); END IF;
+  IF NOT FOUND THEN CREATE POLICY service_role_puntos_historial ON puntos_historial FOR ALL TO service_role USING (true); END IF;
 END $$;
 DO $$ BEGIN
   PERFORM 1 FROM pg_policies WHERE policyname = 'service_role_renovaciones';
-  IF NOT FOUND THEN CREATE POLICY service_role_renovaciones ON renovaciones FOR ALL USING (true); END IF;
+  IF NOT FOUND THEN CREATE POLICY service_role_renovaciones ON renovaciones FOR ALL TO service_role USING (true); END IF;
 END $$;
 
 -- ═══════════════════════════════════════════════════════════════════

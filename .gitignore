@@ -16,5 +16,14 @@ backend/.env
 ANALISIS_COSTOS_PLANES.md
 PRIVADO_*.md
 
+# Secretos y artefactos locales (nunca versionar)
+.freebuff/
+cookies.txt
+*.token
+empresa/enteprise.txt
+img/img-index/*.txt
+.playwright-mcp/
+
 .vercel
 .env*
+.ping-secret.local

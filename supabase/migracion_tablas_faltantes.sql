@@ -162,11 +162,11 @@ CREATE TABLE IF NOT EXISTS ai_product_scan (
 
 -- empresas: backend service role only
 ALTER TABLE empresas ENABLE ROW LEVEL SECURITY;
-CREATE POLICY " service_role_empresas" ON empresas FOR ALL USING (true);
+CREATE POLICY " service_role_empresas" ON empresas FOR ALL TO service_role USING (true);
 
 -- usuario_modulos: backend service role only
 ALTER TABLE usuario_modulos ENABLE ROW LEVEL SECURITY;
-CREATE POLICY " service_role_usuario_modulos" ON usuario_modulos FOR ALL USING (true);
+CREATE POLICY " service_role_usuario_modulos" ON usuario_modulos FOR ALL TO service_role USING (true);
 
 -- automation_rules: JWT-based tenant isolation
 ALTER TABLE automation_rules ENABLE ROW LEVEL SECURITY;
@@ -175,19 +175,19 @@ CREATE POLICY "tenant_automation_rules" ON automation_rules FOR ALL
 
 -- facturas: backend service role only
 ALTER TABLE facturas ENABLE ROW LEVEL SECURITY;
-CREATE POLICY " service_role_facturas" ON facturas FOR ALL USING (true);
+CREATE POLICY " service_role_facturas" ON facturas FOR ALL TO service_role USING (true);
 
 -- transacciones: backend service role only
 ALTER TABLE transacciones ENABLE ROW LEVEL SECURITY;
-CREATE POLICY " service_role_transacciones" ON transacciones FOR ALL USING (true);
+CREATE POLICY " service_role_transacciones" ON transacciones FOR ALL TO service_role USING (true);
 
 -- productos: backend service role only
 ALTER TABLE productos ENABLE ROW LEVEL SECURITY;
-CREATE POLICY " service_role_productos" ON productos FOR ALL USING (true);
+CREATE POLICY " service_role_productos" ON productos FOR ALL TO service_role USING (true);
 
 -- ai_usage_log: backend service role only
 ALTER TABLE ai_usage_log ENABLE ROW LEVEL SECURITY;
-CREATE POLICY " service_role_ai_usage" ON ai_usage_log FOR ALL USING (true);
+CREATE POLICY " service_role_ai_usage" ON ai_usage_log FOR ALL TO service_role USING (true);
 
 -- ═══ Auto-update triggers ═══
 

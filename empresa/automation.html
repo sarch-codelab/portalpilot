@@ -356,7 +356,7 @@ a{text-decoration:none;color:inherit}ul{list-style:none}img{max-width:100%;displ
         <p class="page-subtitle">Configura y monitorea flujos de trabajo impulsados por IA. Control total sobre triggers, acciones y respuestas automáticas.</p>
       </div>
       <div class="page-actions">
-        <button class="btn btn-outline btn-sm" onclick="exportFlows()"><i class="fas fa-download"></i> Exportar Flujos</button>
+        <button class="btn btn-outline btn-sm" onclick="PPPrinter.run(exportFlows)"><i class="fas fa-download"></i> Exportar Flujos</button>
         <button class="btn btn-ghost btn-sm" onclick="refreshAgents()"><i class="fas fa-sync-alt"></i> Sincronizar</button>
       </div>
     </div>
@@ -791,6 +791,7 @@ document.addEventListener('keydown',e=>{
 <script src="../js/portales.js"></script>
 <script src="../js/sidebar-empresa.js"></script>
 <script src="../js/sidebar-loader.js"></script>
+<script src="../js/printer-loader.js"></script>
 <script src="../auth-check.js"></script>
 </body>
 </html>

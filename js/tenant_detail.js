@@ -1,6 +1,5 @@
 // Detectar si estamos en localhost y apuntar al API de producción
-const isLocalhost = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
-const API_ROOT = isLocalhost ? 'https://portal-pilot.vercel.app' : '';
+const API_ROOT = '';
 
 // ── Custom Cursor (OPTIMIZADO) ─────────────────────
 const dot = document.getElementById('cursor-dot');

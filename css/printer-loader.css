@@ -1,0 +1,436 @@
+/* ─── Printer Loading Overlay (scoped) ─────────────── */
+.pp-printer-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  background: radial-gradient(circle at 50% 50%, rgba(20, 20, 34, 0.92), rgba(6, 6, 12, 0.98));
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+.pp-printer-overlay.active {
+  opacity: 1;
+  visibility: visible;
+}
+.pp-printer-overlay .pp-loader-label {
+  font-family: "Syne", "Segoe UI", system-ui, sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: rgba(216, 210, 240, 0.6);
+  text-align: center;
+}
+
+/* ─── Scoped Card Wrapper ─── */
+.pp-printer-overlay .card {
+  width: 190px;
+  height: 254px;
+  background: linear-gradient(145deg, #1a1a1a, #222222);
+  border-radius: 20px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+}
+
+/* subtle dot grid */
+.pp-printer-overlay .card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+  background-size: 14px 14px;
+  pointer-events: none;
+}
+
+/* ─── Scene ─── */
+.pp-printer-overlay .scene {
+  position: relative;
+  width: 190px;
+  height: 175px;
+  margin-top: 18px;
+}
+
+/* ─── Paper (behind printer) ─── */
+.pp-printer-overlay .paper-group {
+  position: absolute;
+  left: 50%;
+  top: 22px;
+  transform: translateX(-50%);
+  z-index: 1;
+  animation: ppPaperMove 6.4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.pp-printer-overlay .paper {
+  width: 54px;
+  height: 68px;
+  background: #ffffff;
+  border: 1px solid #d0d0d0;
+  border-radius: 3px;
+  padding: 7px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  position: relative;
+  z-index: 2;
+}
+
+.pp-printer-overlay .paper-shadow {
+  position: absolute;
+  top: 2px;
+  left: 1px;
+  width: 56px;
+  height: 70px;
+  background: rgba(0, 0, 0, 0.22);
+  border-radius: 3px;
+  filter: blur(2px);
+  z-index: 1;
+  animation: ppShadowOpacity 6.4s ease-in-out infinite;
+}
+
+/* Ink lines */
+.pp-printer-overlay .ink {
+  height: 2.5px;
+  background: #2a2a2a;
+  border-radius: 1.5px;
+  opacity: 0;
+}
+
+.pp-printer-overlay .ink-1 { width: 40px; animation: ppInk1 6.4s ease-out infinite; }
+.pp-printer-overlay .ink-2 { width: 28px; animation: ppInk2 6.4s ease-out infinite; }
+.pp-printer-overlay .ink-3 { width: 19px; animation: ppInk3 6.4s ease-out infinite; }
+.pp-printer-overlay .ink-4 { width: 40px; animation: ppInk4 6.4s ease-out infinite; }
+.pp-printer-overlay .ink-5 { width: 28px; animation: ppInk5 6.4s ease-out infinite; }
+.pp-printer-overlay .ink-6 { width: 19px; animation: ppInk6 6.4s ease-out infinite; }
+.pp-printer-overlay .ink-7 { width: 40px; animation: ppInk7 6.4s ease-out infinite; }
+.pp-printer-overlay .ink-8 { width: 28px; animation: ppInk8 6.4s ease-out infinite; }
+
+/* ─── Printer Body (in front) ─── */
+.pp-printer-overlay .printer {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 132px;
+  height: 96px;
+  z-index: 3;
+}
+
+.pp-printer-overlay .printer-ambient-shadow {
+  position: absolute;
+  left: 3px;
+  top: 10px;
+  width: 126px;
+  height: 70px;
+  background: rgba(0, 0, 0, 0.06);
+  border-radius: 12px;
+  z-index: 0;
+}
+
+.pp-printer-overlay .printer-top {
+  position: absolute;
+  left: 26px;
+  top: 0;
+  width: 80px;
+  height: 17px;
+  background: #f0f0f0;
+  border: 1px solid #c8c8c8;
+  border-radius: 4px;
+  z-index: 2;
+}
+
+.pp-printer-overlay .printer-top-inner {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 72px;
+  height: 11px;
+  background: #f8f8f8;
+  border: 0.5px solid #d8d8d8;
+  border-radius: 2px;
+}
+
+.pp-printer-overlay .printer-body {
+  position: absolute;
+  left: 0;
+  top: 14px;
+  width: 132px;
+  height: 58px;
+  background: #ffffff;
+  border: 1.5px solid #d5d5d5;
+  border-radius: 10px;
+  z-index: 2;
+  box-shadow: 0 5px 0 rgba(0, 0, 0, 0.03);
+}
+
+.pp-printer-overlay .slot {
+  position: absolute;
+  left: 50%;
+  top: 5px;
+  transform: translateX(-50%);
+  width: 70px;
+  height: 4px;
+  background: #2a2a2a;
+  border-radius: 2px;
+  z-index: 3;
+}
+
+.pp-printer-overlay .panel {
+  position: absolute;
+  left: 9px;
+  top: 16px;
+  width: 42px;
+  height: 16px;
+  background: #f8f8f8;
+  border: 1px solid #e0e0e0;
+  border-radius: 3px;
+  z-index: 3;
+}
+
+.pp-printer-overlay .panel-line-lg {
+  position: absolute;
+  left: 4px;
+  top: 4px;
+  width: 16px;
+  height: 2.5px;
+  background: #a0a0a0;
+  border-radius: 1.5px;
+}
+
+.pp-printer-overlay .panel-line-sm {
+  position: absolute;
+  left: 4px;
+  top: 9px;
+  width: 26px;
+  height: 2px;
+  background: #c8c8c8;
+  border-radius: 1px;
+}
+
+.pp-printer-overlay .buttons {
+  position: absolute;
+  left: 58px;
+  top: 18px;
+  display: flex;
+  gap: 3px;
+  z-index: 3;
+}
+
+.pp-printer-overlay .btn {
+  width: 6px;
+  height: 6px;
+  background: #e0e0e0;
+  border: 0.5px solid #c8c8c8;
+  border-radius: 50%;
+}
+
+.pp-printer-overlay .led-wrap {
+  position: absolute;
+  right: 10px;
+  top: 16px;
+  width: 7px;
+  height: 7px;
+  z-index: 3;
+}
+
+.pp-printer-overlay .led {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  position: relative;
+  z-index: 2;
+  animation: ppLedColor 6.4s ease-in-out infinite;
+}
+
+.pp-printer-overlay .led-glow-wrap {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 12px;
+  height: 12px;
+  transform: translate(-50%, -50%);
+  z-index: 1;
+  animation: ppLedGlowPhase 6.4s ease-in-out infinite;
+}
+
+.pp-printer-overlay .led-glow {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  animation: ppLedPulse 0.6s ease-in-out infinite alternate, ppLedGlowColor 6.4s ease-in-out infinite;
+}
+
+.pp-printer-overlay .vents {
+  position: absolute;
+  right: 9px;
+  top: 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 2.5px;
+  z-index: 3;
+}
+
+.pp-printer-overlay .vent {
+  width: 15px;
+  height: 2px;
+  background: #e0e0e0;
+  border-radius: 1px;
+}
+
+.pp-printer-overlay .tray {
+  position: absolute;
+  bottom: -3px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 108px;
+  height: 5px;
+  background: #e8e8e8;
+  border: 0.5px solid #c8c8c8;
+  border-radius: 3px;
+  z-index: 3;
+}
+
+.pp-printer-overlay .tray-inner {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 96px;
+  height: 2.5px;
+  background: #d0d0d0;
+  border-radius: 1px;
+}
+
+.pp-printer-overlay .brand {
+  position: absolute;
+  left: 9px;
+  top: 46px;
+  width: 28px;
+  height: 4px;
+  background: #e8e8e8;
+  border-radius: 1px;
+  z-index: 3;
+}
+
+/* ─── Status Text ─── */
+.pp-printer-overlay .status {
+  position: relative;
+  margin-top: 6px;
+  width: 100%;
+  height: 18px;
+  z-index: 4;
+}
+
+.pp-printer-overlay .st {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.55);
+  letter-spacing: 0.3px;
+  opacity: 0;
+  animation-duration: 6.4s;
+  animation-timing-function: step-end;
+  animation-iteration-count: infinite;
+}
+
+.pp-printer-overlay .ready { animation-name: ppStReady; }
+.pp-printer-overlay .feeding { animation-name: ppStFeeding; }
+.pp-printer-overlay .printing { animation-name: ppStPrinting; }
+.pp-printer-overlay .ejecting { animation-name: ppStEjecting; }
+.pp-printer-overlay .done { animation-name: ppStDone; }
+
+/* ─── Keyframes ─── */
+@keyframes ppPaperMove {
+  0%, 3% { transform: translateX(-50%) translateY(-75px); opacity: 0; }
+  18.75% { transform: translateX(-50%) translateY(-6px); opacity: 1; }
+  43.75% { transform: translateX(-50%) translateY(14px); opacity: 1; }
+  78% { transform: translateX(-50%) translateY(72px); opacity: 1; }
+  81.25% { transform: translateX(-50%) translateY(72px); opacity: 0; }
+  81.3%, 100% { transform: translateX(-50%) translateY(-75px); opacity: 0; }
+}
+
+@keyframes ppShadowOpacity {
+  0%, 18.75% { opacity: 0; }
+  43.75% { opacity: 0; }
+  78% { opacity: 0.22; }
+  81.25%, 100% { opacity: 0; }
+}
+
+@keyframes ppInk1 { 0%, 43.75% { opacity: 0; } 48.75%, 78% { opacity: 1; } 81.25%, 100% { opacity: 0; } }
+@keyframes ppInk2 { 0%, 46.25% { opacity: 0; } 51.25%, 78% { opacity: 1; } 81.25%, 100% { opacity: 0; } }
+@keyframes ppInk3 { 0%, 48.75% { opacity: 0; } 53.75%, 78% { opacity: 1; } 81.25%, 100% { opacity: 0; } }
+@keyframes ppInk4 { 0%, 51.25% { opacity: 0; } 56.25%, 78% { opacity: 1; } 81.25%, 100% { opacity: 0; } }
+@keyframes ppInk5 { 0%, 53.75% { opacity: 0; } 58.75%, 78% { opacity: 1; } 81.25%, 100% { opacity: 0; } }
+@keyframes ppInk6 { 0%, 56.25% { opacity: 0; } 61.25%, 78% { opacity: 1; } 81.25%, 100% { opacity: 0; } }
+@keyframes ppInk7 { 0%, 58.75% { opacity: 0; } 63.75%, 78% { opacity: 1; } 81.25%, 100% { opacity: 0; } }
+@keyframes ppInk8 { 0%, 61.25% { opacity: 0; } 66.25%, 78% { opacity: 1; } 81.25%, 100% { opacity: 0; } }
+
+@keyframes ppLedColor {
+  0%, 18.75% { background: #ffa500; box-shadow: 0 0 4px #ffa500; }
+  18.75%, 43.75% { background: #1e90ff; box-shadow: 0 0 4px #1e90ff; }
+  43.75%, 100% { background: #32cd32; box-shadow: 0 0 4px #32cd32; }
+}
+
+@keyframes ppLedGlowColor {
+  0%, 18.75% { background: #ffa500; }
+  18.75%, 43.75% { background: #1e90ff; }
+  43.75%, 100% { background: #32cd32; }
+}
+
+@keyframes ppLedPulse {
+  from { transform: scale(1); opacity: 0.7; }
+  to { transform: scale(1.5); opacity: 0.15; }
+}
+
+@keyframes ppLedGlowPhase {
+  0%, 43.75% { opacity: 1; }
+  43.75%, 81.25% { opacity: 0; }
+  81.25%, 100% { opacity: 1; }
+}
+
+@keyframes ppStReady {
+  0%, 2.9% { opacity: 1; }
+  3%, 89.9% { opacity: 0; }
+  90%, 100% { opacity: 1; }
+}
+
+@keyframes ppStFeeding {
+  0%, 2.9% { opacity: 0; }
+  3%, 18.6% { opacity: 1; }
+  18.7%, 100% { opacity: 0; }
+}
+
+@keyframes ppStPrinting {
+  0%, 18.6% { opacity: 0; }
+  18.7%, 43.6% { opacity: 1; }
+  43.7%, 100% { opacity: 0; }
+}
+
+@keyframes ppStEjecting {
+  0%, 43.6% { opacity: 0; }
+  43.7%, 77.9% { opacity: 1; }
+  78%, 100% { opacity: 0; }
+}
+
+@keyframes ppStDone {
+  0%, 77.9% { opacity: 0; }
+  78%, 89.9% { opacity: 1; }
+  90%, 100% { opacity: 0; }
+}

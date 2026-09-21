@@ -352,7 +352,7 @@
         </div>
         <div class="profile-actions">
           <button class="btn btn-outline btn-sm" onclick="openModal('uploadAvatarModal')"><i class="fas fa-camera"></i> Cambiar Foto</button>
-          <button class="btn btn-ghost btn-sm" onclick="exportProfile()"><i class="fas fa-download"></i> Exportar Datos</button>
+          <button class="btn btn-ghost btn-sm" onclick="PPPrinter.run(exportProfile)"><i class="fas fa-download"></i> Exportar Datos</button>
         </div>
       </div>
 
@@ -419,7 +419,7 @@
                 <div class="security-desc">Protege tu cuenta con un código adicional</div>
               </div>
               <label class="toggle-switch">
-                <input type="checkbox" id="toggle2fa" checked onchange="toggle2FA()">
+                <input type="checkbox" id="toggle2fa" onchange="toggle2FA()">
                 <span class="toggle-slider"></span>
               </label>
             </div>
@@ -512,7 +512,7 @@
               <button class="btn btn-ghost" style="justify-content:flex-start;" onclick="openModal('sessionsModal')">
                 <i class="fas fa-laptop" style="width:20px;color:var(--cyan)"></i> Cerrar otras sesiones
               </button>
-              <button class="btn btn-ghost" style="justify-content:flex-start;" onclick="downloadData()">
+              <button class="btn btn-ghost" style="justify-content:flex-start;" onclick="PPPrinter.run(downloadData)">
                 <i class="fas fa-file-export" style="width:20px;color:var(--green)"></i> Descargar mis datos
               </button>
               <button class="btn btn-danger" style="justify-content:flex-start;" onclick="openModal('deleteAccountModal')">
@@ -698,6 +698,7 @@
     // ── Sidebar Toggle ───────────────
     const sidebar = document.getElementById('sidebar'), toggleBtn = document.getElementById('toggleSidebar'), overlay = document.getElementById('overlay'), dashboard = document.getElementById('dashboard');
     let isMobile = window.innerWidth <= 900;
+    if (localStorage.getItem('sidebarCollapsed') === 'true' && !isMobile) { sidebar.classList.add('collapsed'); dashboard.classList.add('sidebar-collapsed'); }
     function updateLayout() {
       isMobile = window.innerWidth <= 900;
       if(isMobile) { sidebar.style.position = 'fixed'; sidebar.style.left = sidebar.classList.contains('active') ? '0' : '-260px'; dashboard.classList.remove('sidebar-collapsed'); }
@@ -705,7 +706,7 @@
     }
     window.addEventListener('resize', () => { updateLayout(); setTimeout(() => { window.dispatchEvent(new Event('resize')); }, 300); });
     updateLayout();
-    toggleBtn.addEventListener('click', () => { if(isMobile) { sidebar.classList.toggle('active'); overlay.classList.toggle('active'); } else { sidebar.classList.toggle('collapsed'); dashboard.classList.toggle('sidebar-collapsed'); } updateLayout(); });
+    toggleBtn.addEventListener('click', () => { if(isMobile) { sidebar.classList.toggle('active'); overlay.classList.toggle('active'); } else { sidebar.classList.toggle('collapsed'); dashboard.classList.toggle('sidebar-collapsed'); localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed')); } updateLayout(); });
     overlay.addEventListener('click', () => { sidebar.classList.remove('active'); overlay.classList.remove('active'); });
 
     // ── Dark Mode ────────────────────
@@ -959,36 +960,6 @@
       }
     }
 
-    // ── 2FA Toggle ──────────────
-    async function toggle2FA() {
-      const toggle = document.getElementById('toggle2fa');
-      const enabled = toggle.checked;
-      const token = localStorage.getItem('token');
-      try {
-        setBtnLoading(toggle);
-        if (enabled) {
-          const res = await fetch('/api/security/2fa/setup', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token }
-          }).then(r => r.json());
-          if (res.error) { toggle.checked = false; showMessage('Error: ' + res.error, 'error'); return; }
-          showMessage('2FA en espera de confirmación. Escanea este secreto en tu app autenticadora: ' + res.secret, 'info');
-        } else {
-          const code = prompt('Ingresa tu código 2FA actual para desactivar:');
-          if (!code) { toggle.checked = true; return; }
-          const res = await fetch('/api/security/2fa/disable', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-            body: JSON.stringify({ code })
-          }).then(r => r.json());
-          if (res.error) { toggle.checked = true; showMessage('Error: ' + res.error, 'error'); return; }
-          showMessage('2FA desactivado', 'info');
-        }
-      } catch (e) {
-        toggle.checked = !enabled;
-        showMessage('Error de conexión con el servidor', 'error');
-      }
-    }
     function setBtnLoading(btn) { try { btn.disabled = true; setTimeout(() => { btn.disabled = false; }, 900); } catch(e) {} }
 
     // ── Sessions ──────────────
@@ -1185,6 +1156,9 @@
 <script src="../js/plan-gate.js"></script>
 <script src="../js/portales.js"></script>
 <script src="../js/sidebar-loader.js"></script>
+<script src="../js/printer-loader.js"></script>
+<script src="../js/qrcode.min.js"></script>
+<script src="../js/two-factor.js"></script>
 <script>
 (function() {
   function hideSkeleton() {

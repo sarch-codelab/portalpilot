@@ -227,9 +227,9 @@ DO $$ BEGIN
   DROP POLICY IF EXISTS "plan_limits_public_read" ON plan_limits;
   CREATE POLICY "plan_limits_public_read" ON plan_limits FOR SELECT USING (true);
   DROP POLICY IF EXISTS "tenant_usage_service_role" ON tenant_usage;
-  CREATE POLICY "tenant_usage_service_role" ON tenant_usage FOR ALL USING (true);
+  CREATE POLICY "tenant_usage_service_role" ON tenant_usage FOR ALL TO service_role USING (true);
   DROP POLICY IF EXISTS "subscriptions_service_role" ON subscriptions;
-  CREATE POLICY "subscriptions_service_role" ON subscriptions FOR ALL USING (true);
+  CREATE POLICY "subscriptions_service_role" ON subscriptions FOR ALL TO service_role USING (true);
 END $$;
 
 -- Grants de seguridad (por defecto postgrest usa role anon; restringimos escrituras)

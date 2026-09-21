@@ -1567,7 +1567,8 @@ app.post('/api/upload-image', authenticate, async (req, res) => {
     const { data, error } = await supabase.storage.upload('portal-pilot-assets', filePath, buffer, mime);
     if (error) throw error;
 
-    const publicUrl = supabase.storage.getPublicUrl('portal-pilot-assets', filePath);
+    const publicUrlRaw = supabase.storage.getPublicUrl('portal-pilot-assets', filePath);
+    const publicUrl = publicUrlRaw && publicUrlRaw.data ? publicUrlRaw.data.publicUrl : publicUrlRaw;
     res.json({ success: true, url: publicUrl, path: filePath });
   } catch (err) {
     res.status(500).json({ error: err.message || 'Error al subir imagen a Supabase Storage' });
@@ -2206,7 +2207,9 @@ app.post('/api/login/2fa', loginLimiter, async (req, res) => {
         rol: resolveDisplayRole(userRow, tenantData), empresa_codigo: userRow.empresa_codigo || 'ROOT',
         tenant: userRow.empresa_codigo || 'ROOT', area: userArea, plan: userPlan,
         features: PLAN_ENTITLEMENTS[userPlan]?.features || [], modulos_activos: getModulesForAreaAndPlan(userArea, userPlan), status: userRow.estado || 'activo', token,
-        read_only: trialExpired2fa, trial_expired: trialExpired2fa
+        read_only: trialExpired2fa, trial_expired: trialExpired2fa,
+        foto_perfil_url: userRow.avatar_url || userRow.foto_perfil_url || null,
+        banner_perfil_url: userRow.banner_perfil_url || null
       }
     });
   } catch (error) {
@@ -4230,7 +4233,8 @@ app.post('/api/upload', authenticate, async (req, res) => {
         return res.status(500).json({ error: 'Error al subir archivo a Storage' });
       }
 
-      const fileUrl = supabase.storage.getPublicUrl(UPLOADS_BUCKET, filePath);
+      const fileUrlRaw = supabase.storage.getPublicUrl(UPLOADS_BUCKET, filePath);
+      const fileUrl = fileUrlRaw && fileUrlRaw.data ? fileUrlRaw.data.publicUrl : fileUrlRaw;
       return res.json({ url: fileUrl, path: `/${filePath}`, size: buffer.length });
     }
 
@@ -4318,7 +4322,10 @@ function resolveDisplayRole(userRow, tenantRow) {
   const userEmail = String(userRow && (userRow.email || '')).toLowerCase().trim();
   const tenEmail = String(tenantRow && (tenantRow.email || tenantRow.correo || tenantRow.email_representante || tenantRow.correo_representante || '')).toLowerCase().trim();
   const globalRole = normalizeRole(userRow && userRow.rol_global);
-  if (isGlobalAdminRole(globalRole)) return globalRole === 'super admin' ? 'superadmin' : globalRole;
+  const tenantCode = normalizeTenantCode(userRow && userRow.empresa_codigo);
+  if (isGlobalAdminRole(globalRole) || tenantCode === 'ROOT') {
+    return globalRole === 'super admin' ? 'superadmin' : (isGlobalAdminRole(globalRole) ? globalRole : 'root');
+  }
   if (userEmail && tenEmail && userEmail === tenEmail) return 'Owner';
   return userRow.rol || userRow.rol_global || 'admin';
 }

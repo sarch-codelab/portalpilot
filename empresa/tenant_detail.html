@@ -1621,7 +1621,7 @@
                                 class="fas fa-user-plus"></i> Invitar Usuario</button>
                         <button id="openPortalBtn" class="btn btn-outline btn-sm" onclick="openTenantPortal()"><i class="fas fa-external-link-alt"></i> Abrir Portal</button>
                         <button class="btn btn-outline btn-sm" onclick="openTab('settings')"><i class="fas fa-cog"></i> Configurar</button>
-                        <button class="btn btn-ghost btn-sm" onclick="exportTenantData()"><i class="fas fa-download"></i> Exportar Datos</button>
+                        <button class="btn btn-ghost btn-sm" onclick="PPPrinter.run(exportTenantData)"><i class="fas fa-download"></i> Exportar Datos</button>
                         <button class="btn btn-danger btn-sm" style="margin-left:auto;" onclick="confirmSuspend()"><i
                                 class="fas fa-pause-circle"></i> Suspender</button>
                     </div>
@@ -2210,7 +2210,7 @@
                         <div style="display:flex;gap:12px;flex-wrap:wrap;">
                             <button class="btn btn-outline btn-sm"
                                 style="border-color:var(--yellow);color:var(--yellow);"
-                                onclick="exportTenantData()">
+                                onclick="PPPrinter.run(exportTenantData)">
                                 <i class="fas fa-download"></i> Exportar Todos los Datos
                             </button>
                             <button class="btn btn-danger btn-sm" onclick="confirmSuspend()">
@@ -2731,6 +2731,7 @@
 <script src="../js/plan-gate.js"></script>
 <script src="../js/sidebar-empresa.js"></script>
 <script src="../js/sidebar-loader.js"></script>
+<script src="../js/printer-loader.js"></script>
 <script src="../auth-check.js"></script>
 
 </body>

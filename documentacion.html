@@ -211,7 +211,37 @@
     .sr-meta{font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--accent-soft);margin-bottom:3px}
     .sr-title{font-size:13px;font-weight:600;color:var(--white);margin-bottom:3px}
     .sr-snippet{font-size:11px;color:var(--text-muted);line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-  </style>
+  
+    /* Universal Mobile Overflow & Menu Fix */
+    html {
+      overflow-x: clip !important;
+      max-width: 100vw !important;
+    }
+    body {
+      overflow-x: hidden !important;
+      max-width: 100vw !important;
+      width: 100% !important;
+      position: relative !important;
+    }
+    .staggered-menu-panel:not(.open),
+    .staggered-menu-panel[aria-hidden="true"] {
+      visibility: hidden !important;
+      pointer-events: none !important;
+    }
+    .staggered-menu-panel.open,
+    .staggered-menu-panel[aria-hidden="false"] {
+      visibility: visible !important;
+      pointer-events: auto !important;
+    }
+    .sm-prelayers:not(.open) {
+      visibility: hidden !important;
+      pointer-events: none !important;
+    }
+    body:has(#smToggle[data-open]) .sm-prelayers {
+      visibility: visible !important;
+    }
+
+    </style>
 </head>
 <body>
 

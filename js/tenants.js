@@ -1,6 +1,5 @@
 // Detectar si estamos en localhost y apuntar al API de producción
-const isLocalhost = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
-const API_ROOT = isLocalhost ? 'https://portal-pilot.vercel.app' : '';
+const API_ROOT = '';
 
 // ── Custom Cursor ─────────────────
 const dot = document.getElementById('cursor-dot');
@@ -651,7 +650,7 @@ async function openDetailPanel(tenant) {
     <div style="display:flex;gap:12px;margin-top:24px;">
       <button class="btn btn-ghost btn-sm" style="flex:1;justify-content:center;" onclick="alert('Reporte generado')"><i class="fas fa-file-export"></i> Exportar Logs</button>
       <button class="btn btn-outline btn-sm" style="flex:1;justify-content:center;" onclick="alert('Soporte notificado')"><i class="fas fa-headset"></i> Contactar Soporte</button>
-      <button class="btn btn-acc btn-sm" style="flex:1;justify-content:center;" onclick="window.location.href='tenant_detail.html?id=${tenant.id}&token=' + encodeURIComponent(localStorage.getItem('token') || '')"><i class="fas fa-arrow-right"></i> Ver Detalle Completo</button>
+      <button class="btn btn-acc btn-sm" style="flex:1;justify-content:center;" onclick="window.location.href='tenant_detail.html?id=${tenant.id}'"><i class="fas fa-arrow-right"></i> Ver Detalle Completo</button>
     </div>`;
 
   document.getElementById('detailPanel').classList.add('active');

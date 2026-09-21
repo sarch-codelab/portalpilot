@@ -186,20 +186,43 @@
   }
 
   /* ── API pública ── */
-  function mostrarPublico(tipoPorDefecto, argv) {
+  function parsePublico(argv) {
     var a = Array.prototype.slice.call(argv);
-    if (!a.length) return;
-    var texto = String(a[0]);
-    var tipo = tipoPorDefecto;
-    var subtitulo = null;
+    var out = { texto: a.length ? String(a[0]) : '', tipo: null, subtitulo: null };
+    if (!out.texto) return out;
     if (a.length === 2) {
-      if (esTipo(a[1])) { tipo = a[1]; }
-      else if (a[1]) { subtitulo = a[1]; }
+      if (esTipo(a[1])) { out.tipo = a[1]; }
+      else if (a[1]) { out.subtitulo = a[1]; }
     } else if (a.length >= 3) {
-      if (a[1]) subtitulo = a[1];
-      if (esTipo(a[2])) tipo = a[2];
+      if (a[1]) out.subtitulo = a[1];
+      if (esTipo(a[2])) out.tipo = a[2];
     }
-    crear(texto, subtitulo, tipo);
+    return out;
+  }
+
+  function tipoPp(t) {
+    if (t === 'error') return 'err';
+    if (t === 'warning') return 'warn';
+    if (t === 'info') return 'info';
+    return 'ok';
+  }
+
+  // Si existe el toast global estilo Sileo (portales.js), delegamos en él
+  // para tener UNA sola fuente visual en toda la web. Si no, usamos la pila
+  // propia (fallback para páginas /pp/ sin portales.js).
+  function delegar(argv, tipoPorDefecto) {
+    var p = parsePublico(argv);
+    if (window.ppToast) {
+      window.ppToast(p.subtitulo ? p.texto + ' · ' + p.subtitulo : p.texto, tipoPp(p.tipo || tipoPorDefecto));
+      return null;
+    }
+    return p;
+  }
+
+  function mostrarPublico(tipoPorDefecto, argv) {
+    var p = delegar(argv, tipoPorDefecto);
+    if (!p) return;
+    crear(p.texto, p.subtitulo, p.tipo || tipoPorDefecto);
   }
 
   window.showMessage = function () {

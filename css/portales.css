@@ -109,11 +109,29 @@
 .pp-toolbar{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
 .pp-toolbar .spacer{flex:1}
 
-/* Toast */
-.pp-toast{position:fixed;bottom:24px;right:24px;z-index:20000;display:flex;align-items:center;gap:10px;padding:14px 20px;border-radius:12px;font-size:13px;font-weight:600;color:#fff;box-shadow:0 10px 30px rgba(0,0,0,0.5);animation:ppToastIn .3s ease}
-.pp-toast.ok{background:rgba(6,78,59,0.95);border:1px solid rgba(52,211,153,0.4)}
-.pp-toast.err{background:rgba(127,29,29,0.95);border:1px solid rgba(248,113,113,0.4)}
-@keyframes ppToastIn{from{transform:translateY(16px);opacity:0}to{transform:translateY(0);opacity:1}}
+/* Toast (estilo Sileo: píldora clara, badge circular, física de resorte) */
+#ppToastStack{position:fixed;bottom:24px;right:24px;z-index:20000;display:flex;flex-direction:column;align-items:flex-end;gap:10px;pointer-events:none;max-width:min(400px,calc(100vw - 32px));contain:layout style}
+#ppToastStack .pp-toast{
+  --resorte:linear(0,0.002 0.6%,0.007 1.2%,0.015 1.8%,0.026 2.4%,0.041 3.1%,0.06 3.8%,0.108 5.3%,0.157 6.6%,0.214 8%,0.467 13.7%,0.577 16.3%,0.631 17.7%,0.682 19.1%,0.73 20.5%,0.771 21.8%,0.808 23.1%,0.844 24.5%,0.874 25.8%,0.903 27.2%,0.928 28.6%,0.952 30.1%,0.972 31.6%,0.988 33.1%,1.01 35.7%,1.025 38.5%,1.034 41.6%,1.038 45%,1.035 50.1%,1.012 64.2%,1.003 73%,0.999 83.7%,1);
+  pointer-events:auto;
+  display:flex;align-items:center;gap:12px;
+  padding:10px 20px 10px 10px;
+  border-radius:999px;
+  background:rgba(255,255,255,0.97);
+  box-shadow:0 20px 50px rgba(0,0,0,0.45),0 2px 0 rgba(0,0,0,0.08) inset;
+  font-size:13px;font-weight:600;color:#1d1d1f;
+  animation:ppToastIn .6s var(--resorte) both;
+}
+.pp-toast .pp-toast-badge{width:30px;height:30px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:14px;animation:ppBadgePop .6s var(--resorte) both}
+.pp-toast .pp-toast-msg{line-height:1.35;min-height:14px}
+.pp-toast.ok{color:#1a7f4b}.pp-toast.ok .pp-toast-badge{color:#1a7f4b;background:rgba(26,127,75,0.15)}
+.pp-toast.err{color:#c7302c}.pp-toast.err .pp-toast-badge{color:#c7302c;background:rgba(199,48,44,0.14)}
+.pp-toast.warn{color:#b45309}.pp-toast.warn .pp-toast-badge{color:#b45309;background:rgba(180,83,9,0.16)}
+.pp-toast.info{color:#2563eb}.pp-toast.info .pp-toast-badge{color:#2563eb;background:rgba(37,99,235,0.14)}
+.pp-toast.leaving{transition:transform .45s var(--resorte),opacity .3s ease;transform:translateY(14px) scale(.92);opacity:0}
+@keyframes ppToastIn{from{transform:translateY(18px) scale(.94);opacity:0}to{transform:translateY(0) scale(1);opacity:1}}
+@keyframes ppBadgePop{0%{transform:scale(0)}60%{transform:scale(1.12)}100%{transform:scale(1)}}
+@media(max-width:480px){#ppToastStack{left:12px;right:12px;bottom:12px;align-items:stretch}#ppToastStack .pp-toast{max-width:100%}}
 
 /* Sidebar (igual al existente de empresa) */
 .pp-dashboard{display:grid;grid-template-columns:240px 1fr;min-height:100vh}

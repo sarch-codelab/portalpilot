@@ -189,7 +189,7 @@ a{text-decoration:none;color:inherit}ul{list-style:none}img{max-width:100%;displ
         <p class="page-subtitle">Centro de mando empresarial en tiempo real. Monitorea métricas clave y toma decisiones informadas.</p>
       </div>
       <div class="page-actions">
-        <button class="btn btn-ghost btn-sm" onclick="exportDashboardReport()"><i class="fas fa-download"></i> Exportar Reporte</button>
+        <button class="btn btn-ghost btn-sm" onclick="PPPrinter.run(exportDashboardReport)"><i class="fas fa-download"></i> Exportar Reporte</button>
         <button class="btn btn-ghost btn-sm" onclick="loadDashboard()"><i class="fas fa-sync-alt"></i> Actualizar</button>
       </div>
     </div>
@@ -481,5 +481,6 @@ window.addEventListener('load',loadDashboard);
 <script src="../js/portales.js"></script>
 <script src="../js/sidebar-empresa.js"></script>
 <script src="../js/sidebar-loader.js"></script>
+<script src="../js/printer-loader.js"></script>
 </body>
 </html>

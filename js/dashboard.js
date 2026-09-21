@@ -191,8 +191,7 @@ async function fetchUserCount() {
   try {
     const token = localStorage.getItem('token');
     if (!token) return;
-    const isLocalhost = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
-    const API_ROOT = isLocalhost ? 'https://portal-pilot.vercel.app' : '';
+    const API_ROOT = '';
     const res = await fetch(`${API_ROOT}/api/users`, {
       headers: { 'Authorization': `Bearer ${token}` }
     });
@@ -259,8 +258,7 @@ async function loadSearchData() {
     const token = localStorage.getItem('token');
     if (!token) return;
     const headers = { 'Authorization': `Bearer ${token}` };
-    const isLocalhost = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
-    const API_ROOT = isLocalhost ? 'https://portal-pilot.vercel.app' : '';
+    const API_ROOT = '';
 
     const [tenantsRes, usersRes] = await Promise.all([
       fetch(`${API_ROOT}/api/tenants`, { headers }).then(r => r.ok ? r.json() : []),

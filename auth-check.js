@@ -60,21 +60,21 @@
   // el contenido. Silencioso y no bloqueante.
   async function syncSessionCookie() {
     const t = localStorage.getItem('token');
-    if (!t) return false;
+    if (!t) return null;
     try {
       const r = await fetch(apiSyncPath, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${t}` }
       });
-      if (!r.ok) return false;
+      if (!r.ok) return null;
       const data = await r.json().catch(() => ({}));
       if (data.token) localStorage.setItem('token', data.token);
       if (data.user) {
         if (data.user.rol) localStorage.setItem('userRole', data.user.rol);
         if (data.user.empresa_codigo) localStorage.setItem('empresaCodigo', data.user.empresa_codigo);
       }
-      return true;
-    } catch (e) { return false; }
+      return data;
+    } catch (e) { return null; }
   }
 
   // Limpia solo las claves de sesión (evita el loop sin borrar preferencias).
@@ -103,32 +103,16 @@
     (async () => {
       let t = localStorage.getItem('token');
       if (t) {
-        const synced = await syncSessionCookie();
+        const syncData = await syncSessionCookie();
         t = localStorage.getItem('token') || t;
-        if (synced && getTokenRemainingTime(t) > 0) {
-          // No confiar en userRole cacheado: una cuenta puede haber sido
-          // promovida a ROOT mientras el navegador conserva un token antiguo.
-          const currentId = localStorage.getItem('currentAccountId');
-          let sessionRole = localStorage.getItem('userRole') || '';
-          let sessionCode = localStorage.getItem('empresaCodigo') || '';
-          if (currentId) {
-            try {
-              const profileResponse = await fetch(`/api/users/${encodeURIComponent(currentId)}`, {
-                headers: { 'Authorization': `Bearer ${t}` }
-              });
-              if (profileResponse.ok) {
-                const profile = await profileResponse.json();
-                sessionRole = profile.rol || sessionRole;
-                sessionCode = profile.tenant_code || sessionCode;
-                localStorage.setItem('userRole', sessionRole);
-                localStorage.setItem('empresaCodigo', sessionCode || '');
-              }
-            } catch (e) { /* usar la identidad cacheada como fallback */ }
-          }
+        if (syncData && getTokenRemainingTime(t) > 0) {
+          // /api/session/sync rehidrata el rol vigente desde la base de datos.
+          // No reemplazarlo con /api/users/:id, que puede devolver el rol del
+          // tenant y degradar accidentalmente una cuenta global a empresa.
+          const sessionRole = syncData.user?.rol || localStorage.getItem('userRole') || '';
           const role = String(sessionRole).toLowerCase().trim().replace(/[_-]+/g, ' ').replace(/\s+/g, ' ');
-          const codigo = String(sessionCode).trim().toUpperCase();
           const isRoot = ['root', 'root pp', 'superadmin', 'super admin'].includes(role);
-          const target = isRoot ? 'pp/welcome.html' : 'empresa/dashboard.html';
+          const target = isRoot ? 'pp/dashboard.html' : 'empresa/dashboard.html';
           window.location.replace(target);
           return;
         }

@@ -5,7 +5,7 @@ const nodemailer = require('nodemailer');
 
 const supabase = createClient(
   process.env.SUPABASE_URL || '',
-  process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_SERVICE_KEY || ''
+  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_ANON_KEY || ''
 );
 
 function escapeHtml(str) {
@@ -133,7 +133,7 @@ module.exports = async function handler(req, res) {
   };
 
   try {
-    if (!process.env.SUPABASE_URL || !(process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_SERVICE_KEY)) {
+    if (!process.env.SUPABASE_URL || !(process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_ANON_KEY)) {
       return res.status(503).json({ error: 'El servicio de soporte no está configurado.' });
     }
 

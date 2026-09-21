@@ -82,44 +82,47 @@
     window.ppToast('Reporte generado: ' + filas.length + ' fila(s)');
   }
 
-  document.getElementById('repGrid').addEventListener('click', async (e) => {
+  document.getElementById('repGrid').addEventListener('click', (e) => {
     const btn = e.target.closest('[data-rep]');
     if (!btn || btn.disabled) return;
-    btn.disabled = true;
-    const orig = btn.innerHTML;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generando…';
-    try {
-      const tipo = btn.dataset.rep;
-      if (tipo === 'facturacion') {
-        const d = await window.PP.apiFetch('/api/empresa/billing/documents?limit=300');
-        downloadCSV('facturacion', (d.documentos || []).map(x => ({ tipo: x.tipo, correlativo: x.correlativo, contraparte: x.contraparte, total: x.total, isv: x.isv, estado: x.estado, fecha: x.fecha })));
-      } else if (tipo === 'usuarios') {
-        const d = await window.PP.apiFetch('/api/users');
-        downloadCSV('usuarios', (Array.isArray(d) ? d : []).map(u => ({ nombre: u.nombre, apellido: u.apellido, email: u.email, rol: u.rol, estado: u.status, creado: u.registered, ultimo_acceso: u.lastActivity })));
-      } else if (tipo === 'auditoria') {
-        const d = await window.PP.apiFetch('/api/auditoria/tenant?limit=500');
-        downloadCSV('auditoria', (d.eventos || []).map(x => ({ fecha: x.created_at, accion: x.accion, detalle: x.descripcion, tipo: x.tipo, usuario: x.usuario, ip: x.ip })));
-      } else if (tipo === 'consumo') {
-        const d = await window.PP.apiFetch('/api/tenant/usage');
-        const blob = new Blob([JSON.stringify(d, null, 2)], { type: 'application/json' });
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = 'consumo_' + (d.periodo || '') + '.json';
-        a.click();
-        URL.revokeObjectURL(a.href);
-        window.ppToast('Reporte de consumo generado');
+    PPPrinter.run(async () => {
+      btn.disabled = true;
+      const orig = btn.innerHTML;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generando…';
+      try {
+        const tipo = btn.dataset.rep;
+        if (tipo === 'facturacion') {
+          const d = await window.PP.apiFetch('/api/empresa/billing/documents?limit=300');
+          downloadCSV('facturacion', (d.documentos || []).map(x => ({ tipo: x.tipo, correlativo: x.correlativo, contraparte: x.contraparte, total: x.total, isv: x.isv, estado: x.estado, fecha: x.fecha })));
+        } else if (tipo === 'usuarios') {
+          const d = await window.PP.apiFetch('/api/users');
+          downloadCSV('usuarios', (Array.isArray(d) ? d : []).map(u => ({ nombre: u.nombre, apellido: u.apellido, email: u.email, rol: u.rol, estado: u.status, creado: u.registered, ultimo_acceso: u.lastActivity })));
+        } else if (tipo === 'auditoria') {
+          const d = await window.PP.apiFetch('/api/auditoria/tenant?limit=500');
+          downloadCSV('auditoria', (d.eventos || []).map(x => ({ fecha: x.created_at, accion: x.accion, detalle: x.descripcion, tipo: x.tipo, usuario: x.usuario, ip: x.ip })));
+        } else if (tipo === 'consumo') {
+          const d = await window.PP.apiFetch('/api/tenant/usage');
+          const blob = new Blob([JSON.stringify(d, null, 2)], { type: 'application/json' });
+          const a = document.createElement('a');
+          a.href = URL.createObjectURL(blob);
+          a.download = 'consumo_' + (d.periodo || '') + '.json';
+          a.click();
+          URL.revokeObjectURL(a.href);
+          window.ppToast('Reporte de consumo generado');
+        }
+        const info = document.getElementById('repInfo');
+        info.style.display = 'flex';
+        document.getElementById('repInfoText').textContent = 'Reporte "' + tipo + '" generado con datos reales del tenant.';
+      } catch (err) {
+        window.ppToast(err.message, 'err');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = orig;
       }
-      const info = document.getElementById('repInfo');
-      info.style.display = 'flex';
-      document.getElementById('repInfoText').textContent = 'Reporte "' + tipo + '" generado con datos reales del tenant.';
-    } catch (err) {
-      window.ppToast(err.message, 'err');
-    } finally {
-      btn.disabled = false;
-      btn.innerHTML = orig;
-    }
+    });
   });
 })();
 </script>
+<script src="../js/printer-loader.js"></script>
 </body>
 </html>

@@ -24,11 +24,9 @@ function normalizeTenantCode(code) {
 }
 
 function isRootUser(req) {
-  const codigo = normalizeTenantCode(req.user?.empresa_codigo);
   const role = (req.user?.rol || '').toString().trim().toLowerCase();
-  const rootCodes = ['ROOT', 'ROOT PP'];
   const rootRoles = ['root', 'root pp', 'superadmin'];
-  return rootCodes.includes(codigo) || rootRoles.some(r => role === r);
+  return rootRoles.includes(role);
 }
 
 router.use((req, res, next) => {

@@ -488,6 +488,36 @@
             .btn-row { gap: 8px; }
             .page-footer { font-size: 10px; }
         }
+    
+    /* Universal Mobile Overflow & Menu Fix */
+    html {
+      overflow-x: clip !important;
+      max-width: 100vw !important;
+    }
+    body {
+      overflow-x: hidden !important;
+      max-width: 100vw !important;
+      width: 100% !important;
+      position: relative !important;
+    }
+    .staggered-menu-panel:not(.open),
+    .staggered-menu-panel[aria-hidden="true"] {
+      visibility: hidden !important;
+      pointer-events: none !important;
+    }
+    .staggered-menu-panel.open,
+    .staggered-menu-panel[aria-hidden="false"] {
+      visibility: visible !important;
+      pointer-events: auto !important;
+    }
+    .sm-prelayers:not(.open) {
+      visibility: hidden !important;
+      pointer-events: none !important;
+    }
+    body:has(#smToggle[data-open]) .sm-prelayers {
+      visibility: visible !important;
+    }
+
     </style>
 </head>
 
@@ -867,7 +897,7 @@
                     <div class="twofa-container">
                         <div class="qr-box">
                             <div class="qr-box-title">Código QR</div>
-                            <div class="qr-code"><img id="qrImage" src="" alt="QR Code 2FA"></div>
+                            <div class="qr-code"><div id="qrImage"></div></div>
                             <div class="secret-key-box">
                                 <span class="secret-key" id="secretKey">XXXX XXXX XXXX XXXX</span>
                                 <button class="copy-btn" onclick="copySecretKey()" title="Copiar"><i class="fas fa-copy"></i></button>
@@ -962,10 +992,10 @@
         </div>
     </div>
 
+    <script src="js/qrcode.min.js"></script>
     <script>
         // ─── NOTIFICACIONES ISLA ───
-        const isLocalhost = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
-        const API_ROOT = isLocalhost ? 'https://portal-pilot.vercel.app' : '';
+        const API_ROOT = '';
         const REGISTRATION_STORAGE_KEY = 'portalPilotRegistrationData';
         const contenedorPila = document.getElementById('contenedor-pila');
         const EMOJIS = { error: 'Cross%20mark/3D/cross_mark_3d.png', success: 'Check%20mark%20button/3D/check_mark_button_3d.png', info: 'Information/3D/information_3d.png', warning: 'Warning/3D/warning_3d.png' };
@@ -1005,6 +1035,7 @@
         let regStep = 1;
         let twoFASecret = '';
         let backupCodes = [];
+        let verified2FACode = '';
         let emailVerificationCode = '';
 
         function updateProgress() {
@@ -1293,17 +1324,43 @@
             return code.toString().padStart(6, '0');
         }
 
+        function base32Encode(bytes) {
+            const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+            let bits = 0, value = 0, out = '';
+            for (let i = 0; i < bytes.length; i++) {
+                value = (value << 8) | bytes[i];
+                bits += 8;
+                while (bits >= 5) { out += alphabet[(value >>> (bits - 5)) & 31]; bits -= 5; }
+            }
+            if (bits > 0) out += alphabet[(value << (5 - bits)) & 31];
+            return out;
+        }
+
+        function randomCodeString(len) {
+            const alphabet = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+            const bytes = new Uint8Array(len);
+            crypto.getRandomValues(bytes);
+            let out = '';
+            for (let i = 0; i < len; i++) out += alphabet[bytes[i] % alphabet.length];
+            return out;
+        }
+
         function generate2FASetup() {
-            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
-            let secret = '';
-            for (let i = 0; i < 16; i++) secret += chars[Math.floor(Math.random() * chars.length)];
+            const secret = base32Encode(crypto.getRandomValues(new Uint8Array(20)));
             twoFASecret = secret;
+            verified2FACode = '';
             document.getElementById('secretKey').textContent = secret.match(/.{1,4}/g).join(' ');
             const email = document.getElementById('regEmail').value;
             const uri = `otpauth://totp/PortalPilot:${encodeURIComponent(email)}?secret=${secret}&issuer=PortalPilot&algorithm=SHA1&digits=6&period=30`;
-            document.getElementById('qrImage').src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(uri)}`;
+            const qrBox = document.getElementById('qrImage');
+            if (qrBox) {
+                qrBox.innerHTML = '';
+                if (window.QRCode) {
+                    try { new QRCode(qrBox, { text: uri, width: 140, height: 140, correctLevel: QRCode.CorrectLevel.M }); } catch (e) { /* noop */ }
+                }
+            }
             backupCodes = [];
-            for (let i = 0; i < 8; i++) backupCodes.push(`${Math.random().toString(36).substring(2, 7).toUpperCase()}-${Math.random().toString(36).substring(2, 7).toUpperCase()}`);
+            for (let i = 0; i < 8; i++) backupCodes.push(`${randomCodeString(5)}-${randomCodeString(5)}`);
             document.getElementById('twofa-phase-scan').style.display = 'block';
             document.getElementById('twofa-phase-backup').style.display = 'none';
             setupOTPInputs('otpGroup');
@@ -1331,6 +1388,7 @@
             const offsets = [0, -1, 1, -2, 2];
             const validCodes = await Promise.all(offsets.map(off => computeTOTP(twoFASecret, off)));
             if (!validCodes.includes(code)) { showMessage('Código 2FA incorrecto. Verifica la hora de tu teléfono.', 'error'); return; }
+            verified2FACode = code;
             showMessage('✓ 2FA verificado correctamente', 'success');
             document.getElementById('backupCodesGrid').innerHTML = backupCodes.map(c => `<div class="backup-code">${c}</div>`).join('');
             document.getElementById('twofa-phase-scan').style.display = 'none';
@@ -1459,6 +1517,7 @@
                     dosFaActivo: true,
                     dosFaSecret: twoFASecret || null,
                     dosFaBackupCodes: backupCodes,
+                    dosFaCode: verified2FACode || null,
                     terminosAceptados: true,
                     plan,
                     // Contexto de onboarding (Blueprint §2): persiste en el tenant

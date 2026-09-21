@@ -1221,7 +1221,7 @@
                         combustible, estado mecánico y recibe alertas predictivas de mantenimiento.</p>
                 </div>
                 <div class="page-actions">
-                    <button class="btn btn-outline btn-sm" onclick="exportFleetReport()"><i
+                    <button class="btn btn-outline btn-sm" onclick="PPPrinter.run(exportFleetReport)"><i
                             class="fas fa-file-export"></i> Exportar Reporte</button>
                     <button class="btn btn-ghost btn-sm" onclick="refreshFleet()"><i class="fas fa-sync-alt"></i>
                         Actualizar</button>
@@ -1372,9 +1372,10 @@
             if (isMobile) { sidebar.style.position = 'fixed'; sidebar.style.left = sidebar.classList.contains('active') ? '0' : '-260px'; dashboard.classList.remove('sidebar-collapsed'); }
             else { sidebar.style.position = 'sticky'; sidebar.style.left = 'auto'; sidebar.classList.remove('active'); overlay.classList.remove('active'); if (sidebar.classList.contains('collapsed')) { dashboard.classList.add('sidebar-collapsed'); } else { dashboard.classList.remove('sidebar-collapsed'); } }
         }
+        if (localStorage.getItem('sidebarCollapsed') === 'true' && !isMobile) { sidebar.classList.add('collapsed'); dashboard.classList.add('sidebar-collapsed'); }
         window.addEventListener('resize', () => { updateLayout(); setTimeout(() => { window.dispatchEvent(new Event('resize')); }, 300); });
         updateLayout();
-        toggleBtn.addEventListener('click', () => { if (isMobile) { sidebar.classList.toggle('active'); overlay.classList.toggle('active'); } else { sidebar.classList.toggle('collapsed'); dashboard.classList.toggle('sidebar-collapsed'); } updateLayout(); });
+        toggleBtn.addEventListener('click', () => { if (isMobile) { sidebar.classList.toggle('active'); overlay.classList.toggle('active'); } else { sidebar.classList.toggle('collapsed'); dashboard.classList.toggle('sidebar-collapsed'); localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed')); } updateLayout(); });
         overlay.addEventListener('click', () => { sidebar.classList.remove('active'); overlay.classList.remove('active'); });
 
         // ── Dark Mode ────────────────────
@@ -1637,6 +1638,7 @@
 <script src="../js/plan-gate.js"></script>
 <script src="../js/portales.js"></script>
 <script src="../js/sidebar-loader.js"></script>
+<script src="../js/printer-loader.js"></script>
 <script src="../auth-check.js"></script>
 </body>
 

@@ -141,6 +141,14 @@ async function main() {
   const healthStr = JSON.stringify(health.data || {});
   check('/api/health no expone claves', !/sk-|gsk_|eyJ|service_role/i.test(healthStr), healthStr.slice(0, 150));
 
+  // Enumeración de usuarios: el mismo mensaje para correo inexistente y clave incorrecta.
+  const enum1 = await req('POST', '/api/login', { body: { email: `nadie.s${stamp}@pp.test`, password: 'x' } });
+  const enum2 = await req('POST', '/api/login', { body: { email: `owner.s${stamp}a@pp.test`, password: 'mala' } });
+  const enumMsg = (r) => String(r.data?.error || '');
+  const enumSafe = enum1.status === 429 || enum2.status === 429 ||
+    (enum1.status === 401 && enum2.status === 401 && enumMsg(enum1) === enumMsg(enum2) && !/registrad|no existe|incorrecta/i.test(enumMsg(enum1)));
+  check('login no enumera usuarios (mensaje genérico)', enumSafe, `"${enumMsg(enum1)}" vs "${enumMsg(enum2)}"`);
+
   // ── 7. VALIDACIÓN DE ENTRADA / SQLi superficial ──
   // Nota: tras la batería de logins de este test el rate-limiter puede estar
   // activo; 429 también es un rechazo válido (la inyección nunca autentica).

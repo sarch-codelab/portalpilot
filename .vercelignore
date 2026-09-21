@@ -1,0 +1,20 @@
+# ============================================================================
+# .vercelignore - never upload secrets or local artifacts to Vercel
+# (real environment config lives in Project Settings > Env Variables)
+# ============================================================================
+.freebuff/
+.vercel/
+.env
+.env.*
+!.env.example
+backend/.env
+backend/.env.*
+.ping-secret.local
+*.log
+cookies.txt
+uploads/
+backend/node_modules/
+node_modules/
+.git/
+.playwright-mcp/
+.npm-cache/

@@ -145,16 +145,20 @@ async function pingSitemaps() {
 /* ── Handler principal ───────────────────────────────── */
 
 module.exports = async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-
-  /* Protección: sólo POST con la clave correcta (o GET sin clave en desarrollo) */
-  if (req.method === 'POST' && SECRET_KEY) {
-    const provided = req.headers['x-ping-secret'] || req.body?.secret;
-    if (provided !== SECRET_KEY) {
-      return res.status(401).json({ error: 'Unauthorized' });
-    }
-  } else if (req.method !== 'GET' && req.method !== 'POST') {
+  if (req.method !== 'GET' && req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  const provided = req.headers['x-ping-secret'] || (req.body && req.body.secret) || (req.query && req.query.secret);
+
+  /* Protección obligatoria: siempre debe presentarse la clave correcta.
+     Si no hay PING_SECRET configurado, se deniega (salvo desarrollo local). */
+  if (!SECRET_KEY) {
+    if (process.env.NODE_ENV === 'production' || process.env.VERCEL) {
+      return res.status(503).json({ error: 'Endpoint no configurado.' });
+    }
+  } else if (provided !== SECRET_KEY) {
+    return res.status(401).json({ error: 'Unauthorized' });
   }
 
   console.log(`[ping-search-engines] Iniciando ping — ${new Date().toISOString()}`);

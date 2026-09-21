@@ -222,25 +222,25 @@ ALTER TABLE public.planes_pago ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.support_tickets ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "backend_tenants_policy" ON public.tenants;
-CREATE POLICY "backend_tenants_policy" ON public.tenants FOR ALL USING (true);
+CREATE POLICY "backend_tenants_policy" ON public.tenants FOR ALL TO service_role USING (true);
 
 DROP POLICY IF EXISTS "backend_usuarios_policy" ON public.usuarios;
-CREATE POLICY "backend_usuarios_policy" ON public.usuarios FOR ALL USING (true);
+CREATE POLICY "backend_usuarios_policy" ON public.usuarios FOR ALL TO service_role USING (true);
 
 DROP POLICY IF EXISTS "backend_notif_policy" ON public.notificaciones;
-CREATE POLICY "backend_notif_policy" ON public.notificaciones FOR ALL USING (true);
+CREATE POLICY "backend_notif_policy" ON public.notificaciones FOR ALL TO service_role USING (true);
 
 DROP POLICY IF EXISTS "backend_audit_policy" ON public.auditoria_logs;
-CREATE POLICY "backend_audit_policy" ON public.auditoria_logs FOR ALL USING (true);
+CREATE POLICY "backend_audit_policy" ON public.auditoria_logs FOR ALL TO service_role USING (true);
 
 DROP POLICY IF EXISTS "backend_config_policy" ON public.configuraciones_globales;
-CREATE POLICY "backend_config_policy" ON public.configuraciones_globales FOR ALL USING (true);
+CREATE POLICY "backend_config_policy" ON public.configuraciones_globales FOR ALL TO service_role USING (true);
 
 DROP POLICY IF EXISTS "public_planes_policy" ON public.planes_pago;
 CREATE POLICY "public_planes_policy" ON public.planes_pago FOR SELECT USING (true);
 
 DROP POLICY IF EXISTS "backend_support_policy" ON public.support_tickets;
-CREATE POLICY "backend_support_policy" ON public.support_tickets FOR ALL USING (true);
+CREATE POLICY "backend_support_policy" ON public.support_tickets FOR ALL TO service_role USING (true);
 
 -- 9. CONFIGURACIÓN DE STORAGE BUCKET PARA ASSETS (IMÁGENES)
 INSERT INTO storage.buckets (id, name, public) 

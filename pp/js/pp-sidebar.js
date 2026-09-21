@@ -4,10 +4,15 @@
  * Responsabilidades:
  * - Inyectar el estilo canónico de la sidebar en páginas PP antiguas y nuevas.
  * - Renderizar grupos, enlaces y estado activo desde una sola definición.
- * - Mantener el comportamiento de sidebar abierta, contraída y móvil.
+ * - Colapso global con #toggleSidebar persistido en localStorage.sidebarCollapsed.
+ * - Grupos colapsables con chevron, persistidos en localStorage.ppSidebarGroups.
+ * - Dark mode centralizado y persistido (theme / darkMode).
+ * - Logout: abre #logoutModal si existe; si no, cierra sesión directamente.
  *
- * Contrato HTML: necesita un elemento #sidebarNav o .sidebar-nav dentro de
- * #sidebar. Los enlaces son relativos a la carpeta pp/.
+ * Contrato HTML: necesita #sidebarNav (o .sidebar-nav) dentro de #sidebar y
+ * #dashboard. Cada pieza es opcional y se guarda con null-checks.
+ * Se salta el binding del toggle en páginas que ya definen window.toggleSidebar
+ * (billing_plans.html, global_settings.html) para no duplicar eventos.
  */
 (function () {
   const SIDEBAR_STYLE_ID = 'pp-sidebar-shared-style';
@@ -48,10 +53,31 @@
         margin-top: 12px;
       }
       .pp-nav-title {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 6px;
         padding: 0 10px 4px;
         color: var(--gray2, #9ca3af);
         font-size: 12px;
         font-weight: 600;
+        cursor: pointer;
+        user-select: none;
+        transition: opacity 0.2s;
+      }
+      .pp-nav-title:hover {
+        opacity: 1;
+      }
+      .pp-nav-title .pp-nav-chevron {
+        font-size: 10px;
+        opacity: 0.55;
+        transition: transform 0.25s ease;
+      }
+      .pp-nav-group.collapsed .pp-nav-title .pp-nav-chevron {
+        transform: rotate(-90deg);
+      }
+      .pp-nav-group.collapsed .sidebar-link {
+        display: none;
       }
       .sidebar-link {
         min-height: 40px;
@@ -171,20 +197,181 @@
     return f.toLowerCase();
   }
 
+  function readCollapsedGroups() {
+    try {
+      const v = JSON.parse(localStorage.getItem('ppSidebarGroups') || '[]');
+      return Array.isArray(v) ? v : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function saveCollapsedGroups(list) {
+    try {
+      localStorage.setItem('ppSidebarGroups', JSON.stringify(list));
+    } catch (e) { /* noop */ }
+  }
+
+  function toggleGroupCollapsible(group) {
+    const title = group.querySelector('.pp-nav-title');
+    const titulo = title ? title.getAttribute('data-titulo') : group.getAttribute('data-titulo');
+    if (!titulo) return;
+    group.classList.toggle('collapsed');
+    const list = readCollapsedGroups();
+    const idx = list.indexOf(titulo);
+    if (group.classList.contains('collapsed')) {
+      if (idx < 0) list.push(titulo);
+    } else if (idx >= 0) {
+      list.splice(idx, 1);
+    }
+    saveCollapsedGroups(list);
+  }
+
   function render() {
     const nav = document.getElementById('sidebarNav') || document.querySelector('.sidebar-nav');
     if (!nav) return;
     const actual = paginaActual();
+    const collapsedList = readCollapsedGroups();
     nav.innerHTML = GRUPOS.map(g => {
       const items = g.items.filter(i => !i.oculto || i.href.replace('.html', '') === actual);
       if (!items.length) return '';
-      return `<div class="pp-nav-group">
-        <div class="pp-nav-title">${g.titulo}</div>
+      const hasActive = items.some(i => i.href.replace('.html', '') === actual);
+      const isCollapsed = collapsedList.indexOf(g.titulo) >= 0 && !hasActive;
+      return `<div class="pp-nav-group${isCollapsed ? ' collapsed' : ''}" data-titulo="${g.titulo}">
+        <div class="pp-nav-title" data-titulo="${g.titulo}" title="Cerrar sección">
+          <span>${g.titulo}</span><i class="fas fa-chevron-down pp-nav-chevron"></i>
+        </div>
         ${items.map(i => `<a href="${i.href}" class="sidebar-link ${i.href.replace('.html', '') === actual ? 'active' : ''}"><i class="fas ${i.icon}"></i> <span>${i.label}</span></a>`).join('')}
       </div>`;
     }).join('');
+
+    nav.addEventListener('click', (e) => {
+      const title = e.target.closest('.pp-nav-title');
+      if (title) {
+        const group = title.closest('.pp-nav-group');
+        if (group) toggleGroupCollapsible(group);
+        return;
+      }
+      if (innerWidth <= 900) {
+        const link = e.target.closest('.sidebar-link');
+        if (link) {
+          const sidebar = document.getElementById('sidebar');
+          if (sidebar) sidebar.classList.remove('active');
+          const overlay = document.getElementById('overlay');
+          if (overlay) overlay.classList.remove('active');
+        }
+      }
+    });
   }
 
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', render);
-  else render();
+  // ── Colapso global + móvil ──────────────────────────────
+  function isMobile() {
+    return window.innerWidth <= 900;
+  }
+
+  function setupCollapse() {
+    const sidebar = document.getElementById('sidebar');
+    const dashboard = document.getElementById('dashboard');
+    const toggleBtn = document.getElementById('toggleSidebar');
+    const overlay = document.getElementById('overlay');
+    if (!sidebar || !dashboard) return;
+
+    function applyLayout() {
+      if (isMobile()) {
+        sidebar.classList.remove('collapsed');
+        dashboard.classList.remove('sidebar-collapsed');
+      } else {
+        sidebar.classList.remove('active');
+        if (overlay) overlay.classList.remove('active');
+        const collapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+        sidebar.classList.toggle('collapsed', collapsed);
+        dashboard.classList.toggle('sidebar-collapsed', collapsed);
+      }
+    }
+
+    if (toggleBtn) {
+      toggleBtn.addEventListener('click', () => {
+        if (isMobile()) {
+          sidebar.classList.toggle('active');
+          if (overlay) overlay.classList.toggle('active');
+        } else {
+          sidebar.classList.toggle('collapsed');
+          dashboard.classList.toggle('sidebar-collapsed');
+          localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
+        }
+      });
+      if (overlay) {
+        overlay.addEventListener('click', () => {
+          sidebar.classList.remove('active');
+          overlay.classList.remove('active');
+        });
+      }
+    }
+
+    window.addEventListener('resize', applyLayout);
+    applyLayout();
+  }
+
+  // ── Dark mode ───────────────────────────────────────────
+  function setupTheme() {
+    const darkModeBtn = document.getElementById('darkModeToggle');
+    function renderIcon(isLight) {
+      if (!darkModeBtn) return;
+      darkModeBtn.innerHTML = isLight
+        ? '<i class="fas fa-sun"></i> <span>Light Mode</span>'
+        : '<i class="fas fa-moon"></i> <span>Dark Mode</span>';
+    }
+    function applyTheme(isLight) {
+      document.body.classList.toggle('light-mode', isLight);
+      renderIcon(isLight);
+    }
+    const saved = localStorage.getItem('theme')
+      || (localStorage.getItem('darkMode') === 'light' ? 'light' : 'dark');
+    applyTheme(saved === 'light');
+    if (darkModeBtn) {
+      darkModeBtn.addEventListener('click', () => {
+        const isLight = !document.body.classList.contains('light-mode');
+        applyTheme(isLight);
+        localStorage.setItem('theme', isLight ? 'light' : 'dark');
+        localStorage.setItem('darkMode', isLight ? 'light' : 'dark');
+      });
+    }
+  }
+
+  // ── Logout ──────────────────────────────────────────────
+  function setupLogout() {
+    const logoutBtn = document.getElementById('logoutBtn');
+    const logoutModal = document.getElementById('logoutModal');
+    if (!logoutBtn) return;
+
+    function doLogout() {
+      try { localStorage.clear(); } catch (e) { /* noop */ }
+      try { sessionStorage.clear(); } catch (e) { /* noop */ }
+      window.location.href = '/login.html';
+    }
+
+    logoutBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      if (logoutModal) logoutModal.classList.add('active');
+      else doLogout();
+    });
+
+    if (logoutModal) {
+      const modalCancel = document.getElementById('modalCancel');
+      const modalConfirm = document.getElementById('modalConfirm');
+      if (modalCancel) modalCancel.addEventListener('click', () => logoutModal.classList.remove('active'));
+      if (modalConfirm) modalConfirm.addEventListener('click', doLogout);
+      logoutModal.addEventListener('click', (e) => {
+        if (e.target === logoutModal) logoutModal.classList.remove('active');
+      });
+    }
+  }
+
+  render();
+  // Páginas que ya definen window.toggleSidebar (billing_plans, global_settings)
+  // gestionan su propia sidebar (móvil). No duplicamos eventos.
+  if (typeof window.toggleSidebar !== 'function') setupCollapse();
+  setupTheme();
+  setupLogout();
 })();

@@ -33,11 +33,23 @@
         el.src = u.foto;
         el.alt = u.fullName;
       } else {
-        el.textContent = '';
-        el.style.backgroundImage = `url(${u.foto})`;
-        el.style.backgroundSize = 'cover';
-        el.style.backgroundPosition = 'center';
-        el.style.color = 'transparent';
+        var setFoto = function () {
+          el.textContent = '';
+          el.style.backgroundImage = 'url(' + u.foto + ')';
+          el.style.backgroundSize = 'cover';
+          el.style.backgroundPosition = 'center';
+          el.style.color = 'transparent';
+        };
+        var setFallback = function () {
+          el.style.backgroundImage = 'none';
+          el.style.color = '';
+          el.textContent = u.initials;
+        };
+        var probe = new Image();
+        probe.onload = setFoto;
+        probe.onerror = setFallback;
+        probe.src = u.foto;
+        setFoto();
       }
     } else {
       if (el.tagName === 'IMG') {

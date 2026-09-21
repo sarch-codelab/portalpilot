@@ -21,15 +21,43 @@
       }
     },
     {
-      "src": "**/*.html",
+      "src": "*.html",
       "use": "@vercel/static"
     },
     {
-      "src": "**/*.css",
+      "src": "pp/*.html",
       "use": "@vercel/static"
     },
     {
-      "src": "**/*.js",
+      "src": "empresa/*.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "*.css",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "css/**/*.css",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "pp/css/**/*.css",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "auth-check.js",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "index.js",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "js/**/*.js",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "pp/js/**/*.js",
       "use": "@vercel/static"
     },
     {
@@ -67,38 +95,33 @@
   ],
   "routes": [
     {
+      "src": "/(.*)",
+      "headers": {
+        "X-Content-Type-Options": "nosniff",
+        "X-Frame-Options": "SAMEORIGIN",
+        "Referrer-Policy": "strict-origin-when-cross-origin",
+        "Permissions-Policy": "geolocation=(), microphone=(), camera=()"
+      },
+      "continue": true
+    },
+    {
+      "src": "^/backend(/.*)?$",
+      "dest": "/404.html",
+      "status": 404
+    },
+    {
       "src": "^/enterprise/([^/]+)\\.html$",
       "headers": { "Location": "/enterprise/$1" },
       "status": 308
     },
     {
-      "src": "^/enterprise/([^/.]+)$",
-      "dest": "/empresa/$1.html"
-    },
-    {
-      "src": "^/enterprise/(.*)\\.(css|js|png|jpg|jpeg|svg|webp|ico)$",
-      "dest": "/empresa/$1.$2"
+      "src": "/enterprise(/.*)?",
+      "dest": "/backend/server.js"
     },
     {
       "src": "^/pp/([^/]+)\\.html$",
       "headers": { "Location": "/pp/$1" },
       "status": 308
-    },
-    {
-      "src": "/pp/(.*)\\.css",
-      "dest": "/pp/$1.css"
-    },
-    {
-      "src": "/pp/(.*)\\.js",
-      "dest": "/pp/$1.js"
-    },
-    {
-      "src": "/pp/(.*)\\.(png|jpg|jpeg|svg|webp|ico)",
-      "dest": "/pp/$1.$2"
-    },
-    {
-      "src": "^/pp/([^/.]+)$",
-      "dest": "/pp/$1.html"
     },
     {
       "src": "/pp(/.*)?",
@@ -108,10 +131,6 @@
       "src": "^/empresa/([^/]+)\\.html$",
       "headers": { "Location": "/empresa/$1" },
       "status": 308
-    },
-    {
-      "src": "^/empresa/([^/.]+)$",
-      "dest": "/empresa/$1.html"
     },
     {
       "src": "/empresa(/.*)?",
@@ -138,11 +157,11 @@
       "dest": "/backend/server.js"
     },
     {
-      "src": "/(.*\\.js)",
+      "src": "^/(auth-check\\.js|index\\.js|js/.*\\.js|pp/js/.*\\.js)$",
       "dest": "/$1"
     },
     {
-      "src": "/(.*\\.css)",
+      "src": "^/(index\\.css|css/.*\\.css|pp/css/.*\\.css)$",
       "dest": "/$1"
     },
     {
@@ -159,43 +178,43 @@
     },
     {
       "src": "/tenants",
-      "dest": "/pp/tenants.html"
+      "dest": "/backend/server.js"
     },
     {
       "src": "/dashboard",
-      "dest": "/pp/dashboard.html"
+      "dest": "/backend/server.js"
     },
     {
       "src": "/usuarios",
-      "dest": "/pp/usuarios.html"
+      "dest": "/backend/server.js"
     },
     {
       "src": "/global_settings",
-      "dest": "/pp/global_settings.html"
+      "dest": "/backend/server.js"
     },
     {
       "src": "/billing_plans",
-      "dest": "/pp/billing_plans.html"
+      "dest": "/backend/server.js"
     },
     {
       "src": "/bots_rpa",
-      "dest": "/pp/bots_rpa.html"
+      "dest": "/backend/server.js"
     },
     {
       "src": "/auditoria",
-      "dest": "/pp/auditoria.html"
+      "dest": "/backend/server.js"
     },
     {
       "src": "/analytics",
-      "dest": "/pp/analytics.html"
+      "dest": "/backend/server.js"
     },
     {
       "src": "/system_health",
-      "dest": "/pp/system_health.html"
+      "dest": "/backend/server.js"
     },
     {
       "src": "/perfil",
-      "dest": "/pp/perfil.html"
+      "dest": "/backend/server.js"
     },
     {
       "src": "/primer_acceso",
@@ -203,7 +222,7 @@
     },
     {
       "src": "/inicio",
-      "dest": "/pp/welcome.html"
+      "dest": "/backend/server.js"
     },
     {
       "src": "^/$",

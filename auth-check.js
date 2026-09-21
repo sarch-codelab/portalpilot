@@ -72,6 +72,18 @@
       if (data.user) {
         if (data.user.rol) localStorage.setItem('userRole', data.user.rol);
         if (data.user.empresa_codigo) localStorage.setItem('empresaCodigo', data.user.empresa_codigo);
+        if (data.user.email) localStorage.setItem('userEmail', data.user.email);
+        if (typeof data.user.nombre !== 'undefined') localStorage.setItem('userName', data.user.nombre || '');
+        if (typeof data.user.apellido !== 'undefined') localStorage.setItem('userApellido', data.user.apellido || '');
+        if (typeof data.user.foto_perfil_url !== 'undefined') {
+          const f = data.user.foto_perfil_url;
+          if (f) localStorage.setItem('userFoto', f); else localStorage.removeItem('userFoto');
+        }
+        if (typeof data.user.banner_perfil_url !== 'undefined') {
+          const b = data.user.banner_perfil_url;
+          if (b) localStorage.setItem('userBanner', b); else localStorage.removeItem('userBanner');
+        }
+        try { if (window.refreshSidebarAvatar) window.refreshSidebarAvatar(); } catch (e) {}
       }
       return data;
     } catch (e) { return null; }

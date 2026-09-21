@@ -501,13 +501,21 @@ app.post('/api/session/sync', async (req, res) => {
   if (decoded.sub && supabase) {
     try {
       const { data: row } = await supabase.from('usuarios')
-        .select('id, email, rol, rol_global, empresa_codigo, token_version')
+        .select('id, email, nombre, apellido, rol, rol_global, empresa_codigo, token_version, foto_perfil_url, banner_perfil_url')
         .eq('id', decoded.sub).maybeSingle();
       if (row) {
         const tenantData = row.empresa_codigo
           ? (await supabase.from('tenants').select('email').eq('codigo', row.empresa_codigo).maybeSingle()).data
           : null;
-        sessionUser = { rol: resolveDisplayRole(row, tenantData), empresa_codigo: row.empresa_codigo || 'ROOT' };
+        sessionUser = {
+          rol: resolveDisplayRole(row, tenantData),
+          empresa_codigo: row.empresa_codigo || 'ROOT',
+          email: row.email || decoded.email || null,
+          nombre: row.nombre || null,
+          apellido: row.apellido || null,
+          foto_perfil_url: row.foto_perfil_url || null,
+          banner_perfil_url: row.banner_perfil_url || null
+        };
         sessionToken = jwt.sign({
           sub: row.id,
           email: row.email,

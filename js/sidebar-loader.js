@@ -10,14 +10,51 @@
  */
 
 (function() {
+  const BANNER_STYLE_ID = 'pp-sidebar-banner-style';
+  if (!document.getElementById(BANNER_STYLE_ID)) {
+    const style = document.createElement('style');
+    style.id = BANNER_STYLE_ID;
+    style.textContent = `
+      .profile-section.has-banner {
+        position: relative;
+        min-height: 92px;
+        overflow: hidden;
+        background-size: cover;
+        background-position: center;
+        border: 1px solid rgba(255,255,255,0.06);
+      }
+      .profile-section.has-banner::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        background: linear-gradient(180deg, rgba(4,4,10,0.25), rgba(4,4,10,0.0) 45%, rgba(4,4,10,0.0) 55%, rgba(4,4,10,0.85));
+      }
+      .profile-section.has-banner > * {
+        position: relative;
+        z-index: 1;
+      }
+      .sidebar.collapsed .profile-section.has-banner {
+        min-height: 64px;
+      }
+      @media (max-width: 900px) {
+        .sidebar.collapsed .profile-section.has-banner {
+          min-height: 92px;
+        }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
   function readUser() {
     const name = localStorage.getItem('userName') || 'Admin';
     const apellido = localStorage.getItem('userApellido') || '';
     const role = localStorage.getItem('userRole') || 'Administrador';
     const foto = localStorage.getItem('userFoto') || '';
+    const banner = localStorage.getItem('userBanner') || '';
     const fullName = apellido ? `${name} ${apellido}` : name;
     const initials = fullName.split(' ').filter(Boolean).map(w => w[0]).join('').substring(0, 2).toUpperCase() || 'PP';
-    return { name, apellido, role, foto, fullName, initials };
+    return { name, apellido, role, foto, banner, fullName, initials };
   }
 
   function initialsDataUri(initials) {
@@ -35,7 +72,7 @@
       } else {
         var setFoto = function () {
           el.textContent = '';
-          el.style.backgroundImage = 'url(' + u.foto + ')';
+          el.style.backgroundImage = 'url("' + u.foto + '")';
           el.style.backgroundSize = 'cover';
           el.style.backgroundPosition = 'center';
           el.style.color = 'transparent';
@@ -63,6 +100,26 @@
     }
   }
 
+  function renderProfileBanner(el, u) {
+    if (!el) return;
+    if (u.banner) {
+      const setBanner = function () {
+        el.classList.add('has-banner');
+        el.style.backgroundImage = 'url("' + u.banner + '")';
+      };
+      const probe = new Image();
+      probe.onload = setBanner;
+      probe.onerror = function () {
+        el.classList.remove('has-banner');
+        el.style.backgroundImage = 'none';
+      };
+      probe.src = u.banner;
+    } else {
+      el.classList.remove('has-banner');
+      el.style.backgroundImage = 'none';
+    }
+  }
+
   function renderSidebar() {
     const u = readUser();
 
@@ -73,6 +130,9 @@
     // Avatar (con o sin IDs; <img> o <div>)
     const avatars = document.querySelectorAll('#sidebarAvatar, .sidebar-avatar, .sidebar .avatar, .profile-section .avatar, .sidebar-user .avatar');
     avatars.forEach(el => renderAvatar(el, u));
+
+    // Banner como fondo de la sección de perfil (detrás de la foto)
+    document.querySelectorAll('.profile-section, .sidebar-user').forEach(el => renderProfileBanner(el, u));
   }
 
   window.renderSidebar = renderSidebar;

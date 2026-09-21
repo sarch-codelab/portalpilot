@@ -17,10 +17,11 @@
     style.textContent = `
       .profile-section.has-banner {
         position: relative;
-        min-height: 92px;
+        min-height: 52px;
+        max-height: 56px;
         overflow: hidden;
         background-size: cover;
-        background-position: center;
+        background-position: center top;
         border: 1px solid rgba(255,255,255,0.06);
       }
       .profile-section.has-banner::before {
@@ -28,18 +29,20 @@
         position: absolute;
         inset: 0;
         z-index: 0;
-        background: linear-gradient(180deg, rgba(4,4,10,0.25), rgba(4,4,10,0.0) 45%, rgba(4,4,10,0.0) 55%, rgba(4,4,10,0.85));
+        background: linear-gradient(180deg, rgba(4,4,10,0.05), rgba(4,4,10,0.72));
       }
       .profile-section.has-banner > * {
         position: relative;
         z-index: 1;
       }
       .sidebar.collapsed .profile-section.has-banner {
-        min-height: 64px;
+        min-height: 48px;
+        max-height: 56px;
       }
       @media (max-width: 900px) {
         .sidebar.collapsed .profile-section.has-banner {
-          min-height: 92px;
+          min-height: 56px;
+          max-height: 64px;
         }
       }
     `;

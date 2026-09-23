@@ -326,11 +326,15 @@
     return;
   }
 
-  // Marca global para indicar que la sesión fue validada
+// Marca global para indicar que la sesión fue validada
   window._SESSION_VALIDATED = true;
 
   // Sincronizar la cookie httpOnly de sesión cuando hay token válido
   window._SESSION_SYNC_PROMISE = syncSessionCookie();
+
+  let isExpiredFlowActive = false;
+  let checkInterval;
+  let warningToast = null;
 
   // Si el token está expirado desde el inicio
   const initialRemaining = getTokenRemainingTime(token);
@@ -340,9 +344,6 @@
   }
 
   // ─── MONITOREO DE EXPIRACIÓN EN TIEMPO REAL ───
-  let warningToast = null;
-  let isExpiredFlowActive = false;
-
   function checkSession() {
     if (isExpiredFlowActive) return;
 
@@ -363,7 +364,7 @@
   }
 
   // Comprobación periódica cada 3 segundos
-  const checkInterval = setInterval(checkSession, 3000);
+  checkInterval = setInterval(checkSession, 3000);
 
   function showPreExpirationWarning(seconds) {
     if (warningToast) {

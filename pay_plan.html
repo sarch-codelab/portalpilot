@@ -194,10 +194,10 @@
 
             <!-- 2 MÉTODOS DE PAGO: TARJETA DIGITAL Y TRANSFERENCIA -->
             <div class="payment-tabs">
-                <div class="payment-tab active" id="tabCardBtn" onclick="switchPaymentTab('card')">
+                <div class="payment-tab" id="tabCardBtn" onclick="switchPaymentTab('card')">
                     <i class="fas fa-credit-card"></i> Tarjeta Débito / Crédito
                 </div>
-                 <div class="payment-tab" id="tabBankBtn" onclick="switchPaymentTab('bank')">
+                 <div class="payment-tab active" id="tabBankBtn" onclick="switchPaymentTab('bank')">
                      <i class="fas fa-building-columns"></i> Transferencia Bancaria
                  </div>
                  <div class="payment-tab" id="tabTigoBtn" onclick="switchPaymentTab('tigo')">
@@ -206,7 +206,7 @@
              </div>
 
             <!-- MÉTODO 1: TARJETA DIGITAL -->
-            <div class="tab-content active" id="tabCard">
+            <div class="tab-content" id="tabCard">
                 <div class="info-box">
                     <i class="fas fa-lock"></i>
                     <p>Procesamiento digital seguro SSL de 256 bits. Tu correo recibirá inmediatamente la <strong>confirmación y factura digital</strong> de activación.</p>
@@ -234,12 +234,12 @@
                     <input type="email" class="form-input" id="cardEmail" placeholder="tu@empresa.com">
                 </div>
                 <button class="btn-submit" id="btnPayCard" onclick="processPayment('tarjeta')">
-                    <i class="fas fa-shield-check"></i> Pagar y Activar Plan
+                    <i class="fas fa-clock"></i> Checkout seguro pendiente
                 </button>
             </div>
 
             <!-- MÉTODO 2: TRANSFERENCIA BANCARIA -->
-            <div class="tab-content" id="tabBank">
+            <div class="tab-content active" id="tabBank">
                 <div class="info-box">
                     <i class="fas fa-info-circle"></i>
                     <p>Realiza tu depósito o transferencia por el monto del plan y envía el comprobante para confirmación inmediata por correo electrónico.</p>
@@ -312,6 +312,26 @@
 
     <script>
         const API_ROOT = '';
+
+        // Protección PCI: hasta que exista un checkout alojado por un proveedor
+        // certificado, esta página no presenta ni procesa campos de tarjeta.
+        document.addEventListener('DOMContentLoaded', () => {
+            const cardTab = document.getElementById('tabCard');
+            const cardTabButton = document.getElementById('tabCardBtn');
+            const tigoTab = document.getElementById('tabTigo');
+            const tigoTabButton = document.getElementById('tabTigoBtn');
+            const bankTab = document.getElementById('tabBank');
+            if (cardTab) cardTab.innerHTML = '<div class="info-box"><i class="fas fa-lock"></i><p>El pago con tarjeta se habilitará únicamente mediante un checkout seguro del proveedor. Portal Pilot no solicita ni almacena números de tarjeta o CVC.</p></div>';
+            if (cardTabButton) { cardTabButton.onclick = null; cardTabButton.style.opacity = '0.55'; cardTabButton.title = 'Checkout con tarjeta pendiente de integración'; }
+            if (tigoTab) tigoTab.innerHTML = '<div class="info-box"><i class="fas fa-clock"></i><p>Esta opción estará disponible cuando el proveedor de cobro y la verificación automática estén integrados.</p></div>';
+            if (tigoTabButton) { tigoTabButton.onclick = null; tigoTabButton.style.opacity = '0.55'; tigoTabButton.title = 'Integración de pago pendiente'; }
+            if (bankTab) {
+                const info = bankTab.querySelector('.info-box p');
+                if (info) info.textContent = 'Envía una referencia para revisión. El plan solo se activa después de una verificación de pago real.';
+                const accountDetails = bankTab.querySelector('.bank-info-box');
+                if (accountDetails) accountDetails.innerHTML = '<div class="bank-row"><span class="label">Estado</span><span class="value">Las instrucciones bancarias se entregan únicamente por soporte verificado.</span></div>';
+            }
+        });
 
         // Resolver plan y datos de registro previo
         const urlParams = new URLSearchParams(window.location.search);
@@ -510,13 +530,17 @@
                         plan_name: plan.name,
                         payment_method: metodo
                     });
-                    showToast(data.message || `¡Pago activado exitosamente! Correo de confirmación enviado a ${email}.`, false);
-                    btn.innerHTML = '<i class="fas fa-check"></i> ¡Pago Confirmado!';
-                    btn.style.background = 'var(--green)';
-
-                    setTimeout(() => {
-                        window.location.href = `login.html?welcome=1&email=${encodeURIComponent(email)}`;
-                    }, 3500);
+                    if (data.activated) {
+                        showToast(data.message || `Pago confirmado. Correo enviado a ${email}.`, false);
+                        btn.innerHTML = '<i class="fas fa-check"></i> Pago confirmado';
+                        btn.style.background = 'var(--green)';
+                        setTimeout(() => {
+                            window.location.href = `login.html?welcome=1&email=${encodeURIComponent(email)}`;
+                        }, 3500);
+                    } else {
+                        showToast(data.message || 'Solicitud recibida y pendiente de verificación.', false);
+                        btn.innerHTML = '<i class="fas fa-clock"></i> Pendiente de verificación';
+                    }
                 } else {
                     throw new Error(data.error || 'Error al confirmar el pago');
                 }
@@ -524,7 +548,7 @@
                 console.error(err);
                 showToast(err.message || 'No se pudo confirmar el pago. Intenta de nuevo.', true);
                 btn.disabled = false;
-                btn.innerHTML = metodo === 'tarjeta' ? '<i class="fas fa-shield-check"></i> Pagar y Activar Plan' :
+                btn.innerHTML = metodo === 'tarjeta' ? '<i class="fas fa-clock"></i> Checkout seguro pendiente' :
                                  metodo === 'tigo' ? '<i class="fab fa-whatsapp"></i> Confirmar Pago por Tigo Money' :
                                  '<i class="fas fa-paper-plane"></i> Enviar Comprobante de Transferencia';
             }

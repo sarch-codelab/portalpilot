@@ -187,6 +187,10 @@ function escapeHtml(str) {
 }
 
 const JWT_SECRET = process.env.JWT_SECRET;
+// Solo un webhook del proveedor de pago puede activar una suscripción. Nunca
+// usar este secreto en la web o en la app Flutter: vive exclusivamente en el
+// entorno del servidor de producción.
+const BILLING_WEBHOOK_SECRET = process.env.BILLING_WEBHOOK_SECRET || '';
 
 // Nunca firmar tokens con una clave incluida en el código. En producción se
 // detiene el arranque: publicar una API sin JWT_SECRET sería inseguro.
@@ -2422,7 +2426,6 @@ app.post('/api/confirmar-pago', pagoLimiter, async (req, res) => {
     const emailNorm = String(email).trim().toLowerCase();
     const planNombre = plan ? String(plan).toUpperCase() : 'PRO';
     const amountMap = { STARTER: 0, BUSINESS: 1499, ENTERPRISE: 4999 };
-    const paymentStatus = metodoPago === 'tigo' || metodoPago === 'transferencia' ? 'pending' : 'success';
 
     // Traza de seguridad: endpoint público de billing → todo intento queda
     // auditado (éxito, fallo y origen), no solo los pagos aplicados.
@@ -2433,8 +2436,19 @@ app.post('/api/confirmar-pago', pagoLimiter, async (req, res) => {
       });
     } catch (e) { /* best-effort */ }
 
-    // Actualizar plan del tenant en Supabase si existe
-    if (supabase && empresaCodigo && !empresaCodigo.includes('XXXX')) {
+    // Un navegador puede registrar una solicitud o comprobante, pero no puede
+    // activar un plan por sí solo. La activación queda reservada para el
+    // webhook autenticado del proveedor de pagos.
+    const webhookSecret = String(req.headers['x-billing-webhook-secret'] || '');
+    const trustedWebhook = !!BILLING_WEBHOOK_SECRET &&
+      webhookSecret.length === BILLING_WEBHOOK_SECRET.length &&
+      crypto.timingSafeEqual(Buffer.from(webhookSecret), Buffer.from(BILLING_WEBHOOK_SECRET));
+    const paymentStatus = trustedWebhook ? 'success' : 'pending';
+
+    // Actualizar plan del tenant únicamente después de una confirmación
+    // firmada por el proveedor. Una referencia escrita por el usuario no es
+    // evidencia de pago.
+    if (trustedWebhook && supabase && empresaCodigo && !empresaCodigo.includes('XXXX')) {
       await supabase.from('tenants').update({ plan: planNombre.toLowerCase(), estado: 'activo' }).eq('codigo', empresaCodigo);
       // State machine de suscripción: pago confirmado → active (Blueprint §14).
       try {
@@ -2469,27 +2483,32 @@ app.post('/api/confirmar-pago', pagoLimiter, async (req, res) => {
       if (paymentError) console.warn('[BILLING] No se pudo guardar historial de pago:', paymentError.message);
     }
 
-    // Enviar correo de confirmación de pago
+    // El correo debe reflejar el estado real: solicitud pendiente o pago que
+    // ya fue validado por el webhook.
     try {
       await enviarCorreo({
         from: `"Portal Pilot Billing" <${EMAIL_FROM}>`,
         to: emailNorm,
-        subject: `🎉 ¡Pago Confirmado! Tu Plan ${planNombre} en Portal Pilot está Activo`,
+        subject: trustedWebhook
+          ? `🎉 Pago confirmado: Plan ${planNombre} activo en Portal Pilot`
+          : `Solicitud de pago recibida: Plan ${planNombre}`,
         html: `
           <div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;background:#0b0b10;color:#e0e0f0;border-radius:16px;padding:32px;border:1px solid rgba(139,92,246,0.3);">
             <div style="text-align:center;margin-bottom:24px;">
               <h1 style="color:#a78bfa;margin:0;font-size:26px;">Portal Pilot</h1>
-              <p style="color:#30d158;font-weight:700;font-size:16px;margin-top:4px;">✓ Confirmación de Pago Exitoso</p>
+              <p style="color:${trustedWebhook ? '#30d158' : '#f59e0b'};font-weight:700;font-size:16px;margin-top:4px;">${trustedWebhook ? '✓ Pago confirmado' : '⏳ Pago pendiente de verificación'}</p>
             </div>
             <p>Hola,</p>
-            <p>Tu pago para el <strong>Plan ${planNombre}</strong> ha sido procesado y verificado correctamente.</p>
+            <p>${trustedWebhook
+              ? `Tu pago para el <strong>Plan ${planNombre}</strong> fue procesado y verificado correctamente.`
+              : `Recibimos tu solicitud para el <strong>Plan ${planNombre}</strong>. El acceso se activará únicamente al verificar el pago.`}</p>
             <div style="background:#16161a;padding:20px;border-radius:12px;margin:20px 0;border:1px solid rgba(255,255,255,0.1);">
                <p style="margin:4px 0;font-size:14px;"><strong>Método de pago:</strong> ${metodoPago === 'tarjeta' ? 'Tarjeta de Crédito/Débito Digital' : metodoPago === 'tigo' ? 'Tigo Money (+504 3315-4594)' : 'Transferencia Bancaria'}</p>
-               <p style="margin:4px 0;font-size:14px;"><strong>Estado:</strong> <span style="color:#30d158;font-weight:700;">ACTIVO</span></p>
+               <p style="margin:4px 0;font-size:14px;"><strong>Estado:</strong> <span style="color:${trustedWebhook ? '#30d158' : '#f59e0b'};font-weight:700;">${trustedWebhook ? 'ACTIVO' : 'PENDIENTE DE VERIFICACIÓN'}</span></p>
                <p style="margin:4px 0;font-size:14px;"><strong>ID de Empresa:</strong> ${empresaCodigo || 'ROOT'}</p>
                ${metodoPago === 'tigo' ? `<p style="margin:4px 0;font-size:14px;"><strong>Referencia Tigo Money:</strong> ${req.body.tigoRef || 'N/A'}</p><p style="margin:4px 0;font-size:12px;color:#888;">Tu pago está pendiente de verificación manual. Envía tu comprobante por WhatsApp al +504 3315-4594 para confirmación inmediata.</p>` : ''}
             </div>
-            <p>Ya puedes acceder a tu panel con todos los módulos comerciales habilitados.</p>
+            <p>${trustedWebhook ? 'Ya puedes acceder a tu panel con los módulos de tu plan habilitados.' : 'Te notificaremos por correo cuando la verificación esté completa.'}</p>
             <div style="text-align:center;margin-top:28px;">
               <a href="https://portal-pilot.vercel.app/login.html" style="background:linear-gradient(135deg,#8b5cf6,#a78bfa);color:#fff;padding:12px 28px;border-radius:30px;text-decoration:none;font-weight:700;display:inline-block;">Iniciar Sesión en Portal Pilot</a>
             </div>
@@ -2500,9 +2519,12 @@ app.post('/api/confirmar-pago', pagoLimiter, async (req, res) => {
       console.warn('[CONFIRMAR PAGO] Advertencia enviando correo:', e.message);
     }
 
-    return res.status(200).json({
+    return res.status(trustedWebhook ? 200 : 202).json({
       success: true,
-      message: `¡Pago del Plan ${planNombre} activado con éxito! Se ha enviado el comprobante a ${emailNorm}.`,
+      activated: trustedWebhook,
+      message: trustedWebhook
+        ? `Pago del Plan ${planNombre} activado con éxito.`
+        : `Solicitud recibida. El Plan ${planNombre} se activará tras verificar el pago.`,
       plan: planNombre,
       email: emailNorm
     });
@@ -6152,9 +6174,17 @@ app.post('/api/proveedores', authenticate, requireTenantAdmin, requirePlanFeatur
     const tenant = normalizeTenantCode(getTenantCode(req));
     const empresa = await resolverEmpresaSupabase(tenant);
     if (!empresa) return res.status(404).json({ error: 'Empresa no encontrada' });
-    const b = req.body || {};
+    // La app offline envía el registro dentro de `proveedor`; el portal web
+    // lo envía plano. Aceptamos ambos contratos en un único endpoint.
+    const b = req.body?.proveedor || req.body || {};
     const nombre = (b.nombre || '').toString().trim();
     if (!nombre) return res.status(400).json({ error: 'El nombre del proveedor es requerido' });
+    // Reintentar una operación offline no debe crear otro proveedor. El NIT
+    // es la clave de negocio preferida; sin NIT se usa el nombre por empresa.
+    let existingQuery = supabase.from('proveedores').select('*').eq('empresa_id', empresa.id);
+    existingQuery = b.nit ? existingQuery.eq('nit', String(b.nit).trim()) : existingQuery.eq('nombre', nombre);
+    const { data: existing } = await existingQuery.maybeSingle();
+    if (existing) return res.status(200).json({ proveedor: existing, idempotent: true });
     const { data, error } = await supabase.from('proveedores').insert([{
       empresa_id: empresa.id,
       empresa_codigo: tenant,
@@ -6991,17 +7021,28 @@ app.post('/api/facturas', authenticate, async (req, res) => {
     const tenant = normalizeTenantCode(getTenantCode(req));
     const empresa = await resolverEmpresaSupabase(tenant);
     if (!empresa) return res.status(404).json({ error: 'Empresa no encontrada' });
-    const b = req.body || {};
+    // Compatibilidad app/web: la cola offline usa { factura: {...} } y la
+    // web usa el documento plano. El tenant siempre se toma del JWT.
+    const b = req.body?.factura || req.body || {};
     if (!b.cliente_nombre) return res.status(400).json({ error: 'cliente_nombre es requerido' });
     const subtotal = parseFloat(b.subtotal) || 0;
-    const isv = parseFloat(b.isv) || 0;
+    const isv = parseFloat(b.isv) || (parseFloat(b.isv_15) || 0) + (parseFloat(b.isv_18) || 0);
     const descuento = parseFloat(b.descuento) || 0;
     const total = parseFloat(b.total) || (subtotal + isv - descuento);
+    // `correlativo` es único funcionalmente dentro de una empresa. Revisarlo
+    // antes de insertar hace segura la repetición de solicitudes tras cortes
+    // de red, incluso cuando la app todavía use IDs locales no UUID.
+    const correlativo = (b.correlativo || '').toString().slice(0, 50);
+    if (correlativo) {
+      const { data: existing } = await supabase.from('facturas')
+        .select('*').eq('empresa_id', empresa.id).eq('correlativo', correlativo).maybeSingle();
+      if (existing) return res.status(200).json({ factura: existing, idempotent: true });
+    }
     const payloadFull = {
       empresa_id: empresa.id,
       empresa_codigo: tenant,
       usuario_id: req.user?.sub || null,
-      correlativo: (b.correlativo || '').toString().slice(0, 50),
+      correlativo,
       cliente_nombre: b.cliente_nombre.toString().slice(0, 200),
       cliente_rtn: (b.cliente_rtn || '').toString().slice(0, 20),
       cliente_email: (b.cliente_email || '').toString().slice(0, 100),
@@ -7066,9 +7107,13 @@ app.patch('/api/facturas/:id', authenticate, async (req, res) => {
     if (b.notas !== undefined) updates.notas = b.notas;
     if (b.metodo_pago !== undefined) updates.metodo_pago = b.metodo_pago;
     if (Object.keys(updates).length === 0) return res.status(400).json({ error: 'Sin cambios para actualizar' });
-    const { data, error } = await supabase
-      .from('facturas').update(updates)
-      .eq('id', req.params.id).eq('empresa_id', empresa.id).select().maybeSingle();
+    // Los clientes web usan el UUID remoto. La app offline puede no tenerlo
+    // aún, por lo que envía el correlativo como identificador estable.
+    const identity = String(req.params.id || '').trim();
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(identity);
+    let updateQuery = supabase.from('facturas').update(updates).eq('empresa_id', empresa.id);
+    updateQuery = isUuid ? updateQuery.eq('id', identity) : updateQuery.eq('correlativo', identity);
+    const { data, error } = await updateQuery.select().maybeSingle();
     if (error) return res.status(500).json({ error: error.message });
     if (!data) return res.status(404).json({ error: 'Factura no encontrada' });
     return res.json({ factura: data });
@@ -7119,8 +7164,14 @@ app.post('/api/clientes', authenticate, async (req, res) => {
     const tenant = normalizeTenantCode(getTenantCode(req));
     const empresa = await resolverEmpresaSupabase(tenant);
     if (!empresa) return res.status(404).json({ error: 'Empresa no encontrada' });
-    const b = req.body || {};
+    // La cola de la app conserva el cliente bajo `cliente`; el formulario web
+    // lo publica plano. Ambos representan el mismo recurso.
+    const b = req.body?.cliente || req.body || {};
     if (!b.nombre) return res.status(400).json({ error: 'nombre es requerido' });
+    let existingQuery = supabase.from('clientes').select('*').eq('empresa_id', empresa.id);
+    existingQuery = b.rtn ? existingQuery.eq('rtn', String(b.rtn).trim()) : existingQuery.eq('nombre', String(b.nombre).trim());
+    const { data: existing } = await existingQuery.maybeSingle();
+    if (existing) return res.status(200).json({ cliente: existing, idempotent: true });
     const { data, error } = await supabase.from('clientes').insert([{
       empresa_id: empresa.id,
       empresa_codigo: tenant,

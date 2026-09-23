@@ -283,14 +283,15 @@ async function main() {
     const trialRead = await req('GET', '/api/productos', { token: tA });
     check('TRIAL expirado: lectura sigue permitida', trialRead.status === 200, `status=${trialRead.status}`);
 
-    // Reactivar por pago (billing: expired → active)
+    // Una solicitud pública de pago NO puede reactivar un tenant. Solo el
+    // webhook autenticado del proveedor puede realizar esa transición.
     const pay = await req('POST', '/api/confirmar-pago', { body: { empresa_codigo: A, plan: 'business', email: emails.oa, metodoPago: 'tarjeta', referencia: `e2e-pay-${stamp}` } });
-    check('BILLING: confirmar-pago reactiva tenant → 200/201', [200, 201].includes(pay.status), `status=${pay.status} body=${JSON.stringify(pay.data).slice(0,200)}`);
+    check('BILLING: solicitud pública queda pendiente → 202', pay.status === 202 && pay.data?.activated === false, `status=${pay.status} body=${JSON.stringify(pay.data).slice(0,200)}`);
     await sleep(300);
     const payWrite = await req('POST', '/api/productos', { token: tA, body: { nombre: 'Post Pago', precio_venta: 2 } });
-    check('BILLING: tras pago, escrituras vuelven a funcionar', payWrite.status === 201, `status=${payWrite.status} body=${JSON.stringify(payWrite.data).slice(0,150)}`);
+    check('BILLING: solicitud pública no habilita escrituras', payWrite.status === 403, `status=${payWrite.status} body=${JSON.stringify(payWrite.data).slice(0,150)}`);
     const subAfter = await req('GET', '/api/tenant/subscription', { token: tA });
-    check('BILLING: subscription muestra estado activo/plan business', subAfter.status === 200 && /active|business/i.test(JSON.stringify(subAfter.data)), `body=${JSON.stringify(subAfter.data).slice(0,200)}`);
+    check('BILLING: subscription no cambia por una solicitud pública', subAfter.status === 200 && !/business/i.test(JSON.stringify(subAfter.data)), `body=${JSON.stringify(subAfter.data).slice(0,200)}`);
   } else {
     console.log('  ⚠ sin acceso admin DB: pruebas de trial/billing saltadas');
   }

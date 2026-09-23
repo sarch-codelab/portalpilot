@@ -696,12 +696,15 @@
 
   <script>
     function toggleSidebarMobile() {
-      const sidebar = document.getElementById('sidebar');
-      const hamburger = document.getElementById('hamburgerBtn');
-      sidebar.classList.toggle('open');
-      hamburger.classList.toggle('active');
+      if (window.ppToggleSidebar) window.ppToggleSidebar();
+      else {
+        const sidebar = document.getElementById('sidebar');
+        const hamburger = document.getElementById('hamburgerBtn');
+        sidebar.classList.toggle('open');
+        hamburger.classList.toggle('active');
+      }
     }
-    
+
     // Close sidebar when clicking outside
     document.addEventListener('click', (e) => {
       const sidebar = document.getElementById('sidebar');
@@ -718,10 +721,13 @@
     document.querySelectorAll('.sidebar-link').forEach(link => {
       link.addEventListener('click', () => {
         if (window.innerWidth <= 768) {
-          const sidebar = document.getElementById('sidebar');
-          const hamburger = document.getElementById('hamburgerBtn');
-          sidebar.classList.remove('open');
-          hamburger.classList.remove('active');
+          if (window.ppCloseSidebar) window.ppCloseSidebar();
+          else {
+            const sidebar = document.getElementById('sidebar');
+            const hamburger = document.getElementById('hamburgerBtn');
+            sidebar.classList.remove('open');
+            hamburger.classList.remove('active');
+          }
         }
       });
     });

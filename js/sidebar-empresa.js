@@ -2,33 +2,87 @@
 (function () {
   var sidebar = document.getElementById('sidebar');
   var dashboard = document.querySelector('.dashboard');
-  var toggleBtn = document.getElementById('toggleSidebar');
 
   function isMobile() {
     return window.innerWidth <= 900;
   }
 
-  function applySavedState() {
-    if (!sidebar || !dashboard) return;
-    var collapsed = localStorage.getItem('sidebarCollapsed') === 'true';
-    var should = collapsed && !isMobile();
-    sidebar.classList.toggle('collapsed', should);
-    dashboard.classList.toggle('sidebar-collapsed', should);
+  // ── Drawer móvil: un único mecanismo canónico (clase .active) ──
+  // También se limpia .open (usado por código inline antiguo / hamburguesa).
+  function drawerOpen() {
+    return !!(sidebar && (sidebar.classList.contains('active') || sidebar.classList.contains('open')));
   }
 
-  if (toggleBtn && sidebar && dashboard) {
-    toggleBtn.addEventListener('click', function () {
-      if (isMobile()) {
-        sidebar.classList.toggle('active');
-      } else {
-        sidebar.classList.toggle('collapsed');
-        dashboard.classList.toggle('sidebar-collapsed');
-        localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
-      }
-    });
-    window.addEventListener('resize', applySavedState);
-    applySavedState();
+  function setDrawer(open) {
+    if (!sidebar) return;
+    sidebar.classList.toggle('active', open);
+    sidebar.classList.remove('open');
+    var ov = document.getElementById('overlay');
+    if (ov) ov.classList.toggle('active', open);
+    var ov2 = document.querySelector('.sidebar-overlay');
+    if (ov2) ov2.classList.toggle('active', open);
+    var hb = document.getElementById('hamburgerBtn') || document.querySelector('.hamburger-toggle');
+    if (hb) hb.classList.toggle('active', open);
   }
+
+  function closeDrawer() { setDrawer(false); }
+
+  function toggleDrawer() { setDrawer(!drawerOpen()); }
+
+  function toggleDesktopCollapse() {
+    if (!sidebar || !dashboard) return;
+    var collapsed = !sidebar.classList.contains('collapsed');
+    sidebar.classList.toggle('collapsed', collapsed);
+    dashboard.classList.toggle('sidebar-collapsed', collapsed);
+    try { localStorage.setItem('sidebarCollapsed', collapsed ? 'true' : 'false'); } catch (e) { /* noop */ }
+  }
+
+  // Un único manejador en fase de captura: corre ANTES que cualquier
+  // onclick inline o binding de página, evitando el doble binding de
+  // #toggleSidebar (fleet, security, perfil) y la coexistencia de dos
+  // mecanismos (.open del hamburguesa + .active del chevron).
+  document.addEventListener('click', function (e) {
+    var t = e.target;
+    if (!t || !t.closest) return;
+    var trig = t.closest('#toggleSidebar, #sidebarToggle, .sidebar-toggle, #hamburgerBtn, .hamburger-toggle');
+    if (!trig) return;
+    var isSidebarControl = trig.closest('#sidebar, .sidebar')
+      || trig.id === 'hamburgerBtn'
+      || trig.id === 'sidebarToggle'
+      || trig.classList.contains('sidebar-toggle')
+      || trig.classList.contains('hamburger-toggle');
+    if (!isSidebarControl) return;
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    if (isMobile()) toggleDrawer();
+    else toggleDesktopCollapse();
+  }, true);
+
+  // Cerrar el drawer móvil al hacer clic fuera
+  document.addEventListener('click', function (e) {
+    if (!isMobile() || !drawerOpen()) return;
+    var t = e.target;
+    if (!t || !t.closest) return;
+    if (t.closest('#sidebar, .sidebar, #toggleSidebar, #sidebarToggle, .sidebar-toggle, #hamburgerBtn, .hamburger-toggle')) return;
+    closeDrawer();
+  });
+
+  function applySavedState() {
+    if (!sidebar || !dashboard) return;
+    if (isMobile()) {
+      closeDrawer();
+      sidebar.classList.remove('collapsed');
+      dashboard.classList.remove('sidebar-collapsed');
+    } else {
+      closeDrawer();
+      var collapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+      sidebar.classList.toggle('collapsed', collapsed);
+      dashboard.classList.toggle('sidebar-collapsed', collapsed);
+    }
+  }
+
+  window.addEventListener('resize', applySavedState);
+  applySavedState();
 
   var darkModeBtn = document.getElementById('darkModeToggle');
   function renderThemeIcon(isLight) {

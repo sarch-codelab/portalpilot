@@ -230,3 +230,49 @@ body.light-mode {
   --gray2: #475569;
   --white: #0f172a;
 }
+
+/* Móvil (≤900px): sidebar fuera de pantalla (drawer), abierta solo con .active/.open */
+@media (max-width: 900px) {
+  .dashboard,
+  .dashboard.sidebar-collapsed {
+    grid-template-columns: 1fr !important;
+  }
+
+  .sidebar,
+  .sidebar.collapsed {
+    position: fixed !important;
+    top: 0;
+    left: -260px !important;
+    width: 260px !important;
+    height: 100vh;
+    min-width: 260px !important;
+    z-index: 1000;
+    transition: left 0.3s ease;
+  }
+
+  .sidebar.active,
+  .sidebar.open {
+    left: 0 !important;
+  }
+
+  .toggle-btn {
+    right: -40px !important;
+  }
+
+  .sidebar.collapsed .logo,
+  .sidebar.collapsed .profile-info,
+  .sidebar.collapsed .sidebar-link span,
+  .sidebar.collapsed .footer-btn span {
+    display: block !important;
+  }
+
+  .sidebar.collapsed .sidebar-link {
+    justify-content: flex-start;
+    padding: 11px 14px !important;
+  }
+
+  .sidebar-toggle,
+  .hamburger-toggle {
+    z-index: 1200 !important;
+  }
+}

@@ -6559,13 +6559,26 @@ app.post('/api/productos', authenticate, async (req, res) => {
             activo: p.activo !== false,
             updated_at: new Date().toISOString()
           };
-          const { data: exist } = await supabase.from('productos')
-            .select('id').eq('empresa_id', empresa.id).eq('codigo', codigo).limit(1);
-          if (exist && exist.length > 0) {
+          const barcode = campos.barcode;
+          let idExistente = null;
+          if (codigo) {
+            const { data: exist } = await supabase.from('productos')
+              .select('id').eq('empresa_id', empresa.id).eq('codigo', codigo).limit(1);
+            if (exist && exist.length > 0) idExistente = exist[0].id;
+          }
+          // Anti-duplicados: si el codigo no coincide pero el barcode sí, se
+          // actualiza esa fila en vez de insertar una copia (la app encola el
+          // borrado/upsert por barcode también).
+          if (!idExistente && barcode) {
+            const { data: existBar } = await supabase.from('productos')
+              .select('id').eq('empresa_id', empresa.id).eq('barcode', barcode).limit(1);
+            if (existBar && existBar.length > 0) idExistente = existBar[0].id;
+          }
+          if (idExistente) {
             const up = {};
             const allowUp = ['nombre','descripcion','categoria','unidad_medida','imagen_url','precio_compra','precio_venta','stock_actual','stock_minimo','isv_rate','exento','bodega','barcode','marca','presentacion','sucursal_id','bodega_id','activo','updated_at'];
             allowUp.forEach(k => { if (campos[k] !== undefined) up[k] = campos[k]; });
-            const { error: ue } = await supabase.from('productos').update(up).eq('id', exist[0].id);
+            const { error: ue } = await supabase.from('productos').update(up).eq('id', idExistente);
             if (ue) errores.push({ codigo, error: ue.message });
             else sincronizados++;
             continue;

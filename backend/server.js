@@ -1798,6 +1798,189 @@ app.get('/api/test-email', authenticate, requireRoot, async (req, res) => {
   }
 });
 
+// -------------------------------------------------------------------------
+// REGISTRO: helpers de branding (paso 4) y de 2FA verificado (paso 6)
+// -------------------------------------------------------------------------
+
+// Modelos de negocio del paso 2. Es la selección que decide qué módulos se
+// activan (ver getModulesForAreaAndPlan), por eso se persiste tal cual.
+const MODELOS_NEGOCIO = ['Pulpería / Mercadito', 'Tienda / Supermercado', 'Club / Membresía'];
+
+function normalizarModeloNegocio(valor) {
+  const v = String(valor || '').trim();
+  if (!v) return null;
+  const exacto = MODELOS_NEGOCIO.find(m => m.toLowerCase() === v.toLowerCase());
+  return exacto || null;
+}
+
+// Buckets donde se prueban las imágenes del registro (en orden de preferencia).
+const BRANDING_BUCKETS = ['uploads', 'portal-pilot-assets'];
+const MAX_BRANDING_BYTES = 4 * 1024 * 1024;
+
+/**
+ * Sube una imagen data:URL a Supabase Storage y devuelve la URL pública.
+ * Nunca lanza: si algo falla se registra y se devuelve null para que el
+ * registro del tenant no se caiga por un logo.
+ */
+async function subirImagenRegistro(dataUrl, tenantCode, carpeta, nombreBase) {
+  if (!supabase || !supabase.storage) return null;
+  const match = String(dataUrl || '').match(/^data:image\/(png|jpe?g|webp|gif);base64,([A-Za-z0-9+/=\s]+)$/i);
+  if (!match) return null;
+
+  const ext = (match[1].toLowerCase() === 'jpeg' ? 'jpg' : match[1].toLowerCase());
+  const contentType = `image/${ext === 'jpg' ? 'jpeg' : ext}`;
+  const buffer = Buffer.from(match[2].replace(/\s/g, ''), 'base64');
+  if (!buffer.length || buffer.length > MAX_BRANDING_BYTES) {
+    console.warn('[REGISTRO] Imagen de branding descartada por tamaño inválido:', nombreBase, buffer.length);
+    return null;
+  }
+
+  const safeCode = String(tenantCode || 'tenant').replace(/[^A-Za-z0-9_-]/g, '');
+  const safeName = String(nombreBase || 'imagen').replace(/[^a-z0-9_-]/g, '');
+  // Sufijo aleatorio: dos imagenes del mismo slot en el mismo milisegundo
+  // colisionarian con un nombre basado solo en Date.now().
+  const sufijo = `${Date.now()}_${crypto.randomBytes(4).toString('hex')}`;
+  const filePath = `uploads/${safeCode}/${carpeta}/${safeName}_${sufijo}.${ext}`;
+
+  for (const bucket of BRANDING_BUCKETS) {
+    try {
+      const { error } = await supabase.storage.from(bucket).upload(filePath, buffer, { contentType });
+      if (error) { console.warn(`[REGISTRO] Upload falló en bucket ${bucket}:`, error.message); continue; }
+      const publicUrl = supabase.storage.from(bucket).getPublicUrl(filePath).data.publicUrl;
+      if (publicUrl && String(publicUrl).startsWith('http')) return publicUrl;
+    } catch (e) {
+      console.warn(`[REGISTRO] Upload lanzó en bucket ${bucket}:`, e.message);
+    }
+  }
+  return null;
+}
+
+/**
+ * Sube las cuatro imágenes del paso 4 y devuelve las URLs públicas.
+ * Acepta tanto data:URL (base64) como URL ya subida. Si una imagen falla,
+ * el resto se guarda igual: la personalización nunca bloquea el registro.
+ */
+async function subirBrandingRegistro(body, codigoNorm) {
+  const resultado = {
+    logo_url: null,
+    banner_url: null,
+    profile_pic_url: null,
+    profile_banner_url: null
+  };
+  const esBase64 = v => typeof v === 'string' && /^data:image\//i.test(v.trim());
+
+  try {
+    if (esBase64(body.company_logo)) {
+      resultado.logo_url = await subirImagenRegistro(body.company_logo, codigoNorm, 'empresa', 'logo');
+    } else if (typeof body.company_logo === 'string' && body.company_logo.startsWith('http')) {
+      resultado.logo_url = body.company_logo;
+    }
+
+    if (esBase64(body.company_banner)) {
+      resultado.banner_url = await subirImagenRegistro(body.company_banner, codigoNorm, 'empresa', 'banner');
+    } else if (typeof body.company_banner === 'string' && body.company_banner.startsWith('http')) {
+      resultado.banner_url = body.company_banner;
+    }
+
+    if (esBase64(body.profile_pic)) {
+      resultado.profile_pic_url = await subirImagenRegistro(body.profile_pic, codigoNorm, 'perfil', 'foto');
+    } else if (typeof body.profile_pic === 'string' && body.profile_pic.startsWith('http')) {
+      resultado.profile_pic_url = body.profile_pic;
+    }
+
+    if (esBase64(body.profile_banner)) {
+      resultado.profile_banner_url = await subirImagenRegistro(body.profile_banner, codigoNorm, 'perfil', 'banner');
+    } else if (typeof body.profile_banner === 'string' && body.profile_banner.startsWith('http')) {
+      resultado.profile_banner_url = body.profile_banner;
+    }
+  } catch (e) {
+    console.warn('[REGISTRO] Error subiendo branding:', e && e.message);
+  }
+  return resultado;
+}
+
+// Detecta el nombre de la columna en el error de PostgREST
+// "column <tabla>.<columna> does not exist" (y variantes entrecomilladas).
+// Se decide por el mensaje, no por `code`: una columna inexistente puede
+// llegar como 42703 (Postgres) o PGRST204 (esquema cacheado por PostgREST).
+function columnaInexistenteDe(error) {
+  if (!error) return null;
+  const msg = String(error.message || '');
+  const patrones = [
+    /column\s+"([^"]+)"\s+does not exist/i,
+    /column\s+[A-Za-z0-9_]+\.([A-Za-z0-9_]+)\s+does not exist/i,
+    /column\s+([A-Za-z0-9_]+)\s+does not exist/i
+  ];
+  for (const p of patrones) {
+    const m = msg.match(p);
+    if (!m) continue;
+    // "tenants.banner_url" -> "banner_url"
+    const parte = String(m[1]).split('.').pop();
+    if (parte) return parte;
+  }
+  return null;
+}
+
+/**
+ * upsert/insert tolerante a columnas inexistentes: si la tabla no tiene alguna
+ * columna (p. ej. `banner_url` sin migración aplicada), la omite y reintenta
+ * para que el registro no se caiga. Devuelve el mismo contrato de
+ * supabase-js ({ data, error }) más `ok` y `descartadas` para diagnóstico.
+ */
+async function upsertTolerante(tabla, fila, onConflict) {
+  let actual = { ...fila };
+  const descartadas = [];
+  for (let intento = 0; intento < 8; intento++) {
+    const q = supabase.from(tabla);
+    const { data, error } = onConflict ? await q.upsert(actual, { onConflict }) : await q.insert(actual);
+    if (!error) return { ok: true, data, error: null, descartadas };
+    const columna = columnaInexistenteDe(error);
+    if (!columna || !(columna in actual)) {
+      return { ok: false, data: null, error, descartadas };
+    }
+    console.warn(`[REGISTRO] ${tabla}.${columna} no existe en el schema; se omite esa columna.`);
+    delete actual[columna];
+    descartadas.push(columna);
+  }
+  return { ok: false, data: null, error: new Error('Máximo de columnas desconocidas superadas'), descartadas };
+}
+
+/**
+ * Verifica el TOTP del paso 6 y devuelve un token firmado de 30 minutos.
+ * El token (no el código) es lo que viaja a /api/registro: así un código de
+ * 30 s nunca caduca entre el paso 6 y el paso 7 mientras se busca el email.
+ */
+app.post('/api/registro/verificar-2fa', async (req, res) => {
+  try {
+    const email = String((req.body && req.body.email) || '').trim().toLowerCase();
+    const secret = normalizarSecretoTotp(req.body && req.body.secret);
+    const code = String((req.body && req.body.code) || '').trim();
+
+    if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+      return res.status(400).json({ error: 'Correo electrónico inválido.' });
+    }
+    if (secret.length < 16) {
+      return res.status(400).json({ error: 'No se pudo verificar el código 2FA. Escanea de nuevo el código e inténtalo otra vez.' });
+    }
+
+    let valido = false;
+    try { valido = verifyTotp(secret, code, 2); } catch (e) { valido = false; }
+    if (!valido) {
+      return res.status(400).json({ error: 'No se pudo verificar el código 2FA. Escanea de nuevo el código e inténtalo otra vez.' });
+    }
+
+    const setupToken = jwt.sign(
+      { purpose: 'registro_2fa', email, secret },
+      localJwtSecret,
+      { expiresIn: '30m' }
+    );
+    return res.json({ success: true, setupToken });
+  } catch (err) {
+    console.error('[REGISTRO 2FA] Excepción:', err.stack || err.message);
+    return res.status(500).json({ error: 'No se pudo verificar el código 2FA en este momento.' });
+  }
+});
+
 app.post('/api/registro', async (req, res) => {
   try {
     const {
@@ -1811,6 +1994,9 @@ app.post('/api/registro', async (req, res) => {
     } = req.body;
     // Contexto de onboarding (Blueprint §2): la app entrega industria/tamaño;
     // se persisten en el tenant para que el Workspace los represente.
+    // La selección explícita del paso 2 (`area`) manda: es el modelo de negocio
+    // que usa getModulesForAreaAndPlan para activar los módulos correctos.
+    const modeloNegocio = normalizarModeloNegocio(area);
     const industria = String(req.body.industria || '').trim() || String(empresaSector || '').trim() || null;
     const tamano = String(req.body.tamano || '').trim() || String(empresaSize || sise || '').trim() || null;
 
@@ -1838,15 +2024,34 @@ app.post('/api/registro', async (req, res) => {
       }
 
       // Autenticación en dos pasos (TOTP) elegida durante el registro: se valida
-      // el código en el servidor ANTES de crear nada y se persiste el secreto.
+      // ANTES de crear nada y se persiste el secreto. El paso 6 ya canjeó el
+      // código por un token firmado (POST /api/registro/verificar-2fa); se acepta
+      // ese token y, por compatibilidad, el código TOTP crudo.
       let campos2fa = { two_factor_enabled: false, two_factor_secret: null, two_factor_confirmed_at: null, two_factor_backup_codes: [] };
       if (dosFaActivo === true || String(dosFaActivo) === 'true') {
         const secreto = normalizarSecretoTotp(dosFaSecret);
-        let codigoValido = false;
-        try { codigoValido = secreto.length >= 16 && verifyTotp(secreto, req.body.dosFaCode, 2); } catch (e) { codigoValido = false; }
-        if (!codigoValido) {
+
+        let pruebaValida = false;
+        const setupToken = String(req.body.dosFaSetupToken || '').trim();
+        if (setupToken) {
+          let payload2fa = null;
+          try { payload2fa = jwt.verify(setupToken, localJwtSecret); } catch (e) { payload2fa = null; }
+          // El token debe corresponder al MISMO email y al MISMO secreto que
+          // se van a guardar; si no, se cae al código crudo.
+          pruebaValida = !!payload2fa
+            && payload2fa.purpose === 'registro_2fa'
+            && String(payload2fa.email || '').toLowerCase() === emailNorm
+            && normalizarSecretoTotp(payload2fa.secret) === secreto;
+        }
+        if (!pruebaValida) {
+          let codigoValido = false;
+          try { codigoValido = secreto.length >= 16 && verifyTotp(secreto, req.body.dosFaCode, 2); } catch (e) { codigoValido = false; }
+          pruebaValida = codigoValido;
+        }
+        if (!pruebaValida || secreto.length < 16) {
           return res.status(400).json({ error: 'No se pudo verificar el código 2FA. Escanea de nuevo el código e inténtalo otra vez.' });
         }
+
         const codigosRespaldo = Array.isArray(dosFaBackupCodes) ? dosFaBackupCodes.filter(Boolean).map(hashBackupCode) : [];
         campos2fa = {
           two_factor_enabled: true,
@@ -1856,18 +2061,29 @@ app.post('/api/registro', async (req, res) => {
         };
       }
 
-      const { company_banner, company_logo, profile_banner, profile_pic } = req.body || {};
+      // Paso 4 (personalización): las imágenes llegan en base64 porque durante el
+      // registro todavía no hay sesión y /api/upload exige autenticación. Aquí se
+      // suben a Storage y se guardan las URLs públicas en tenants y usuarios.
+      const branding = await subirBrandingRegistro(req.body, codigoNorm);
 
       // Crear tenant en Supabase
-      await supabase.from('tenants').upsert({
+      const tenantRow = {
         codigo: codigoNorm,
         nombre_empresa: empresaNombre || 'Portal Pilot',
         dominio: (dominioWorkspace && dominioWorkspace.trim()) ? dominioWorkspace.trim() : null,
         plan: plan || 'starter',
-        area: industria,
+        area: modeloNegocio || industria,
         tamano: tamano,
         estado: 'activo'
-      }, { onConflict: 'codigo' });
+      };
+      if (branding.logo_url) tenantRow.logo_url = branding.logo_url;
+      if (branding.banner_url) tenantRow.banner_url = branding.banner_url;
+
+      const tenantRes = await upsertTolerante('tenants', tenantRow, 'codigo');
+      if (!tenantRes.ok) {
+        console.error('[REGISTRO] Error creando tenant en Supabase:', JSON.stringify(tenantRes.error));
+        return res.status(500).json({ error: 'No se pudo crear la empresa. Inténtalo de nuevo en unos minutos.' });
+      }
 
       // Hashear contraseña y crear usuario en Supabase
       const salt = await bcrypt.genSalt(10);
@@ -1875,7 +2091,7 @@ app.post('/api/registro', async (req, res) => {
 
       const userUuid = crypto.randomUUID();
       // El primer usuario del tenant es el OWNER (Blueprint §3/§6).
-      const { data: newUser, error: userErr } = await supabase.from('usuarios').insert({
+      const userRow = {
         id: userUuid,
         email: emailNorm,
         password_hash: passwordHash,
@@ -1887,12 +2103,14 @@ app.post('/api/registro', async (req, res) => {
         empresa_codigo: codigoNorm,
         estado: 'activo',
         activo: true,
-        foto_perfil_url: profile_pic || company_logo || null,
+        foto_perfil_url: branding.profile_pic_url || branding.logo_url || null,
         ...campos2fa
-      });
+      };
+      if (branding.profile_banner_url) userRow.banner_perfil_url = branding.profile_banner_url;
 
+      const { data: newUser, error: userErr } = await upsertTolerante('usuarios', userRow, null);
       if (userErr) {
-        console.error('[REGISTRO] Error insertando usuario en Supabase:', JSON.stringify(userErr));
+        console.error('[REGISTRO] Error creando usuario en Supabase:', JSON.stringify(userErr));
         return res.status(400).json({ error: userErr.message || userErr.details || 'Error al crear usuario en base de datos' });
       }
 
@@ -5224,19 +5442,36 @@ app.post('/api/ai/crm/customer', authenticate, requirePlanFeature('ia'), async (
     if (customerData) {
       const searchTerm = customerData.rtn || customerData.nombre || '';
       const { data: byRtn } = await supabase.from('facturas')
-        .select('id, correlativo, cliente_nombre, cliente_rtn, subtotal, isv, total, estado, created_at')
+        .select('id, correlativo, cliente_nombre, cliente_rtn, subtotal, isv_15, isv_18, total, estado, created_at')
         .eq('empresa_id', empresa.id)
         .eq('cliente_rtn', customerData.rtn || '__none__')
         .order('created_at', { ascending: false }).limit(10);
-      if (byRtn && byRtn.length > 0) {
+      // Esquema legado: reintenta si la DB solo tiene `isv` (no isv_15/isv_18).
+      if (byRtn && byRtn.error && /column\s+facturas\.isv_15/i.test(byRtn.error.message || '')) {
+        const legacy = await supabase.from('facturas')
+          .select('id, correlativo, cliente_nombre, cliente_rtn, subtotal, isv, total, estado, created_at')
+          .eq('empresa_id', empresa.id)
+          .eq('cliente_rtn', customerData.rtn || '__none__')
+          .order('created_at', { ascending: false }).limit(10);
+        facturas = legacy.data || [];
+      } else if (byRtn && byRtn.length > 0) {
         facturas = byRtn;
       } else {
-        const { data: byName } = await supabase.from('facturas')
-          .select('id, correlativo, cliente_nombre, cliente_rtn, subtotal, isv, total, estado, created_at')
+        let byName = await supabase.from('facturas')
+          .select('id, correlativo, cliente_nombre, cliente_rtn, subtotal, isv_15, isv_18, total, estado, created_at')
           .eq('empresa_id', empresa.id)
           .ilike('cliente_nombre', `%${customerData.nombre}%`)
           .order('created_at', { ascending: false }).limit(10);
-        facturas = byName || [];
+        if (byName && byName.error && /column\s+facturas\.isv_15/i.test(byName.error.message || '')) {
+          byName = await supabase.from('facturas')
+            .select('id, correlativo, cliente_nombre, cliente_rtn, subtotal, isv, total, estado, created_at')
+            .eq('empresa_id', empresa.id)
+            .ilike('cliente_nombre', `%${customerData.nombre}%`)
+            .order('created_at', { ascending: false }).limit(10);
+          facturas = byName.data || [];
+        } else {
+          facturas = (byName && byName.data) || byName || [];
+        }
       }
     }
 
@@ -6992,13 +7227,25 @@ app.get('/api/facturas/resumen', authenticate, async (req, res) => {
     const tenant = normalizeTenantCode(getTenantCode(req));
     const empresa = await resolverEmpresaSupabase(tenant);
     if (!empresa) return res.status(404).json({ error: 'Empresa no encontrada' });
-    const { data, error } = await supabase
-      .from('facturas').select('id, total, isv, estado, created_at')
+    // La DB productiva separa el ISV en isv_15/isv_18; si el esquema legado
+    // solo tiene la columna única `isv`, se reintenta con ella.
+    let { data, error } = await supabase
+      .from('facturas').select('id, total, isv_15, isv_18, estado, created_at')
       .eq('empresa_id', empresa.id);
+    if (error && /column\s+facturas\.isv_15/i.test(error.message || '')) {
+      const legacy = await supabase
+        .from('facturas').select('id, total, isv, estado, created_at')
+        .eq('empresa_id', empresa.id);
+      data = legacy.data; error = legacy.error;
+    }
     if (error) return res.status(500).json({ error: error.message });
     const rows = data || [];
+    const rowISV = (r) =>
+      (r.isv_15 !== undefined || r.isv_18 !== undefined)
+        ? (Number(r.isv_15) || 0) + (Number(r.isv_18) || 0)
+        : (Number(r.isv) || 0);
     const totalFacturado = rows.filter(r => r.estado !== 'anulada').reduce((s, r) => s + (Number(r.total) || 0), 0);
-    const totalISV = rows.filter(r => r.estado !== 'anulada').reduce((s, r) => s + (Number(r.isv) || 0), 0);
+    const totalISV = rows.filter(r => r.estado !== 'anulada').reduce((s, r) => s + rowISV(r), 0);
     const emitidas = rows.filter(r => r.estado === 'emitida').length;
     const anuladas = rows.filter(r => r.estado === 'anulada').length;
     const totalFacturas = rows.length;
@@ -7038,8 +7285,12 @@ app.post('/api/facturas', authenticate, async (req, res) => {
     // web usa el documento plano. El tenant siempre se toma del JWT.
     const b = req.body?.factura || req.body || {};
     if (!b.cliente_nombre) return res.status(400).json({ error: 'cliente_nombre es requerido' });
-    const subtotal = parseFloat(b.subtotal) || 0;
+const subtotal = parseFloat(b.subtotal) || 0;
     const isv = parseFloat(b.isv) || (parseFloat(b.isv_15) || 0) + (parseFloat(b.isv_18) || 0);
+    // La DB productiva usa columnas separadas isv_15/isv_18; se pasan tal cual
+    // cuando el cliente las envía, y se descartan por el fallback si no existen.
+    const isv_15 = parseFloat(b.isv_15) || 0;
+    const isv_18 = parseFloat(b.isv_18) || 0;
     const descuento = parseFloat(b.descuento) || 0;
     const total = parseFloat(b.total) || (subtotal + isv - descuento);
     // `correlativo` es único funcionalmente dentro de una empresa. Revisarlo
@@ -7059,7 +7310,7 @@ app.post('/api/facturas', authenticate, async (req, res) => {
       cliente_nombre: b.cliente_nombre.toString().slice(0, 200),
       cliente_rtn: (b.cliente_rtn || '').toString().slice(0, 20),
       cliente_email: (b.cliente_email || '').toString().slice(0, 100),
-      subtotal, isv, descuento, total,
+      subtotal, isv, isv_15, isv_18, descuento, total,
       items: Array.isArray(b.items) ? b.items : [],
       estado: 'emitida',
       tipo_documento: ({ 'factura': 'Factura', 'nota credito': 'Nota Crédito', 'nota crédito': 'Nota Crédito', 'nota debito': 'Nota Débito', 'nota débito': 'Nota Débito', 'factura exportacion': 'Factura Exportación' })[String(b.tipo_documento || 'factura').toLowerCase().trim()] || 'Factura',
@@ -8691,11 +8942,16 @@ app.get('/api/empresa/billing/documents', authenticate, requireTenantAdmin, asyn
       return r;
     }
     const [fac, rec, nc] = await Promise.all([
-      selectDocs('facturas', 'id, correlativo, cliente_nombre, total, isv, estado, tipo_documento, created_at', 'id, correlativo, cliente_nombre, total, estado, created_at'),
+      selectDocs('facturas', 'id, correlativo, cliente_nombre, total, isv_15, isv_18, estado, tipo_documento, created_at', 'id, correlativo, cliente_nombre, total, estado, created_at'),
       selectDocs('recibos', 'id, correlativo, cliente_nombre, total, created_at', 'id, total, created_at'),
       selectDocs('notas_credito', 'id, correlativo, motivo, total, created_at', 'id, total, created_at')
     ]);
-    const mapFactura = f => ({ tipo: 'factura', id: f.id, correlativo: f.correlativo || 's/n', contraparte: f.cliente_nombre || null, total: Number(f.total) || 0, isv: f.isv !== undefined && f.isv !== null ? Number(f.isv) : null, estado: f.estado || 'emitida', fecha: f.created_at });
+    const mapFactura = f => {
+      const isvRow = (f.isv_15 !== undefined || f.isv_18 !== undefined)
+        ? (Number(f.isv_15) || 0) + (Number(f.isv_18) || 0)
+        : (f.isv !== undefined && f.isv !== null ? Number(f.isv) : null);
+      return ({ tipo: 'factura', id: f.id, correlativo: f.correlativo || 's/n', contraparte: f.cliente_nombre || null, total: Number(f.total) || 0, isv: isvRow, estado: f.estado || 'emitida', fecha: f.created_at });
+    };
     const mapRecibo = r => ({ tipo: 'recibo', id: r.id, correlativo: r.correlativo || 's/n', contraparte: r.cliente_nombre || null, total: Number(r.total) || 0, isv: null, estado: 'recibido', fecha: r.created_at });
     const mapNota = n => ({ tipo: 'nota_credito', id: n.id, correlativo: n.correlativo || 's/n', contraparte: n.motivo || null, total: Number(n.total) || 0, isv: null, estado: 'emitida', fecha: n.created_at });
     const documentos = [
@@ -9151,7 +9407,7 @@ const SYNC_SAFE_COLUMNS = Object.freeze({
   transacciones: ['id', 'empresa_id', 'empresa_codigo', 'tipo', 'categoria', 'descripcion', 'monto', 'metodo_pago', 'referencia', 'fecha', 'created_at', 'updated_at', 'metadata', 'sucursal_id'],
   productos: ['id', 'empresa_id', 'empresa_codigo', 'codigo', 'nombre', 'descripcion', 'categoria', 'unidad_medida', 'imagen_url', 'precio_compra', 'precio_venta', 'stock_actual', 'stock_minimo', 'isv_rate', 'exento', 'bodega', 'activo', 'created_at', 'updated_at'],
   clientes: ['id', 'empresa_id', 'empresa_codigo', 'nombre', 'rtn', 'email', 'telefono', 'direccion', 'limite_credito', 'saldo_pendiente', 'notas', 'activo', 'created_at', 'updated_at'],
-  facturas: ['id', 'empresa_id', 'empresa_codigo', 'usuario_id', 'correlativo', 'cliente_nombre', 'cliente_rtn', 'cliente_email', 'subtotal', 'isv', 'descuento', 'total', 'estado', 'tipo_documento', 'metodo_pago', 'notas', 'created_at', 'updated_at'],
+  facturas: ['id', 'empresa_id', 'empresa_codigo', 'usuario_id', 'correlativo', 'cliente_nombre', 'cliente_rtn', 'cliente_email', 'subtotal', 'isv_15', 'isv_18', 'descuento', 'total', 'estado', 'tipo_documento', 'metodo_pago', 'notas', 'created_at', 'updated_at'],
   cotizaciones: ['id', 'empresa_id', 'empresa_codigo', 'usuario_id', 'correlativo', 'cliente_nombre', 'cliente_rtn', 'items', 'subtotal', 'isv', 'descuento', 'total', 'estado', 'notas', 'sucursal_id', 'creado_por', 'created_at', 'updated_at'],
   ordenes_compra: ['id', 'empresa_id', 'empresa_codigo', 'usuario_id', 'correlativo', 'proveedor_nombre', 'proveedor_rtn', 'items', 'subtotal', 'isv', 'descuento', 'total', 'estado', 'notas', 'bodega_id', 'created_at', 'updated_at'],
   notas: ['id', 'empresa_id', 'empresa_codigo', 'clave', 'datos', 'created_at', 'updated_at']

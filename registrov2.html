@@ -679,19 +679,18 @@
                     </div>
                 </div>
                 <div class="field">
-                    <div class="field-label"><label>Área de la empresa</label></div>
+                    <div class="field-label"><label>¿Cómo funciona tu negocio?</label></div>
                     <div class="input-wrap">
                         <i class="fas fa-sitemap field-icon"></i>
-                        <select id="regArea">
-                            <option value="">Seleccionar área empresarial...</option>
-                            <option value="Área Comercial">Área Comercial (Compra y reventa directa de productos)</option>
-                            <option value="Sector Retail (Comercio al por Menor)">Sector Retail (Pulperías, abarroterías y supermercados al consumidor final)</option>
-                            <option value="Comercio de Base Tecnológica o Membresía">Comercio de Base Tecnológica o Membresía (Clubes de compra a granel / Modelo PriceSmart)</option>
-                            <option value="Canal Tradicional">Canal Tradicional (Pulperías y mercaditos de barrio)</option>
-                            <option value="Canal Moderno">Canal Moderno (Supermercados organizados y grandes cadenas)</option>
+                        <select id="regArea" onchange="resetPasswordWarning()">
+                            <option value="">Seleccionar modelo de negocio...</option>
+                            <option value="Pulpería / Mercadito">Pulpería / Mercadito (Barrio, Colonia)</option>
+                            <option value="Tienda / Supermercado">Tienda / Supermercado (Retail, Abarrotes)</option>
+                            <option value="Club / Membresía">Club / Membresía (Membresías, Socios)</option>
                         </select>
                         <i class="fas fa-chevron-down chevron-down"></i>
                     </div>
+                    <div class="field-hint" id="hint-area"><i class="fas fa-info-circle"></i> Define los módulos y el POS que se activarán en tu cuenta.</div>
                 </div>
                 <div class="btn-row">
                     <button class="btn-submit secondary" onclick="prevStep(2)"><i class="fas fa-arrow-left" style="font-size:12px;"></i> Atrás</button>
@@ -831,6 +830,10 @@
                     </div>
                 </div>
 
+                <div class="field-hint" id="brandingStatus" style="margin-top:4px;">
+                    <i class="fas fa-cloud-arrow-up"></i> Las imágenes se subirán a tu cuenta al finalizar el registro.
+                </div>
+
                 <button class="skip-btn" onclick="nextStep(4)" style="margin: 0 auto 20px; display:flex;">
                     <i class="fas fa-forward"></i> Saltar personalización por ahora
                 </button>
@@ -880,6 +883,17 @@
                         <input type="password" id="regPass2" placeholder="Repite la contraseña">
                     </div>
                     <div class="field-hint" id="hint-password2"></div>
+                </div>
+                <div class="info-box" id="passwordWarnBox" style="display:none; background:rgba(255,159,10,0.08); border-color:rgba(255,159,10,0.35);">
+                    <i class="fas fa-triangle-exclamation" style="color:var(--orange);"></i>
+                    <div class="info-box-text">
+                        <strong style="color:var(--orange);">Tu contraseña es débil</strong>
+                        <p id="passwordWarnText" style="margin:4px 0 0;">
+                            Tu contraseña es fácil de adivinar y podría comprometer tu empresa.
+                            Puedes continuar con ella, pero te recomendamos usar el botón
+                            <strong>Generar</strong> para crear una más segura.
+                        </p>
+                    </div>
                 </div>
                 <div class="btn-row">
                     <button class="btn-submit secondary" onclick="prevStep(5)"><i class="fas fa-arrow-left" style="font-size:12px;"></i> Atrás</button>
@@ -1036,6 +1050,7 @@
         let twoFASecret = '';
         let backupCodes = [];
         let verified2FACode = '';
+        let twoFASetupToken = '';
         let emailVerificationCode = '';
 
         function updateProgress() {
@@ -1087,8 +1102,24 @@
             }
             if (step === 5) {
                 const pass = document.getElementById('regPass').value;
-                if (pass.length < 8 || !/[A-Z]/.test(pass) || !/[0-9]/.test(pass)) { showMessage('La contraseña no cumple los requisitos', 'error'); return false; }
-                if (pass !== document.getElementById('regPass2').value) { showMessage('Las contraseñas no coinciden', 'error'); return false; }
+                const pass2 = document.getElementById('regPass2').value;
+                if (!pass) { showMessage('Escribe una contraseña para tu cuenta', 'error'); return false; }
+                if (pass !== pass2) { showMessage('Las contraseñas no coinciden', 'error'); return false; }
+                // Reglas mínimas reales del backend: 8+ caracteres, una mayúscula y un número.
+                if (pass.length < 8) { showMessage('La contraseña debe tener al menos 8 caracteres', 'error'); return false; }
+                const evaluation = evaluatePassword(pass);
+                if (!evaluation.checks.upper || !evaluation.checks.number) {
+                    showMessage('La contraseña necesita al menos una mayúscula y un número', 'error');
+                    return false;
+                }
+                // Password aceptable/débil: NUNCA se bloquea la creación de la cuenta.
+                // El primer clic advierte, el segundo avanza al paso 6.
+                if (!evaluation.isStrong && !passwordWarningAcknowledged) {
+                    passwordWarningAcknowledged = true;
+                    showPasswordWarning(evaluation);
+                    showMessage('Contraseña débil: pulsa Continuar otra vez si aún quieres usarla', 'warning');
+                    return false;
+                }
                 return true;
             }
             return true;
@@ -1127,7 +1158,9 @@
 
         // ─── PREVISUALIZACIÓN DE IMÁGENES (NUEVO) ───
         // Almacén temporal de imágenes para upload
-        const pendingUploads = { 'company-banner': null, 'company-logo': null, 'profile-banner': null, 'profile-pic': null };
+        // Claves en snake_case: coinciden con los nombres que espera el backend
+        // en /api/registro (company_logo, company_banner, profile_pic, profile_banner).
+        const pendingUploads = { 'company_banner': null, 'company_logo': null, 'profile_banner': null, 'profile_pic': null };
 
         function compressImage(file, maxDimension = 500, quality = 0.65) {
             return new Promise((resolve) => {
@@ -1161,10 +1194,40 @@
             });
         }
 
+        const BRANDING_LABELS = {
+            company_banner: 'Banner de la empresa',
+            company_logo: 'Logo de la empresa',
+            profile_banner: 'Banner de tu perfil',
+            profile_pic: 'Tu foto de perfil'
+        };
+
+        // Límite práctico del body en serverless (Vercel corta ~4.5 MB). Se deja
+        // margen para el resto del JSON del registro.
+        const BRANDING_BODY_LIMIT = 3 * 1024 * 1024;
+
+        function updateBrandingStatus() {
+            const hint = document.getElementById('brandingStatus');
+            if (!hint) return;
+            const selected = Object.keys(pendingUploads).filter(k => pendingUploads[k]);
+            if (!selected.length) {
+                hint.className = '';
+                hint.innerHTML = '<i class="fas fa-cloud-arrow-up"></i> Las imágenes se subirán a tu cuenta al finalizar el registro.';
+                return;
+            }
+            hint.className = 'success';
+            hint.innerHTML = '<i class="fas fa-circle-check"></i> Se guardarán en tu cuenta: '
+                + selected.map(k => escapeHtml(BRANDING_LABELS[k] || k)).join(' · ');
+        }
+
         window.previewImage = async function(input, previewId, zoneId) {
             if (input.files && input.files[0]) {
-                const compressedBase64 = await compressImage(input.files[0], 500, 0.65);
-                if (!compressedBase64) return;
+                const compressedBase64 = await compressImage(input.files[0], 1200, 0.78);
+                if (!compressedBase64) { showMessage('No se pudo procesar la imagen', 'error'); return; }
+                const bytesApprox = Math.ceil((compressedBase64.length * 3) / 4);
+                if (bytesApprox > BRANDING_BODY_LIMIT) {
+                    showMessage('La imagen es demasiado grande para este registro. Reduce su tamaño o usa una resolución menor.', 'error');
+                    return;
+                }
                 const zone = document.getElementById(zoneId);
                 if (!zone) return;
                 const existingImg = zone.querySelector('img.preview-img');
@@ -1185,33 +1248,9 @@
                 }
                 const uploadKey = zoneId.replace('zone-', '').replace(/-/g, '_');
                 pendingUploads[uploadKey] = compressedBase64;
+                updateBrandingStatus();
             }
         };
-
-        async function uploadPendingImages(empresaCodigo) {
-            const mapping = {
-                'company_banner': { folder: `${empresaCodigo}/empresa`, name: 'banner' },
-                'company_logo': { folder: `${empresaCodigo}/empresa`, name: 'logo' },
-                'profile_banner': { folder: `${empresaCodigo}/perfil`, name: 'banner' },
-                'profile_pic': { folder: `${empresaCodigo}/perfil`, name: 'foto' }
-            };
-            const results = {};
-            for (const [key, data] of Object.entries(pendingUploads)) {
-                if (!data) continue;
-                const cfg = mapping[key];
-                if (!cfg) continue;
-                try {
-                    const res = await fetch(`${API_ROOT}/api/upload`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ file: data, folder: cfg.folder, filename: cfg.name })
-                    });
-                    const json = await res.json();
-                    if (res.ok && json.url) results[key] = json.url;
-                } catch (e) { console.warn(`[UPLOAD] Error subiendo ${key}:`, e.message); }
-            }
-            return results;
-        }
 
         window.adjustBannerZoom = function(zoneId, value) {
             const zone = document.getElementById(zoneId);
@@ -1238,33 +1277,76 @@
         };
 
         // ─── PASSWORD STRENGTH ───
-        window.checkPasswordStrength = function (password) {
-            const strengthBox = document.getElementById('passwordStrength');
-            const label = document.getElementById('strengthLabel');
-            const segments = document.querySelectorAll('.strength-segment');
-            if (!password) { strengthBox.style.display = 'none'; return; }
-            strengthBox.style.display = 'block';
-
+        // Fuente única de verdad de la fortaleza: la usan tanto el medidor visual
+        // como la validación del paso 5 (así el aviso y la barra nunca mienten).
+        function evaluatePassword(password) {
+            const value = password || '';
             const checks = {
-                length: password.length >= 8, upper: /[A-Z]/.test(password), lower: /[a-z]/.test(password),
-                number: /[0-9]/.test(password), symbol: /[^A-Za-z0-9]/.test(password), strong: password.length >= 12
+                length: value.length >= 8,
+                upper: /[A-Z]/.test(value),
+                lower: /[a-z]/.test(value),
+                number: /[0-9]/.test(value),
+                symbol: /[^A-Za-z0-9]/.test(value),
+                strong: value.length >= 12
             };
-            document.querySelectorAll('.req-item').forEach(item => {
-                const req = item.dataset.req;
-                if (checks[req]) { item.classList.add('met'); item.querySelector('i').className = 'fas fa-circle-check'; }
-                else { item.classList.remove('met'); item.querySelector('i').className = 'fas fa-circle'; }
-            });
-
-            const score = Object.values(checks).filter(Boolean).length;
+            const score = Object.keys(checks).filter(k => checks[k]).length;
             let level, levelClass;
             if (score <= 2) { level = 'Muy débil'; levelClass = 'weak'; }
             else if (score <= 3) { level = 'Débil'; levelClass = 'weak'; }
             else if (score <= 4) { level = 'Aceptable'; levelClass = 'fair'; }
-            else if (score <= 5) { level = 'Fuerte'; levelClass = 'good'; }
+            else if (score === 5) { level = 'Fuerte'; levelClass = 'good'; }
             else { level = 'Muy fuerte'; levelClass = 'strong'; }
+            // "Segura" = 5 de 6 requisitos. Por debajo se permite continuar, pero
+            // avisando (requisito: nunca bloquear la creación de la cuenta).
+            return { checks, score, level, levelClass, isStrong: score >= 5 };
+        }
 
-            label.textContent = level; label.className = `strength-label ${levelClass}`;
+        // El aviso se muestra una vez: el primer "Continuar" advierte y el
+        // segundo avanza al paso 6. Se reinicia si el usuario edita la clave.
+        let passwordWarningAcknowledged = false;
+        window.resetPasswordWarning = function () {
+            passwordWarningAcknowledged = false;
+            const box = document.getElementById('passwordWarnBox');
+            if (box) box.style.display = 'none';
+        };
+
+        function showPasswordWarning(evaluation) {
+            const box = document.getElementById('passwordWarnBox');
+            const text = document.getElementById('passwordWarnText');
+            const faltantes = [];
+            if (!evaluation.checks.length) faltantes.push('8 caracteres');
+            if (!evaluation.checks.upper) faltantes.push('una mayúscula');
+            if (!evaluation.checks.lower) faltantes.push('una minúscula');
+            if (!evaluation.checks.number) faltantes.push('un número');
+            if (!evaluation.checks.symbol) faltantes.push('un símbolo');
+            if (text) {
+                text.innerHTML = 'Tu contraseña es <strong>' + evaluation.level.toLowerCase() + '</strong>'
+                    + (faltantes.length ? ' — le falta: ' + escapeHtml(faltantes.join(', ')) + '.' : '.')
+                    + ' Puedes continuar con ella, pero una clave más segura protege mejor tu empresa. Pulsa <strong>Continuar</strong> otra vez para aceptarla.';
+            }
+            if (box) box.style.display = 'flex';
+        }
+
+        window.checkPasswordStrength = function (password) {
+            const strengthBox = document.getElementById('passwordStrength');
+            const label = document.getElementById('strengthLabel');
+            const segments = document.querySelectorAll('.strength-segment');
+            if (!password) { strengthBox.style.display = 'none'; window.resetPasswordWarning(); return; }
+            strengthBox.style.display = 'block';
+
+            const evaluation = evaluatePassword(password);
+            document.querySelectorAll('.req-item').forEach(item => {
+                const req = item.dataset.req;
+                if (evaluation.checks[req]) { item.classList.add('met'); item.querySelector('i').className = 'fas fa-circle-check'; }
+                else { item.classList.remove('met'); item.querySelector('i').className = 'fas fa-circle'; }
+            });
+
+            label.textContent = evaluation.level;
+            label.className = `strength-label ${evaluation.levelClass}`;
+            const { score, levelClass } = evaluation;
             segments.forEach((seg, i) => { seg.classList.remove('filled', 'weak', 'fair', 'good', 'strong'); if (i < score) seg.classList.add('filled', levelClass); });
+
+            window.resetPasswordWarning();
         };
 
         window.generatePassword = function () {
@@ -1274,6 +1356,7 @@
             for (let i = 0; i < 10; i++) password += all[Math.floor(Math.random() * all.length)];
             password = password.split('').sort(() => Math.random() - 0.5).join('');
             document.getElementById('regPass').value = password;
+            document.getElementById('regPass2').value = password;
             document.getElementById('regPass').type = 'text';
             checkPasswordStrength(password);
             showMessage('Contraseña segura generada', 'success');
@@ -1349,6 +1432,7 @@
             const secret = base32Encode(crypto.getRandomValues(new Uint8Array(20)));
             twoFASecret = secret;
             verified2FACode = '';
+            twoFASetupToken = '';
             document.getElementById('secretKey').textContent = secret.match(/.{1,4}/g).join(' ');
             const email = document.getElementById('regEmail').value;
             const uri = `otpauth://totp/PortalPilot:${encodeURIComponent(email)}?secret=${secret}&issuer=PortalPilot&algorithm=SHA1&digits=6&period=30`;
@@ -1385,14 +1469,39 @@
         window.verify2FA = async function () {
             const code = getOTPValue('otpGroup').trim();
             if (code.length !== 6) { showMessage('Ingresa el código completo de 6 dígitos', 'error'); return; }
-            const offsets = [0, -1, 1, -2, 2];
-            const validCodes = await Promise.all(offsets.map(off => computeTOTP(twoFASecret, off)));
-            if (!validCodes.includes(code)) { showMessage('Código 2FA incorrecto. Verifica la hora de tu teléfono.', 'error'); return; }
-            verified2FACode = code;
-            showMessage('✓ 2FA verificado correctamente', 'success');
-            document.getElementById('backupCodesGrid').innerHTML = backupCodes.map(c => `<div class="backup-code">${c}</div>`).join('');
-            document.getElementById('twofa-phase-scan').style.display = 'none';
-            document.getElementById('twofa-phase-backup').style.display = 'block';
+
+            const email = document.getElementById('regEmail').value.trim().toLowerCase();
+            const btn = document.querySelector('#twofa-phase-scan .btn-submit:not(.secondary)');
+            const originalHtml = btn ? btn.innerHTML : null;
+            if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verificando...'; }
+
+            try {
+                // El servidor es la autoridad: valida el TOTP y devuelve un token
+                // firmado de corta duración. Evita depender de un código que caduca
+                // mientras el usuario busca el código de correo.
+                const res = await fetch(`${API_ROOT}/api/registro/verificar-2fa`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, secret: twoFASecret, code })
+                });
+                const data = await readJsonResponse(res);
+                if (!res.ok || !data.setupToken) {
+                    showMessage(data.error || 'No se pudo verificar el código 2FA. Escanea de nuevo el QR e inténtalo otra vez.', 'error');
+                    return;
+                }
+
+                verified2FACode = code;
+                twoFASetupToken = data.setupToken;
+                showMessage('2FA verificado correctamente', 'success');
+                document.getElementById('backupCodesGrid').innerHTML = backupCodes.map(c => `<div class="backup-code">${c}</div>`).join('');
+                document.getElementById('twofa-phase-scan').style.display = 'none';
+                document.getElementById('twofa-phase-backup').style.display = 'block';
+            } catch (error) {
+                console.error('[2FA] Error verificando:', error);
+                showMessage('No se pudo conectar con el servidor para verificar el 2FA. Inténtalo otra vez.', 'error');
+            } finally {
+                if (btn) { btn.disabled = false; btn.innerHTML = originalHtml; }
+            }
         };
 
         window.confirmBackupSaved = function () {
@@ -1478,8 +1587,9 @@
                 const dominio = document.getElementById('regDominio').value.trim().toLowerCase();
                 const empresaCodigo = `PP-${Math.random().toString(36).substring(2, 6).toUpperCase()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
 
-                // Imágenes: pasar base64 directamente (no funciona upload en Vercel)
-                const imageUrls = {
+                // Imágenes del paso 4: se envían en base64 y el backend las sube a
+                // Supabase Storage y persiste las URLs (antes solo quedaban en el navegador).
+                const imageData = {
                     company_banner: pendingUploads.company_banner || null,
                     company_logo: pendingUploads.company_logo || null,
                     profile_banner: pendingUploads.profile_banner || null,
@@ -1493,6 +1603,13 @@
                 const pais = document.getElementById('regCountry').value || '';
                 const zonaHoraria = document.getElementById('regTimezone').value || '';
 
+                if (!twoFASetupToken) {
+                    showMessage('Vuelve al paso de 2FA y verifica el código para continuar.', 'error');
+                    btn.innerHTML = '<i class="fas fa-rocket"></i> Crear mi tenant';
+                    btn.disabled = false;
+                    return;
+                }
+
                 const payload = {
                     empresaNombre: document.getElementById('regCompany').value.trim(),
                     empresaCodigo,
@@ -1500,26 +1617,29 @@
                     landPage: '',
                     empresaSize,
                     sise: sizeMap[empresaSize] || 'small',
-                    empresaSector: '',
+                    empresaSector: document.getElementById('regArea').value || '',
                     empresaCountry: pais,
                     zonaHoraria,
-                    logoUrl: imageUrls.company_logo || null,
-                    bannerUrl: imageUrls.company_banner || null,
                     usuarioNombre: document.getElementById('regFirst').value.trim(),
                     usuarioApellido: document.getElementById('regLast').value.trim(),
                     email,
                     cargo: 'Owner',
                     area: document.getElementById('regArea').value || 'Sin asignar',
                     rango: 'Administrador',
-                    perfilFotoUrl: imageUrls.profile_pic || null,
-                    perfilBannerUrl: imageUrls.profile_banner || null,
                     password,
                     dosFaActivo: true,
                     dosFaSecret: twoFASecret || null,
                     dosFaBackupCodes: backupCodes,
                     dosFaCode: verified2FACode || null,
+                    dosFaSetupToken: twoFASetupToken,
                     terminosAceptados: true,
                     plan,
+                    // Paso 4 (personalización): branding en base64 para que el
+                    // backend lo suba a Storage y devuelva URLs públicas.
+                    company_logo: imageData.company_logo,
+                    company_banner: imageData.company_banner,
+                    profile_pic: imageData.profile_pic,
+                    profile_banner: imageData.profile_banner,
                     // Contexto de onboarding (Blueprint §2): persiste en el tenant
                     // lo que la app/web ya respondió; no se vuelve a preguntar.
                     industria: (function(){ try { const c = JSON.parse(sessionStorage.getItem('portalpilot_onboarding') || '{}'); return c.industria || c.business || ''; } catch (e) { return ''; } })(),
@@ -1608,13 +1728,14 @@
                 const modulosParam = params.get('modulos') || '';
                 const origen = params.get('origen') || (business ? 'app' : '');
                 const normalizedBusiness = (business || industria).toLowerCase();
-                const areaByBusiness = normalizedBusiness.includes('supermer') || normalizedBusiness.includes('tienda') || normalizedBusiness.includes('retail')
-                    ? 'Sector Retail (Comercio al por Menor)'
-                    : normalizedBusiness.includes('pulper') || normalizedBusiness.includes('mercad')
-                        ? 'Canal Tradicional'
-                        : normalizedBusiness.includes('club') || normalizedBusiness.includes('membres')
-                            ? 'Comercio de Base Tecnológica o Membresía'
-                            : (business || industria) ? 'Área Comercial' : '';
+                // Se mapea al modelo de negocio del paso 2 (pulpería / tienda / club).
+                const areaByBusiness = normalizedBusiness.includes('club') || normalizedBusiness.includes('membres') || normalizedBusiness.includes('socio')
+                    ? 'Club / Membresía'
+                    : normalizedBusiness.includes('pulper') || normalizedBusiness.includes('mercad') || normalizedBusiness.includes('barrio') || normalizedBusiness.includes('colonia')
+                        ? 'Pulpería / Mercadito'
+                        : normalizedBusiness.includes('supermer') || normalizedBusiness.includes('tienda') || normalizedBusiness.includes('retail') || normalizedBusiness.includes('abarroter')
+                            ? 'Tienda / Supermercado'
+                            : '';
                 const area = document.getElementById('regArea');
                 if (areaByBusiness && area) area.value = areaByBusiness;
                 sessionStorage.setItem('portalpilot_onboarding', JSON.stringify({ business, customer, operation, industria, categoria, operacion, modulos: modulosParam, origen }));
@@ -1632,9 +1753,11 @@
             } catch (e) { console.warn('No se pudieron cargar las preferencias del onboarding:', e); }
         })();
 
-        function escapeBannerHtml(str) {
+        function escapeHtml(str) {
             return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
         }
+        // Alias histórico (banner de onboarding).
+        function escapeBannerHtml(str) { return escapeHtml(str); }
 
         // ─── TIMEZONE POR PAÍS ───
         window.onCountryChange = function () {

@@ -10,6 +10,30 @@ function isGlobalPortalRole(role) {
   return ['root', 'root pp', 'superadmin', 'super admin'].includes(normalized);
 }
 
+// Destino tras login: la pertenencia al panel /pp la decide el servidor.
+// `empresa_codigo === 'ROOT'` es la fuente de verdad; la lista de roles globales
+// se conserva como refuerzo para cuentas historicas. Un Owner de tenant nunca
+// debe caer en /pp aunque su `rol` diga "owner"/"admin".
+function resolvePostLoginTarget(user) {
+  const empresa = String((user && user.empresa_codigo) || '').trim().toUpperCase();
+  if (empresa === 'ROOT') return 'pp/dashboard.html';
+  if (!empresa && isGlobalPortalRole(user && user.rol)) return 'pp/dashboard.html';
+  return 'empresa/dashboard.html';
+}
+
+// Limpia cualquier sesion anterior antes de guardar la nueva. Sin esto, un
+// login con una cuenta distinta conserva token/rol/empresa de la cuenta previa
+// y el navegador navega con el panel de la sesion ajena.
+function resetPreviousSession() {
+  [
+    'token', 'userRole', 'userName', 'userApellido', 'userEmail', 'userFoto',
+    'userBanner', 'empresaCodigo', 'empresaNombre', 'currentAccountId',
+    'linkedAccounts', 'empresaPlan', 'trialExpired', 'pendingUserId',
+    'pendingEmail', 'userId'
+  ].forEach(function (k) { try { localStorage.removeItem(k); } catch (e) { /* no critico */ } });
+  try { sessionStorage.clear(); } catch (e) { /* no critico */ }
+}
+
 // Única declaración de supabase (evita el error "already been declared")
 let supabase = null;
 
@@ -314,6 +338,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
             const user2 = data2.user;
             const norm2 = (user2.empresa_codigo || '').toString().trim().toUpperCase();
+            resetPreviousSession();
             localStorage.setItem('token', data2.token);
             localStorage.setItem('userRole', user2.rol || '');
             localStorage.setItem('userName', user2.nombre || '');
@@ -328,7 +353,7 @@ document.addEventListener('DOMContentLoaded', function () {
             localStorage.setItem('trialExpired', 'false');
             localStorage.removeItem('linkedAccounts');
             showMessage('Acceso concedido (2FA). Redirigiendo...', 'success');
-            setTimeout(() => { window.location.href = isGlobalPortalRole(user2.rol) ? 'pp/dashboard.html' : 'empresa/dashboard.html'; }, 1200);
+            setTimeout(() => {           window.location.href = resolvePostLoginTarget(user2); }, 1200);
           } catch (err2) {
             showMessage('Error al verificar 2FA.', 'error');
             btn2.innerHTML = '<i class="fas fa-check"></i> Verificar código'; btn2.disabled = false;
@@ -347,6 +372,10 @@ document.addEventListener('DOMContentLoaded', function () {
       const normalizedEmpresa = (user.empresa_codigo || '').toString().trim().toUpperCase();
       const empresaNombre = user.empresa_nombre || (normalizedEmpresa === 'ROOT' ? 'Portal Pilot' : normalizedEmpresa);
 
+      // Descarta la sesión anterior ANTES de escribir la nueva: evita que un
+      // login con una cuenta de tenant conserve el rol/empresa de la cuenta ROOT
+      // que se usada antes en el mismo navegador.
+      resetPreviousSession();
       localStorage.setItem('token', data.token);
       localStorage.setItem('userRole', user.rol || '');
       localStorage.setItem('userName', user.nombre || '');
@@ -387,7 +416,7 @@ document.addEventListener('DOMContentLoaded', function () {
         localStorage.removeItem('pendingEmail');
         showMessage('Acceso concedido. Redirigiendo...', 'success');
         setTimeout(() => {
-          window.location.href = isGlobalPortalRole(user.rol) ? 'pp/dashboard.html' : 'empresa/dashboard.html';
+          window.location.href = resolvePostLoginTarget(user);
         }, 1200);
       }
 

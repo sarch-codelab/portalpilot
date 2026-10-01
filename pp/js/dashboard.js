@@ -109,6 +109,25 @@ document.querySelectorAll('.model-item').forEach(item => {
 });
 
 // ── Cargar Notificaciones desde /api/notificaciones ────
+// Normaliza el link persistido en BD a una ruta real del portal.
+// /pp/administracion/tenants no existe -> se mapea a /pp/tenants.html.
+function resolveNotifDestino(link) {
+  if (!link) return '';
+  const destino = String(link).trim();
+  if (!destino || destino === '#') return '';
+  const rutas = {
+    '/pp/administracion/tenants': '/pp/tenants.html',
+    '/pp/administracion/tenants/': '/pp/tenants.html',
+    '/pp/tenants': '/pp/tenants.html',
+    '/pp/auditoria': '/pp/auditoria.html',
+    '/pp/usuarios': '/pp/usuarios.html'
+  };
+  if (rutas[destino]) return rutas[destino];
+  if (/^https?:/i.test(destino)) return destino;
+  if (destino.charAt(0) === '/') return destino;
+  return '/pp/' + destino;
+}
+
 async function loadDashboardNotifications() {
   const container = document.getElementById('dashboardNotifications');
   const badge = document.getElementById('notifBadge');
@@ -165,28 +184,40 @@ async function loadDashboardNotifications() {
     container.innerHTML = notifs.slice(0, 10).map(n => {
       const [icon, cls] = tipoMap[n.tipo] || tipoMap.info;
       const isUnread = !n.leida;
+      const destino = resolveNotifDestino(n.link);
       return `
-        <div class="notification-item ${isUnread ? 'unread' : ''}" data-id="${n.id}">
+        <div class="notification-item ${isUnread ? 'unread' : ''}" data-id="${n.id}"${destino ? ` data-link="${destino}" role="button" tabindex="0" style="cursor:pointer;"` : ''}>
           <div class="notification-icon ${cls}"><i class="fas ${icon}"></i></div>
           <div class="notification-content">
             <div class="notification-title">${n.titulo || 'Notificación'}</div>
             <div class="notification-desc">${n.mensaje || ''}</div>
-            <div class="notification-time">${fmtTime(n.created_at)}</div>
+            <div class="notification-time">${fmtTime(n.created_at)}${destino ? ' · Ver detalle' : ''}</div>
           </div>
         </div>`;
     }).join('');
 
-    container.querySelectorAll('.notification-item.unread').forEach(item => {
-      item.addEventListener('click', async () => {
+    container.querySelectorAll('.notification-item').forEach(item => {
+      const marcar = async () => {
         const id = item.dataset.id;
-        item.classList.remove('unread');
-        try {
-          await fetch(`${API_ROOT}/api/notificaciones/${id}/read`, {
-            method: 'PUT',
-            headers: { 'Authorization': `Bearer ${token}` }
-          });
-          loadDashboardNotifications();
-        } catch (e) { /* no crítico */ }
+        if (item.classList.contains('unread')) {
+          item.classList.remove('unread');
+          try {
+            await fetch(`${API_ROOT}/api/notificaciones/${id}/read`, {
+              method: 'PUT',
+              headers: { 'Authorization': `Bearer ${token}` }
+            });
+          } catch (e) { /* no crítico */ }
+        }
+        loadDashboardNotifications();
+      };
+      // El clic navega al destino de la notificación (antes no hacía nada).
+      item.addEventListener('click', async () => {
+        const destino = item.dataset.link;
+        await marcar();
+        if (destino) window.location.href = destino;
+      });
+      item.addEventListener('keydown', async e => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); item.click(); }
       });
     });
   } catch (e) {
@@ -302,6 +333,14 @@ function renderDashboardModels() {
 renderDashboardModels();
 loadDashboardNotifications();
 loadDashboardMessages();
+
+// Notificaciones en vivo: el dashboard se queda abierto durante horas, asi que
+// un Owner registrado en otro navegador debe aparecer sin recargar la pagina.
+setInterval(loadDashboardNotifications, 20000);
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) loadDashboardNotifications();
+});
+window.addEventListener('focus', loadDashboardNotifications);
 
 // ── Dashboard Data Loading (Backend Integration) ────
 let dashboardData = null;

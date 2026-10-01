@@ -121,10 +121,23 @@
           // /api/session/sync rehidrata el rol vigente desde la base de datos.
           // No reemplazarlo con /api/users/:id, que puede devolver el rol del
           // tenant y degradar accidentalmente una cuenta global a empresa.
-          const sessionRole = syncData.user?.rol || localStorage.getItem('userRole') || '';
-          const role = String(sessionRole).toLowerCase().trim().replace(/[_-]+/g, ' ').replace(/\s+/g, ' ');
-          const isRoot = ['root', 'root pp', 'superadmin', 'super admin'].includes(role);
-          const target = isRoot ? 'pp/dashboard.html' : 'empresa/dashboard.html';
+          //
+          // SEGURIDAD: la pertenencia al panel /pp se decide EXCLUSIVAMENTE con
+          // datos del servidor (empresa_codigo === 'ROOT'). Antes se usaba
+          // localStorage.getItem('userRole') como fallback, y una sesion ROOT
+          // anterior dejaba ese valor cacheado: al iniciar sesion con una cuenta
+          // nueva de tenant el usuario caia en /pp en vez de /empresa.
+          // Ante cualquier duda se falla cerrado (no-root).
+          const sessionUser = syncData.user || {};
+          const sessionEmpresa = String(sessionUser.empresa_codigo || sessionUser.tenant_code || '').trim().toUpperCase();
+          const sessionRoleNorm = String(sessionUser.rol || '').toLowerCase().trim().replace(/[_-]+/g, ' ').replace(/\s+/g, ' ');
+          const serverConfirmsRoot = sessionEmpresa === 'ROOT'
+            || ['root', 'root pp', 'superadmin', 'super admin'].includes(sessionRoleNorm);
+          const target = serverConfirmsRoot ? 'pp/dashboard.html' : 'empresa/dashboard.html';
+          // Sincroniza el cache local con la verdad del servidor para que la
+          // sesion actual no arrastre el rol de la sesion anterior.
+          if (sessionEmpresa) localStorage.setItem('empresaCodigo', sessionEmpresa);
+          if (sessionRoleNorm) localStorage.setItem('userRole', sessionRoleNorm);
           window.location.replace(target);
           return;
         }

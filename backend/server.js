@@ -6038,7 +6038,7 @@ Origen: Registro público (registrov2)`;
       tipo: 'sistema',
       prioridad: 'alta',
       leida: false,
-      link: '/pp/administracion/tenants',
+      link: '/pp/tenants.html',
       created_at: new Date().toISOString()
     }]);
   } catch (err) {
@@ -6064,7 +6064,7 @@ Origen: Registro público (registrov2)`;
       empresa_codigo: empresaCodigo,
       empresa_id: null,
       accion: 'owner_creado',
-      descripcion: 'Primer Owner creado mediante registro público',
+      descripcion: 'Owner creado mediante registro público',
       tipo: 'registro',
       usuario: emailOwner,
       ip: ip || '0.0.0.0',

@@ -2861,6 +2861,8 @@
                   }
                 }
                 const isDataUrl = avatarSrc.startsWith('data:');
+                // Un data: URL grande no es una URL navegable para <img src> en
+                // todas las rutas; se descarta y queda el avatar de iniciales.
                 const safeAvatarSrc = isDataUrl && avatarSrc.length > 5000 ? '' : avatarSrc;
                 const avatarHtml = safeAvatarSrc
                   ? `<img src="${safeAvatarSrc}" alt="${cleanNombre} ${cleanApellido}" loading="lazy" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"><span class="avatar-fallback" style="display:none;width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--cyan));color:#fff;font-weight:600;font-size:14px;display:flex;align-items:center;justify-content:center;">${initials}</span>`

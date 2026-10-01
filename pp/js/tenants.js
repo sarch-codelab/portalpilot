@@ -215,6 +215,31 @@ async function deleteTenant(id, name) {
   }
 }
 
+// Avatar del tenant: muestra el logo real si existe y, si la imagen falla o no
+// hay logo, cae a las iniciales. Antes solo pintaba iniciales, por eso el logo
+// subido en el registro nunca aparecia en /pp/tenants.
+function tenantAvatarHtml(t, extraClass) {
+  const iniciales = String(t.name || t.codigo || '?')
+    .split(' ').map(w => w[0]).filter(Boolean).slice(0, 2).join('').toUpperCase();
+  const logo = safeImgUrl(t.logo_url);
+  const clase = 'tenant-avatar' + (extraClass ? ' ' + extraClass : '');
+  if (!logo) return `<div class="${clase}">${iniciales}</div>`;
+  return `<div class="${clase} tenant-avatar-img">
+    <img src="${logo}" alt="${t.name || 'Logo'}" loading="lazy"
+         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+    <span style="display:none;width:100%;height:100%;align-items:center;justify-content:center;">${iniciales}</span>
+  </div>`;
+}
+
+// Solo acepta URLs http(s) o data:; bloquea javascript: y rutas relativas rotas.
+function safeImgUrl(url) {
+  if (!url) return '';
+  const v = String(url).trim();
+  if (/^https?:\/\//i.test(v)) return v;
+  if (/^data:image\//i.test(v)) return v;
+  return '';
+}
+
 function renderTenants(data = filteredTenants) {
   const tbody = document.getElementById('tenantsBody');
   tbody.innerHTML = '';
@@ -241,7 +266,7 @@ function renderTenants(data = filteredTenants) {
     row.innerHTML = `
       <td>
         <div class="tenant-info">
-          <div class="tenant-avatar">${t.name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()}</div>
+          ${tenantAvatarHtml(t)}
           <div>
             <div class="tenant-name">${t.name}</div>
             <div class="tenant-id">${t.domain}</div>
@@ -660,7 +685,7 @@ async function openDetailPanel(tenant) {
   const content = document.getElementById('detailContent');
   content.innerHTML = `
     <div class="tenant-detail-header">
-      <div class="tenant-detail-avatar">${tenant.name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()}</div>
+      ${tenantAvatarHtml(tenant, 'tenant-detail-avatar')}
       <div class="tenant-detail-info">
         <div class="name">${tenant.name}</div>
         <div class="id">${tenant.id} · ${tenant.domain}</div>

@@ -1899,14 +1899,15 @@ async function subirBrandingRegistro(body, codigoNorm) {
   return resultado;
 }
 
-// Detecta el nombre de la columna en el error de PostgREST
-// "column <tabla>.<columna> does not exist" (y variantes entrecomilladas).
-// Se decide por el mensaje, no por `code`: una columna inexistente puede
-// llegar como 42703 (Postgres) o PGRST204 (esquema cacheado por PostgREST).
+// Detecta el nombre de la columna ausente en los dos formatos de error que usa
+// el stack real: PostgREST/PGRST204 ("Could not find the 'banner_url' column of
+// 'tenants' in the schema cache") y Postgres/42703 ("column tenants.banner_url
+// does not exist"). Se decide por el mensaje, no por `code`.
 function columnaInexistenteDe(error) {
   if (!error) return null;
   const msg = String(error.message || '');
   const patrones = [
+    /could not find the '([^']+)' column/i,
     /column\s+"([^"]+)"\s+does not exist/i,
     /column\s+[A-Za-z0-9_]+\.([A-Za-z0-9_]+)\s+does not exist/i,
     /column\s+([A-Za-z0-9_]+)\s+does not exist/i
@@ -2133,6 +2134,16 @@ app.post('/api/registro', async (req, res) => {
 
     // AUTOMATION HOOK: tenant_creado
     dispatchAutomationEvent(codigoNorm, 'tenant_creado', { empresaCodigo: codigoNorm, plan, email }).catch(err => console.warn('[REGISTRO] automation hook error:', err.message));
+    crearNotificacionAdminRegistro({
+      empresaCodigo: codigoNorm,
+      tenantNombre: empresaNombre || 'Portal Pilot',
+      emailOwner: emailNorm,
+      nombreOwner: String(usuarioNombre || '').trim(),
+      apellidoOwner: String(usuarioApellido || '').trim(),
+      plan: plan || 'starter',
+      dominioWorkspace: dominioWorkspace || null,
+      ip: req.ip || (req.headers && req.headers['x-forwarded-for']) || '0.0.0.0'
+    }).catch(err => console.warn('[REGISTRO] notificacion admin registro error:', err.message));
 
     return res.status(201).json({ 
       message: 'Tenant creado con éxito',
@@ -6004,28 +6015,63 @@ app.patch('/api/automation/:id', authenticate, requireTenantAdmin, requirePlanFe
 // AUTOMATION ENGINE — Event dispatching + polling execution
 // ═══════════════════════════════════════════════════════════
 
-async function dispatchAutomationEvent(empresaCodigo, eventType, payload) {
-  if (!supabase || !empresaCodigo) return;
-  try {
-    const { data: rules, error } = await supabase
-      .from('automation_rules')
-      .select('*')
-      .eq('empresa_codigo', empresaCodigo)
-      .eq('trigger_type', eventType)
-      .eq('enabled', true);
-    if (error || !rules || !rules.length) return;
+async function crearNotificacionAdminRegistro({ empresaCodigo, tenantNombre, emailOwner, nombreOwner, apellidoOwner, plan, dominioWorkspace, ip }) {
+  if (!supabase) return;
+  const titulo = 'Nuevo Owner registrado';
+  const nombreCompleto = [nombreOwner, apellidoOwner].filter(Boolean).join(' ') || 'Owner';
+  const mensaje = `Se registró un nuevo Owner en el sistema.
 
-    for (const rule of rules) {
-      if (!checkConditions(rule.conditions, payload)) continue;
-      await executeActions(empresaCodigo, rule, payload);
-      await supabase.from('automation_rules').update({
-        last_executed_at: new Date().toISOString(),
-        execution_count: (rule.execution_count || 0) + 1,
-        updated_at: new Date().toISOString()
-      }).eq('id', rule.id);
-    }
+Empresa: ${tenantNombre || empresaCodigo}
+Código: ${empresaCodigo}
+Owner: ${nombreCompleto} (${emailOwner})
+Plan: ${plan || 'starter'}
+Dominio workspace: ${dominioWorkspace || '-'}
+
+Origen: Registro público (registrov2)`;
+
+  try {
+    await supabase.from('notificaciones').insert([{
+      empresa_codigo: 'ROOT',
+      usuario_id: null,
+      titulo,
+      mensaje,
+      tipo: 'sistema',
+      prioridad: 'alta',
+      leida: false,
+      link: '/pp/administracion/tenants',
+      created_at: new Date().toISOString()
+    }]);
   } catch (err) {
-    console.warn('[AUTOMATION] dispatchEvent error:', err.message);
+    console.warn('[REGISTRO] No se pudo crear notificación ROOT para nuevo owner:', err.message);
+  }
+
+  try {
+    await supabase.from('auditoria_logs').insert([{
+      empresa_codigo: 'ROOT',
+      usuario_email: 'sistema',
+      accion: 'owner_creado',
+      modulo: 'registro',
+      detalle: `Nuevo Owner registrado: ${emailOwner} (empresa ${empresaCodigo}, plan ${plan || 'starter'})`,
+      ip_origen: ip || '0.0.0.0',
+      created_at: new Date().toISOString()
+    }]);
+  } catch (err) {
+    console.warn('[REGISTRO] No se pudo crear auditoria_logs ROOT:', err.message);
+  }
+
+  try {
+    await supabase.from('auditoria').insert([{
+      empresa_codigo: empresaCodigo,
+      empresa_id: null,
+      accion: 'owner_creado',
+      descripcion: 'Primer Owner creado mediante registro público',
+      tipo: 'registro',
+      usuario: emailOwner,
+      ip: ip || '0.0.0.0',
+      created_at: new Date().toISOString()
+    }]);
+  } catch (err) {
+    console.warn('[REGISTRO] No se pudo crear auditoria del tenant:', err.message);
   }
 }
 

@@ -2133,7 +2133,7 @@ app.post('/api/registro', async (req, res) => {
     }
 
     // AUTOMATION HOOK: tenant_creado
-    dispatchAutomationEvent(codigoNorm, 'tenant_creado', { empresaCodigo: codigoNorm, plan, email }).catch(err => console.warn('[REGISTRO] automation hook error:', err.message));
+    try { if (typeof dispatchAutomationEvent === 'function') await dispatchAutomationEvent(codigoNorm, 'tenant_creado', { empresaCodigo: codigoNorm, plan, email }); } catch (err) { console.warn('[REGISTRO] automation hook error:', err.message); }
     crearNotificacionAdminRegistro({
       empresaCodigo: codigoNorm,
       tenantNombre: empresaNombre || 'Portal Pilot',

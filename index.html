@@ -99,13 +99,13 @@
   <div id="top-banner" class="pp-announce-bar">
     <div class="pp-announce-inner">
       <div class="pp-announce-left">
-        <span class="pp-announce-dot"></span>
-        <span class="pp-announce-strong">Prueba Gratis — 15 días</span>
+        <span class="pp-announce-dot" style="background:#30d158;"></span>
+        <span class="pp-announce-strong">🇭🇳 Planes Adaptados a Honduras</span>
         <span class="pp-announce-sep">·</span>
-        <span class="pp-announce-muted">Business sin compromiso · Sin tarjeta requerida</span>
+        <span class="pp-announce-muted">Pulpería, Tienda, Club o Cotizador Modular de 21 Módulos</span>
       </div>
       <div class="pp-announce-right">
-        <a href="registrov2.html" class="pp-announce-cta">Iniciar Prueba Gratis <i class="fas fa-arrow-right"></i></a>
+        <a href="planes.html" class="pp-announce-cta">Ver Planes & Cotizar <i class="fas fa-arrow-right"></i></a>
         <button type="button" aria-label="Cerrar banner" class="pp-announce-close" onclick="(function(){var b=document.getElementById('top-banner');b.style.display='none';try{localStorage.setItem('pp_banner_dismissed_at',String(Date.now()));}catch(e){}if(window.syncNavTop)window.syncNavTop();})()"><i class="fas fa-times"></i></button>
       </div>
     </div>
@@ -182,6 +182,7 @@
         <img src="img/iconos/Portal Pilot.png" alt="Portal Pilot" style="height:22px;width:auto;object-fit:contain;display:block;">
       </div>
       <div class="nav-right">
+        <a href="planes.html" class="btn btn-ghost btn-sm glow-on-hover glow-ghost" style="border-color:rgba(139,92,246,0.3);color:var(--accent-soft);"><i class="fas fa-calculator"></i> Planes & Cotizador</a>
         <a href="login.html" class="btn btn-ghost btn-sm glow-on-hover glow-ghost nav-btn-login">Acceder</a>
         <a href="download.html" class="btn btn-acc btn-sm glow-on-hover glow-accent nav-btn-download"><i class="fas fa-rocket"></i> Descargar APP</a>
       </div>
@@ -1154,8 +1155,100 @@
       <div class="pricing-cards-container reveal">
 
         <!-- PLAN: STARTER (Prueba Gratis) -->
+        <!-- PLAN: PULPERÍA -->
         <div class="pricing-card-wrapper plan-starter">
-          <div class="pricing-card-side-tab">Prueba</div>
+          <div class="pricing-card-side-tab">Pulpería</div>
+          <div class="pricing-card">
+            <div class="pricing-card-price-section">
+              <div class="pricing-card-price"><span class="pricing-card-price-text"><sup style="font-size:1.4rem;">L</sup>299</span></div>
+              <div class="pricing-card-subtitle">Por mes · L. 10 al día<br>Menos que un refresco</div>
+            </div>
+            <div class="pricing-card-features">
+              <div class="pricing-card-feature"><i class="fas fa-check" style="margin-right:8px;color:var(--green);font-size:11px;"></i> POS de mostrador ultrarrápido</div>
+              <div class="pricing-card-feature"><i class="fas fa-check" style="margin-right:8px;color:var(--green);font-size:11px;"></i> <strong>Libreta digital de fiado</strong></div>
+              <div class="pricing-card-feature"><i class="fas fa-check" style="margin-right:8px;color:var(--green);font-size:11px;"></i> Control de caja y arqueo diario</div>
+              <div class="pricing-card-feature"><i class="fas fa-check" style="margin-right:8px;color:var(--green);font-size:11px;"></i> Inventario básico con alertas</div>
+              <div class="pricing-card-feature"><i class="fas fa-check" style="margin-right:8px;color:var(--green);font-size:11px;"></i> Facturación SAR simplificada</div>
+              <div class="pricing-card-feature"><i class="fas fa-check" style="margin-right:8px;color:var(--green);font-size:11px;"></i> Hasta <strong>3</strong> usuarios</div>
+            </div>
+            <button class="pricing-card-btn" onclick="selectPlan('pulperia')">
+              <i class="fas fa-shop" style="margin-right:6px;"></i> Elegir Pulpería
+            </button>
+          </div>
+          <div class="pricing-card-bottom-tab">Barrio & Colonia</div>
+        </div>
+
+        <!-- PLAN: TIENDA (Popular) -->
+        <div class="pricing-card-wrapper plan-business">
+          <div class="pricing-card-side-tab">Tienda</div>
+          <div class="pricing-card">
+            <div class="pricing-card-price-section">
+              <div class="pricing-card-price"><span class="pricing-card-price-text"><sup style="font-size:1.4rem;">L</sup><span id="p1">799</span></span></div>
+              <div class="pricing-card-subtitle">Por mes · L. 26.60 al día<br>Menos del 0.8% de tus ventas</div>
+            </div>
+            <div class="pricing-card-features">
+              <div class="pricing-card-feature"><i class="fas fa-check" style="margin-right:8px;color:var(--green);font-size:11px;"></i> POS retail con código de barras</div>
+              <div class="pricing-card-feature"><i class="fas fa-check" style="margin-right:8px;color:var(--green);font-size:11px;"></i> Facturación SAR <strong>formal</strong> (CAI/RTN)</div>
+              <div class="pricing-card-feature"><i class="fas fa-check" style="margin-right:8px;color:var(--green);font-size:11px;"></i> Inventario categorizado</div>
+              <div class="pricing-card-feature"><i class="fas fa-check" style="margin-right:8px;color:var(--green);font-size:11px;"></i> Compras y proveedores mayoristas</div>
+              <div class="pricing-card-feature"><i class="fas fa-check" style="margin-right:8px;color:var(--green);font-size:11px;"></i> Cotizaciones PDF y CRM</div>
+              <div class="pricing-card-feature"><i class="fas fa-check" style="margin-right:8px;color:var(--green);font-size:11px;"></i> Reportes de ventas y ganancias</div>
+              <div class="pricing-card-feature"><i class="fas fa-check" style="margin-right:8px;color:var(--green);font-size:11px;"></i> Hasta <strong>15</strong> usuarios</div>
+            </div>
+            <button class="pricing-card-btn pricing-card-btn-featured" onclick="selectPlan('tienda')">
+              <i class="fas fa-rocket" style="margin-right:6px;"></i> Elegir Tienda
+            </button>
+          </div>
+          <div class="pricing-card-bottom-tab">⭐ Más elegido</div>
+        </div>
+
+        <!-- PLAN: CLUB -->
+        <div class="pricing-card-wrapper plan-enterprise">
+          <div class="pricing-card-side-tab">Club</div>
+          <div class="pricing-card">
+            <div class="pricing-card-price-section">
+              <div class="pricing-card-price"><span class="pricing-card-price-text"><sup style="font-size:1.4rem;">L</sup><span id="p2">1,399</span></span></div>
+              <div class="pricing-card-subtitle">Por mes · L. 46.60 al día<br>Se cubre con 2 socios</div>
+            </div>
+            <div class="pricing-card-features">
+              <div class="pricing-card-feature"><i class="fas fa-check" style="margin-right:8px;color:var(--green);font-size:11px;"></i> Membresías y <strong>carnet QR</strong></div>
+              <div class="pricing-card-feature"><i class="fas fa-check" style="margin-right:8px;color:var(--green);font-size:11px;"></i> POS para barra y mesas</div>
+              <div class="pricing-card-feature"><i class="fas fa-check" style="margin-right:8px;color:var(--green);font-size:11px;"></i> Stock de bebidas y licores</div>
+              <div class="pricing-card-feature"><i class="fas fa-check" style="margin-right:8px;color:var(--green);font-size:11px;"></i> Fidelización, puntos y promociones</div>
+              <div class="pricing-card-feature"><i class="fas fa-check" style="margin-right:8px;color:var(--green);font-size:11px;"></i> Seguridad 2FA y roles</div>
+              <div class="pricing-card-feature"><i class="fas fa-check" style="margin-right:8px;color:var(--green);font-size:11px;"></i> Analytics de horas pico</div>
+              <div class="pricing-card-feature"><i class="fas fa-check" style="margin-right:8px;color:var(--green);font-size:11px;"></i> Hasta <strong>35</strong> usuarios</div>
+            </div>
+            <button class="pricing-card-btn" onclick="selectPlan('club')">
+              <i class="fas fa-crown" style="margin-right:6px;"></i> Elegir Club
+            </button>
+          </div>
+          <div class="pricing-card-bottom-tab">Socios & Nocturno</div>
+        </div>
+
+      </div>
+
+      <!-- COTIZADOR 21 MÓDULOS -->
+      <div class="reveal" style="max-width:760px;margin:32px auto 0;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:28px 32px;text-align:center;">
+        <h3 style="font-size:18px;font-weight:700;color:var(--white);margin-bottom:8px;">¿Tu negocio no encaja en una caja?</h3>
+        <p style="font-size:13.5px;color:var(--text-dim);line-height:1.6;margin-bottom:16px;">Arma tu plan con el <strong style="color:var(--white);">cotizador de 23 módulos</strong>: cuota base de L. 150/mes y solo pagas lo que usas, con descuentos por volumen de hasta 25%.</p>
+        <a href="planes.html#cotizador" class="btn btn-ghost glow-on-hover glow-ghost" style="text-decoration:none;"><i class="fas fa-calculator" style="margin-right:6px;"></i> Abrir el Cotizador</a>
+      </div>
+
+      <!-- Prueba gratis -->
+      <div class="reveal" style="max-width:700px;margin:24px auto 0;text-align:center;">
+        <p style="font-size:13px;color:var(--text-dim);line-height:1.6;">¿Aún no estás seguro? Empieza con la <a href="registrov2.html" style="color:var(--accent-soft);"><strong>Prueba gratis de 15 días</strong></a> con la plataforma completa. Sin tarjeta de crédito.</p>
+      </div>
+
+      <!-- Detalle completo -->
+      <div class="reveal" style="max-width:700px;margin:24px auto 48px;text-align:center;">
+        <p style="font-size:13px;color:var(--text-dim);line-height:1.6;">Todos los precios en <strong style="color:var(--white);">Lempiras (HNL)</strong>. Facturación mensual o anual (2 meses gratis). Precios no incluyen impuestos.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- LEGACY PRICING (oculto) -->
+  <section id="pricing-legacy" hidden>
           <div class="pricing-card">
             <div class="pricing-card-price-section">
               <div class="pricing-card-price"><span class="pricing-card-price-text">Prueba</span></div>
@@ -1243,9 +1336,9 @@
 
       </div>
 
-      <!-- Detalle completo -->
+      <!-- Detalle completo (legacy oculto) -->
       <div class="reveal" style="max-width:700px;margin:48px auto 0;text-align:center;">
-        <p style="font-size:13px;color:var(--text-dim);line-height:1.6;">Todos los precios en <strong style="color:var(--white);">Lempiras (HNL)</strong>. Planes Business e Enterprise incluyen todas las funciones base más las específicas de cada nivel. Precios no incluyen impuestos.</p>
+        <p style="font-size:13px;color:var(--text-dim);line-height:1.6;">Planes Business y Enterprise permanecen disponibles para clientes con contrato legacy.</p>
       </div>
     </div>
   </section>
@@ -1292,7 +1385,7 @@
             <div class="faq-q-text">¿Puedo gestionar varias empresas?</div>
             <div class="faq-toggle"><i class="fas fa-plus"></i></div>
           </div>
-          <div class="faq-a">Sí. Los planes Business y Enterprise permiten múltiples empresas (tenants) bajo una misma cuenta. Cada empresa tiene su propio portal, usuarios, configuración y datos separados. Ideal para grupos corporativos con subsidiarias.</div>
+          <div class="faq-a">Sí. Los planes Club y los contratos legacy (Business/Enterprise) permiten múltiples empresas (tenants) bajo una misma cuenta. Cada empresa tiene su propio portal, usuarios, configuración y datos separados.</div>
         </div>
       </div>
     </div>

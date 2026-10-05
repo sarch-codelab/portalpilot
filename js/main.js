@@ -108,9 +108,11 @@ function toggleFaq(btn) {
 }
 
 // ── Pricing Toggle ───────────────────────────────────
+// Modelo de precios Honduras: Pulpería L.299 · Tienda L.799 · Club L.1,399.
+// Anual = 10 meses (2 meses gratis).
 const prices = {
-  monthly: { p1: '1,499', p2: '4,999' },
-  yearly: { p1: '1,274', p2: '4,249' }
+  monthly: { p1: '799', p2: '1,399' },
+  yearly: { p1: '7,990', p2: '13,990' }
 };
 
 function setPricingToggle(btn, mode) {
@@ -137,18 +139,30 @@ function setPricingToggle(btn, mode) {
 
 // ── Plan select → redirect a registro con plan preseleccionado ──
 function selectPlan(name, e) {
-  const btn = e.currentTarget;
-  const orig = btn.textContent;
-  btn.textContent = '✓ Seleccionado!';
-  btn.style.background = '#34d399';
-  btn.style.borderColor = '#34d399';
-  btn.style.color = '#000';
+  const btn = e ? e.currentTarget : null;
+  const orig = btn ? btn.textContent : '';
+  if (btn) {
+    btn.textContent = '✓ Seleccionado!';
+    btn.style.background = '#34d399';
+    btn.style.borderColor = '#34d399';
+    btn.style.color = '#000';
+  }
   setTimeout(() => {
-    btn.textContent = orig;
-    btn.style.background = '';
-    btn.style.borderColor = '';
-    btn.style.color = '';
-    window.location.href = 'registrov2.html?plan=' + encodeURIComponent(name);
+    if (btn) {
+      btn.textContent = orig;
+      btn.style.background = '';
+      btn.style.borderColor = '';
+      btn.style.color = '';
+    }
+    // El plan del modelo Honduras ya trae business_type para el registro.
+    const byPlan = {
+      pulperia: 'Pulper%C3%ADa%20%2F%20Mercadito',
+      tienda: 'Tienda%20%2F%20Supermercado',
+      club: 'Club%20%2F%20Membres%C3%ADa',
+      personalizado: 'Personalizado'
+    };
+    const bt = byPlan[name];
+    window.location.href = 'registrov2.html?plan=' + encodeURIComponent(name) + (bt ? '&business_type=' + bt : '');
   }, 500);
 }
 

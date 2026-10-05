@@ -32,9 +32,13 @@ async function init() {
   } catch (e) { console.warn('[PROVISIONAR] fallback de planes:', e.message); }
   if (!planes.length) {
     planes = [
-      { clave: 'starter', nombre: 'Starter (Prueba)', precio_mensual: 499, descripcion: 'Trial de 15 días con toda la plataforma abierta para evaluar.' },
-      { clave: 'business', nombre: 'Business', precio_mensual: 1499, descripcion: 'POS avanzado, IA integrada, multisucursal, hasta 15 usuarios.' },
-      { clave: 'enterprise', nombre: 'Enterprise', precio_mensual: 4999, descripcion: 'Acceso completo: bots RPA, multiempresa, IA dedicada, API.' }
+      { clave: 'starter', nombre: 'Prueba', precio_mensual: 0, descripcion: 'Trial de 15 días con toda la plataforma abierta para evaluar.' },
+      { clave: 'pulperia', nombre: 'Pulpería / Mercadito', precio_mensual: 299, descripcion: 'POS de mostrador, libreta de fiado, caja y factura SAR simplificada.' },
+      { clave: 'tienda', nombre: 'Tienda / Supermercado', precio_mensual: 799, descripcion: 'POS retail con escáner, SAR formal, compras, CRM y reportes.' },
+      { clave: 'club', nombre: 'Club / Membresía', precio_mensual: 1399, descripcion: 'Membresías QR, barra y mesas, BI, 2FA y fidelización.' },
+      { clave: 'personalizado', nombre: 'Personalizado (Cotizador)', precio_mensual: 150, descripcion: 'Cuota base + módulos a la carta desde el cotizador de 21.' },
+      { clave: 'business', nombre: 'Business (legacy)', precio_mensual: 1499, descripcion: 'Plan legacy para clientes con contrato anterior.' },
+      { clave: 'enterprise', nombre: 'Enterprise (legacy)', precio_mensual: 4999, descripcion: 'Plan legacy para clientes con contrato anterior.' }
     ];
   }
   if (!features.length) {

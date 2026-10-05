@@ -1,12 +1,20 @@
 // ─── PLAN GATE: Checks company plan and locks sidebar items ───
-// Add data-min-plan="starter|business|enterprise" to sidebar links
-//starter=free, business=pro, enterprise=enterprise
+// Add data-min-plan="pulperia|tienda|club|personalizado|business|enterprise" to sidebar links
 
 (function () {
-  const PLAN_LEVELS = { starter: 0, free: 0, startup: 0, business: 1, pro: 1, enterprise: 2, corporativo: 2 };
+  // Nivel de plan del modelo Honduras: pulpería < tienda < club.
+  // Los planes legacy (business/enterprise) se mantienen por compatibilidad.
+  const PLAN_LEVELS = {
+    starter: 0, free: 0, startup: 0,
+    pulperia: 1, pulpería: 1, mercadito: 1,
+    tienda: 2, supermercado: 2, retail: 2,
+    personalizado: 2, business: 2, pro: 2,
+    club: 3, membresia: 3, membresía: 3,
+    enterprise: 3, corporativo: 3
+  };
 
   function getPlanLevel(plan) {
-    return PLAN_LEVELS[(plan || '').toLowerCase()] ?? 0;
+    return PLAN_LEVELS[(plan || '').toString().trim().toLowerCase()] ?? 0;
   }
 
   async function fetchPlan() {
@@ -44,8 +52,22 @@
   }
 
   function showPlanBadge(plan) {
-    const name = { starter: 'Starter', free: 'Starter', business: 'Business', pro: 'Business', enterprise: 'Enterprise' }[plan] || 'Starter';
-    const color = { starter: '#9ca3af', business: '#8b5cf6', enterprise: '#f59e0b' }[plan.toLowerCase()] || '#9ca3af';
+    const clave = String(plan || '').trim().toLowerCase();
+    const name = {
+      starter: 'Prueba', free: 'Prueba', startup: 'Prueba',
+      pulperia: 'Pulpería', pulpería: 'Pulpería', mercadito: 'Pulpería',
+      tienda: 'Tienda', supermercado: 'Tienda', retail: 'Tienda',
+      personalizado: 'Personalizado', business: 'Business', pro: 'Business',
+      club: 'Club', membresia: 'Club', membresía: 'Club',
+      enterprise: 'Enterprise'
+    }[clave] || (clave || 'Prueba').replace(/(^|\s)([a-záéíóúñ])/g, (m, a, b) => a + b.toUpperCase());
+    const color = {
+      starter: '#9ca3af', free: '#9ca3af', startup: '#9ca3af',
+      pulperia: '#f59e0b', pulpería: '#f59e0b', mercadito: '#f59e0b',
+      tienda: '#8b5cf6', supermercado: '#8b5cf6', retail: '#8b5cf6',
+      club: '#38bdf8', membresia: '#38bdf8', membresía: '#38bdf8',
+      personalizado: '#30d158', business: '#8b5cf6', enterprise: '#f59e0b'
+    }[clave] || '#9ca3af';
     const badges = document.querySelectorAll('.plan-badge');
     badges.forEach(b => {
       b.textContent = name;
@@ -63,7 +85,7 @@
       '<p style="color:#9ca3af;font-size:13px;line-height:1.6;margin:0 0 24px">' + message + '</p>' +
       '<div style="display:flex;gap:12px;justify-content:center">' +
       '<button onclick="this.closest(\'div[style*=fixed]\').remove()" style="padding:10px 20px;border-radius:10px;background:rgba(255,255,255,0.05);border:1px solid rgba(139,92,246,0.2);color:#fff;font-size:13px;cursor:pointer">Cerrar</button>' +
-      '<a href="../pay_plan.html" style="padding:10px 20px;border-radius:10px;background:#8b5cf6;color:#fff;font-size:13px;font-weight:600;text-decoration:none">Ver Planes</a>' +
+      '<a href="../planes.html" style="padding:10px 20px;border-radius:10px;background:#8b5cf6;color:#fff;font-size:13px;font-weight:600;text-decoration:none">Ver Planes</a>' +
       '</div></div>';
     document.body.appendChild(overlay);
     overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
@@ -87,7 +109,7 @@
     banner.className = 'pp-read-only-banner';
     banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:20000;background:linear-gradient(90deg,#dc2626,#ef4444);color:#fff;padding:10px 16px;text-align:center;font-weight:600;font-size:13px;line-height:1.5;font-family:"DM Sans",system-ui,sans-serif;box-shadow:0 4px 14px rgba(220,38,38,.35);display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap';
     banner.innerHTML = '<i class="fas fa-lock" style="font-size:13px"></i><span>Prueba vencida · Modo solo lectura: solo puedes consultar y exportar tus datos.</span>' +
-      '<a href="../pay_plan.html" style="color:#fff;text-decoration:underline;font-weight:800">Renovar plan</a>';
+      '<a href="../planes.html" style="color:#fff;text-decoration:underline;font-weight:800">Renovar plan</a>';
     document.body.appendChild(banner);
     if (parseInt(document.body.style.paddingTop || '0', 10) < 42) document.body.style.paddingTop = '42px';
   };

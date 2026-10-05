@@ -174,16 +174,16 @@
         </header>
 
         <div class="plan-card">
-            <h2 id="planName">Plan Business</h2>
-            <div class="plan-price" id="planPrice">L.1,499 <span>/mes</span></div>
-            <div class="plan-billing">Facturación mensual. Cancela cuando quieras.</div>
+            <h2 id="planName">Plan Pulpería / Mercadito</h2>
+            <div class="plan-price" id="planPrice">L.299 <span>/mes</span></div>
+            <div class="plan-billing" id="planBillingNote">Facturación mensual. Cancela cuando quieras.</div>
             <ul class="plan-features" id="planFeatures">
-                <li><i class="fas fa-check"></i> Hasta 15 usuarios activos</li>
-                <li><i class="fas fa-check"></i> IA Groq ilimitada</li>
-                <li><i class="fas fa-check"></i> Todos los módulos</li>
-                <li><i class="fas fa-check"></i> Facturación Electrónica SAR</li>
-                <li><i class="fas fa-check"></i> Hasta 3 empresas</li>
-                <li><i class="fas fa-check"></i> Soporte email 24h</li>
+                <li><i class="fas fa-check"></i> POS de mostrador ultrarrápido</li>
+                <li><i class="fas fa-check"></i> Libreta digital de fiado</li>
+                <li><i class="fas fa-check"></i> Control de caja y arqueo</li>
+                <li><i class="fas fa-check"></i> Inventario básico con alertas</li>
+                <li><i class="fas fa-check"></i> Facturación SAR simplificada</li>
+                <li><i class="fas fa-check"></i> Hasta 3 usuarios</li>
             </ul>
         </div>
 
@@ -333,9 +333,12 @@
             }
         });
 
-        // Resolver plan y datos de registro previo
+        // Resolver plan, ciclo de facturación y datos de registro previo
         const urlParams = new URLSearchParams(window.location.search);
-        const selectedPlan = (urlParams.get('plan') || 'business').toLowerCase();
+        const selectedPlan = (urlParams.get('plan') || 'pulperia').toLowerCase();
+        const billingCycle = (urlParams.get('billing') || 'monthly').toLowerCase() === 'annual' ? 'annual' : 'monthly';
+        // Cotización del cotizador de 23 módulos (plan personalizado).
+        const precioCotizado = Number(String(urlParams.get('precio') || '').replace(/[^0-9.]/g, '')) || 0;
 
         // Recuperar correo almacenado de registro previo si existe
         const savedRegistration = sessionStorage.getItem('portalPilotRegistrationData') || localStorage.getItem('portalPilotRegistrationData');
@@ -352,52 +355,88 @@
             document.getElementById('tigoEmail').value = userEmail;
         }
 
+        // Modelo de precios Honduras: L.299 / L.799 / L.1,399 + cotizador.
+        // Anual = 10 meses (2 meses gratis).
         const planConfig = {
             starter: {
                 name: 'Plan Prueba',
-                price: 'Gratis',
-                amount: 'L.0.00',
+                mensual: 0,
+                anual: 0,
                 features: [
-                    '<i class="fas fa-check"></i> Hasta 5 usuarios',
-                    '<i class="fas fa-check"></i> Todos los módulos base',
+                    '<i class="fas fa-check"></i> Plataforma completa 15 días',
+                    '<i class="fas fa-check"></i> Sin tarjeta de crédito',
+                    '<i class="fas fa-check"></i> Luego eliges Pulpería, Tienda o Club',
                     '<i class="fas fa-check"></i> Facturación Electrónica SAR',
-                    '<i class="fas fa-check"></i> IA Portal Pilot — uso básico',
                     '<i class="fas fa-check"></i> Soporte por email'
                 ]
             },
-            business: {
-                name: 'Plan Business',
-                price: 'L.1,499',
-                amount: 'L.1,499.00',
+            pulperia: {
+                name: 'Plan Pulpería / Mercadito',
+                mensual: 299,
+                anual: 2990,
                 features: [
-                    '<i class="fas fa-check"></i> Hasta 15 usuarios activos',
-                    '<i class="fas fa-check"></i> IA Groq ilimitada',
-                    '<i class="fas fa-check"></i> Todos los módulos comerciales',
-                    '<i class="fas fa-check"></i> Facturación Electrónica SAR',
-                    '<i class="fas fa-check"></i> Hasta 3 bodegas/empresas',
-                    '<i class="fas fa-check"></i> Soporte prioritario'
+                    '<i class="fas fa-check"></i> POS de mostrador ultrarrápido',
+                    '<i class="fas fa-check"></i> Libreta digital de fiado',
+                    '<i class="fas fa-check"></i> Control de caja y arqueo diario',
+                    '<i class="fas fa-check"></i> Inventario básico con alertas',
+                    '<i class="fas fa-check"></i> Facturación SAR simplificada',
+                    '<i class="fas fa-check"></i> Hasta 3 usuarios'
                 ]
             },
-            enterprise: {
-                name: 'Plan Enterprise',
-                price: 'L.4,999',
-                amount: 'L.4,999.00',
+            tienda: {
+                name: 'Plan Tienda / Supermercado',
+                mensual: 799,
+                anual: 7990,
                 features: [
-                    '<i class="fas fa-check"></i> Usuarios ilimitados',
-                    '<i class="fas fa-check"></i> IA dedicada + Bots RPA',
-                    '<i class="fas fa-check"></i> Módulos Enterprise + Flotas',
-                    '<i class="fas fa-check"></i> Facturación Electrónica SAR',
-                    '<i class="fas fa-check"></i> Bodegas ilimitadas',
-                    '<i class="fas fa-check"></i> Soporte VIP 24/7'
+                    '<i class="fas fa-check"></i> POS retail con código de barras',
+                    '<i class="fas fa-check"></i> Facturación SAR formal (CAI, rangos y RTN)',
+                    '<i class="fas fa-check"></i> Inventario categorizado por pasillos',
+                    '<i class="fas fa-check"></i> Compras y proveedores mayoristas',
+                    '<i class="fas fa-check"></i> Cotizaciones PDF y CRM de clientes',
+                    '<i class="fas fa-check"></i> Hasta 15 usuarios'
+                ]
+            },
+            club: {
+                name: 'Plan Club / Membresía',
+                mensual: 1399,
+                anual: 13990,
+                features: [
+                    '<i class="fas fa-check"></i> Membresías y carnet QR de socios',
+                    '<i class="fas fa-check"></i> POS para barra y mesas',
+                    '<i class="fas fa-check"></i> Stock de bebidas y licores',
+                    '<i class="fas fa-check"></i> Fidelización, puntos y promociones',
+                    '<i class="fas fa-check"></i> Seguridad 2FA, roles y analytics',
+                    '<i class="fas fa-check"></i> Hasta 35 usuarios'
+                ]
+            },
+            personalizado: {
+                name: 'Plan Personalizado (Cotizador)',
+                mensual: 150,
+                anual: 1500,
+                features: [
+                    '<i class="fas fa-check"></i> Cuota base de plataforma cloud',
+                    '<i class="fas fa-check"></i> Los módulos que elegiste en el cotizador',
+                    '<i class="fas fa-check"></i> Descuento por volumen aplicado',
+                    '<i class="fas fa-check"></i> Respaldos diarios y SSL/TLS',
+                    '<i class="fas fa-check"></i> Soporte técnico en horario hábil',
+                    '<i class="fas fa-check"></i> Puedes agregar módulos cuando quieras'
                 ]
             }
         };
 
-        const plan = planConfig[selectedPlan] || planConfig.business;
+        const plan = planConfig[selectedPlan] || planConfig.pulperia;
+        const precioMensual = (selectedPlan === 'personalizado' && precioCotizado > 0) ? precioCotizado : plan.mensual;
+        const precioAnual = (selectedPlan === 'personalizado' && precioCotizado > 0) ? Math.round(precioCotizado * 10) : plan.anual;
+        const amountNumber = billingCycle === 'annual' ? precioAnual : precioMensual;
+        const amountText = 'L.' + amountNumber.toLocaleString('en-US') + '.00';
         document.getElementById('planName').textContent = plan.name;
-        document.getElementById('planPrice').innerHTML = plan.price + ' <span>/mes</span>';
-        document.getElementById('bankAmount').textContent = plan.amount;
-        document.getElementById('tigoAmount').textContent = plan.amount;
+        document.getElementById('planPrice').innerHTML = (precioMensual === 0 ? 'Gratis' : 'L.' + (billingCycle === 'annual' ? precioAnual.toLocaleString('en-US') : precioMensual.toLocaleString('en-US')))
+            + ' <span>/' + (billingCycle === 'annual' ? 'año' : 'mes') + '</span>';
+        document.getElementById('planBillingNote').textContent = billingCycle === 'annual'
+            ? 'Facturación anual (2 meses gratis · pagas 10 de 12).'
+            : 'Facturación mensual. Cancela cuando quieras.';
+        document.getElementById('bankAmount').textContent = amountText;
+        document.getElementById('tigoAmount').textContent = amountText;
         document.getElementById('planFeatures').innerHTML = plan.features.map(f => '<li>' + f + '</li>').join('');
 
         function switchPaymentTab(method) {
@@ -505,6 +544,8 @@
                 const payload = {
                     email,
                     plan: selectedPlan,
+                    billing: billingCycle,
+                    monto: amountNumber,
                     metodoPago: metodo,
                     empresaCodigo: tenantCode
                 };
@@ -526,7 +567,7 @@
                     gtag('event', 'purchase', {
                         transaction_id: data.email + '-' + Date.now(),
                         currency: 'HNL',
-                        value: { starter: 0, business: 1499, enterprise: 4999 }[selectedPlan] || 1499,
+                        value: amountNumber,
                         plan_name: plan.name,
                         payment_method: metodo
                     });

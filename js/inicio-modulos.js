@@ -25,17 +25,39 @@ const MODULO_INFO = {
   'Analytics': { icon: 'fa-chart-line' }
 };
 const SLUG_TO_MODULO = {
-  pos_caja: 'POS', pos_pulperia: 'POS', pos_ventas: 'POS', pos_multicaja: 'POS', pos_escaner: 'POS',
-  inventario_rapido: 'Inventario', inventario_basico: 'Inventario', inventario_multibodega: 'Inventario', inventario_avanzado: 'Inventario', control_stock: 'Inventario', transferencias_bodega: 'Inventario',
+  // Módulos del cotizador de 21 (fuente: planes.html / modulos_cotizador)
+  pos_caja: 'POS', control_caja: 'POS',
+  cuentas_por_cobrar: 'Canal Tradicional',
   facturacion_sar: 'Facturación SAR',
-  credito_clientes: 'CRM', cuentas_por_cobrar: 'CRM', clientes_proveedores: 'CRM',
-  gestion_membresias: 'Membresías', ventas_mayoreo: 'Membresías',
-  analytics_ventas: 'Analytics', reportes_comerciales: 'Analytics',
+  inventario_basico: 'Inventario',
+  retail_pasillos: 'Sector Retail',
+  clientes_proveedores: 'Compras & Proveedores',
+  cotizaciones: 'Cotizaciones',
+  crm_clientes: 'CRM',
+  fidelizacion_puntos: 'CRM Avanzado',
+  contabilidad_pyme: 'Contabilidad',
+  rrhh_planillas: 'RRHH',
+  rutas_delivery: 'Supply Chain',
+  transferencias_bodega: 'Inventario',
+  multi_sucursal: 'Multi-Empresa',
+  chat_ia_groq: 'Chat IA',
+  reportes_comerciales: 'Analytics',
+  analytics_ventas: 'Analytics',
+  gestion_membresias: 'Membresías',
+  seguridad_2fa: 'Seguridad',
+  automatizacion_alertas: 'Automatizaciones',
+  // Legacy (tenants antiguos)
+  pos_pulperia: 'POS', pos_ventas: 'POS', pos_multicaja: 'POS', pos_escaner: 'POS',
+  inventario_rapido: 'Inventario', inventario_multibodega: 'Inventario', inventario_avanzado: 'Inventario', control_stock: 'Inventario',
+  credito_clientes: 'CRM', ventas_mayoreo: 'Membresías',
   despacho_flotas: 'Supply Chain', flota_vehiculos: 'Supply Chain',
   automatizacion_rpa: 'Comercial', api_keys_seguridad: 'Seguridad'
 };
 const MODULOS_FALLBACK = ['POS','Canal Moderno','Canal Tradicional','Chat IA','Comercial','Compras & Proveedores','Contabilidad','Cotizaciones','CRM','CRM Avanzado','Facturación SAR','Fiscal Avanzado','Inventario','Membresías','Multi-Empresa','Retail','RRHH','Sector Retail','Seguridad','Configuración','Soporte','Supply Chain','Analytics'];
 const MODULO_URL = {
+  'Automatizaciones': 'automation.html',
+  'Compras & Proveedores': 'dashboard.html',
+  'Canal Tradicional': 'dashboard.html',
   'Comercial': 'automation.html',
   'Supply Chain': 'fleet.html',
   'Seguridad': 'security.html',
@@ -44,7 +66,11 @@ const MODULO_URL = {
   'Analytics': 'dashboard.html',
   'Retail': 'dashboard.html',
   'POS': 'dashboard.html',
-  'Inventario': 'dashboard.html',
+  // Modulos operativos (FASE 5): una sola pantalla real con pestanas, en vez de
+  // apuntar a un dashboard generico. ?tab= abre la seccion que corresponde.
+  'Inventario': 'operaciones.html?tab=productos',
+  'Membresías': 'operaciones.html?tab=mesas',
+  'Sector Retail': 'operaciones.html?tab=pasillos',
   'Facturación SAR': 'dashboard.html',
   'CRM': 'dashboard.html',
   'Chat IA': 'dashboard.html'

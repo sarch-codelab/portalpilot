@@ -687,6 +687,7 @@
                             <option value="Pulpería / Mercadito">Pulpería / Mercadito (Barrio, Colonia)</option>
                             <option value="Tienda / Supermercado">Tienda / Supermercado (Retail, Abarrotes)</option>
                             <option value="Club / Membresía">Club / Membresía (Membresías, Socios)</option>
+                            <option value="Personalizado">Personalizado (Módulos a la Medida)</option>
                         </select>
                         <i class="fas fa-chevron-down chevron-down"></i>
                     </div>
@@ -706,35 +707,59 @@
                 </div>
 
                 <div class="plan-grid">
-                    <!-- Startup -->
+                    <!-- Pulpería -->
+                    <div class="plan-card" data-plan="pulperia" onclick="selectPlan('pulperia', this)">
+                        <h3>Pulpería</h3>
+                        <div class="plan-price">L.299 <span>/mes</span></div>
+                        <ul class="plan-features">
+                            <li><i class="fas fa-check"></i> POS de mostrador ultrarrápido</li>
+                            <li><i class="fas fa-check"></i> Libreta digital de fiado</li>
+                            <li><i class="fas fa-check"></i> Caja, arqueo y factura SAR</li>
+                            <li><i class="fas fa-check"></i> Hasta 3 usuarios</li>
+                        </ul>
+                    </div>
+                    <!-- Tienda -->
+                    <div class="plan-card" data-plan="tienda" onclick="selectPlan('tienda', this)">
+                        <div class="plan-badge">Más elegido</div>
+                        <h3>Tienda</h3>
+                        <div class="plan-price">L.799 <span>/mes</span></div>
+                        <ul class="plan-features">
+                            <li><i class="fas fa-check"></i> POS retail con código de barras</li>
+                            <li><i class="fas fa-check"></i> Facturación SAR formal (CAI/RTN)</li>
+                            <li><i class="fas fa-check"></i> Compras, proveedores y CRM</li>
+                            <li><i class="fas fa-check"></i> Hasta 15 usuarios</li>
+                        </ul>
+                    </div>
+                    <!-- Club -->
+                    <div class="plan-card" data-plan="club" onclick="selectPlan('club', this)">
+                        <h3>Club</h3>
+                        <div class="plan-price">L.1,399 <span>/mes</span></div>
+                        <ul class="plan-features">
+                            <li><i class="fas fa-check"></i> Membresías y carnet QR</li>
+                            <li><i class="fas fa-check"></i> POS de barra y mesas</li>
+                            <li><i class="fas fa-check"></i> 2FA, BI y fidelización</li>
+                            <li><i class="fas fa-check"></i> Hasta 35 usuarios</li>
+                        </ul>
+                    </div>
+                    <!-- Personalizado -->
+                    <div class="plan-card" data-plan="personalizado" onclick="selectPlan('personalizado', this)">
+                        <h3>Personalizado</h3>
+                        <div class="plan-price">Desde L.150 <span>/mes</span></div>
+                        <ul class="plan-features">
+                            <li><i class="fas fa-check"></i> Arma tu plan con 23 módulos</li>
+                            <li><i class="fas fa-check"></i> Descuentos por volumen hasta 25%</li>
+                            <li><i class="fas fa-check"></i> <a href="planes.html#cotizador" style="color:var(--accent-soft);">Abrir el cotizador</a></li>
+                        </ul>
+                    </div>
+                    <!-- Prueba -->
                     <div class="plan-card" data-plan="starter" onclick="selectPlan('starter', this)">
                         <div class="plan-badge">Gratis</div>
                         <h3>Prueba</h3>
                         <div class="plan-price">GRATIS <span>/15 días</span></div>
                         <ul class="plan-features">
-                            <li><i class="fas fa-check"></i> Hasta 5 usuarios</li>
-                            <li><i class="fas fa-check"></i> IA Portal Pilot — uso básico</li>
-                            <li><i class="fas fa-check"></i> Soporte por email</li>
-                        </ul>
-                    </div>
-                    <!-- Business -->
-                    <div class="plan-card" data-plan="business" onclick="selectPlan('business', this)">
-                        <h3>Business</h3>
-                        <div class="plan-price">L.1,499 <span>/mes</span></div>
-                        <ul class="plan-features">
-                            <li><i class="fas fa-check"></i> Hasta 50 usuarios</li>
-                            <li><i class="fas fa-check"></i> Ventas fiadas y abonos</li>
-                            <li><i class="fas fa-check"></i> Soporte prioritario 24/7</li>
-                        </ul>
-                    </div>
-                    <!-- Enterprise -->
-                    <div class="plan-card" data-plan="enterprise" onclick="selectPlan('enterprise', this)">
-                        <h3>Enterprise</h3>
-                        <div class="plan-price">L.4,999 <span>/mes</span></div>
-                        <ul class="plan-features">
-                            <li><i class="fas fa-check"></i> Hasta 200 usuarios</li>
-                            <li><i class="fas fa-check"></i> API completa + automatizaciones</li>
-                            <li><i class="fas fa-check"></i> SLA garantizado 99.9%</li>
+                            <li><i class="fas fa-check"></i> Plataforma completa 15 días</li>
+                            <li><i class="fas fa-check"></i> Sin tarjeta de crédito</li>
+                            <li><i class="fas fa-check"></i> Luego eliges tu plan real</li>
                         </ul>
                     </div>
                 </div>
@@ -745,7 +770,7 @@
                     <i class="fas fa-gift"></i>
                     <div>
                         <strong>¡Excelente elección!</strong>
-                        <p>Tu plan Prueba incluye una <strong>prueba gratuita de 15 días</strong> con acceso completo a los módulos del plan Starter. No se requiere tarjeta de crédito.</p>
+                        <p>Tu plan Prueba incluye <strong>15 días con la plataforma completa</strong> para evaluar. No se requiere tarjeta de crédito y al final eliges el plan de tu negocio (Pulpería, Tienda o Club).</p>
                     </div>
                 </div>
 
@@ -1146,15 +1171,10 @@
                 showMessage('Selecciona un plan para continuar', 'error');
                 return;
             }
-
-            if (plan === 'business' || plan === 'enterprise') {
-                // Redirigir a la página de pago con el plan seleccionado
-                window.location.href = `pay_plan.html?plan=${plan}`;
-             } else {
-                 // Es starter (plan gratuito), continuar al siguiente paso
-                 nextStep(3);
-             }
-};
+            // El pago se realiza al final del registro (pay_plan.html con el
+            // companyId ya creado): así el cobro queda asociado al tenant real.
+            nextStep(3);
+        };
 
         // ─── PREVISUALIZACIÓN DE IMÁGENES (NUEVO) ───
         // Almacén temporal de imágenes para upload
@@ -1599,7 +1619,14 @@
                 const email = document.getElementById('regEmail').value.trim().toLowerCase();
                 const password = document.getElementById('regPass').value;
                 const plan = document.getElementById('selectedPlan').value || 'starter';
-                const planText = plan === 'starter' ? 'Prueba (15 días gratis)' : (plan === 'business' ? 'Business' : 'Enterprise');
+                const PLANES_NOMBRE = {
+                    starter: 'Prueba (15 días gratis)',
+                    pulperia: 'Pulpería / Mercadito — L.299/mes',
+                    tienda: 'Tienda / Supermercado — L.799/mes',
+                    club: 'Club / Membresía — L.1,399/mes',
+                    personalizado: 'Personalizado (cotizador de 23 módulos)'
+                };
+                const planText = PLANES_NOMBRE[plan] || plan;
                 const pais = document.getElementById('regCountry').value || '';
                 const zonaHoraria = document.getElementById('regTimezone').value || '';
 
@@ -1634,6 +1661,10 @@
                     dosFaSetupToken: twoFASetupToken,
                     terminosAceptados: true,
                     plan,
+                    // Modelo de precios Honduras: ciclo de facturación y cotización
+                    // del cotizador (personalizado) viajan al backend.
+                    billing: (function(){ try { const c = JSON.parse(sessionStorage.getItem('portalpilot_onboarding') || '{}'); return c.billing || 'monthly'; } catch (e) { return 'monthly'; } })(),
+                    precio: (function(){ try { const c = JSON.parse(sessionStorage.getItem('portalpilot_onboarding') || '{}'); return c.precio || ''; } catch (e) { return ''; } })(),
                     // Paso 4 (personalización): branding en base64 para que el
                     // backend lo suba a Storage y devuelva URLs públicas.
                     company_logo: imageData.company_logo,
@@ -1677,8 +1708,11 @@
                         window.location.href = `login.html?tenant=${encodeURIComponent(`${dominio}.pp.ia`)}&welcome=1`;
                     }, 4000);
                 } else {
+                    const cotiz = (function(){ try { return JSON.parse(sessionStorage.getItem('portalpilot_onboarding') || '{}'); } catch (e) { return {}; } })();
                     setTimeout(function() {
-                        window.location.href = `pay_plan.html?plan=${encodeURIComponent(plan)}&companyId=${encodeURIComponent(empresaCodigo)}&domain=${encodeURIComponent(`${dominio}.pp.ia`)}`;
+                        window.location.href = `pay_plan.html?plan=${encodeURIComponent(plan)}&companyId=${encodeURIComponent(empresaCodigo)}&domain=${encodeURIComponent(`${dominio}.pp.ia`)}`
+                            + `&billing=${encodeURIComponent(cotiz.billing || 'monthly')}`
+                            + (cotiz.precio ? `&precio=${encodeURIComponent(cotiz.precio)}` : '');
                     }, 4000);
                 }
             } catch (err) {
@@ -1727,26 +1761,30 @@
                 const operacion = params.get('operacion') || params.get('tamano') || '';
                 const modulosParam = params.get('modulos') || '';
                 const origen = params.get('origen') || (business ? 'app' : '');
+                const precioParam = params.get('precio') || '';
+                const billingParam = (params.get('billing') || 'monthly').toLowerCase() === 'annual' ? 'annual' : 'monthly';
                 const normalizedBusiness = (business || industria).toLowerCase();
-                // Se mapea al modelo de negocio del paso 2 (pulpería / tienda / club).
-                const areaByBusiness = normalizedBusiness.includes('club') || normalizedBusiness.includes('membres') || normalizedBusiness.includes('socio')
-                    ? 'Club / Membresía'
-                    : normalizedBusiness.includes('pulper') || normalizedBusiness.includes('mercad') || normalizedBusiness.includes('barrio') || normalizedBusiness.includes('colonia')
-                        ? 'Pulpería / Mercadito'
-                        : normalizedBusiness.includes('supermer') || normalizedBusiness.includes('tienda') || normalizedBusiness.includes('retail') || normalizedBusiness.includes('abarroter')
-                            ? 'Tienda / Supermercado'
-                            : '';
+                // Se mapea al modelo de negocio del paso 2 (pulpería / tienda / club / personalizado).
+                const areaByBusiness = normalizedBusiness.includes('personali') || normalizedBusiness.includes('custom')
+                    ? 'Personalizado'
+                    : normalizedBusiness.includes('club') || normalizedBusiness.includes('membres') || normalizedBusiness.includes('socio')
+                        ? 'Club / Membresía'
+                        : normalizedBusiness.includes('pulper') || normalizedBusiness.includes('mercad') || normalizedBusiness.includes('barrio') || normalizedBusiness.includes('colonia')
+                            ? 'Pulpería / Mercadito'
+                            : normalizedBusiness.includes('supermer') || normalizedBusiness.includes('tienda') || normalizedBusiness.includes('retail') || normalizedBusiness.includes('abarroter')
+                                ? 'Tienda / Supermercado'
+                                : '';
                 const area = document.getElementById('regArea');
                 if (areaByBusiness && area) area.value = areaByBusiness;
-                sessionStorage.setItem('portalpilot_onboarding', JSON.stringify({ business, customer, operation, industria, categoria, operacion, modulos: modulosParam, origen }));
+                sessionStorage.setItem('portalpilot_onboarding', JSON.stringify({ business, customer, operation, industria, categoria, operacion, modulos: modulosParam, precio: precioParam, billing: billingParam, origen }));
 
                 // Aviso "Hemos preparado tu configuración" con lo que la app ya respondió.
-                if (origen || business || industria) {
+                if (origen || business || industria || modulosParam) {
                     const formEl = document.querySelector('form');
                     if (formEl) {
                         const banner = document.createElement('div');
                         banner.style.cssText = 'background:rgba(139,92,246,0.08);border:1px solid rgba(139,92,246,0.3);border-radius:14px;padding:16px 20px;margin:0 0 20px;';
-                        banner.innerHTML = '\n                          <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">\n                            <span style="font-size:20px;">\u2713</span>\n                            <strong style="color:#a78bfa;font-size:15px;">Hemos preparado tu configuraci\u00f3n</strong>\n                          </div>\n                          <div style="font-size:13px;color:#c4c4d4;line-height:1.7;">\n                            ' + ((industria || business) ? '<div><strong>\u00c1rea:</strong> ' + escapeBannerHtml(areaByBusiness || industria || business) + '</div>' : '') + '\n                            ' + (modulosParam ? '<div><strong>M\u00f3dulos:</strong> ' + escapeBannerHtml(modulosParam.split(',').map(m => m.trim()).filter(Boolean).join(' \u2713 ')) + ' \u2713</div>' : '') + '\n                            ' + (operacion ? '<div><strong>Operaci\u00f3n:</strong> ' + escapeBannerHtml(operacion) + '</div>' : '') + '\n                            <div style="margin-top:6px;color:#8b8ba7;font-size:12px;">Solo te falta completar los datos de tu empresa y del propietario.</div>\n                          </div>';
+                        banner.innerHTML = '\n                          <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">\n                            <span style="font-size:20px;">\u2713</span>\n                            <strong style="color:#a78bfa;font-size:15px;">Hemos preparado tu cotizaci\u00f3n y configuraci\u00f3n</strong>\n                          </div>\n                          <div style="font-size:13px;color:#c4c4d4;line-height:1.7;">\n                            ' + ((industria || business || areaByBusiness) ? '<div><strong>Modelo:</strong> ' + escapeBannerHtml(areaByBusiness || industria || business) + '</div>' : '') + '\n                            ' + (precioParam ? '<div><strong>Inversi\u00f3n estimada:</strong> L. ' + escapeBannerHtml(Number(precioParam).toLocaleString('en-US')) + '</div>' : '') + '\n                            ' + (modulosParam ? '<div><strong>M\u00f3dulos seleccionados:</strong> ' + escapeBannerHtml(modulosParam.split(',').map(m => m.trim().replace(/_/g, ' ')).filter(Boolean).join(' \u2713 ')) + ' \u2713</div>' : '') + '\n                            ' + (operacion ? '<div><strong>Operaci\u00f3n:</strong> ' + escapeBannerHtml(operacion) + '</div>' : '') + '\n                            <div style="margin-top:6px;color:#8b8ba7;font-size:12px;">Solo te falta completar los datos de tu empresa y del propietario para activar tu portal.</div>\n                          </div>';
                         formEl.parentNode.insertBefore(banner, formEl);
                     }
                 }

@@ -1,0 +1,837 @@
+/*
+ * Modulos operativos (mesas, cuentas abiertas, accesos, mermas, pasillos,
+ * catalogos maestro).
+ *
+ * Capa aditiva sobre css/dashboard.css: aqui solo viven los componentes que
+ * ese archivo no define (pestanas, tabla densa, mapa de mesas, formularios de
+ * linea). Los tokens de color, el layout .dashboard/.sidebar/.topbar y los
+ * breakpoints se heredan de dashboard.css para no duplicar el diseno.
+ */
+
+/* --------------------------------------------------------------------- */
+/* Contenedor de la vista                                                 */
+/* --------------------------------------------------------------------- */
+
+.op-main {
+  padding: 24px 28px 56px;
+  max-width: 1400px;
+}
+
+.op-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.op-head-text { min-width: 0; }
+
+.op-title {
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--white);
+  margin: 0 0 6px;
+  letter-spacing: -0.02em;
+}
+
+.op-title span { color: var(--accent); }
+
+.op-subtitle {
+  font-size: 13px;
+  color: var(--gray);
+  margin: 0;
+}
+
+.op-head-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+/* --------------------------------------------------------------------- */
+/* Pestanas de modulo                                                      */
+/* --------------------------------------------------------------------- */
+
+.op-tabs {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid var(--border);
+  scrollbar-width: thin;
+}
+
+.op-tab {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 15px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: var(--gray);
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+  border-radius: 8px 8px 0 0;
+  transition: var(--transition);
+}
+
+.op-tab:hover:not(:disabled) {
+  color: var(--text);
+  background: rgba(139, 92, 246, 0.06);
+}
+
+.op-tab.active {
+  color: var(--white);
+  border-bottom-color: var(--accent);
+}
+
+.op-tab:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.op-tab .op-tab-count {
+  font-size: 11px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: rgba(139, 92, 246, 0.16);
+  color: var(--cyan);
+}
+
+.op-tab.active .op-tab-count {
+  background: var(--accent);
+  color: #fff;
+}
+
+.op-tab .fa-lock {
+  font-size: 10px;
+  color: var(--yellow);
+}
+
+/* --------------------------------------------------------------------- */
+/* Barra de filtros                                                       */
+/* --------------------------------------------------------------------- */
+
+.op-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.op-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+
+.op-field > label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--gray);
+}
+
+.op-input,
+.op-select,
+.op-textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text);
+  font-size: 13px;
+  font-family: inherit;
+  transition: var(--transition);
+}
+
+.op-input:focus,
+.op-select:focus,
+.op-textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+.op-input::placeholder,
+.op-textarea::placeholder { color: var(--gray); }
+
+.op-textarea { resize: vertical; min-height: 72px; }
+
+.op-select option { background: var(--card); color: var(--text); }
+
+.op-search { flex: 1 1 240px; min-width: 180px; }
+
+/* --------------------------------------------------------------------- */
+/* KPI strip                                                              */
+/* --------------------------------------------------------------------- */
+
+.op-kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.op-kpi {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  min-width: 0;
+}
+
+.op-kpi-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--gray);
+  margin-bottom: 6px;
+}
+
+.op-kpi-value {
+  font-size: 21px;
+  font-weight: 700;
+  color: var(--white);
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.op-kpi-value.is-money { font-size: 18px; }
+.op-kpi-value.is-danger { color: var(--red); }
+.op-kpi-value.is-ok { color: var(--green); }
+
+/* --------------------------------------------------------------------- */
+/* Panel                                                                  */
+/* --------------------------------------------------------------------- */
+
+.op-panel {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.op-panel-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+}
+
+.op-panel-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--white);
+  margin: 0;
+}
+
+.op-panel-body { padding: 16px 18px; }
+.op-panel-body.is-flush { padding: 0; }
+
+/* --------------------------------------------------------------------- */
+/* Tabla densa                                                            */
+/* --------------------------------------------------------------------- */
+
+.op-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.op-table th {
+  text-align: left;
+  padding: 11px 14px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--gray);
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+  background: rgba(255, 255, 255, 0.015);
+}
+
+.op-table td {
+  padding: 11px 14px;
+  border-bottom: 1px solid rgba(139, 92, 246, 0.06);
+  color: var(--text);
+  vertical-align: middle;
+}
+
+.op-table tbody tr:last-child td { border-bottom: 0; }
+
+.op-table tbody tr:hover { background: rgba(139, 92, 246, 0.04); }
+
+.op-table .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.op-table .actions { text-align: right; white-space: nowrap; width: 1%; }
+
+.op-table .actions .btn { margin-left: 6px; }
+
+.op-strong { color: var(--white); font-weight: 600; }
+.op-muted { color: var(--gray); }
+
+/* Fila de filtros del catalogo de productos: buscador, selectores y el
+   interruptor de inactivos. Se envuelve sola para noOverflowar en movil. */
+.op-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.op-filters .op-input { flex: 1 1 240px; min-width: 0; }
+.op-filters .op-select { flex: 0 1 200px; min-width: 0; }
+
+/* Checkbox con su texto en la misma linea (usado dentro de formularios y filtros). */
+.op-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  color: var(--gray);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.op-check input[type="checkbox"] { width: 15px; height: 15px; accent-color: var(--cya); cursor: pointer; }
+.op-check:hover { color: var(--text); }
+
+/* Aviso informativo al pie de un panel (no es un error). */
+.op-note {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 11px 16px;
+  font-size: 12.5px;
+  color: var(--gray);
+  background: rgba(255, 255, 255, 0.02);
+  border-top: 1px solid var(--border);
+}
+
+.op-note i { color: var(--cya); }
+
+/* Envoltorio con scroll horizontal para tablas anchas en pantallas medias. */
+.op-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.op-danger-text { color: var(--red); }
+.op-ok-text { color: var(--green); }
+
+/* Stock en alerta: en o por debajo del minimo. Sin stock va `is-danger`. */
+.op-table .is-warn { color: var(--yellow, #fbbf24); font-weight: 600; }
+.op-table .is-danger { color: var(--red); font-weight: 600; }
+
+/* Un producto desactivado sigue visible en el catalogo (hay que poder
+   reactivarlo), pero se apaga para que no cuente como disponible. */
+.op-table tbody tr.is-inactivo td { opacity: 0.5; }
+
+/* --------------------------------------------------------------------- */
+/* Estados: carga / vacio / error / bloqueado                             */
+/* --------------------------------------------------------------------- */
+
+.op-state {
+  padding: 46px 22px;
+  text-align: center;
+  color: var(--gray);
+}
+
+.op-state-icon {
+  font-size: 26px;
+  margin-bottom: 12px;
+  opacity: 0.65;
+}
+
+.op-state-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--white);
+  margin-bottom: 6px;
+}
+
+.op-state-text {
+  font-size: 13px;
+  max-width: 460px;
+  margin: 0 auto 16px;
+  line-height: 1.55;
+}
+
+.op-state.is-error .op-state-icon,
+.op-state.is-error .op-state-title { color: var(--red); }
+
+.op-skeleton-row {
+  height: 14px;
+  border-radius: 6px;
+  background: linear-gradient(90deg, rgba(139, 92, 246, 0.06), rgba(139, 92, 246, 0.18), rgba(139, 92, 246, 0.06));
+  background-size: 200% 100%;
+  animation: opShimmer 1.3s linear infinite;
+}
+
+@keyframes opShimmer {
+  from { background-position: 200% 0; }
+  to { background-position: -200% 0; }
+}
+
+.op-skeleton-rows { padding: 16px 18px; display: grid; gap: 12px; }
+
+/* --------------------------------------------------------------------- */
+/* Mapa de mesas                                                          */
+/* --------------------------------------------------------------------- */
+
+.op-mesas {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(178px, 1fr));
+  gap: 12px;
+}
+
+/* Envoltorio de la tarjeta + acciones. Las acciones van debajo para que el
+   boton principal siga siendo la mesa entera y no compitan por el mismo click. */
+.op-mesa-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.op-mesa-acciones {
+  display: flex;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
+.op-icon-btn {
+  width: 30px;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-dim);
+  font-size: 12px;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.op-icon-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.op-icon-btn.is-danger:hover {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.op-mesa {
+  position: relative;
+  text-align: left;
+  padding: 14px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.02);
+  color: var(--text);
+  font-family: inherit;
+  cursor: pointer;
+  transition: var(--transition);
+  min-width: 0;
+  flex: 1;
+}
+
+.op-mesa:hover:not(:disabled) {
+  border-color: var(--accent);
+  transform: translateY(-2px);
+}
+
+.op-mesa:disabled { cursor: default; opacity: 0.75; }
+
+.op-mesa-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.op-mesa-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--white);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.op-mesa-meta {
+  font-size: 12px;
+  color: var(--gray);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+}
+
+.op-mesa-cuenta {
+  margin-top: 10px;
+  padding-top: 9px;
+  border-top: 1px dashed rgba(139, 92, 246, 0.22);
+  font-size: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.op-mesa-cuenta .monto {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--green);
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------- */
+/* Badges de estado                                                       */
+/* --------------------------------------------------------------------- */
+
+.op-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text);
+}
+
+.op-badge.is-libre { background: rgba(52, 211, 153, 0.14); color: var(--green); }
+.op-badge.is-ocupada { background: rgba(96, 165, 250, 0.14); color: var(--blue); }
+.op-badge.is-reservada { background: rgba(251, 191, 36, 0.14); color: var(--yellow); }
+.op-badge.is-fuera { background: rgba(248, 113, 113, 0.14); color: var(--red); }
+.op-badge.is-inactivo { background: rgba(255, 255, 255, 0.05); color: var(--gray); }
+.op-badge.is-rojo { background: rgba(248, 113, 113, 0.14); color: var(--red); }
+.op-badge.is-verde { background: rgba(52, 211, 153, 0.14); color: var(--green); }
+.op-badge.is-azul { background: rgba(96, 165, 250, 0.14); color: var(--blue); }
+
+/* --------------------------------------------------------------------- */
+/* Catalogo en dos columnas                                               */
+/* --------------------------------------------------------------------- */
+
+.op-split {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 16px;
+  align-items: start;
+}
+
+/* --------------------------------------------------------------------- */
+/* Lineas de formulario (consumos)                                        */
+/* --------------------------------------------------------------------- */
+
+.op-lines { display: grid; gap: 10px; }
+
+.op-line {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) 92px 108px auto;
+  gap: 8px;
+  align-items: end;
+}
+
+.op-line-total {
+  font-size: 12px;
+  color: var(--gray);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.op-line-remove {
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius);
+  border: 1px solid rgba(248, 113, 113, 0.3);
+  background: rgba(248, 113, 113, 0.08);
+  color: var(--red);
+  cursor: pointer;
+  flex: 0 0 auto;
+}
+
+.op-line-remove:hover { background: rgba(248, 113, 113, 0.18); }
+
+/* --------------------------------------------------------------------- */
+/* Resumen lateral                                                        */
+/* --------------------------------------------------------------------- */
+
+.op-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 16px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.op-summary-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 13px;
+  color: var(--text);
+}
+
+.op-summary-row.is-total {
+  padding-top: 10px;
+  border-top: 1px dashed rgba(139, 92, 246, 0.22);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--white);
+}
+
+.op-summary-row .val { font-variant-numeric: tabular-nums; }
+
+/* --------------------------------------------------------------------- */
+/* Toast                                                                  */
+/* --------------------------------------------------------------------- */
+
+.op-toasts {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 10000;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: min(400px, calc(100vw - 40px));
+}
+
+.op-toast {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.45;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+  animation: opToastIn 0.22s ease;
+}
+
+.op-toast.is-ok { border-color: rgba(52, 211, 153, 0.4); }
+.op-toast.is-error { border-color: rgba(248, 113, 113, 0.45); }
+.op-toast i { margin-top: 2px; }
+.op-toast.is-ok i { color: var(--green); }
+.op-toast.is-error i { color: var(--red); }
+
+@keyframes opToastIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* --------------------------------------------------------------------- */
+/* Modal de formulario                                                    */
+/* --------------------------------------------------------------------- */
+
+.op-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: none;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 24px 16px;
+  overflow-y: auto;
+  background: rgba(4, 4, 10, 0.72);
+  backdrop-filter: blur(4px);
+}
+
+.op-modal.open { display: flex; }
+
+.op-modal-card {
+  width: 100%;
+  max-width: 560px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  animation: opModalIn 0.2s ease;
+}
+
+.op-modal-card.is-wide { max-width: 760px; }
+
+@keyframes opModalIn {
+  from { opacity: 0; transform: translateY(14px) scale(0.98); }
+  to { opacity: 1; transform: none; }
+}
+
+.op-modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--border);
+}
+
+.op-modal-head h3 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--white);
+}
+
+.op-modal-close {
+  border: 0;
+  background: transparent;
+  color: var(--gray);
+  font-size: 17px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 8px;
+}
+
+.op-modal-close:hover { color: var(--white); background: rgba(255, 255, 255, 0.06); }
+
+.op-modal-body { padding: 18px; }
+
+.op-form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 14px;
+}
+
+.op-form-grid .span-2 { grid-column: 1 / -1; }
+
+.op-modal-foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 14px 18px;
+  border-top: 1px solid var(--border);
+}
+
+.op-alert {
+  display: none;
+  padding: 10px 12px;
+  margin-bottom: 14px;
+  border-radius: var(--radius);
+  border: 1px solid rgba(248, 113, 113, 0.4);
+  background: rgba(248, 113, 113, 0.08);
+  color: var(--red);
+  font-size: 12.5px;
+  line-height: 1.45;
+}
+
+.op-alert.show { display: block; }
+
+/* --------------------------------------------------------------------- */
+/* Responsive                                                             */
+/* --------------------------------------------------------------------- */
+
+@media (max-width: 900px) {
+  .op-main { padding: 18px 16px 48px; }
+  .op-title { font-size: 21px; }
+}
+
+@media (max-width: 600px) {
+  .op-main { padding: 14px 12px 44px; }
+  .op-title { font-size: 19px; }
+
+  .op-tabs {
+    gap: 2px;
+    margin: 0 -12px 16px;
+    padding: 0 12px 4px;
+  }
+
+  .op-tab { padding: 9px 12px; font-size: 12px; }
+
+  .op-kpis { grid-template-columns: repeat(auto-fit, minmax(132px, 1fr)); gap: 8px; }
+  .op-kpi { padding: 11px 12px; }
+  .op-kpi-value { font-size: 18px; }
+  .op-kpi-value.is-money { font-size: 16px; }
+
+  /* La tabla densa pasa a tarjetas apiladas: en movil no hay ancho util. */
+  .op-table thead { display: none; }
+
+  .op-table,
+  .op-table tbody,
+  .op-table tr,
+  .op-table td {
+    display: block;
+    width: 100%;
+  }
+
+  .op-table tr {
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .op-table td {
+    padding: 3px 0;
+    border: 0;
+    display: flex;
+    justify-content: space-between;
+    gap: 14px;
+    align-items: baseline;
+  }
+
+  .op-table td::before {
+    content: attr(data-label);
+    flex: 0 0 auto;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--gray);
+  }
+
+  .op-table td.actions {
+    padding-top: 10px;
+    margin-top: 6px;
+    border-top: 1px dashed rgba(139, 92, 246, 0.2);
+  }
+
+  .op-table td.actions::before { content: none; }
+  .op-table .num { text-align: left; }
+  .op-table .actions { width: 100%; }
+
+  .op-mesas { grid-template-columns: repeat(auto-fill, minmax(144px, 1fr)); }
+
+  .op-line { grid-template-columns: 1fr 1fr; }
+  .op-line > .op-line-total { grid-column: 1 / -1; text-align: left; }
+
+  .op-modal { padding: 12px 10px; }
+  .op-toasts { right: 12px; left: 12px; bottom: 12px; max-width: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .op-skeleton-row { animation: none; }
+  .op-toast,
+  .op-modal-card { animation: none; }
+  .op-mesa:hover:not(:disabled) { transform: none; }
+}

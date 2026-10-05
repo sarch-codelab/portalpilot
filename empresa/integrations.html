@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
 <link rel="icon" type="image/png" href="../img/iconos/robot_logo.png">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Integraciones — Portal Pilot</title>
+<title>Integraciones â€” Portal Pilot</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <link rel="stylesheet" href="../css/portales.css">
@@ -33,30 +33,30 @@
       <a href="dashboard.html" class="pp-nav-link"><i class="fas fa-home"></i> <span>Dashboard</span></a>
       <a href="team.html" class="pp-nav-link"><i class="fas fa-users"></i> <span>Equipo</span></a>
       <a href="roles.html" class="pp-nav-link"><i class="fas fa-user-shield"></i> <span>Roles</span></a>
-      <a href="modules.html" class="pp-nav-link"><i class="fas fa-shapes"></i> <span>Módulos</span></a>
+      <a href="modules.html" class="pp-nav-link"><i class="fas fa-shapes"></i> <span>MÃ³dulos</span></a>
       <a href="consumo.html" class="pp-nav-link"><i class="fas fa-chart-pie"></i> <span>Consumo</span></a>
       <div class="pp-nav-sep">Cuenta</div>
-      <a href="suscripcion.html" class="pp-nav-link"><i class="fas fa-crown"></i> <span>Suscripción</span></a>
+      <a href="suscripcion.html" class="pp-nav-link"><i class="fas fa-crown"></i> <span>SuscripciÃ³n</span></a>
       <a href="api_keys.html" class="pp-nav-link"><i class="fas fa-plug"></i> <span>API Keys</span></a>
       <a href="integrations.html" class="pp-nav-link active"><i class="fas fa-puzzle-piece"></i> <span>Integraciones</span></a>
       <a href="security.html" class="pp-nav-link"><i class="fas fa-shield-alt"></i> <span>Seguridad</span></a>
       <a href="perfil.html" class="pp-nav-link"><i class="fas fa-user"></i> <span>Mi Perfil</span></a>
     </nav>
     <div class="pp-sidebar-footer">
-      <button class="pp-btn pp-btn-ghost pp-btn-sm" onclick="window.location.href='/login.html'"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</button>
+      <button class="pp-btn pp-btn-ghost pp-btn-sm" onclick="window.location.href='/login.html'"><i class="fas fa-sign-out-alt"></i> Cerrar SesiÃ³n</button>
     </div>
   </aside>
   <main class="main-content">
-    <div class="pp-topbar"><div class="pp-topbar-title">Integraciones de <span>MI EMPRESA</span></div><span class="pp-badge purple" id="countBadge">—</span></div>
+    <div class="pp-topbar"><div class="pp-topbar-title">Integraciones de <span>MI EMPRESA</span></div><span class="pp-badge purple" id="countBadge">â€”</span></div>
     <div class="pp-page-header">
       <div>
         <h1 class="pp-page-title">Integraciones <span>disponibles</span></h1>
-        <p class="pp-page-subtitle">Conecta Portal Pilot con los servicios que ya usa tu empresa. Cada conexión queda registrada en el historial de seguridad.</p>
+        <p class="pp-page-subtitle">Conecta Portal Pilot con los servicios que ya usa tu empresa. Cada conexiÃ³n queda registrada en el historial de seguridad.</p>
       </div>
       <button class="pp-btn pp-btn-ghost pp-btn-sm" onclick="load()"><i class="fas fa-sync-alt"></i> Actualizar</button>
     </div>
     <div class="pp-content">
-      <div id="msg" class="pp-info-box"><i class="fas fa-spinner fa-spin"></i> Cargando integraciones…</div>
+      <div id="msg" class="pp-info-box"><i class="fas fa-spinner fa-spin"></i> Cargando integracionesâ€¦</div>
       <div class="int-grid" id="intGrid"></div>
     </div>
   </main>
@@ -86,7 +86,7 @@
           <div class="int-nombre">${H(i.nombre)}</div>
           <div class="int-desc">${H(i.descripcion)}</div>
           <div class="int-foot">
-            <span style="font-size:11px;color:var(--gray)">${i.connected_at ? 'Desde ' + window.PP.fmtFecha(i.connected_at) : 'Categoría: ' + H(i.categoria)}</span>
+            <span style="font-size:11px;color:var(--gray)">${i.connected_at ? 'Desde ' + window.PP.fmtFecha(i.connected_at) : 'CategorÃ­a: ' + H(i.categoria)}</span>
             <button class="switch ${i.enabled ? 'on' : ''}" data-key="${H(i.key)}" data-enabled="${i.enabled}" title="${i.enabled ? 'Desconectar' : 'Conectar'}"></button>
           </div>
         </div>`).join('');
@@ -103,7 +103,7 @@
     const enabled = sw.dataset.enabled !== 'true';
     try {
       await window.PP.apiFetch('/api/empresa/integrations/' + encodeURIComponent(key), { method: 'PUT', body: JSON.stringify({ enabled }) });
-      window.ppToast(enabled ? 'Integración conectada' : 'Integración desconectada');
+      window.ppToast(enabled ? 'IntegraciÃ³n conectada' : 'IntegraciÃ³n desconectada');
       load();
     } catch (err) {
       window.ppToast(err.message, 'err');
@@ -114,5 +114,8 @@
   load();
 })();
 </script>
+  <script src="../js/pp-sidebar-empresa.js"></script>
 </body>
 </html>
+
+

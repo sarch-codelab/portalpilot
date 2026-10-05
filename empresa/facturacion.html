@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
 <link rel="icon" type="image/png" href="../img/iconos/robot_logo.png">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Facturación — Portal Pilot</title>
+<title>FacturaciÃ³n â€” Portal Pilot</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <link rel="stylesheet" href="../css/portales.css">
@@ -22,39 +22,39 @@
     <nav class="pp-nav">
       <a href="dashboard.html" class="pp-nav-link"><i class="fas fa-home"></i> <span>Dashboard</span></a>
       <a href="team.html" class="pp-nav-link"><i class="fas fa-users"></i> <span>Equipo</span></a>
-      <a href="modules.html" class="pp-nav-link"><i class="fas fa-shapes"></i> <span>Módulos</span></a>
+      <a href="modules.html" class="pp-nav-link"><i class="fas fa-shapes"></i> <span>MÃ³dulos</span></a>
       <a href="consumo.html" class="pp-nav-link"><i class="fas fa-chart-pie"></i> <span>Consumo</span></a>
       <div class="pp-nav-sep">Cuenta</div>
-      <a href="suscripcion.html" class="pp-nav-link"><i class="fas fa-crown"></i> <span>Suscripción</span></a>
-      <a href="facturacion.html" class="pp-nav-link active"><i class="fas fa-file-invoice-dollar"></i> <span>Facturación</span></a>
+      <a href="suscripcion.html" class="pp-nav-link"><i class="fas fa-crown"></i> <span>SuscripciÃ³n</span></a>
+      <a href="facturacion.html" class="pp-nav-link active"><i class="fas fa-file-invoice-dollar"></i> <span>FacturaciÃ³n</span></a>
       <a href="security.html" class="pp-nav-link"><i class="fas fa-shield-alt"></i> <span>Seguridad</span></a>
       <a href="perfil.html" class="pp-nav-link"><i class="fas fa-user"></i> <span>Mi Perfil</span></a>
     </nav>
     <div class="pp-sidebar-footer">
-      <button class="pp-btn pp-btn-ghost pp-btn-sm" onclick="window.location.href='/login.html'"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</button>
+      <button class="pp-btn pp-btn-ghost pp-btn-sm" onclick="window.location.href='/login.html'"><i class="fas fa-sign-out-alt"></i> Cerrar SesiÃ³n</button>
     </div>
   </aside>
   <main class="main-content">
-    <div class="pp-topbar"><div class="pp-topbar-title">Facturación de <span>MI EMPRESA</span></div></div>
+    <div class="pp-topbar"><div class="pp-topbar-title">FacturaciÃ³n de <span>MI EMPRESA</span></div></div>
     <div class="pp-page-header">
       <div>
         <h1 class="pp-page-title">Documentos <span>fiscales</span></h1>
-        <p class="pp-page-subtitle">Historial real de tu operación. Cada tipo de documento es distinto: la <b>factura</b> es el comprobante fiscal de la venta; el <b>recibo</b> acredita un pago recibido; la <b>nota de crédito</b> ajusta o anula una factura emitida.</p>
+        <p class="pp-page-subtitle">Historial real de tu operaciÃ³n. Cada tipo de documento es distinto: la <b>factura</b> es el comprobante fiscal de la venta; el <b>recibo</b> acredita un pago recibido; la <b>nota de crÃ©dito</b> ajusta o anula una factura emitida.</p>
       </div>
     </div>
     <div class="pp-content">
-      <div id="msg" class="pp-info-box"><i class="fas fa-spinner fa-spin"></i> Cargando documentos reales…</div>
+      <div id="msg" class="pp-info-box"><i class="fas fa-spinner fa-spin"></i> Cargando documentos realesâ€¦</div>
       <div id="content" style="display:none;flex-direction:column;gap:20px">
         <div class="pp-grid pp-grid-3">
-          <div class="pp-stat"><div class="pp-stat-icon"><i class="fas fa-file-invoice"></i></div><div class="pp-stat-info"><div class="pp-stat-value" id="sumFac">—</div><div class="pp-stat-label">Facturas fiscales</div><div class="pp-stat-foot" id="sumFacMonto"></div></div></div>
-          <div class="pp-stat"><div class="pp-stat-icon green"><i class="fas fa-receipt"></i></div><div class="pp-stat-info"><div class="pp-stat-value" id="sumRec">—</div><div class="pp-stat-label">Recibos</div><div class="pp-stat-foot" id="sumRecMonto"></div></div></div>
-          <div class="pp-stat"><div class="pp-stat-icon red"><i class="fas fa-rotate-left"></i></div><div class="pp-stat-info"><div class="pp-stat-value" id="sumNc">—</div><div class="pp-stat-label">Notas de crédito</div><div class="pp-stat-foot" id="sumNcMonto"></div></div></div>
+          <div class="pp-stat"><div class="pp-stat-icon"><i class="fas fa-file-invoice"></i></div><div class="pp-stat-info"><div class="pp-stat-value" id="sumFac">â€”</div><div class="pp-stat-label">Facturas fiscales</div><div class="pp-stat-foot" id="sumFacMonto"></div></div></div>
+          <div class="pp-stat"><div class="pp-stat-icon green"><i class="fas fa-receipt"></i></div><div class="pp-stat-info"><div class="pp-stat-value" id="sumRec">â€”</div><div class="pp-stat-label">Recibos</div><div class="pp-stat-foot" id="sumRecMonto"></div></div></div>
+          <div class="pp-stat"><div class="pp-stat-icon red"><i class="fas fa-rotate-left"></i></div><div class="pp-stat-info"><div class="pp-stat-value" id="sumNc">â€”</div><div class="pp-stat-label">Notas de crÃ©dito</div><div class="pp-stat-foot" id="sumNcMonto"></div></div></div>
         </div>
         <div class="doc-tabs" id="tabs">
           <button class="doc-tab active" data-tipo="todos">Todos <span class="n" id="nTodos"></span></button>
           <button class="doc-tab" data-tipo="factura">Facturas <span class="n" id="nFac"></span></button>
           <button class="doc-tab" data-tipo="recibo">Recibos <span class="n" id="nRec"></span></button>
-          <button class="doc-tab" data-tipo="nota_credito">Notas de crédito <span class="n" id="nNc"></span></button>
+          <button class="doc-tab" data-tipo="nota_credito">Notas de crÃ©dito <span class="n" id="nNc"></span></button>
         </div>
         <div class="pp-table-wrap">
           <table class="pp-table">
@@ -79,13 +79,13 @@
   const TIPO_META = {
     factura: { label: 'Factura fiscal', cls: 'purple', icon: 'fa-file-invoice' },
     recibo: { label: 'Recibo', cls: 'green', icon: 'fa-receipt' },
-    nota_credito: { label: 'Nota de crédito', cls: 'red', icon: 'fa-rotate-left' }
+    nota_credito: { label: 'Nota de crÃ©dito', cls: 'red', icon: 'fa-rotate-left' }
   };
   const badgeEstado = (tipo, estado) => {
     const e = String(estado || '').toLowerCase();
     const map = { emitida: 'yellow', pagada: 'green', pendiente: 'yellow', recibido: 'green', anulada: 'red', cancelada: 'red' };
     const [cls] = map[e] || ['gray'];
-    return `<span class="pp-badge ${cls}"><span class="dot"></span>${H(e || '—')}</span>`;
+    return `<span class="pp-badge ${cls}"><span class="dot"></span>${H(e || 'â€”')}</span>`;
   };
 
   function render() {
@@ -95,7 +95,7 @@
       tbody.innerHTML = '';
       const es = document.getElementById('emptyState');
       es.style.display = 'block';
-      es.innerHTML = `<div class="pp-empty"><i class="fas fa-file-circle-question"></i><div class="pp-empty-title">Sin documentos ${filtro === 'todos' ? '' : 'de este tipo '}</div><p>Los documentos aparecerán aquí cuando se emitan desde Facturación o POS en el Workspace.</p></div>`;
+      es.innerHTML = `<div class="pp-empty"><i class="fas fa-file-circle-question"></i><div class="pp-empty-title">Sin documentos ${filtro === 'todos' ? '' : 'de este tipo '}</div><p>Los documentos aparecerÃ¡n aquÃ­ cuando se emitan desde FacturaciÃ³n o POS en el Workspace.</p></div>`;
       return;
     }
     document.getElementById('emptyState').style.display = 'none';
@@ -104,7 +104,7 @@
       return `<tr>
         <td><span class="pp-badge ${m.cls}"><i class="fas ${m.icon}"></i> ${m.label}</span></td>
         <td style="font-family:monospace;color:var(--white)">${H(d.correlativo)}</td>
-        <td style="max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${H(d.contraparte || '')}">${H(d.contraparte || '—')}</td>
+        <td style="max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${H(d.contraparte || '')}">${H(d.contraparte || 'â€”')}</td>
         <td style="text-align:right;color:var(--white);font-weight:600">${fmtMoney(d.total)}</td>
         <td>${badgeEstado(d.tipo, d.estado)}</td>
         <td>${fmtDate(d.fecha)}</td>
@@ -133,7 +133,7 @@
       render();
     } catch (err) {
       msg.className = 'pp-error';
-      msg.innerHTML = `<i class="fas fa-triangle-exclamation"></i><div><b>No se pudo cargar la facturación.</b><br>${H(err.message)}</div>`;
+      msg.innerHTML = `<i class="fas fa-triangle-exclamation"></i><div><b>No se pudo cargar la facturaciÃ³n.</b><br>${H(err.message)}</div>`;
     }
   }
 
@@ -149,5 +149,8 @@
   load();
 })();
 </script>
+  <script src="../js/pp-sidebar-empresa.js"></script>
 </body>
 </html>
+
+

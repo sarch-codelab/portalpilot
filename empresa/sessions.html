@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
 <link rel="icon" type="image/png" href="../img/iconos/robot_logo.png">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sesiones — Portal Pilot</title>
+<title>Sesiones â€” Portal Pilot</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <link rel="stylesheet" href="../css/portales.css">
@@ -19,34 +19,34 @@
       <div class="pp-nav-sep">Seguridad</div>
       <a href="security.html" class="pp-nav-link"><i class="fas fa-shield-alt"></i> <span>Eventos de seguridad</span></a>
       <a href="sessions.html" class="pp-nav-link active"><i class="fas fa-laptop"></i> <span>Sesiones</span></a>
-      <a href="audit.html" class="pp-nav-link"><i class="fas fa-clipboard-list"></i> <span>Auditoría</span></a>
+      <a href="audit.html" class="pp-nav-link"><i class="fas fa-clipboard-list"></i> <span>AuditorÃ­a</span></a>
       <div class="pp-nav-sep">Cuenta</div>
       <a href="perfil.html" class="pp-nav-link"><i class="fas fa-user"></i> <span>Mi Perfil</span></a>
     </nav>
     <div class="pp-sidebar-footer">
-      <button class="pp-btn pp-btn-ghost pp-btn-sm" onclick="window.location.href='/login.html'"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</button>
+      <button class="pp-btn pp-btn-ghost pp-btn-sm" onclick="window.location.href='/login.html'"><i class="fas fa-sign-out-alt"></i> Cerrar SesiÃ³n</button>
     </div>
   </aside>
   <main class="main-content">
-    <div class="pp-topbar"><div class="pp-topbar-title">Sesiones de <span>MI EMPRESA</span></div><span class="pp-badge gray" id="modoBadge">—</span></div>
+    <div class="pp-topbar"><div class="pp-topbar-title">Sesiones de <span>MI EMPRESA</span></div><span class="pp-badge gray" id="modoBadge">â€”</span></div>
     <div class="pp-page-header">
       <div>
         <h1 class="pp-page-title">Sesiones y <span>dispositivos</span></h1>
-        <p class="pp-page-subtitle">Sesiones reales registradas por el backend al iniciar sesión. Puedes revocar tu propia sesión siempre; las de otros usuarios son Owner. Revocar también cierra la sesión en el servidor.</p>
+        <p class="pp-page-subtitle">Sesiones reales registradas por el backend al iniciar sesiÃ³n. Puedes revocar tu propia sesiÃ³n siempre; las de otros usuarios son Owner. Revocar tambiÃ©n cierra la sesiÃ³n en el servidor.</p>
       </div>
       <button class="pp-btn pp-btn-ghost pp-btn-sm" onclick="load()"><i class="fas fa-sync-alt"></i> Actualizar</button>
     </div>
     <div class="pp-content">
-      <div id="msg" class="pp-info-box"><i class="fas fa-spinner fa-spin"></i> Cargando sesiones reales…</div>
+      <div id="msg" class="pp-info-box"><i class="fas fa-spinner fa-spin"></i> Cargando sesiones realesâ€¦</div>
       <div id="content" style="display:none;flex-direction:column;gap:16px">
         <div class="pp-table-wrap">
           <table class="pp-table">
-            <thead><tr><th>Usuario</th><th>Dispositivo</th><th>Ubicación</th><th>IP</th><th>Última actividad</th><th>Estado</th><th></th></tr></thead>
+            <thead><tr><th>Usuario</th><th>Dispositivo</th><th>UbicaciÃ³n</th><th>IP</th><th>Ãšltima actividad</th><th>Estado</th><th></th></tr></thead>
             <tbody id="rows"></tbody>
           </table>
           <div id="empty" style="display:none"></div>
         </div>
-        <div class="pp-info-box"><i class="fas fa-circle-info"></i><div>El registro de dispositivos comienza con esta versión: verás sesiones de los logins realizados a partir de ahora. “Sin registrar” significa que el acceso es anterior al nuevo registro.</div></div>
+        <div class="pp-info-box"><i class="fas fa-circle-info"></i><div>El registro de dispositivos comienza con esta versiÃ³n: verÃ¡s sesiones de los logins realizados a partir de ahora. â€œSin registrarâ€ significa que el acceso es anterior al nuevo registro.</div></div>
       </div>
     </div>
   </main>
@@ -71,7 +71,7 @@
       msg.style.display = 'none';
       document.getElementById('content').style.display = 'flex';
       const badge = document.getElementById('modoBadge');
-      if (data.fallback) { badge.className = 'pp-badge yellow'; badge.textContent = 'Modo histórico'; }
+      if (data.fallback) { badge.className = 'pp-badge yellow'; badge.textContent = 'Modo histÃ³rico'; }
       else { badge.className = 'pp-badge green'; badge.textContent = 'Registro activo'; }
       const sesiones = data.sesiones || [];
       const tbody = document.getElementById('rows');
@@ -79,17 +79,17 @@
       if (!sesiones.length) {
         tbody.innerHTML = '';
         empty.style.display = 'block';
-        empty.innerHTML = '<div class="pp-empty"><i class="fas fa-laptop"></i><div class="pp-empty-title">Sin sesiones registradas</div><p>Habrá sesiones cuando los usuarios inicien sesión en la plataforma.</p></div>';
+        empty.innerHTML = '<div class="pp-empty"><i class="fas fa-laptop"></i><div class="pp-empty-title">Sin sesiones registradas</div><p>HabrÃ¡ sesiones cuando los usuarios inicien sesiÃ³n en la plataforma.</p></div>';
         return;
       }
       empty.style.display = 'none';
       tbody.innerHTML = sesiones.map(s => {
         const revocable = esOwnerOrRoot || s.es_propia;
         return `<tr>
-          <td><div style="color:var(--white);font-weight:600">${H(s.usuario || '—')}</div><div style="font-size:11px;color:var(--gray)">${H(s.email || '')}</div></td>
+          <td><div style="color:var(--white);font-weight:600">${H(s.usuario || 'â€”')}</div><div style="font-size:11px;color:var(--gray)">${H(s.email || '')}</div></td>
           <td><i class="fas fa-desktop" style="color:var(--accent);margin-right:6px"></i>${H(s.dispositivo || 'No registrado')}</td>
-          <td>${H(s.ubicacion || '—')}</td>
-          <td style="font-family:monospace">${H(s.ip || '—')}</td>
+          <td>${H(s.ubicacion || 'â€”')}</td>
+          <td style="font-family:monospace">${H(s.ip || 'â€”')}</td>
           <td>${fmtDT(s.ultimo_actividad)}</td>
           <td>${s.revocada ? '<span class="pp-badge red"><span class="dot"></span>Revocada</span>' : '<span class="pp-badge green"><span class="dot"></span>Activa</span>'}</td>
           <td>${revocada_disabled(s)}</td>
@@ -108,10 +108,10 @@
   document.getElementById('rows').addEventListener('click', async (e) => {
     const btn = e.target.closest('[data-revoke]');
     if (!btn) return;
-    if (!confirm('¿Revocar esta sesión? El dispositivo tendrá que iniciar sesión de nuevo.')) return;
+    if (!confirm('Â¿Revocar esta sesiÃ³n? El dispositivo tendrÃ¡ que iniciar sesiÃ³n de nuevo.')) return;
     try {
       await window.PP.apiFetch('/api/empresa/sessions/' + encodeURIComponent(btn.dataset.revoke), { method: 'DELETE' });
-      window.ppToast('Sesión revocada');
+      window.ppToast('SesiÃ³n revocada');
       load();
     } catch (err) { window.ppToast(err.message, 'err'); }
   });
@@ -119,5 +119,8 @@
   load();
 })();
 </script>
+  <script src="../js/pp-sidebar-empresa.js"></script>
 </body>
 </html>
+
+

@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
 <link rel="icon" type="image/png" href="../img/iconos/robot_logo.png">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Soporte — Portal Pilot</title>
+<title>Soporte â€” Portal Pilot</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <link rel="stylesheet" href="../css/portales.css">
@@ -19,11 +19,11 @@
       <div class="pp-nav-sep">Ayuda</div>
       <a href="support.html" class="pp-nav-link active"><i class="fas fa-headset"></i> <span>Soporte</span></a>
       <div class="pp-nav-sep">Cuenta</div>
-      <a href="suscripcion.html" class="pp-nav-link"><i class="fas fa-crown"></i> <span>Suscripción</span></a>
+      <a href="suscripcion.html" class="pp-nav-link"><i class="fas fa-crown"></i> <span>SuscripciÃ³n</span></a>
       <a href="perfil.html" class="pp-nav-link"><i class="fas fa-user"></i> <span>Mi Perfil</span></a>
     </nav>
     <div class="pp-sidebar-footer">
-      <button class="pp-btn pp-btn-ghost pp-btn-sm" onclick="window.location.href='/login.html'"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</button>
+      <button class="pp-btn pp-btn-ghost pp-btn-sm" onclick="window.location.href='/login.html'"><i class="fas fa-sign-out-alt"></i> Cerrar SesiÃ³n</button>
     </div>
   </aside>
   <main class="main-content">
@@ -39,12 +39,12 @@
         <div class="pp-card">
           <div class="pp-card-head"><div class="pp-card-title"><i class="fas fa-paper-plane"></i> Nuevo ticket</div></div>
           <form id="ticketForm">
-            <div class="pp-field"><label for="tCategoria">Categoría</label>
+            <div class="pp-field"><label for="tCategoria">CategorÃ­a</label>
               <select class="pp-select" id="tCategoria" required>
                 <option value="cuenta">Cuenta y acceso</option>
-                <option value="facturacion">Facturación y pagos</option>
-                <option value="tecnico">Problema técnico</option>
-                <option value="datos">Datos y migración</option>
+                <option value="facturacion">FacturaciÃ³n y pagos</option>
+                <option value="tecnico">Problema tÃ©cnico</option>
+                <option value="datos">Datos y migraciÃ³n</option>
                 <option value="otro">Otro</option>
               </select>
             </div>
@@ -52,18 +52,18 @@
               <select class="pp-select" id="tPrioridad">
                 <option value="baja">Baja</option>
                 <option value="normal" selected>Normal</option>
-                <option value="alta">Alta — operativa detenida</option>
+                <option value="alta">Alta â€” operativa detenida</option>
               </select>
             </div>
-            <div class="pp-field"><label for="tMensaje">Describe tu situación</label>
-              <textarea class="pp-textarea" id="tMensaje" rows="5" required minlength="20" placeholder="Cuéntanos qué ocurre, desde cuándo y qué has intentado…"></textarea>
+            <div class="pp-field"><label for="tMensaje">Describe tu situaciÃ³n</label>
+              <textarea class="pp-textarea" id="tMensaje" rows="5" required minlength="20" placeholder="CuÃ©ntanos quÃ© ocurre, desde cuÃ¡ndo y quÃ© has intentadoâ€¦"></textarea>
             </div>
             <button type="submit" class="pp-btn pp-btn-acc" id="btnEnviar"><i class="fas fa-paper-plane"></i> Enviar ticket</button>
           </form>
         </div>
         <div class="pp-card">
           <div class="pp-card-head"><div class="pp-card-title"><i class="fas fa-inbox"></i> Tickets de tu empresa</div><span class="pp-badge gray" id="tkCount">0</span></div>
-          <div id="tkMsg" class="pp-info-box" style="margin-bottom:12px"><i class="fas fa-spinner fa-spin"></i> Cargando tickets…</div>
+          <div id="tkMsg" class="pp-info-box" style="margin-bottom:12px"><i class="fas fa-spinner fa-spin"></i> Cargando ticketsâ€¦</div>
           <div id="tkList" style="display:flex;flex-direction:column;gap:10px;max-height:420px;overflow-y:auto"></div>
           <div id="tkEmpty" style="display:none"></div>
         </div>
@@ -90,7 +90,7 @@
       if (!tickets.length) {
         list.innerHTML = '';
         empty.style.display = 'block';
-        empty.innerHTML = '<div class="pp-empty"><i class="fas fa-inbox"></i><div class="pp-empty-title">Sin tickets todavía</div><p>Cuando envíes un ticket aparecerá aquí con su estado.</p></div>';
+        empty.innerHTML = '<div class="pp-empty"><i class="fas fa-inbox"></i><div class="pp-empty-title">Sin tickets todavÃ­a</div><p>Cuando envÃ­es un ticket aparecerÃ¡ aquÃ­ con su estado.</p></div>';
         return;
       }
       empty.style.display = 'none';
@@ -100,8 +100,8 @@
           <span style="font-size:12px;color:var(--cyan);font-family:monospace">#${H(String(t.id).slice(0, 8))}</span>
           <span class="pp-badge ${estadoBadge(t.estado)}">${H(t.estado || 'open')}</span>
         </div>
-        <div style="font-size:13px;color:var(--white);font-weight:600;margin-top:6px">${H(t.categoria || '')} · ${H(t.prioridad || 'normal')}</div>
-        <div style="font-size:12.5px;color:var(--gray);margin-top:4px">${H((t.mensaje || '').slice(0, 140))}${(t.mensaje || '').length > 140 ? '…' : ''}</div>
+        <div style="font-size:13px;color:var(--white);font-weight:600;margin-top:6px">${H(t.categoria || '')} Â· ${H(t.prioridad || 'normal')}</div>
+        <div style="font-size:12.5px;color:var(--gray);margin-top:4px">${H((t.mensaje || '').slice(0, 140))}${(t.mensaje || '').length > 140 ? 'â€¦' : ''}</div>
         <div style="font-size:11px;color:var(--gray);margin-top:6px"><i class="fas fa-clock"></i> ${fmtDT(t.created_at)}</div>
       </div>`).join('');
     } catch (err) {
@@ -114,7 +114,7 @@
     e.preventDefault();
     const btn = document.getElementById('btnEnviar');
     btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando…';
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviandoâ€¦';
     try {
       const nombre = localStorage.getItem('userName') || 'Usuario';
       const email = localStorage.getItem('userEmail') || '';
@@ -148,5 +148,8 @@
   loadTickets();
 })();
 </script>
+  <script src="../js/pp-sidebar-empresa.js"></script>
 </body>
 </html>
+
+

@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
 <link rel="icon" type="image/png" href="../img/iconos/robot_logo.png">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Auditoría — Portal Pilot</title>
+<title>AuditorÃ­a â€” Portal Pilot</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <link rel="stylesheet" href="../css/portales.css">
@@ -22,41 +22,41 @@
       <a href="dashboard.html" class="pp-nav-link"><i class="fas fa-home"></i> <span>Dashboard</span></a>
       <a href="team.html" class="pp-nav-link"><i class="fas fa-users"></i> <span>Equipo</span></a>
       <div class="pp-nav-sep">Transparencia</div>
-      <a href="audit.html" class="pp-nav-link active"><i class="fas fa-clipboard-list"></i> <span>Auditoría</span></a>
+      <a href="audit.html" class="pp-nav-link active"><i class="fas fa-clipboard-list"></i> <span>AuditorÃ­a</span></a>
       <a href="activity.html" class="pp-nav-link"><i class="fas fa-wave-square"></i> <span>Actividad</span></a>
       <div class="pp-nav-sep">Cuenta</div>
-      <a href="suscripcion.html" class="pp-nav-link"><i class="fas fa-crown"></i> <span>Suscripción</span></a>
+      <a href="suscripcion.html" class="pp-nav-link"><i class="fas fa-crown"></i> <span>SuscripciÃ³n</span></a>
       <a href="security.html" class="pp-nav-link"><i class="fas fa-shield-alt"></i> <span>Seguridad</span></a>
       <a href="perfil.html" class="pp-nav-link"><i class="fas fa-user"></i> <span>Mi Perfil</span></a>
     </nav>
     <div class="pp-sidebar-footer">
-      <button class="pp-btn pp-btn-ghost pp-btn-sm" onclick="window.location.href='/login.html'"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</button>
+      <button class="pp-btn pp-btn-ghost pp-btn-sm" onclick="window.location.href='/login.html'"><i class="fas fa-sign-out-alt"></i> Cerrar SesiÃ³n</button>
     </div>
   </aside>
   <main class="main-content">
-    <div class="pp-topbar"><div class="pp-topbar-title">Auditoría de <span>MI EMPRESA</span></div><span class="pp-badge green" id="integrityBadge"><i class="fas fa-link"></i> Verificando…</span></div>
+    <div class="pp-topbar"><div class="pp-topbar-title">AuditorÃ­a de <span>MI EMPRESA</span></div><span class="pp-badge green" id="integrityBadge"><i class="fas fa-link"></i> Verificandoâ€¦</span></div>
     <div class="pp-page-header">
       <div>
-        <h1 class="pp-page-title">Registro de <span>auditoría</span></h1>
-        <p class="pp-page-subtitle">Eventos administrativos importantes: creación de usuarios, cambios de rol, de plan, de configuración y de seguridad, y operaciones críticas. La actividad operacional (facturación, POS, flota) vive en <a href="activity.html" style="color:var(--accent)">Actividad</a>.</p>
+        <h1 class="pp-page-title">Registro de <span>auditorÃ­a</span></h1>
+        <p class="pp-page-subtitle">Eventos administrativos importantes: creaciÃ³n de usuarios, cambios de rol, de plan, de configuraciÃ³n y de seguridad, y operaciones crÃ­ticas. La actividad operacional (facturaciÃ³n, POS, flota) vive en <a href="activity.html" style="color:var(--accent)">Actividad</a>.</p>
       </div>
       <div class="pp-toolbar">
         <select class="pp-select" id="fTipo" style="width:auto"><option value="">Todos los tipos</option></select>
-        <input class="pp-input" id="fBuscar" placeholder="Buscar…" style="width:200px">
+        <input class="pp-input" id="fBuscar" placeholder="Buscarâ€¦" style="width:200px">
         <button class="pp-btn pp-btn-ghost pp-btn-sm" onclick="load()"><i class="fas fa-sync-alt"></i></button>
       </div>
     </div>
     <div class="pp-content">
-      <div id="msg" class="pp-info-box"><i class="fas fa-spinner fa-spin"></i> Cargando auditoría…</div>
+      <div id="msg" class="pp-info-box"><i class="fas fa-spinner fa-spin"></i> Cargando auditorÃ­aâ€¦</div>
       <div id="content" style="display:none;flex-direction:column;gap:16px">
         <div class="pp-grid pp-grid-4" style="grid-template-columns:repeat(auto-fit,minmax(170px,1fr))">
-          <div class="pp-stat"><div class="pp-stat-info"><div class="pp-stat-value" id="stTotal">—</div><div class="pp-stat-label">Eventos cargados</div></div></div>
-          <div class="pp-stat"><div class="pp-stat-info"><div class="pp-stat-value" id="stTipos">—</div><div class="pp-stat-label">Tipos de evento</div></div></div>
-          <div class="pp-stat"><div class="pp-stat-info"><div class="pp-stat-value" id="stUltimo">—</div><div class="pp-stat-label">Último evento</div></div></div>
+          <div class="pp-stat"><div class="pp-stat-info"><div class="pp-stat-value" id="stTotal">â€”</div><div class="pp-stat-label">Eventos cargados</div></div></div>
+          <div class="pp-stat"><div class="pp-stat-info"><div class="pp-stat-value" id="stTipos">â€”</div><div class="pp-stat-label">Tipos de evento</div></div></div>
+          <div class="pp-stat"><div class="pp-stat-info"><div class="pp-stat-value" id="stUltimo">â€”</div><div class="pp-stat-label">Ãšltimo evento</div></div></div>
         </div>
         <div class="pp-table-wrap">
           <table class="pp-table">
-            <thead><tr><th>Fecha</th><th>Acción</th><th>Detalle</th><th>Tipo</th><th>Usuario</th><th>Hash</th></tr></thead>
+            <thead><tr><th>Fecha</th><th>AcciÃ³n</th><th>Detalle</th><th>Tipo</th><th>Usuario</th><th>Hash</th></tr></thead>
             <tbody id="rows"></tbody>
           </table>
           <div id="empty" style="display:none"></div>
@@ -85,21 +85,21 @@
     if (!rows.length) {
       tbody.innerHTML = '';
       empty.style.display = 'block';
-      empty.innerHTML = '<div class="pp-empty"><i class="fas fa-clipboard-list"></i><div class="pp-empty-title">Sin eventos de auditoría</div><p>Cuando se realicen acciones administrativas aparecerán aquí.</p></div>';
+      empty.innerHTML = '<div class="pp-empty"><i class="fas fa-clipboard-list"></i><div class="pp-empty-title">Sin eventos de auditorÃ­a</div><p>Cuando se realicen acciones administrativas aparecerÃ¡n aquÃ­.</p></div>';
       return;
     }
     empty.style.display = 'none';
     tbody.innerHTML = rows.map(e => {
       const fecha = e.fecha || e.created_at;
       const tipo = e.tipo || 'sistema';
-      const usuario = e.usuario || '—';
+      const usuario = e.usuario || 'â€”';
       return `<tr>
       <td style="white-space:nowrap">${fmtDT(fecha)}</td>
-      <td style="color:var(--white);font-weight:600">${H(e.accion || e.event || '—')}</td>
-      <td style="max-width:320px">${H(e.descripcion || e.details || '—')}</td>
+      <td style="color:var(--white);font-weight:600">${H(e.accion || e.event || 'â€”')}</td>
+      <td style="max-width:320px">${H(e.descripcion || e.details || 'â€”')}</td>
       <td><span class="tipo-badge">${H(tipo)}</span></td>
       <td>${H(usuario)}</td>
-      <td class="hash-cell" title="Hash verificado dentro de la cadena de auditoría">${(e.currHash || '').slice(0, 12) || '—'}</td>
+      <td class="hash-cell" title="Hash verificado dentro de la cadena de auditorÃ­a">${(e.currHash || '').slice(0, 12) || 'â€”'}</td>
     </tr>`;
     }).join('');
   }
@@ -127,14 +127,14 @@
       sel.innerHTML = '<option value="">Todos los tipos</option>' + tipos.map(t => `<option value="${H(t)}">${H(t)}</option>`).join('');
       sel.value = current;
       const ultimo = eventos.length ? (eventos[0].fecha || eventos[0].created_at) : null;
-      document.getElementById('stUltimo').textContent = ultimo ? fmtDT(ultimo) : '—';
+      document.getElementById('stUltimo').textContent = ultimo ? fmtDT(ultimo) : 'â€”';
       const badge = document.getElementById('integrityBadge');
       badge.className = 'pp-badge ' + (cadena ? 'green' : 'gray');
       badge.innerHTML = cadena ? '<i class="fas fa-link"></i> Cadena verificada' : '<i class="fas fa-circle-info"></i> Log simple';
       render();
     } catch (err) {
       msg.className = 'pp-error';
-      msg.innerHTML = `<i class="fas fa-triangle-exclamation"></i><div><b>No se pudo cargar la auditoría.</b><br>${H(err.message)}</div>`;
+      msg.innerHTML = `<i class="fas fa-triangle-exclamation"></i><div><b>No se pudo cargar la auditorÃ­a.</b><br>${H(err.message)}</div>`;
     }
   }
 
@@ -144,5 +144,8 @@
   load();
 })();
 </script>
+  <script src="../js/pp-sidebar-empresa.js"></script>
 </body>
 </html>
+
+

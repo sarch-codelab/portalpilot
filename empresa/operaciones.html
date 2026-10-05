@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Modulos operativos | Portal Pilot</title>
+  <link rel="icon" type="image/png" href="../img/iconos/robot_logo.png">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="../css/dashboard.css">
+  <link rel="stylesheet" href="../css/notifications.css">
+  <link rel="stylesheet" href="../css/modulos-operativos.css">
+</head>
+<body>
+
+<div class="dashboard" id="dashboard">
+
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="logo">
+        <i class="fas fa-layer-group"></i>
+        <span>Portal Pilot</span>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav" id="sidebarNav">
+      <a href="dashboard.html" class="sidebar-link">
+        <i class="fas fa-gauge"></i><span>Dashboard</span>
+      </a>
+      <a href="operaciones.html" class="sidebar-link active">
+        <i class="fas fa-layer-group"></i><span>Modulos operativos</span>
+      </a>
+      <a href="modules.html" class="sidebar-link">
+        <i class="fas fa-cubes"></i><span>Modulos</span>
+      </a>
+      <a href="reports.html" class="sidebar-link">
+        <i class="fas fa-file-export"></i><span>Reportes</span>
+      </a>
+      <a href="configuracion.html" class="sidebar-link">
+        <i class="fas fa-cog"></i><span>Configuracion</span>
+      </a>
+      <a href="support.html" class="sidebar-link">
+        <i class="fas fa-life-ring"></i><span>Soporte</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="profile-info">
+        <span class="name" id="sidebarName">Mi empresa</span>
+        <span class="role" id="sidebarRole">Cargando…</span>
+      </div>
+    </div>
+  </aside>
+
+  <div class="overlay" id="overlay"></div>
+
+  <div class="main-content">
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="toggle-btn" id="toggleSidebar" aria-label="Alternar menu">
+          <i class="fas fa-bars"></i>
+        </button>
+        <span class="topbar-title">Modulos <span>operativos</span></span>
+      </div>
+      <div class="topbar-right">
+        <span class="plan-badge" id="opPlanBadge"></span>
+      </div>
+    </header>
+
+    <main class="op-main" id="opVista">
+      <div class="op-head">
+        <div class="op-head-text">
+          <h1 class="op-title">Modulos <span>operativos</span></h1>
+          <p class="op-subtitle" id="opSubtitle">Cargando…</p>
+        </div>
+        <div class="op-head-actions">
+          <button class="btn btn-ghost btn-sm" id="opSalir">
+            <i class="fas fa-arrow-left"></i> Volver al dashboard
+          </button>
+        </div>
+      </div>
+
+      <nav class="op-tabs" id="opTabs" aria-label="Modulos operativos"></nav>
+
+      <section class="op-kpis" id="opKpis" aria-live="polite"></section>
+
+      <div id="opPanel">
+        <div class="op-skeleton-rows">
+          <div class="op-skeleton-row"></div>
+          <div class="op-skeleton-row"></div>
+          <div class="op-skeleton-row"></div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+</div>
+
+<div class="op-modal" id="opModal" role="dialog" aria-modal="true" aria-labelledby="opModalTitle">
+  <div class="op-modal-card">
+    <div class="op-modal-head">
+      <h3 id="opModalTitle">Formulario</h3>
+      <button class="op-modal-close" data-op-modal-close aria-label="Cerrar">
+        <i class="fas fa-xmark"></i>
+      </button>
+    </div>
+    <div class="op-modal-body">
+      <div class="op-alert" id="opModalAlert"></div>
+      <div id="opModalBody"></div>
+    </div>
+    <div class="op-modal-foot" id="opModalFoot"></div>
+  </div>
+</div>
+
+<div class="op-toasts" id="opToasts" aria-live="polite"></div>
+
+<script src="../js/plan-gate.js"></script>
+<script src="../js/portales.js"></script>
+<script src="../auth-check.js"></script>
+<script src="../js/operaciones-modulos.js"></script>
+
+</body>
+</html>

@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
     <link rel="icon" type="image/png" href="../img/iconos/robot_logo.png">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Consumo — Portal Pilot</title>
+<title>Consumo â€” Portal Pilot</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <style>
@@ -63,29 +63,29 @@ a{text-decoration:none;color:inherit}button{font-family:inherit;cursor:pointer}
       <a href="dashboard.html" class="sidebar-link"><i class="fas fa-home"></i> <span>Dashboard</span></a>
       <a href="team.html" class="sidebar-link" data-min-plan="business"><i class="fas fa-users"></i> <span>Equipo</span></a>
       <a href="roles.html" class="sidebar-link" data-min-plan="business"><i class="fas fa-user-shield"></i> <span>Roles</span></a>
-      <a href="modules.html" class="sidebar-link"><i class="fas fa-shapes"></i> <span>Módulos</span></a>
+      <a href="modules.html" class="sidebar-link"><i class="fas fa-shapes"></i> <span>MÃ³dulos</span></a>
       <a href="consumo.html" class="sidebar-link active"><i class="fas fa-chart-pie"></i> <span>Consumo</span></a>
       <a href="fleet.html" class="sidebar-link" data-min-plan="enterprise"><i class="fas fa-truck"></i> <span>Flota</span></a>
       <a href="automation.html" class="sidebar-link" data-min-plan="enterprise"><i class="fas fa-robot"></i> <span>Bots RPA</span></a>
       <a href="api_keys.html" class="sidebar-link" data-min-plan="enterprise"><i class="fas fa-key"></i> <span>API Keys</span></a>
       <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--gray);padding:12px 16px 4px">Cuenta</div>
-      <a href="suscripcion.html" class="sidebar-link"><i class="fas fa-crown"></i> <span>Suscripción</span></a>
+      <a href="suscripcion.html" class="sidebar-link"><i class="fas fa-crown"></i> <span>SuscripciÃ³n</span></a>
       <a href="security.html" class="sidebar-link" data-min-plan="business"><i class="fas fa-shield-alt"></i> <span>Seguridad</span></a>
       <a href="perfil.html" class="sidebar-link"><i class="fas fa-user"></i> <span>Mi Perfil</span></a>
       <a href="support.html" class="sidebar-link"><i class="fas fa-headset"></i> <span>Soporte</span></a>
     </nav>
   </aside>
   <main class="main-content">
-    <div class="topbar"><div class="topbar-title">Consumo de <span>MI EMPRESA</span></div><span class="plan-badge" id="planBadge">—</span></div>
+    <div class="topbar"><div class="topbar-title">Consumo de <span>MI EMPRESA</span></div><span class="plan-badge" id="planBadge">â€”</span></div>
     <div class="page-header">
       <div>
         <h1 class="page-title">Consumo del <span>periodo</span></h1>
-        <p class="page-subtitle">Uso real por recurso según el metering del backend (tenant_usage). Los límites provienen de tu plan — la fuente de verdad es la API, no esta página.</p>
+        <p class="page-subtitle">Uso real por recurso segÃºn el metering del backend (tenant_usage). Los lÃ­mites provienen de tu plan â€” la fuente de verdad es la API, no esta pÃ¡gina.</p>
       </div>
       <select class="periodo-select" id="periodoSelect"></select>
     </div>
     <div class="content">
-      <div id="msg" class="msg loading"><i class="fas fa-spinner fa-spin"></i> Cargando consumo real…</div>
+      <div id="msg" class="msg loading"><i class="fas fa-spinner fa-spin"></i> Cargando consumo realâ€¦</div>
       <div class="usage-grid" id="usageGrid"></div>
     </div>
   </main>
@@ -117,7 +117,7 @@ a{text-decoration:none;color:inherit}button{font-family:inherit;cursor:pointer}
   sel.addEventListener('change', load);
 
   function pct(usado, limite) {
-    if (!limite || limite <= 0) return { pct: null, texto: 'Sin límite' };
+    if (!limite || limite <= 0) return { pct: null, texto: 'Sin lÃ­mite' };
     const p = Math.min(100, Math.round((usado / limite) * 100));
     return { pct: p, texto: p + '%' };
   }
@@ -126,7 +126,7 @@ a{text-decoration:none;color:inherit}button{font-family:inherit;cursor:pointer}
     const grid = document.getElementById('usageGrid');
     const msg = document.getElementById('msg');
     msg.className = 'msg loading';
-    msg.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Cargando consumo real…';
+    msg.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Cargando consumo realâ€¦';
     grid.innerHTML = '';
     try {
       const res = await fetch(`${API_ROOT}/api/tenant/usage?periodo=${encodeURIComponent(sel.value)}`, { headers });
@@ -139,16 +139,16 @@ a{text-decoration:none;color:inherit}button{font-family:inherit;cursor:pointer}
       if (!res.ok) throw new Error('HTTP ' + res.status);
       const data = await res.json();
       msg.className = 'msg';
-      document.getElementById('planBadge').textContent = 'Plan: ' + (data.plan || '—');
+      document.getElementById('planBadge').textContent = 'Plan: ' + (data.plan || 'â€”');
       grid.innerHTML = RECURSOS.map(r => {
         const usado = Number((data.uso || {})[r.key]) || 0;
         const limite = Number((data.limites || {})[r.key]) || 0;
-        // Estados reales (Bloque H): normal / próximo al límite / alcanzado / ilimitado
+        // Estados reales (Bloque H): normal / prÃ³ximo al lÃ­mite / alcanzado / ilimitado
         let estado = { cls: 'gray', label: 'Ilimitado', pct: null };
         if (limite > 0) {
           const p = Math.min(100, Math.round((usado / limite) * 100));
-          estado = p >= 100 ? { cls: 'red', label: 'Límite alcanzado', pct: 100 }
-            : p >= 80 ? { cls: 'yellow', label: 'Próximo al límite', pct: p }
+          estado = p >= 100 ? { cls: 'red', label: 'LÃ­mite alcanzado', pct: 100 }
+            : p >= 80 ? { cls: 'yellow', label: 'PrÃ³ximo al lÃ­mite', pct: p }
             : { cls: 'green', label: 'Normal', pct: p };
         }
         const cls = estado.pct === null ? '' : (estado.pct >= 100 ? 'danger' : estado.pct >= 80 ? 'warn' : '');
@@ -159,9 +159,9 @@ a{text-decoration:none;color:inherit}button{font-family:inherit;cursor:pointer}
             <div class="usage-card-title"><i class="fas ${r.icon}"></i> ${r.label}</div>
             <span class="pp-badge ${estado.cls}"><span class="dot"></span>${estado.label}</span>
           </div>
-          <div class="usage-nums">${fmt(usado)} <small>${r.unidad ? r.unidad + ' ' : ''}usados${limite ? ' / ' + fmt(limite) : ' · sin límite registrado'}</small></div>
+          <div class="usage-nums">${fmt(usado)} <small>${r.unidad ? r.unidad + ' ' : ''}usados${limite ? ' / ' + fmt(limite) : ' Â· sin lÃ­mite registrado'}</small></div>
           <div class="usage-bar"><div class="usage-bar-fill ${cls}" style="width:${estado.pct === null ? 4 : Math.max(2, estado.pct)}%"></div></div>
-          <div class="usage-foot"><span>Periodo ${data.periodo}</span><span>${limite ? 'Restante: ' + fmt(Math.max(0, limite - usado)) : 'medición continua'}</span></div>
+          <div class="usage-foot"><span>Periodo ${data.periodo}</span><span>${limite ? 'Restante: ' + fmt(Math.max(0, limite - usado)) : 'mediciÃ³n continua'}</span></div>
         </div>`;
       }).join('');
     } catch (err) {
@@ -172,5 +172,8 @@ a{text-decoration:none;color:inherit}button{font-family:inherit;cursor:pointer}
   load();
 })();
 </script>
+  <script src="../js/pp-sidebar-empresa.js"></script>
 </body>
 </html>
+
+

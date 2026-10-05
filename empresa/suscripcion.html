@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
 <link rel="icon" type="image/png" href="../img/iconos/robot_logo.png">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Suscripción — Portal Pilot</title>
+<title>SuscripciÃ³n â€” Portal Pilot</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <link rel="stylesheet" href="../css/portales.css">
@@ -29,29 +29,29 @@
     <nav class="pp-nav">
       <a href="dashboard.html" class="pp-nav-link"><i class="fas fa-home"></i> <span>Dashboard</span></a>
       <a href="team.html" class="pp-nav-link"><i class="fas fa-users"></i> <span>Equipo</span></a>
-      <a href="modules.html" class="pp-nav-link"><i class="fas fa-shapes"></i> <span>Módulos</span></a>
+      <a href="modules.html" class="pp-nav-link"><i class="fas fa-shapes"></i> <span>MÃ³dulos</span></a>
       <a href="consumo.html" class="pp-nav-link"><i class="fas fa-chart-pie"></i> <span>Consumo</span></a>
       <div class="pp-nav-sep">Cuenta</div>
-      <a href="suscripcion.html" class="pp-nav-link active"><i class="fas fa-crown"></i> <span>Suscripción</span></a>
-      <a href="facturacion.html" class="pp-nav-link" data-need-owner><i class="fas fa-file-invoice-dollar"></i> <span>Facturación</span></a>
+      <a href="suscripcion.html" class="pp-nav-link active"><i class="fas fa-crown"></i> <span>SuscripciÃ³n</span></a>
+      <a href="facturacion.html" class="pp-nav-link" data-need-owner><i class="fas fa-file-invoice-dollar"></i> <span>FacturaciÃ³n</span></a>
       <a href="security.html" class="pp-nav-link"><i class="fas fa-shield-alt"></i> <span>Seguridad</span></a>
       <a href="perfil.html" class="pp-nav-link"><i class="fas fa-user"></i> <span>Mi Perfil</span></a>
     </nav>
     <div class="pp-sidebar-footer">
-      <button class="pp-btn pp-btn-ghost pp-btn-sm" onclick="window.location.href='/login.html'"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</button>
+      <button class="pp-btn pp-btn-ghost pp-btn-sm" onclick="window.location.href='/login.html'"><i class="fas fa-sign-out-alt"></i> Cerrar SesiÃ³n</button>
     </div>
   </aside>
   <main class="main-content">
-    <div class="pp-topbar"><div class="pp-topbar-title">Suscripción de <span>MI EMPRESA</span></div><span class="pp-badge purple" id="planBadge">—</span></div>
+    <div class="pp-topbar"><div class="pp-topbar-title">SuscripciÃ³n de <span>MI EMPRESA</span></div><span class="pp-badge purple" id="planBadge">â€”</span></div>
     <div class="pp-page-header">
       <div>
-        <h1 class="pp-page-title">Plan y <span>suscripción</span></h1>
-        <p class="pp-page-subtitle">La información proviene del Plan Engine del backend. Esta página solo representa los entitlements recibidos — las reglas del plan nunca se duplican en el navegador.</p>
+        <h1 class="pp-page-title">Plan y <span>suscripciÃ³n</span></h1>
+        <p class="pp-page-subtitle">La informaciÃ³n proviene del Plan Engine del backend. Esta pÃ¡gina solo representa los entitlements recibidos â€” las reglas del plan nunca se duplican en el navegador.</p>
       </div>
       <button class="pp-btn pp-btn-ghost pp-btn-sm" onclick="load()"><i class="fas fa-sync-alt"></i> Actualizar</button>
     </div>
     <div class="pp-content">
-      <div id="msg" class="pp-info-box"><i class="fas fa-spinner fa-spin"></i> Cargando suscripción real…</div>
+      <div id="msg" class="pp-info-box"><i class="fas fa-spinner fa-spin"></i> Cargando suscripciÃ³n realâ€¦</div>
       <div id="content" style="display:none;flex-direction:column;gap:20px">
         <div class="sub-hero" id="hero"></div>
         <div class="pp-grid pp-grid-2">
@@ -65,7 +65,7 @@
           </div>
         </div>
         <div class="pp-card">
-          <div class="pp-card-head"><div class="pp-card-title"><i class="fas fa-gauge"></i> Límites del plan</div></div>
+          <div class="pp-card-head"><div class="pp-card-title"><i class="fas fa-gauge"></i> LÃ­mites del plan</div></div>
           <div class="pp-grid pp-grid-4" id="limitsGrid" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr))"></div>
         </div>
       </div>
@@ -80,7 +80,7 @@
   const H = window.PP.escapeHtml;
   const badgeEstado = (estado) => {
     const map = { active: ['green', 'Activa'], trial: ['purple', 'Prueba'], expired: ['red', 'Vencida'], suspended: ['red', 'Suspendida'], pending: ['yellow', 'Pendiente'], canceled: ['gray', 'Cancelada'], inactive: ['gray', 'Inactiva'] };
-    const [cls, label] = map[estado] || ['gray', estado || '—'];
+    const [cls, label] = map[estado] || ['gray', estado || 'â€”'];
     return `<span class="pp-badge ${cls}"><span class="dot"></span>${H(label)}</span>`;
   };
   const LIMIT_LABELS = [
@@ -95,7 +95,7 @@
   async function load() {
     const msg = document.getElementById('msg');
     msg.className = 'pp-info-box';
-    msg.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Cargando suscripción real…';
+    msg.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Cargando suscripciÃ³n realâ€¦';
     try {
       const [ent, usage] = await Promise.all([
         window.PP.apiFetch('/api/empresa/entitlements'),
@@ -116,7 +116,7 @@
           <div class="sub-plan">${H(ent.plan)}</div>
           <div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap">
             ${badgeEstado(estadoGeneral)}
-            ${enTrial ? `<span class="pp-badge cyan"><i class="fas fa-hourglass-half"></i> Trial · ${ent.trial.endsAt ? window.PP.fmtDate(ent.trial.endsAt) : '15 días'}</span>` : ''}
+            ${enTrial ? `<span class="pp-badge cyan"><i class="fas fa-hourglass-half"></i> Trial Â· ${ent.trial.endsAt ? window.PP.fmtDate(ent.trial.endsAt) : '15 dÃ­as'}</span>` : ''}
             ${ent.estado === 'expired' ? '<span class="pp-badge red"><i class="fas fa-lock"></i> Solo lectura</span>' : ''}
           </div>
         </div>
@@ -125,10 +125,10 @@
         </div>`;
 
       const meta = [
-        { l: 'Fecha de inicio', v: sub.current_period_start ? window.PP.fmtDate(sub.current_period_start) : (sub.trial_started_at ? window.PP.fmtDate(sub.trial_started_at) : '—') },
-        { l: 'Próxima renovación', v: sub.current_period_end ? window.PP.fmtDate(sub.current_period_end) : (sub.estado === 'trial' ? 'Al finalizar el trial' : '—') },
-        { l: 'Vence / fin de trial', v: ent.trial_ends_at ? window.PP.fmtDate(ent.trial_ends_at) : (sub.current_period_end ? window.PP.fmtDate(sub.current_period_end) : '—') },
-        { l: 'Cancelación programada', v: sub.cancel_at_period_end ? 'Sí — al fin del periodo' : 'No' },
+        { l: 'Fecha de inicio', v: sub.current_period_start ? window.PP.fmtDate(sub.current_period_start) : (sub.trial_started_at ? window.PP.fmtDate(sub.trial_started_at) : 'â€”') },
+        { l: 'PrÃ³xima renovaciÃ³n', v: sub.current_period_end ? window.PP.fmtDate(sub.current_period_end) : (sub.estado === 'trial' ? 'Al finalizar el trial' : 'â€”') },
+        { l: 'Vence / fin de trial', v: ent.trial_ends_at ? window.PP.fmtDate(ent.trial_ends_at) : (sub.current_period_end ? window.PP.fmtDate(sub.current_period_end) : 'â€”') },
+        { l: 'CancelaciÃ³n programada', v: sub.cancel_at_period_end ? 'SÃ­ â€” al fin del periodo' : 'No' },
         { l: 'Usuarios incluidos', v: Number.isFinite(ent.max_users) ? window.PP.fmtNum(ent.max_users) : 'Ilimitados' },
         { l: 'Empresas incluidas', v: Number.isFinite(ent.max_companies) ? window.PP.fmtNum(ent.max_companies) : 'Ilimitadas' }
       ];
@@ -154,12 +154,15 @@
       }).join('');
     } catch (err) {
       msg.className = 'pp-error';
-      msg.innerHTML = `<i class="fas fa-triangle-exclamation"></i><div><b>No se pudo cargar la suscripción.</b><br>${H(err.message)}</div>`;
+      msg.innerHTML = `<i class="fas fa-triangle-exclamation"></i><div><b>No se pudo cargar la suscripciÃ³n.</b><br>${H(err.message)}</div>`;
     }
   }
   window.load = load;
   load();
 })();
 </script>
+  <script src="../js/pp-sidebar-empresa.js"></script>
 </body>
 </html>
+
+

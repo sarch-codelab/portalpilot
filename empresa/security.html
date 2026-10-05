@@ -1,17 +1,17 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 
 <head>
     <meta charset="UTF-8">
     <link rel="icon" type="image/png" href="../img/iconos/robot_logo.png">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Auditoría — Portal Pilot</title>
+    <title>AuditorÃ­a â€” Portal Pilot</title>
     <link
         href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <style>
-        /* ─── RESET & TOKENS ───────────────── */
+        /* â”€â”€â”€ RESET & TOKENS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
         *,
         *::before,
         *::after {
@@ -87,7 +87,7 @@
             padding: 0 clamp(12px, 3vw, 32px);
         }
 
-        /* ─── CUSTOM CURSOR ───────────────── */
+        /* â”€â”€â”€ CUSTOM CURSOR â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
         #cursor-dot {
             width: 6px;
             height: 6px;
@@ -122,7 +122,7 @@
             transition: transform .08s;
         }
 
-        /* ─── SCROLLBAR & PROGRESS ───────── */
+        /* â”€â”€â”€ SCROLLBAR & PROGRESS â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
         ::-webkit-scrollbar {
             width: 10px;
         }
@@ -165,7 +165,7 @@
             transition: width .1s linear;
         }
 
-        /* ─── BUTTONS ─────────────────────── */
+        /* â”€â”€â”€ BUTTONS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
         .btn {
             display: inline-flex;
             align-items: center;
@@ -233,7 +233,7 @@
             font-size: 11px;
         }
 
-        /* ─── LAYOUT ──────────────────────── */
+        /* â”€â”€â”€ LAYOUT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
         .dashboard {
             display: grid;
             grid-template-columns: var(--sidebar-width) 1fr;
@@ -246,7 +246,7 @@
             grid-template-columns: var(--sidebar-collapsed) 1fr;
         }
 
-        /* ─── SIDEBAR ─────────────────────── */
+        /* â”€â”€â”€ SIDEBAR â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
         .sidebar {
             background: var(--bg2);
             border-right: 1px solid var(--border);
@@ -497,7 +497,7 @@
             flex-shrink: 0;
         }
 
-        /* ─── MAIN CONTENT ────────────────── */
+        /* â”€â”€â”€ MAIN CONTENT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
         .main-content {
             display: flex;
             flex-direction: column;
@@ -506,7 +506,7 @@
             transition: all 0.3s ease;
         }
 
-        /* ─── TOP BAR ─────────────────────── */
+        /* â”€â”€â”€ TOP BAR â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
         .topbar {
             position: sticky;
             top: 0;
@@ -616,7 +616,7 @@
             font-weight: 600;
         }
 
-        /* ─── PAGE HEADER ───────── */
+        /* â”€â”€â”€ PAGE HEADER â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
         .page-header {
             padding: clamp(24px, 4vw, 40px) clamp(12px, 3vw, 32px) 24px;
             display: flex;
@@ -652,7 +652,7 @@
             flex-wrap: wrap;
         }
 
-        /* ─── AUDIT LAYOUT ───────── */
+        /* â”€â”€â”€ AUDIT LAYOUT â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
         .audit-layout {
             display: grid;
             grid-template-columns: 2fr 1fr;
@@ -666,7 +666,7 @@
             }
         }
 
-        /* ─── CARDS ───────────────── */
+        /* â”€â”€â”€ CARDS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
         .card {
             background: var(--card);
             border: 1px solid var(--border);
@@ -974,7 +974,7 @@
             font-weight: 600;
         }
 
-        /* ─── ANIMATIONS & UTILS ───── */
+        /* â”€â”€â”€ ANIMATIONS & UTILS â”€â”€â”€â”€â”€ */
         .reveal {
             opacity: 0;
             transform: translateY(20px);
@@ -1002,7 +1002,7 @@
             pointer-events: auto;
         }
 
-        /* ─── RESPONSIVE ───────────── */
+        /* â”€â”€â”€ RESPONSIVE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
         @media(max-width:900px) {
             .dashboard {
                 grid-template-columns: 1fr !important;
@@ -1122,7 +1122,7 @@
         .plan-locked::after{content:'\f023';font-family:'Font Awesome 6 Free';font-weight:900;position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:11px;color:#fbbf24}
     </style>
 <link rel="stylesheet" href="../css/notifications.css">
-<link rel="stylesheet" href="../css/sidebar-empresa.css">
+
 </head>
 
 <body>
@@ -1157,7 +1157,7 @@
                 <a href="fleet.html" class="sidebar-link" data-min-plan="enterprise"><i class="fas fa-truck"></i> <span>Flota</span></a>
                 <a href="automation.html" class="sidebar-link" data-min-plan="enterprise"><i class="fas fa-robot"></i> <span>Bots RPA</span></a>
                 <a href="api_keys.html" class="sidebar-link" data-min-plan="enterprise"><i class="fas fa-key"></i> <span>API Keys</span></a>
-                <a href="security.html" class="sidebar-link active" data-min-plan="business"><i class="fas fa-shield-alt"></i> <span>Auditoría</span></a>
+                <a href="security.html" class="sidebar-link active" data-min-plan="business"><i class="fas fa-shield-alt"></i> <span>AuditorÃ­a</span></a>
                 <a href="consumo.html" class="sidebar-link"><i class="fas fa-chart-pie"></i> <span>Consumo</span></a>
             </nav>
 
@@ -1166,7 +1166,7 @@
                 <button class="footer-btn" id="darkModeToggle"><i class="fas fa-moon"></i> <span>Dark
                         Mode</span></button>
                 <button class="footer-btn logout" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> <span>Cerrar
-                        Sesión</span></button>
+                        SesiÃ³n</span></button>
             </div>
 
             <!-- Toggle Button -->
@@ -1180,7 +1180,7 @@
             <!-- TOP BAR -->
             <header class="topbar">
                 <div class="topbar-left">
-                    <div class="topbar-title">Auditoría <span>Blockchain</span></div>
+                    <div class="topbar-title">AuditorÃ­a <span>Blockchain</span></div>
                     <div class="topbar-search"><i class="fas fa-search"></i><input type="text" id="hashSearch"
                             placeholder="Buscar hash, evento, IP..." onkeyup="filterHashes()"></div>
                 </div>
@@ -1195,9 +1195,9 @@
             <!-- PAGE HEADER -->
             <div class="page-header">
                 <div>
-                    <h1 class="page-title">Auditoría <span>Inmutable</span></h1>
-                    <p class="page-subtitle">Visualiza la cadena de hashes criptográficos que garantizan la integridad
-                        de cada evento en tu plataforma. Cada bloque está firmado y verificado en tiempo real.</p>
+                    <h1 class="page-title">AuditorÃ­a <span>Inmutable</span></h1>
+                    <p class="page-subtitle">Visualiza la cadena de hashes criptogrÃ¡ficos que garantizan la integridad
+                        de cada evento en tu plataforma. Cada bloque estÃ¡ firmado y verificado en tiempo real.</p>
                 </div>
                 <div class="page-actions">
                     <button class="btn btn-outline btn-sm" onclick="verifyChain()"><i class="fas fa-shield-alt"></i>
@@ -1218,10 +1218,10 @@
                         <div class="filter-bar">
                             <select class="filter-select" id="eventFilter" onchange="filterHashes()">
                                 <option value="">Todos los eventos</option>
-                                <option value="login">Login / Autenticación</option>
-                                <option value="fleet">Modificación de Flota</option>
+                                <option value="login">Login / AutenticaciÃ³n</option>
+                                <option value="fleet">ModificaciÃ³n de Flota</option>
                                 <option value="billing">Transacciones de Pago</option>
-                                <option value="config">Cambios de Configuración</option>
+                                <option value="config">Cambios de ConfiguraciÃ³n</option>
                                 <option value="security">Eventos de Seguridad</option>
                             </select>
                             <input type="text" class="filter-input" id="hashInput"
@@ -1232,10 +1232,10 @@
                             <thead>
                                 <tr>
                                     <th>Bloque</th>
-                                    <th>Evento / Acción</th>
+                                    <th>Evento / AcciÃ³n</th>
                                     <th>Hash Anterior</th>
                                     <th>Hash Actual</th>
-                                    <th style="text-align:center;">Validación</th>
+                                    <th style="text-align:center;">ValidaciÃ³n</th>
                                 </tr>
                             </thead>
                             <tbody id="hashBody">
@@ -1258,17 +1258,17 @@
                     <div class="card reveal">
                         <h2 class="card-title"><i class="fas fa-user-shield"></i> Eventos de Seguridad</h2>
                         <div id="secEventsPanel" class="activity-list" style="margin-top:12px">
-                            <div style="padding:16px;color:var(--gray);font-size:13px">Cargando eventos de seguridad…</div>
+                            <div style="padding:16px;color:var(--gray);font-size:13px">Cargando eventos de seguridadâ€¦</div>
                         </div>
                     </div>
 
                     <!-- Security Policies -->
                     <div class="card reveal">
-                        <h2 class="card-title"><i class="fas fa-shield-alt"></i> Políticas de Seguridad</h2>
+                        <h2 class="card-title"><i class="fas fa-shield-alt"></i> PolÃ­ticas de Seguridad</h2>
 
                         <div class="stats-row">
                             <div class="stat-item">
-                                <div class="stat-value" id="statUptime">—</div>
+                                <div class="stat-value" id="statUptime">â€”</div>
                                 <div class="stat-label">Integridad de la Cadena</div>
                             </div>
                             <div class="stat-item">
@@ -1287,24 +1287,24 @@
                         </div>
                         <div class="policy-item">
                             <div class="policy-info">
-                                <div class="policy-title">Rotación de Contraseñas</div>
-                                <div class="policy-desc">Cambio obligatorio cada 90 días</div>
+                                <div class="policy-title">RotaciÃ³n de ContraseÃ±as</div>
+                                <div class="policy-desc">Cambio obligatorio cada 90 dÃ­as</div>
                             </div>
                             <label class="toggle-switch"><input type="checkbox" checked><span
                                     class="toggle-slider"></span></label>
                         </div>
                         <div class="policy-item">
                             <div class="policy-info">
-                                <div class="policy-title">Sesión Administrativa</div>
-                                <div class="policy-desc">Timeout automático a las 8 horas</div>
+                                <div class="policy-title">SesiÃ³n Administrativa</div>
+                                <div class="policy-desc">Timeout automÃ¡tico a las 8 horas</div>
                             </div>
                             <label class="toggle-switch"><input type="checkbox"><span
                                     class="toggle-slider"></span></label>
                         </div>
 
                         <div class="policy-details" style="margin-top:16px;">
-                            <p><b>Complejidad:</b> Alta (Mín. 10 chars, alfanumérico + símbolos)</p>
-                            <p><b>Sesión Dirección:</b> <span class="ok">Extendida (24h) para laptops
+                            <p><b>Complejidad:</b> Alta (MÃ­n. 10 chars, alfanumÃ©rico + sÃ­mbolos)</p>
+                            <p><b>SesiÃ³n DirecciÃ³n:</b> <span class="ok">Extendida (24h) para laptops
                                     corporativas</span></p>
                             <p><b>Registro de Intentos:</b> Todos los accesos fallidos se auditan en blockchain</p>
                         </div>
@@ -1326,7 +1326,7 @@
     </div>
 
     <script>
-        // ── Custom Cursor ─────────────────
+        // â”€â”€ Custom Cursor â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         const dot = document.getElementById('cursor-dot'), ring = document.getElementById('cursor-ring'), glow = document.getElementById('cursor-glow');
         let mx = 0, my = 0, rx = 0, ry = 0;
         document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; dot.style.left = mx + 'px'; dot.style.top = my + 'px'; glow.style.left = mx + 'px'; glow.style.top = my + 'px'; });
@@ -1337,14 +1337,14 @@
             el.addEventListener('mouseleave', () => { ring.style.width = '36px'; ring.style.height = '36px'; ring.style.opacity = '1'; });
         });
 
-        // ── Scroll Progress ──────────────
+        // â”€â”€ Scroll Progress â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         window.addEventListener('scroll', () => { const p = (window.scrollY / (document.documentElement.scrollHeight - innerHeight)) * 100; document.getElementById('progress-fill').style.width = Math.min(100, Math.max(0, p)) + '%'; });
 
-        // ── Reveal on Scroll ─────────────
+        // â”€â”€ Reveal on Scroll â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         const obs = new IntersectionObserver(entries => { entries.forEach((e, i) => { if (e.isIntersecting) setTimeout(() => e.target.classList.add('in'), i * 50); }); }, { threshold: 0.05 });
         document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
 
-        // ── Sidebar Toggle ───────────────
+        // â”€â”€ Sidebar Toggle â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         const sidebar = document.getElementById('sidebar'), toggleBtn = document.getElementById('toggleSidebar'), overlay = document.getElementById('overlay'), dashboard = document.getElementById('dashboard');
         let isMobile = window.innerWidth <= 900;
         function updateLayout() {
@@ -1358,11 +1358,11 @@
         toggleBtn.addEventListener('click', () => { if (isMobile) { sidebar.classList.toggle('active'); overlay.classList.toggle('active'); } else { sidebar.classList.toggle('collapsed'); dashboard.classList.toggle('sidebar-collapsed'); localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed')); } updateLayout(); });
         overlay.addEventListener('click', () => { sidebar.classList.remove('active'); overlay.classList.remove('active'); });
 
-        // ── Dark Mode ────────────────────
+        // â”€â”€ Dark Mode â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         const darkModeBtn = document.getElementById('darkModeToggle');
         darkModeBtn.addEventListener('click', () => { document.body.classList.toggle('light-mode'); const isLight = document.body.classList.contains('light-mode'); darkModeBtn.innerHTML = isLight ? '<i class="fas fa-sun"></i> <span>Light Mode</span>' : '<i class="fas fa-moon"></i> <span>Dark Mode</span>'; });
 
-        // ── Hash Chain Data ──────────────
+        // â”€â”€ Hash Chain Data â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         let hashChain = [];
         let chainStats = { total: 0, valid: true };
 
@@ -1390,7 +1390,7 @@
                         const ok = hashChain.filter(h => h.valid !== false).length;
                         uptime.textContent = Math.round((ok / hashChain.length) * 100) + '%';
                     } else {
-                        uptime.textContent = '—';
+                        uptime.textContent = 'â€”';
                     }
                 }
                 if (skeleton) skeleton.closest('tr').style.display = 'none';
@@ -1398,7 +1398,7 @@
             } catch (err) {
                 if (skeleton) skeleton.closest('tr').style.display = 'none';
                 const tbody = document.getElementById('hashBody');
-                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:40px;color:var(--red);"><i class="fas fa-exclamation-triangle" style="font-size:24px;margin-bottom:12px;display:block;"></i>No se pudo cargar la auditoría: ${err.message}</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:40px;color:var(--red);"><i class="fas fa-exclamation-triangle" style="font-size:24px;margin-bottom:12px;display:block;"></i>No se pudo cargar la auditorÃ­a: ${err.message}</td></tr>`;
             }
         }
 
@@ -1413,7 +1413,7 @@
                 const row = document.createElement('tr');
                 row.innerHTML = `
           <td class="hash-block">#${h.block}</td>
-          <td class="hash-event">${h.event}${h.usuario ? ` <span style="color:var(--gray);font-weight:400;">· ${h.usuario}</span>` : ''}</td>
+          <td class="hash-event">${h.event}${h.usuario ? ` <span style="color:var(--gray);font-weight:400;">Â· ${h.usuario}</span>` : ''}</td>
           <td><code class="hash-code">${h.prevHash}</code></td>
           <td><code class="hash-code">${h.currHash}</code></td>
           <td style="text-align:center;" class="${h.valid ? 'hash-valid' : 'hash-invalid'}">${h.valid ? '<i class="fas fa-check-circle"></i>' : '<i class="fas fa-times-circle"></i>'}</td>
@@ -1434,7 +1434,7 @@
             renderHashes(filtered);
         }
 
-        // ── Utilities ────────────────────
+        // â”€â”€ Utilities â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         function exportAuditReport() {
             if (!hashChain.length) { showToast('No hay registros para exportar', 'warning'); return; }
             const header = ['Bloque', 'Evento', 'Tipo', 'Usuario', 'IP', 'Hash Anterior', 'Hash Actual'];
@@ -1445,7 +1445,7 @@
             a.href = URL.createObjectURL(blob);
             a.download = 'auditoria_' + (localStorage.getItem('empresaCodigo') || 'tenant') + '.csv';
             a.click();
-            showToast('Reporte de auditoría descargado.', 'success');
+            showToast('Reporte de auditorÃ­a descargado.', 'success');
         }
         async function verifyChain() {
             try {
@@ -1454,9 +1454,9 @@
                 const data = await res.json();
                 const stats = data.stats || {};
                 if (stats.verificados === 0 && stats.total === 0) {
-                    showToast('Aún no hay eventos de auditoría que verificar.', 'warning');
+                    showToast('AÃºn no hay eventos de auditorÃ­a que verificar.', 'warning');
                 } else {
-                    showToast(`Cadena de auditoría verificada: ${stats.verificados ?? 0} de ${stats.total ?? 0} bloques íntegros.`, 'success');
+                    showToast(`Cadena de auditorÃ­a verificada: ${stats.verificados ?? 0} de ${stats.total ?? 0} bloques Ã­ntegros.`, 'success');
                 }
             } catch (err) {
                 showToast('Error al verificar: ' + err.message, 'error');
@@ -1467,14 +1467,14 @@
             if (icon) icon.classList.add('fa-spin');
             await loadAudit();
             if (icon) icon.classList.remove('fa-spin');
-            showToast('Auditoría actualizada con los últimos eventos.', 'success');
+            showToast('AuditorÃ­a actualizada con los Ãºltimos eventos.', 'success');
         }
 
-        // ── Políticas de Seguridad (persistencia local) ──
+        // â”€â”€ PolÃ­ticas de Seguridad (persistencia local) â”€â”€
         document.querySelectorAll('.policy-item input[type="checkbox"]').forEach(sw => {
             const item = sw.closest('.policy-item');
             const titleEl = item ? item.querySelector('.policy-title') : null;
-            const title = titleEl ? titleEl.textContent.trim() : 'Política';
+            const title = titleEl ? titleEl.textContent.trim() : 'PolÃ­tica';
             const key = 'pp_policy_' + title.toLowerCase().replace(/[^a-z0-9]+/g, '_');
             const saved = localStorage.getItem(key);
             if (saved !== null) sw.checked = saved !== 'off';
@@ -1484,7 +1484,7 @@
             });
         });
 
-        // ── Bloque I: eventos de seguridad reales (logins, cambios sensibles, 2FA) ──
+        // â”€â”€ Bloque I: eventos de seguridad reales (logins, cambios sensibles, 2FA) â”€â”€
         async function loadSecurityEvents() {
             try {
                 const res = await apiFetch('/api/empresa/security/events?limit=30');
@@ -1493,13 +1493,13 @@
                 if (!panel) return;
                 const eventos = data.eventos || [];
                 if (!eventos.length) {
-                    panel.innerHTML = '<div style="padding:16px;color:var(--gray);font-size:13px">Sin eventos de seguridad registrados todavía. Aparecerán al iniciar sesión, cambiar contraseña, activar 2FA, etc.</div>';
+                    panel.innerHTML = '<div style="padding:16px;color:var(--gray);font-size:13px">Sin eventos de seguridad registrados todavÃ­a. AparecerÃ¡n al iniciar sesiÃ³n, cambiar contraseÃ±a, activar 2FA, etc.</div>';
                     return;
                 }
                 panel.innerHTML = eventos.slice(0, 10).map(ev => {
                     const sev = ev.severidad === 'critical' ? 'var(--red)' : (ev.severidad === 'warning' ? 'var(--yellow)' : 'var(--cyan)');
                     const icon = ev.evento && ev.evento.includes('fallido') ? 'fa-user-slash' : (ev.evento && ev.evento.includes('2fa') ? 'fa-key' : 'fa-shield-alt');
-                    return `<div class="activity-item security"><div class="activity-icon" style="color:${sev}"><i class="fas ${icon}"></i></div><div class="activity-content"><div class="activity-text">${String(ev.evento || '').replace(/_/g, ' ')}${ev.usuario_email ? ' · ' + ev.usuario_email : ''}</div><div class="activity-time">${ev.ip ? ev.ip + ' · ' : ''}${new Date(ev.created_at).toLocaleString('es-HN')}</div></div></div>`;
+                    return `<div class="activity-item security"><div class="activity-icon" style="color:${sev}"><i class="fas ${icon}"></i></div><div class="activity-content"><div class="activity-text">${String(ev.evento || '').replace(/_/g, ' ')}${ev.usuario_email ? ' Â· ' + ev.usuario_email : ''}</div><div class="activity-time">${ev.ip ? ev.ip + ' Â· ' : ''}${new Date(ev.created_at).toLocaleString('es-HN')}</div></div></div>`;
                 }).join('');
             } catch (err) {
                 const panel = document.getElementById('secEventsPanel');
@@ -1512,7 +1512,7 @@
             if (window.ppToast) window.ppToast(msg, type === 'success' ? 'ok' : (type === 'warning' ? 'ok' : 'err'));
         }
 
-        // ── Initialize ──────────────────
+        // â”€â”€ Initialize â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         window.addEventListener('load', () => {
             loadAudit();
             loadSecurityEvents();
@@ -1525,10 +1525,11 @@
 <script src="../js/notif-panel.js"></script>
 <script src="../js/plan-gate.js"></script>
 <script src="../js/portales.js"></script>
-<script src="../js/sidebar-empresa.js"></script>
-<script src="../js/sidebar-loader.js"></script>
+
+<script src="../js/pp-sidebar-empresa.js"></script>
 <script src="../js/printer-loader.js"></script>
 <script src="../auth-check.js"></script>
 </body>
 
 </html>
+

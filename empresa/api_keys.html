@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 
 <head>
@@ -13,7 +13,7 @@
       gtag('js', new Date());
       gtag('config', 'G-FGPT99SWLY');
     </script>
-    <title>API Keys — Portal Pilot</title>
+    <title>API Keys â€” Portal Pilot</title>
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <style>
@@ -158,7 +158,7 @@
 
         @media (max-width: 768px) { .dashboard { grid-template-columns: 1fr; } .sidebar { position: fixed; left: -260px; top: 0; height: 100vh; z-index: 999; transition: left 0.3s; } .sidebar.active { left: 0; } .main-content { margin-left: 0; } }
     </style>
-<link rel="stylesheet" href="../css/sidebar-empresa.css">
+
 <link rel="stylesheet" href="../css/notifications.css">
 </head>
 
@@ -181,15 +181,15 @@
                 <a href="fleet.html" class="sidebar-link" data-min-plan="enterprise"><i class="fas fa-truck"></i> <span>Flota</span></a>
                 <a href="automation.html" class="sidebar-link" data-min-plan="enterprise"><i class="fas fa-robot"></i> <span>Bots RPA</span></a>
                 <a href="api_keys.html" class="sidebar-link active" data-min-plan="enterprise"><i class="fas fa-key"></i> <span>API Keys</span></a>
-                <a href="security.html" class="sidebar-link" data-min-plan="business"><i class="fas fa-shield-alt"></i> <span>Auditoría</span></a>
+                <a href="security.html" class="sidebar-link" data-min-plan="business"><i class="fas fa-shield-alt"></i> <span>AuditorÃ­a</span></a>
       <a href="consumo.html" class="sidebar-link"><i class="fas fa-chart-pie"></i> <span>Consumo</span></a>
             </nav>
 
             <!-- Footer -->
             <div class="sidebar-footer">
-                <a href="tenant_detail.html" class="footer-btn"><i class="fas fa-building"></i> <span>Configuración Empresa</span></a>
+                <a href="tenant_detail.html" class="footer-btn"><i class="fas fa-building"></i> <span>ConfiguraciÃ³n Empresa</span></a>
                 <button class="footer-btn" id="darkModeToggle"><i class="fas fa-moon"></i> <span>Dark Mode</span></button>
-                <button class="footer-btn logout" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> <span>Cerrar Sesión</span></button>
+                <button class="footer-btn logout" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> <span>Cerrar SesiÃ³n</span></button>
             </div>
 
             <!-- Toggle Button -->
@@ -230,7 +230,7 @@
                             <tr>
                                 <th>Nombre</th>
                                 <th>Clave</th>
-                                <th>Último uso</th>
+                                <th>Ãšltimo uso</th>
                                 <th>Creada</th>
                                 <th>Estado</th>
                                 <th style="text-align:center">Acciones</th>
@@ -256,13 +256,13 @@
             <form id="createForm" onsubmit="createKey(event)">
                 <div class="form-group">
                     <label class="form-label">Nombre de la clave</label>
-                    <input type="text" class="form-input" id="keyName" placeholder="Ej: Mi Integración ERP" required maxlength="120">
-                    <div style="font-size:11px;color:var(--gray);margin-top:4px">Describe el propósito de esta clave. Usa un nombre identificable.</div>
+                    <input type="text" class="form-input" id="keyName" placeholder="Ej: Mi IntegraciÃ³n ERP" required maxlength="120">
+                    <div style="font-size:11px;color:var(--gray);margin-top:4px">Describe el propÃ³sito de esta clave. Usa un nombre identificable.</div>
                 </div>
 
                 <div class="form-group">
                     <label class="form-label">Vista previa de la clave</label>
-                    <input type="password" class="form-input" id="keyPreview" placeholder="Se generará al crear" readonly>
+                    <input type="password" class="form-input" id="keyPreview" placeholder="Se generarÃ¡ al crear" readonly>
                 </div>
 
                 <div style="background:rgba(245,159,11,0.08);border:1px solid rgba(245,159,11,0.25);border-radius:var(--radius);padding:14px;margin-bottom:20px">
@@ -270,7 +270,7 @@
                         <i class="fas fa-exclamation-triangle" style="color:var(--yellow);font-size:14px;margin-top:2px"></i>
                         <div>
                             <div style="font-size:12px;font-weight:600;color:var(--yellow);margin-bottom:4px">Importante: Guarda esta clave ahora</div>
-                            <div style="font-size:11px;color:var(--gray);line-height:1.5">La clave se mostrará una sola vez. Una vez creada no podrás verla nuevamente. Si la pierdes, tendrás que revocarla y crear una nueva.</div>
+                            <div style="font-size:11px;color:var(--gray);line-height:1.5">La clave se mostrarÃ¡ una sola vez. Una vez creada no podrÃ¡s verla nuevamente. Si la pierdes, tendrÃ¡s que revocarla y crear una nueva.</div>
                         </div>
                     </div>
                 </div>
@@ -288,8 +288,8 @@
                 <div style="width:64px;height:64px;border-radius:50%;background:rgba(52,211,153,0.15);display:flex;align-items:center;justify-content:center;margin:0 auto 20px">
                     <i class="fas fa-check-circle" style="font-size:32px;color:var(--green)"></i>
                 </div>
-                <h3 style="color:var(--white);font-size:16px;font-weight:700;margin-bottom:8px">¡Clave creada!</h3>
-                <p style="font-size:13px;color:var(--gray);margin-bottom:16px">Copia esta clave ahora. No volverá a mostrarse.</p>
+                <h3 style="color:var(--white);font-size:16px;font-weight:700;margin-bottom:8px">Â¡Clave creada!</h3>
+                <p style="font-size:13px;color:var(--gray);margin-bottom:16px">Copia esta clave ahora. No volverÃ¡ a mostrarse.</p>
                 <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--white);word-break:break-all;margin-bottom:16px" id="newKeyDisplay"></div>
                 <button class="btn btn-primary" style="width:100%" onclick="copyToClipboard(document.getElementById('newKeyDisplay').textContent)">
                     <i class="fas fa-copy"></i> Copiar Clave
@@ -330,7 +330,7 @@
                 document.getElementById('keysCount').textContent = keys.length + ' claves';
 
                 if (keys.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><i class="fas fa-key"></i><p>No tienes claves de API creadas aún.<br>Haz clic en "Crear Clave" para generar tu primera clave de acceso.</p></div></td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><i class="fas fa-key"></i><p>No tienes claves de API creadas aÃºn.<br>Haz clic en "Crear Clave" para generar tu primera clave de acceso.</p></div></td></tr>';
                 } else {
                     tbody.innerHTML = keys.map(k => `
                         <tr>
@@ -357,9 +357,9 @@
         }
 
         function maskKey(key) {
-            if (!key) return '<span style="color:var(--gray)">—</span>';
-            if (key.length <= 20) return key.substring(0, 4) + '••••••••••••••••';
-            return key.substring(0, 14) + '••••••••••••••••••' + key.substring(key.length - 4);
+            if (!key) return '<span style="color:var(--gray)">â€”</span>';
+            if (key.length <= 20) return key.substring(0, 4) + 'â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢';
+            return key.substring(0, 14) + 'â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢' + key.substring(key.length - 4);
         }
 
         function openCreateModal() {
@@ -410,7 +410,7 @@
                 document.getElementById('successState').style.display = 'block';
                 document.getElementById('newKeyDisplay').textContent = generatedKey;
 
-                showToast('Clave API creada exitosamente. Cópiala ahora.', 'success');
+                showToast('Clave API creada exitosamente. CÃ³piala ahora.', 'success');
                 loadKeys();
                 gtag('event', 'api_key_created', { plan_level: 'enterprise' });
             } catch (err) {
@@ -421,7 +421,7 @@
         }
 
         async function deleteKey(id) {
-            const confirmed = confirm('¿Estás seguro de revocar esta clave de API?\nSe eliminara inmediatamente y dejará de funcionar.');
+            const confirmed = confirm('Â¿EstÃ¡s seguro de revocar esta clave de API?\nSe eliminara inmediatamente y dejarÃ¡ de funcionar.');
             if (!confirmed) return;
 
             try {
@@ -430,7 +430,7 @@
                     const data = await res.json().catch(() => ({}));
                     throw new Error(data.error || 'Error revocando clave');
                 }
-                showToast('Clave revocada. Ya no podrá usarse.', 'success');
+                showToast('Clave revocada. Ya no podrÃ¡ usarse.', 'success');
                 loadKeys();
                 gtag('event', 'api_key_deleted', { plan_level: 'enterprise' });
             } catch (err) {
@@ -439,7 +439,7 @@
         }
 
         function formatDate(iso) {
-            if (!iso) return '—';
+            if (!iso) return 'â€”';
             const d = new Date(iso);
             const now = new Date();
             const diff = now - d;
@@ -478,8 +478,8 @@
     <script src="../js/notifications.js"></script>
 <script src="../js/plan-gate.js"></script>
 <script src="../js/portales.js"></script>
-<script src="../js/sidebar-empresa.js"></script>
-<script src="../js/sidebar-loader.js"></script>
+
+<script src="../js/pp-sidebar-empresa.js"></script>
     <script src="../auth-check.js"></script>
 </body>
 

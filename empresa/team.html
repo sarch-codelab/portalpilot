@@ -1,14 +1,14 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
     <link rel="icon" type="image/png" href="../img/iconos/robot_logo.png">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Equipo — Portal Pilot</title>
+<title>Equipo â€” Portal Pilot</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <style>
-/* ─── RESET & TOKENS ────────────────────────────────── */
+/* â”€â”€â”€ RESET & TOKENS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;cursor:none}
 :root{
   --bg:#04040a;--bg2:#07070f;--bg3:#0c0c1a;--card:#0e0e1c;--card2:#111124;
@@ -22,17 +22,17 @@ html{scroll-behavior:smooth;font-size:16px}
 body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden;line-height:1.6;-webkit-font-smoothing:antialiased}
 a{text-decoration:none;color:inherit}ul{list-style:none}img{max-width:100%;display:block}button{font-family:inherit;cursor:pointer}
 
-/* ─── CUSTOM CURSOR ──────────────────────────────────── */
+/* â”€â”€â”€ CUSTOM CURSOR â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 #cursor-dot{width:6px;height:6px;background:#fff;border-radius:50%;position:fixed;pointer-events:none;z-index:10000;transition:transform .1s}
 #cursor-ring{width:36px;height:36px;border:1px solid rgba(139,92,246,0.6);border-radius:50%;position:fixed;pointer-events:none;z-index:9999;transition:transform .15s ease,width .2s,height .2s,opacity .2s;transform:translate(-50%,-50%)}
 #cursor-glow{width:500px;height:500px;background:radial-gradient(circle,rgba(139,92,246,0.12) 0,transparent 70%);position:fixed;pointer-events:none;z-index:0;transform:translate(-50%,-50%);transition:transform .08s}
 
-/* ─── SCROLLBAR & PROGRESS ──────────────────────────── */
+/* â”€â”€â”€ SCROLLBAR & PROGRESS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--accent);border-radius:2px}
 #progress{position:fixed;top:0;left:0;right:0;height:2px;z-index:999;background:transparent}
 #progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--cyan));width:0;transition:width .1s linear}
 
-/* ─── BUTTONS ───────────────────────────────────────── */
+/* â”€â”€â”€ BUTTONS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .btn{display:inline-flex;align-items:center;gap:8px;padding:11px 24px;border-radius:40px;font-size:13px;font-weight:600;border:none;transition:all .25s;white-space:nowrap;font-family:'DM Sans',sans-serif;cursor:pointer}
 .btn-acc{background:var(--accent);color:#fff}.btn-acc:hover{background:var(--accent2);transform:translateY(-1px);box-shadow:0 8px 28px var(--accent-glow)}
 .btn-ghost{background:rgba(255,255,255,0.05);color:var(--white);border:1px solid var(--border2)}.btn-ghost:hover{background:rgba(139,92,246,0.1);border-color:var(--border2)}
@@ -42,10 +42,10 @@ a{text-decoration:none;color:inherit}ul{list-style:none}img{max-width:100%;displ
 .btn-warning{background:rgba(251,191,36,0.15);color:var(--yellow);border:1px solid rgba(251,191,36,0.3)}.btn-warning:hover{background:var(--yellow);color:#000}
 .btn-sm{padding:8px 18px;font-size:12px}.btn-xs{padding:6px 14px;font-size:11px}
 
-/* ─── DASHBOARD LAYOUT ──────────────────────────────── */
+/* â”€â”€â”€ DASHBOARD LAYOUT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .dashboard{display:grid;grid-template-columns:240px 1fr;min-height:100vh}
 
-/* ─── SIDEBAR ───────────────────────────────────────── */
+/* â”€â”€â”€ SIDEBAR â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .sidebar{background:var(--bg2);border-right:1px solid var(--border);padding:24px 16px;position:sticky;top:0;height:100vh;display:flex;flex-direction:column;gap:8px;z-index:50}
 .sidebar-logo{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:var(--white);display:flex;align-items:center;gap:10px;padding:8px 12px;margin-bottom:24px;border-radius:var(--radius)}
 .sidebar-logo .logo-icon{width:34px;height:34px;border-radius:8px;overflow:hidden;flex-shrink:0}
@@ -60,7 +60,7 @@ a{text-decoration:none;color:inherit}ul{list-style:none}img{max-width:100%;displ
 .sidebar-avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--cyan));display:flex;align-items:center;justify-content:center;font-size:14px;color:#fff;font-weight:600}
 .sidebar-username{font-size:12px;font-weight:600;color:var(--white)}.sidebar-role{font-size:11px;color:var(--gray)}
 
-/* ─── MAIN & TOPBAR ─────────────────────────────────── */
+/* â”€â”€â”€ MAIN & TOPBAR â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .main-content{display:flex;flex-direction:column;gap:0}
 .topbar{position:sticky;top:0;z-index:40;background:rgba(4,4,10,0.85);backdrop-filter:blur(24px);border-bottom:1px solid var(--border);padding:0 clamp(16px,4vw,40px);height:64px;display:flex;align-items:center;justify-content:space-between}
 .topbar-left{display:flex;align-items:center;gap:16px}
@@ -73,12 +73,12 @@ a{text-decoration:none;color:inherit}ul{list-style:none}img{max-width:100%;displ
 .topbar-btn:hover{background:rgba(139,92,246,0.1);color:var(--accent);border-color:var(--border2)}
 .topbar-btn .badge{position:absolute;top:-4px;right:-4px;width:16px;height:16px;border-radius:50%;background:var(--red);color:#fff;font-size:9px;display:flex;align-items:center;justify-content:center;font-weight:600}
 
-/* ─── PAGE HEADER ───────────────────────────────────── */
+/* â”€â”€â”€ PAGE HEADER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .page-header{padding:clamp(24px,4vw,40px) clamp(16px,4vw,40px) 24px;display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:16px;border-bottom:1px solid var(--border)}
 .page-title{font-family:'Syne',sans-serif;font-size:clamp(24px,4vw,32px);font-weight:800;color:var(--white);letter-spacing:-1px}.page-title span{color:var(--accent)}
 .page-subtitle{font-size:14px;color:var(--gray);max-width:480px;line-height:1.6}.page-actions{display:flex;gap:12px;flex-wrap:wrap}
 
-/* ─── TEAM STATS BAR ────────────────────────────────── */
+/* â”€â”€â”€ TEAM STATS BAR â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .stats-bar{padding:20px clamp(16px,4vw,40px);display:grid;grid-template-columns:repeat(4,1fr);gap:16px;border-bottom:1px solid var(--border);background:var(--bg2)}
 .stat-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px 20px;display:flex;align-items:center;gap:14px}
 .stat-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
@@ -93,7 +93,7 @@ a{text-decoration:none;color:inherit}ul{list-style:none}img{max-width:100%;displ
 .stat-bar-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--accent),var(--cyan));transition:width .5s ease}
 .stat-bar-fill.warning{background:linear-gradient(90deg,var(--yellow),var(--red))}
 
-/* ─── FILTERS BAR ───────────────────────────────────── */
+/* â”€â”€â”€ FILTERS BAR â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .filters-bar{padding:16px clamp(16px,4vw,40px);display:flex;gap:12px;align-items:center;flex-wrap:wrap;background:var(--bg)}
 .filter-select{padding:8px 14px;border-radius:8px;background:var(--card);border:1px solid var(--border);color:var(--text);font-size:13px;outline:none;cursor:pointer}
 .filter-select option{background:var(--card2)}
@@ -103,7 +103,7 @@ a{text-decoration:none;color:inherit}ul{list-style:none}img{max-width:100%;displ
 .filter-reset{margin-left:auto;font-size:12px;color:var(--gray);background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:4px;transition:color .2s}
 .filter-reset:hover{color:var(--accent)}
 
-/* ─── TEAM TABLE ─────────────────────────────────────── */
+/* â”€â”€â”€ TEAM TABLE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .table-container{padding:0 clamp(16px,4vw,40px) 24px}
 .team-table{width:100%;border-collapse:separate;border-spacing:0;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden}
 .team-table thead{background:var(--card2);border-bottom:1px solid var(--border)}
@@ -144,7 +144,7 @@ a{text-decoration:none;color:inherit}ul{list-style:none}img{max-width:100%;displ
 .action-btn.danger:hover{background:var(--red);border-color:var(--red)}
 .action-btn.success:hover{background:var(--green);border-color:var(--green)}
 
-/* ─── MODALS ─────────────────────────────────────────── */
+/* â”€â”€â”€ MODALS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;z-index:1000;opacity:0;pointer-events:none;transition:opacity .3s}
 .modal-overlay.active{opacity:1;pointer-events:auto}
 .modal{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);width:100%;max-width:520px;max-height:90vh;overflow-y:auto;transform:translateY(20px);transition:transform .3s}
@@ -168,7 +168,7 @@ a{text-decoration:none;color:inherit}ul{list-style:none}img{max-width:100%;displ
 .password-gen{display:flex;gap:8px;margin-top:8px}
 .password-gen .form-input{flex:1}
 
-/* ─── CONFIRM DIALOG ────────────────────────────────── */
+/* â”€â”€â”€ CONFIRM DIALOG â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .confirm-dialog{position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;z-index:1001;opacity:0;pointer-events:none;transition:opacity .3s}
 .confirm-dialog.active{opacity:1;pointer-events:auto}
 .confirm-box{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);width:100%;max-width:420px;padding:24px}
@@ -179,16 +179,16 @@ a{text-decoration:none;color:inherit}ul{list-style:none}img{max-width:100%;displ
 .confirm-message{font-size:14px;color:var(--gray);text-align:center;line-height:1.6;margin-bottom:24px}
 .confirm-actions{display:flex;gap:12px}.confirm-actions .btn{flex:1;justify-content:center}
 
-/* ─── TOAST ─────────────────────────────────────────── */
+/* â”€â”€â”€ TOAST â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .toast{position:fixed;bottom:24px;right:24px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px 20px;font-size:13px;color:var(--white);z-index:2000;box-shadow:0 8px 32px rgba(0,0,0,0.4);display:flex;align-items:center;gap:10px;animation:slideIn .3s ease}
 .toast.success{border-left:3px solid var(--green)}.toast.error{border-left:3px solid var(--red)}.toast.info{border-left:3px solid var(--cyan)}.toast.warning{border-left:3px solid var(--yellow)}
 @keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
 @keyframes slideOut{from{transform:translateX(0);opacity:1}to{transform:translateX(100%);opacity:0}}
 
-/* ─── REVEAL ─────────────────────────────────────────── */
+/* â”€â”€â”€ REVEAL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .reveal{opacity:0;transform:translateY(20px);transition:opacity .6s ease,transform .6s ease}.reveal.in{opacity:1;transform:translateY(0)}
 
-/* ─── RESPONSIVE ────────────────────────────────────── */
+/* â”€â”€â”€ RESPONSIVE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 @media(max-width:1200px){.stats-bar{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:900px){
   .dashboard{grid-template-columns:1fr}
@@ -208,10 +208,10 @@ a{text-decoration:none;color:inherit}ul{list-style:none}img{max-width:100%;displ
   .role-badge{padding:2px 8px;font-size:10px}
 }
 
-/* ─── SIDEBAR TOGGLE ────────────────────────────────── */
+/* â”€â”€â”€ SIDEBAR TOGGLE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .sidebar-toggle{display:none;position:fixed;top:16px;left:16px;z-index:60;width:40px;height:40px;border-radius:50%;background:var(--card);border:1px solid var(--border);align-items:center;justify-content:center;color:var(--white);font-size:16px}
 
-/* ─── SKELETON LOADING ──────────────────────────────── */
+/* â”€â”€â”€ SKELETON LOADING â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 @keyframes shimmer{0%{background-position:-400px 0}100%{background-position:400px 0}}
 .skeleton{background:linear-gradient(90deg,var(--card2) 25%,rgba(139,92,246,0.06) 50%,var(--card2) 75%);background-size:800px 100%;animation:shimmer 1.5s infinite;border-radius:8px}
 .skeleton-text{height:14px;margin-bottom:8px}
@@ -235,7 +235,7 @@ a{text-decoration:none;color:inherit}ul{list-style:none}img{max-width:100%;displ
 .lock-badge .btn{font-size:11px;padding:6px 14px}
 </style>
 <link rel="stylesheet" href="../css/notifications.css">
-<link rel="stylesheet" href="../css/sidebar-empresa.css">
+
 </head>
 <body>
 
@@ -256,25 +256,25 @@ a{text-decoration:none;color:inherit}ul{list-style:none}img{max-width:100%;displ
         <div class="form-row">
           <div class="form-group">
             <label class="form-label">Nombre *</label>
-            <input type="text" class="form-input" id="memberFirstName" placeholder="Ej: María" required>
+            <input type="text" class="form-input" id="memberFirstName" placeholder="Ej: MarÃ­a" required>
           </div>
           <div class="form-group">
             <label class="form-label">Apellido *</label>
-            <input type="text" class="form-input" id="memberLastName" placeholder="Ej: González" required>
+            <input type="text" class="form-input" id="memberLastName" placeholder="Ej: GonzÃ¡lez" required>
           </div>
         </div>
         <div class="form-group">
           <label class="form-label">Email Corporativo *</label>
           <input type="email" class="form-input" id="memberEmail" placeholder="maria@tuempresa.com" required>
-          <div class="form-hint"><i class="fas fa-info-circle"></i> Se enviarán las credenciales a este email</div>
+          <div class="form-hint"><i class="fas fa-info-circle"></i> Se enviarÃ¡n las credenciales a este email</div>
         </div>
         <div class="form-row">
           <div class="form-group">
             <label class="form-label">Rol *</label>
             <select class="form-select" id="memberRole" required>
               <option value="">Seleccionar rol...</option>
-              <option value="admin" data-need-owner>🔧 Admin</option>
-              <option value="miembro" selected>👤 Miembro</option>
+              <option value="admin" data-need-owner>ðŸ”§ Admin</option>
+              <option value="miembro" selected>ðŸ‘¤ Miembro</option>
             </select>
           </div>
           <div class="form-group">
@@ -293,20 +293,27 @@ a{text-decoration:none;color:inherit}ul{list-style:none}img{max-width:100%;displ
         <div class="form-group">
           <label class="form-label">Contraseña Temporal</label>
           <div class="password-gen">
-            <input type="text" class="form-input" id="memberPassword" placeholder="Se genera automáticamente" readonly>
+            <input type="text" class="form-input" id="memberPassword" placeholder="Se genera automÃ¡ticamente" readonly>
             <button type="button" class="btn btn-outline btn-sm" onclick="generatePassword()"><i class="fas fa-dice"></i> Generar</button>
           </div>
-          <div class="form-hint"><i class="fas fa-shield-alt"></i> El usuario deberá cambiarla en el primer inicio de sesión</div>
+          <div class="form-hint"><i class="fas fa-shield-alt"></i> El usuario deberÃ¡ cambiarla en el primer inicio de sesiÃ³n</div>
         </div>
         <div class="form-group">
-          <label class="form-label">Mensaje de Invitación</label>
-          <textarea class="form-input form-textarea" id="memberMessage" placeholder="Mensaje opcional que se incluirá en el email de invitación..."></textarea>
+          <label class="form-label">Módulos asignados</label>
+          <div id="memberModulosBox" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;max-height:180px;overflow-y:auto;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:12px;">
+            <div style="font-size:12px;color:var(--gray)"><i class="fas fa-spinner fa-spin"></i> Cargando módulos de tu plan…</div>
+          </div>
+          <div class="form-hint"><i class="fas fa-shapes"></i> Solo verás los módulos de tu plan. Desmarca los que este usuario no debe usar.</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Mensaje de InvitaciÃ³n</label>
+          <textarea class="form-input form-textarea" id="memberMessage" placeholder="Mensaje opcional que se incluirÃ¡ en el email de invitaciÃ³n..."></textarea>
         </div>
       </form>
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal('addMemberModal')">Cancelar</button>
-      <button class="btn btn-acc" onclick="addMember()"><i class="fas fa-paper-plane"></i> Enviar Invitación</button>
+      <button class="btn btn-acc" onclick="addMember()"><i class="fas fa-paper-plane"></i> Enviar InvitaciÃ³n</button>
     </div>
   </div>
 </div>
@@ -339,16 +346,16 @@ a{text-decoration:none;color:inherit}ul{list-style:none}img{max-width:100%;displ
           <div class="form-group">
             <label class="form-label">Rol</label>
             <select class="form-select" id="editRole">
-              <option value="owner" data-need-owner-owner-only>👑 Owner</option>
-              <option value="admin" data-need-owner>🔧 Admin</option>
-              <option value="miembro">👤 Miembro</option>
+              <option value="owner" data-need-owner-owner-only>ðŸ‘‘ Owner</option>
+              <option value="admin" data-need-owner>ðŸ”§ Admin</option>
+              <option value="miembro">ðŸ‘¤ Miembro</option>
             </select>
           </div>
           <div class="form-group">
             <label class="form-label">Estado</label>
             <select class="form-select" id="editStatus">
-              <option value="active">✅ Activo</option>
-              <option value="blocked">🚫 Bloqueado</option>
+              <option value="active">âœ… Activo</option>
+              <option value="blocked">ðŸš« Bloqueado</option>
             </select>
           </div>
         </div>
@@ -365,8 +372,8 @@ a{text-decoration:none;color:inherit}ul{list-style:none}img{max-width:100%;displ
 <div class="confirm-dialog" id="confirmDialog">
   <div class="confirm-box">
     <div class="confirm-icon" id="confirmIcon"><i class="fas fa-exclamation-triangle"></i></div>
-    <div class="confirm-title" id="confirmTitle">¿Confirmar acción?</div>
-    <div class="confirm-message" id="confirmMessage">Esta acción no se puede deshacer.</div>
+    <div class="confirm-title" id="confirmTitle">Â¿Confirmar acciÃ³n?</div>
+    <div class="confirm-message" id="confirmMessage">Esta acciÃ³n no se puede deshacer.</div>
     <div class="confirm-actions">
       <button class="btn btn-ghost" onclick="closeConfirm()">Cancelar</button>
       <button class="btn btn-danger" id="confirmBtn">Confirmar</button>
@@ -392,14 +399,14 @@ a{text-decoration:none;color:inherit}ul{list-style:none}img{max-width:100%;displ
       <a href="fleet.html" class="sidebar-link" data-min-plan="enterprise"><i class="fas fa-truck"></i> <span>Flota</span></a>
       <a href="automation.html" class="sidebar-link" data-min-plan="enterprise"><i class="fas fa-robot"></i> <span>Bots RPA</span></a>
       <a href="api_keys.html" class="sidebar-link" data-min-plan="enterprise"><i class="fas fa-key"></i> <span>API Keys</span></a>
-      <a href="security.html" class="sidebar-link" data-min-plan="business"><i class="fas fa-shield-alt"></i> <span>Auditoría</span></a>
+      <a href="security.html" class="sidebar-link" data-min-plan="business"><i class="fas fa-shield-alt"></i> <span>AuditorÃ­a</span></a>
       <a href="consumo.html" class="sidebar-link"><i class="fas fa-chart-pie"></i> <span>Consumo</span></a>
     </nav>
 
     <!-- Footer -->
     <div class="sidebar-footer">
       <button class="footer-btn" id="darkModeToggle"><i class="fas fa-moon"></i> <span>Dark Mode</span></button>
-      <button class="footer-btn logout" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> <span>Cerrar Sesión</span></button>
+      <button class="footer-btn logout" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> <span>Cerrar SesiÃ³n</span></button>
     </div>
 
     <!-- Toggle Button -->
@@ -409,7 +416,7 @@ a{text-decoration:none;color:inherit}ul{list-style:none}img{max-width:100%;displ
   <main class="main-content">
     <header class="topbar">
       <div class="topbar-left">
-        <div class="topbar-title">Gestión de <span>Equipo</span></div>
+        <div class="topbar-title">GestiÃ³n de <span>Equipo</span></div>
         <div class="topbar-search"><i class="fas fa-search"></i><input type="text" placeholder="Buscar por nombre, email o rol..." oninput="searchMembers(this.value)"></div>
       </div>
       <div class="topbar-right">
@@ -420,7 +427,7 @@ a{text-decoration:none;color:inherit}ul{list-style:none}img{max-width:100%;displ
 
     <div class="page-header">
       <div>
-        <h1 class="page-title">Gestión de <span>Talento Humano</span></h1>
+        <h1 class="page-title">GestiÃ³n de <span>Talento Humano</span></h1>
         <p class="page-subtitle">Administra tu equipo, asigna roles y controla el acceso. Administra tu equipo, asigna roles y controla el acceso seg&uacute;n tu plan.</p>
       </div>
       <div class="page-actions">
@@ -495,7 +502,7 @@ a{text-decoration:none;color:inherit}ul{list-style:none}img{max-width:100%;displ
     <div class="table-container">
       <table class="team-table">
         <thead>
-          <tr><th>Miembro</th><th>Rol</th><th>Departamento</th><th>Estado</th><th>Última Conexión</th><th>Acciones</th></tr>
+          <tr><th>Miembro</th><th>Rol</th><th>Departamento</th><th>Estado</th><th>Ãšltima ConexiÃ³n</th><th>Acciones</th></tr>
         </thead>
         <tbody id="teamTableBody"><tr><td colspan="6" style="padding:0"><div id="tableSkeleton"></div></td></tr></tbody>
       </table>
@@ -510,7 +517,7 @@ a{text-decoration:none;color:inherit}ul{list-style:none}img{max-width:100%;displ
 </div>
 
 <script>
-// ── Custom Cursor ────────────────────────────────────
+// â”€â”€ Custom Cursor â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const dot=document.getElementById('cursor-dot'),ring=document.getElementById('cursor-ring'),glow=document.getElementById('cursor-glow');
 let mx=0,my=0,rx=0,ry=0;
 document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;dot.style.left=mx+'px';dot.style.top=my+'px';glow.style.left=mx+'px';glow.style.top=my+'px'});
@@ -519,18 +526,18 @@ document.querySelectorAll('a,button,.sidebar-link,.action-btn,.modal-close,.filt
   el.addEventListener('mouseenter',()=>{ring.style.width='50px';ring.style.height='50px';ring.style.opacity='.5'});
   el.addEventListener('mouseleave',()=>{ring.style.width='36px';ring.style.height='36px';ring.style.opacity='1'})});
 
-// ── Scroll Progress ──────────────────────────────────
+// â”€â”€ Scroll Progress â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 window.addEventListener('scroll',()=>{const p=(window.scrollY/(document.documentElement.scrollHeight-innerHeight))*100;document.getElementById('progress-fill').style.width=p+'%'});
 
-// ── Reveal ───────────────────────────────────────────
+// â”€â”€ Reveal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const obs=new IntersectionObserver(entries=>{entries.forEach((e,i)=>{if(e.isIntersecting)setTimeout(()=>e.target.classList.add('in'),i*50)})},{threshold:0.05});
 document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
 
-// ── Sidebar ─────────────────────────────────────────
+// â”€â”€ Sidebar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function toggleSidebar(){document.getElementById('sidebar').classList.toggle('open')}
 document.addEventListener('click',e=>{const sb=document.getElementById('sidebar'),tg=document.getElementById('sidebarToggle');if(window.innerWidth<=900&&sb.classList.contains('open')&&!sb.contains(e.target)&&!tg.contains(e.target))sb.classList.remove('open')});
 
-// ── Config ──────────────────────────────────────────
+// â”€â”€ Config â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const API_BASE = '../api';
 const token = localStorage.getItem('token');
 const empresaCodigo = localStorage.getItem('empresaCodigo');
@@ -542,12 +549,12 @@ let seatLimit = SEAT_LIMITS[planActual] || 200;
 const seatsLimitEl = document.getElementById('seatsLimit');
 if (seatsLimitEl) seatsLimitEl.textContent = seatLimit;
 
-// ── Team Data (from API) ───────────────────────────
+// â”€â”€ Team Data (from API) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 let teamMembers = [];
 const deptNames = {it:'IT & Desarrollo',ops:'Operaciones',sales:'Ventas',hr:'RRHH',finance:'Finanzas',marketing:'Marketing'};
 const roleNames = {owner:'Owner',admin:'Admin',administrador:'Admin',miembro:'Miembro',member:'Miembro',user:'Miembro',operador:'Miembro'};
 
-// ── Load from API ──────────────────────────────────
+// â”€â”€ Load from API â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async function loadTeam() {
   try {
     document.getElementById('tableSkeleton').innerHTML='<div class="skeleton-row"><div class="skeleton skeleton-avatar"></div><div class="skeleton-col"><div class="skeleton skeleton-text" style="width:50%"></div><div class="skeleton skeleton-text xs"></div></div></div><div class="skeleton-row"><div class="skeleton skeleton-avatar"></div><div class="skeleton-col"><div class="skeleton skeleton-text" style="width:65%"></div><div class="skeleton skeleton-text xs"></div></div></div><div class="skeleton-row"><div class="skeleton skeleton-avatar"></div><div class="skeleton-col"><div class="skeleton skeleton-text" style="width:45%"></div><div class="skeleton skeleton-text xs"></div></div></div><div class="skeleton-row"><div class="skeleton skeleton-avatar"></div><div class="skeleton-col"><div class="skeleton skeleton-text" style="width:55%"></div><div class="skeleton skeleton-text xs"></div></div></div><div class="skeleton-row"><div class="skeleton skeleton-avatar"></div><div class="skeleton-col"><div class="skeleton skeleton-text" style="width:40%"></div><div class="skeleton skeleton-text xs"></div></div></div>';
@@ -579,6 +586,25 @@ async function loadTeam() {
   }
 }
 
+// Módulos del plan disponibles para asignar a un trabajador (owner).
+async function cargarModulosParaAsignar() {
+  const box = document.getElementById('memberModulosBox');
+  if (!box) return;
+  try {
+    const data = await (await fetch(`${API_BASE}/tenant/modules`, { headers })).json();
+    const mods = (data && Array.isArray(data.modulos_activos)) ? data.modulos_activos : [];
+    if (!mods.length) { box.innerHTML = '<div style="font-size:12px;color:var(--gray)">Tu plan no tiene módulos asignados aún.</div>'; return; }
+    box.innerHTML = mods.map(m => {
+      const nombre = (data.modulos_detalle || []).find(d => d.clave === m)?.nombre || m.replace(/_/g, ' ');
+      return `<label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text);cursor:pointer">
+        <input type="checkbox" data-modulo="${m}" checked style="accent-color:var(--accent)"> ${nombre}</label>`;
+    }).join('');
+  } catch (e) {
+    box.innerHTML = '<div style="font-size:12px;color:var(--gray)">No se pudieron cargar los módulos.</div>';
+  }
+}
+cargarModulosParaAsignar();
+
 function timeAgo(dateStr) {
   const diff = Date.now() - new Date(dateStr).getTime();
   const mins = Math.floor(diff / 60000);
@@ -588,10 +614,10 @@ function timeAgo(dateStr) {
   if (hrs < 24) return `Hace ${hrs}h`;
   const days = Math.floor(hrs / 24);
   if (days === 1) return 'Ayer';
-  return `Hace ${days} días`;
+  return `Hace ${days} dÃ­as`;
 }
 
-// ── Render Table ─────────────────────────────────────
+// â”€â”€ Render Table â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 let filteredMembers = [...teamMembers];
 let currentPage = 1;
 const pageSize = 10;
@@ -618,7 +644,7 @@ function renderTable(data = filteredMembers) {
         <div><div class="member-name">${m.firstName} ${m.lastName}</div><div class="member-email">${m.email}</div></div>
       </div></td>
       <td><span class="role-badge ${m.rol}">${roleNames[m.rol] || m.rol}</span></td>
-      <td style="color:var(--gray);font-size:12px">${m.registered ? new Date(m.registered).toLocaleDateString('es-HN') : '—'}</td>
+      <td style="color:var(--gray);font-size:12px">${m.registered ? new Date(m.registered).toLocaleDateString('es-HN') : 'â€”'}</td>
       <td><span class="status-badge ${m.status}"><span class="status-dot"></span>${m.status === 'active' ? 'Activo' : m.status === 'blocked' ? 'Bloqueado' : 'Invitado'}</span></td>
       <td style="color:var(--gray);font-size:12px">${m.lastLogin}</td>
       <td><div class="actions-cell">
@@ -656,7 +682,7 @@ function renderPagination(totalPages) {
   wrap.appendChild(mkBtn('<i class="fas fa-chevron-right"></i>', currentPage >= totalPages, () => { currentPage++; renderTable(); }));
 }
 
-// ── Filters ─────────────────────────────────────────
+// â”€â”€ Filters â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function applyFilters() {
   const role = document.getElementById('filterRole').value;
   const status = document.getElementById('filterStatus').value;
@@ -687,7 +713,7 @@ function searchMembers(query) {
   renderTable();
 }
 
-// ── Actions ──────────────────────────────────────────
+// â”€â”€ Actions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function editMember(id) {
   const m = teamMembers.find(x => String(x.id) === String(id));
   if (!m) return;
@@ -731,10 +757,10 @@ async function blockMember(id) {
   if (!m) return;
   document.getElementById('confirmIcon').className = 'confirm-icon danger';
   document.getElementById('confirmIcon').innerHTML = '<i class="fas fa-ban"></i>';
-  document.getElementById('confirmTitle').textContent = '¿Bloquear acceso?';
-  document.getElementById('confirmMessage').textContent = `${m.firstName} ${m.lastName} perderá acceso inmediato a la plataforma.`;
+  document.getElementById('confirmTitle').textContent = 'Â¿Bloquear acceso?';
+  document.getElementById('confirmMessage').textContent = `${m.firstName} ${m.lastName} perderÃ¡ acceso inmediato a la plataforma.`;
   document.getElementById('confirmBtn').className = 'btn btn-danger';
-  document.getElementById('confirmBtn').textContent = 'Sí, Bloquear';
+  document.getElementById('confirmBtn').textContent = 'SÃ­, Bloquear';
   document.getElementById('confirmBtn').onclick = async function () {
     try {
       const res = await fetch(`${API_BASE}/users/${encodeURIComponent(id)}`, {
@@ -769,10 +795,10 @@ async function unblockMember(id) {
 function confirmDelete(id, name) {
   document.getElementById('confirmIcon').className = 'confirm-icon danger';
   document.getElementById('confirmIcon').innerHTML = '<i class="fas fa-exclamation-triangle"></i>';
-  document.getElementById('confirmTitle').textContent = '¿Eliminar miembro?';
-  document.getElementById('confirmMessage').textContent = `¿Eliminar a "${name}"? Esta acción es irreversible.`;
+  document.getElementById('confirmTitle').textContent = 'Â¿Eliminar miembro?';
+  document.getElementById('confirmMessage').textContent = `Â¿Eliminar a "${name}"? Esta acciÃ³n es irreversible.`;
   document.getElementById('confirmBtn').className = 'btn btn-danger';
-  document.getElementById('confirmBtn').textContent = 'Sí, Eliminar';
+  document.getElementById('confirmBtn').textContent = 'SÃ­, Eliminar';
   document.getElementById('confirmBtn').onclick = async function () {
     try {
       const res = await fetch(`${API_BASE}/users/${encodeURIComponent(id)}`, {
@@ -793,7 +819,7 @@ function confirmDelete(id, name) {
 }
 function closeConfirm() { document.getElementById('confirmDialog').classList.remove('active'); }
 
-// ── Add Member ───────────────────────────────────────
+// â”€â”€ Add Member â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function generatePassword() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$';
   let pwd = '';
@@ -805,7 +831,7 @@ async function addMember() {
   const form = document.getElementById('addMemberForm');
   if (!form.checkValidity()) { form.reportValidity(); return; }
   const password = document.getElementById('memberPassword').value;
-  if (!password) { showToast('Genera una contraseña primero', 'warning'); return; }
+  if (!password) { showToast('Genera una contraseÃ±a primero', 'warning'); return; }
 
   const btn = document.querySelector('.modal-footer .btn-acc');
   const origHTML = btn.innerHTML;
@@ -813,12 +839,15 @@ async function addMember() {
   btn.disabled = true;
 
   try {
+    const modulosSel = Array.from(document.querySelectorAll('#memberModulosBox input[data-modulo]:checked'))
+      .map(cb => cb.dataset.modulo);
     const payload = {
       nombre: document.getElementById('memberFirstName').value,
       apellido: document.getElementById('memberLastName').value,
       email: document.getElementById('memberEmail').value,
       rol: document.getElementById('memberRole').value,
-      password: password
+      password: password,
+      modulos: modulosSel
     };
     const res = await fetch(`${API_BASE}/users`, {
       method: 'POST', headers, body: JSON.stringify(payload)
@@ -830,7 +859,7 @@ async function addMember() {
     closeModal('addMemberModal');
     form.reset();
     document.getElementById('memberPassword').value = '';
-    showToast(`Invitación enviada a ${payload.email}`, 'success');
+    showToast(`InvitaciÃ³n enviada a ${payload.email}`, 'success');
     await loadTeam();
   } catch (err) {
     console.error('[TEAM] Add error:', err);
@@ -841,7 +870,7 @@ async function addMember() {
   }
 }
 
-// ── Stats ────────────────────────────────────────────
+// â”€â”€ Stats â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function updateStats() {
   const total = teamMembers.length;
   const active = teamMembers.filter(m => m.status === 'active').length;
@@ -857,21 +886,21 @@ function updateStats() {
   if (pct >= 90) bar.className = 'stat-bar-fill warning'; else bar.className = 'stat-bar-fill';
 }
 
-// ── Modals ───────────────────────────────────────────
+// â”€â”€ Modals â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function openModal(id) { document.getElementById(id).classList.add('active'); }
 function closeModal(id) { document.getElementById(id).classList.remove('active'); }
 
-// ── Export ───────────────────────────────────────────
+// â”€â”€ Export â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function exportTeam() {
-  let csv = 'Nombre,Email,Rol,Estado,Última Conexión\n';
+  let csv = 'Nombre,Email,Rol,Estado,Ãšltima ConexiÃ³n\n';
   teamMembers.forEach(m => { csv += `${m.firstName} ${m.lastName},${m.email},${roleNames[m.rol] || m.rol},${m.status},${m.lastLogin}\n`; });
   const blob = new Blob([csv], { type: 'text/csv' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a'); a.href = url; a.download = 'equipo.csv'; a.click(); URL.revokeObjectURL(url);
-  showToast('Exportación completada', 'success');
+  showToast('ExportaciÃ³n completada', 'success');
 }
 
-// ── Init ─────────────────────────────────────────────
+// â”€â”€ Init â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 window.addEventListener('load', async () => {
   await loadTeam();
   setTimeout(() => { document.querySelectorAll('.reveal').forEach((el, i) => { setTimeout(() => el.classList.add('in'), i * 50); }); }, 100);
@@ -907,9 +936,10 @@ document.addEventListener('keydown', e => {
 <script src="../js/notif-panel.js"></script>
 <script src="../js/plan-gate.js"></script>
 <script src="../js/portales.js"></script>
-<script src="../js/sidebar-empresa.js"></script>
-<script src="../js/sidebar-loader.js"></script>
+
+<script src="../js/pp-sidebar-empresa.js"></script>
 <script src="../js/printer-loader.js"></script>
 <script src="../auth-check.js"></script>
 </body>
 </html>
+

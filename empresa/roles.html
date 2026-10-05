@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
 <link rel="icon" type="image/png" href="../img/iconos/robot_logo.png">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Roles y Permisos — Portal Pilot</title>
+<title>Roles y Permisos â€” Portal Pilot</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <link rel="stylesheet" href="../css/portales.css">
@@ -17,15 +17,15 @@
       <a href="dashboard.html" class="pp-nav-link"><i class="fas fa-home"></i> <span>Dashboard</span></a>
       <a href="team.html" class="pp-nav-link active"><i class="fas fa-users"></i> <span>Equipo</span></a>
       <a href="roles.html" class="pp-nav-link"><i class="fas fa-user-shield"></i> <span>Roles</span></a>
-      <a href="modules.html" class="pp-nav-link"><i class="fas fa-shapes"></i> <span>Módulos</span></a>
+      <a href="modules.html" class="pp-nav-link"><i class="fas fa-shapes"></i> <span>MÃ³dulos</span></a>
       <a href="consumo.html" class="pp-nav-link"><i class="fas fa-chart-pie"></i> <span>Consumo</span></a>
       <div class="pp-nav-sep">Cuenta</div>
-      <a href="suscripcion.html" class="pp-nav-link"><i class="fas fa-crown"></i> <span>Suscripción</span></a>
+      <a href="suscripcion.html" class="pp-nav-link"><i class="fas fa-crown"></i> <span>SuscripciÃ³n</span></a>
       <a href="security.html" class="pp-nav-link"><i class="fas fa-shield-alt"></i> <span>Seguridad</span></a>
       <a href="perfil.html" class="pp-nav-link"><i class="fas fa-user"></i> <span>Mi Perfil</span></a>
     </nav>
     <div class="pp-sidebar-footer">
-      <button class="pp-btn pp-btn-ghost pp-btn-sm" onclick="window.location.href='/login.html'"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</button>
+      <button class="pp-btn pp-btn-ghost pp-btn-sm" onclick="window.location.href='/login.html'"><i class="fas fa-sign-out-alt"></i> Cerrar SesiÃ³n</button>
     </div>
   </aside>
   <main class="main-content">
@@ -33,17 +33,17 @@
     <div class="pp-page-header">
       <div>
         <h1 class="pp-page-title">Roles y <span>permisos</span></h1>
-        <p class="pp-page-subtitle">Los permisos se aplican SIEMPRE en el backend — esta matriz es una representación de las reglas reales del servidor, no la fuente de control.</p>
+        <p class="pp-page-subtitle">Los permisos se aplican SIEMPRE en el backend â€” esta matriz es una representaciÃ³n de las reglas reales del servidor, no la fuente de control.</p>
       </div>
     </div>
     <div class="pp-content">
-      <div id="msg" class="pp-info-box"><i class="fas fa-spinner fa-spin"></i> Cargando roles…</div>
+      <div id="msg" class="pp-info-box"><i class="fas fa-spinner fa-spin"></i> Cargando rolesâ€¦</div>
       <div id="content" style="display:none;flex-direction:column;gap:20px">
         <div class="pp-grid pp-grid-4">
-          <div class="pp-stat"><div class="pp-stat-icon yellow"><i class="fas fa-crown"></i></div><div class="pp-stat-info"><div class="pp-stat-value" id="cOwner">—</div><div class="pp-stat-label">Owner</div></div></div>
-          <div class="pp-stat"><div class="pp-stat-icon"><i class="fas fa-user-shield"></i></div><div class="pp-stat-info"><div class="pp-stat-value" id="cAdmin">—</div><div class="pp-stat-label">Admin</div></div></div>
-          <div class="pp-stat"><div class="pp-stat-icon green"><i class="fas fa-user"></i></div><div class="pp-stat-info"><div class="pp-stat-value" id="cMiembro">—</div><div class="pp-stat-label">Miembros</div></div></div>
-          <div class="pp-stat"><div class="pp-stat-icon"><i class="fas fa-users"></i></div><div class="pp-stat-info"><div class="pp-stat-value" id="cTotal">—</div><div class="pp-stat-label">Total usuarios</div></div></div>
+          <div class="pp-stat"><div class="pp-stat-icon yellow"><i class="fas fa-crown"></i></div><div class="pp-stat-info"><div class="pp-stat-value" id="cOwner">â€”</div><div class="pp-stat-label">Owner</div></div></div>
+          <div class="pp-stat"><div class="pp-stat-icon"><i class="fas fa-user-shield"></i></div><div class="pp-stat-info"><div class="pp-stat-value" id="cAdmin">â€”</div><div class="pp-stat-label">Admin</div></div></div>
+          <div class="pp-stat"><div class="pp-stat-icon green"><i class="fas fa-user"></i></div><div class="pp-stat-info"><div class="pp-stat-value" id="cMiembro">â€”</div><div class="pp-stat-label">Miembros</div></div></div>
+          <div class="pp-stat"><div class="pp-stat-icon"><i class="fas fa-users"></i></div><div class="pp-stat-info"><div class="pp-stat-value" id="cTotal">â€”</div><div class="pp-stat-label">Total usuarios</div></div></div>
         </div>
         <div class="pp-card">
           <div class="pp-card-head"><div class="pp-card-title"><i class="fas fa-table-cells"></i> Matriz de permisos por rol</div><span class="pp-badge gray">aplicada en backend</span></div>
@@ -56,7 +56,7 @@
         </div>
         <div class="pp-info-box">
           <i class="fas fa-circle-info"></i>
-          <div>MEMBER no accede al Portal Empresa: su lugar es el <b>Workspace Client</b>. El Owner es único por empresa: un ADMIN nunca puede crear ni asignar roles Owner/Admin — el backend lo bloquea con <b>403</b> aunque se manipule la petición.</div>
+          <div>MEMBER no accede al Portal Empresa: su lugar es el <b>Workspace Client</b>. El Owner es Ãºnico por empresa: un ADMIN nunca puede crear ni asignar roles Owner/Admin â€” el backend lo bloquea con <b>403</b> aunque se manipule la peticiÃ³n.</div>
         </div>
       </div>
     </div>
@@ -69,11 +69,11 @@
   if (!window.PP.requireSession()) return;
   const H = window.PP.escapeHtml;
   const CAPS = [
-    ['gestionar_empresa', 'Gestionar información de la empresa'],
+    ['gestionar_empresa', 'Gestionar informaciÃ³n de la empresa'],
     ['usuarios', 'Crear y editar usuarios'],
     ['roles', 'Asignar roles Owner/Admin'],
-    ['suscripcion', 'Gestionar suscripción y plan'],
-    ['facturacion', 'Ver facturación'],
+    ['suscripcion', 'Gestionar suscripciÃ³n y plan'],
+    ['facturacion', 'Ver facturaciÃ³n'],
     ['api_keys', 'Administrar API keys'],
     ['eliminar_usuarios', 'Eliminar usuarios']
   ];
@@ -105,5 +105,8 @@
   load();
 })();
 </script>
+  <script src="../js/pp-sidebar-empresa.js"></script>
 </body>
 </html>
+
+

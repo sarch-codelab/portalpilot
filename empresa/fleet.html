@@ -1,17 +1,17 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 
 <head>
     <meta charset="UTF-8">
     <link rel="icon" type="image/png" href="../img/iconos/robot_logo.png">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Flota — Portal Pilot</title>
+    <title>Flota â€” Portal Pilot</title>
     <link
         href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <style>
-        /* ─── RESET & TOKENS ───────────────── */
+        /* â”€â”€â”€ RESET & TOKENS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
         *,
         *::before,
         *::after {
@@ -87,7 +87,7 @@
             padding: 0 clamp(12px, 3vw, 32px);
         }
 
-        /* ─── CUSTOM CURSOR ───────────────── */
+        /* â”€â”€â”€ CUSTOM CURSOR â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
         #cursor-dot {
             width: 6px;
             height: 6px;
@@ -122,7 +122,7 @@
             transition: transform .08s;
         }
 
-        /* ─── SCROLLBAR & PROGRESS ───────── */
+        /* â”€â”€â”€ SCROLLBAR & PROGRESS â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
         ::-webkit-scrollbar {
             width: 10px;
         }
@@ -165,7 +165,7 @@
             transition: width .1s linear;
         }
 
-        /* ─── BUTTONS ─────────────────────── */
+        /* â”€â”€â”€ BUTTONS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
         .btn {
             display: inline-flex;
             align-items: center;
@@ -233,7 +233,7 @@
             font-size: 11px;
         }
 
-        /* ─── MODALS ─────────────────────── */
+        /* â”€â”€â”€ MODALS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
         .modal-overlay {
             position: fixed;
             inset: 0;
@@ -303,7 +303,7 @@
             border-color: var(--primary);
         }
 
-        /* ─── LAYOUT ──────────────────────── */
+        /* â”€â”€â”€ LAYOUT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
         .dashboard {
             display: grid;
             grid-template-columns: var(--sidebar-width) 1fr;
@@ -316,7 +316,7 @@
             grid-template-columns: var(--sidebar-collapsed) 1fr;
         }
 
-        /* ─── SIDEBAR ─────────────────────── */
+        /* â”€â”€â”€ SIDEBAR â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
         .sidebar {
             background: var(--bg2);
             border-right: 1px solid var(--border);
@@ -567,7 +567,7 @@
             flex-shrink: 0;
         }
 
-        /* ─── MAIN CONTENT ────────────────── */
+        /* â”€â”€â”€ MAIN CONTENT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
         .main-content {
             display: flex;
             flex-direction: column;
@@ -576,7 +576,7 @@
             transition: all 0.3s ease;
         }
 
-        /* ─── TOP BAR ─────────────────────── */
+        /* â”€â”€â”€ TOP BAR â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
         .topbar {
             position: sticky;
             top: 0;
@@ -686,7 +686,7 @@
             font-weight: 600;
         }
 
-        /* ─── PAGE HEADER ───────── */
+        /* â”€â”€â”€ PAGE HEADER â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
         .page-header {
             padding: clamp(24px, 4vw, 40px) clamp(12px, 3vw, 32px) 24px;
             display: flex;
@@ -722,7 +722,7 @@
             flex-wrap: wrap;
         }
 
-        /* ─── FLEET LAYOUT ───────── */
+        /* â”€â”€â”€ FLEET LAYOUT â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
         .fleet-layout {
             display: grid;
             grid-template-columns: 2fr 1fr;
@@ -736,7 +736,7 @@
             }
         }
 
-        /* ─── KPI BANNER ───────── */
+        /* â”€â”€â”€ KPI BANNER â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
         .kpi-banner {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -778,7 +778,7 @@
             letter-spacing: 0.5px;
         }
 
-        /* ─── CARDS ───────────────── */
+        /* â”€â”€â”€ CARDS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
         .card {
             background: var(--card);
             border: 1px solid var(--border);
@@ -996,7 +996,7 @@
             color: var(--text);
         }
 
-        /* ─── ANIMATIONS & UTILS ───── */
+        /* â”€â”€â”€ ANIMATIONS & UTILS â”€â”€â”€â”€â”€ */
         .reveal {
             opacity: 0;
             transform: translateY(20px);
@@ -1024,7 +1024,7 @@
             pointer-events: auto;
         }
 
-        /* ─── RESPONSIVE ───────────── */
+        /* â”€â”€â”€ RESPONSIVE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
         @media(max-width:900px) {
             .dashboard {
                 grid-template-columns: 1fr !important;
@@ -1144,7 +1144,7 @@
         .plan-locked::after{content:'\f023';font-family:'Font Awesome 6 Free';font-weight:900;position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:11px;color:#fbbf24}
     </style>
 <link rel="stylesheet" href="../css/notifications.css">
-<link rel="stylesheet" href="../css/sidebar-empresa.css">
+
 </head>
 
 <body>
@@ -1179,7 +1179,7 @@
                 <a href="fleet.html" class="sidebar-link active" data-min-plan="enterprise"><i class="fas fa-truck"></i> <span>Flota</span></a>
                 <a href="automation.html" class="sidebar-link" data-min-plan="enterprise"><i class="fas fa-robot"></i> <span>Bots RPA</span></a>
                 <a href="api_keys.html" class="sidebar-link" data-min-plan="enterprise"><i class="fas fa-key"></i> <span>API Keys</span></a>
-                <a href="security.html" class="sidebar-link" data-min-plan="business"><i class="fas fa-shield-alt"></i> <span>Auditoría</span></a>
+                <a href="security.html" class="sidebar-link" data-min-plan="business"><i class="fas fa-shield-alt"></i> <span>AuditorÃ­a</span></a>
       <a href="consumo.html" class="sidebar-link"><i class="fas fa-chart-pie"></i> <span>Consumo</span></a>
             </nav>
 
@@ -1188,7 +1188,7 @@
                 <button class="footer-btn" id="darkModeToggle"><i class="fas fa-moon"></i> <span>Dark
                         Mode</span></button>
                 <button class="footer-btn logout" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> <span>Cerrar
-                        Sesión</span></button>
+                        SesiÃ³n</span></button>
             </div>
 
             <!-- Toggle Button -->
@@ -1202,7 +1202,7 @@
             <!-- TOP BAR -->
             <header class="topbar">
                 <div class="topbar-left">
-                    <div class="topbar-title">Gestión de <span>Flota</span></div>
+                    <div class="topbar-title">GestiÃ³n de <span>Flota</span></div>
                     <div class="topbar-search"><i class="fas fa-search"></i><input type="text" id="fleetSearch"
                             placeholder="Buscar placa, chofer, ruta..." onkeyup="filterFleet()"></div>
                 </div>
@@ -1210,7 +1210,7 @@
                     <button class="topbar-btn" title="Alertas"><i class="fas fa-bell"></i><span
                             class="badge" style="display:none">0</span></button>
                     <button class="btn btn-acc btn-sm" onclick="addNewVehicle()"><i class="fas fa-plus"></i> Nuevo
-                        Vehículo</button>
+                        VehÃ­culo</button>
                 </div>
             </header>
 
@@ -1218,8 +1218,8 @@
             <div class="page-header">
                 <div>
                     <h1 class="page-title">Activos <span>en Tiempo Real</span></h1>
-                    <p class="page-subtitle">Monitorea tu flota de vehículos con telemetría IoT. Visualiza ubicación,
-                        combustible, estado mecánico y recibe alertas predictivas de mantenimiento.</p>
+                    <p class="page-subtitle">Monitorea tu flota de vehÃ­culos con telemetrÃ­a IoT. Visualiza ubicaciÃ³n,
+                        combustible, estado mecÃ¡nico y recibe alertas predictivas de mantenimiento.</p>
                 </div>
                 <div class="page-actions">
                     <button class="btn btn-outline btn-sm" onclick="PPPrinter.run(exportFleetReport)"><i
@@ -1238,19 +1238,19 @@
             </div>
             <div class="kpi-banner">
                 <div class="kpi-card reveal">
-                    <div class="kpi-value" id="kpiTotal">—</div>
-                    <div class="kpi-label">Total Vehículos</div>
+                    <div class="kpi-value" id="kpiTotal">â€”</div>
+                    <div class="kpi-label">Total VehÃ­culos</div>
                 </div>
                 <div class="kpi-card reveal">
-                    <div class="kpi-value" id="kpiTipos">—</div>
+                    <div class="kpi-value" id="kpiTipos">â€”</div>
                     <div class="kpi-label">Camiones / Vans</div>
                 </div>
                 <div class="kpi-card reveal">
-                    <div class="kpi-value" id="kpiOperativos">—</div>
+                    <div class="kpi-value" id="kpiOperativos">â€”</div>
                     <div class="kpi-label">En Ruta / Operativos</div>
                 </div>
                 <div class="kpi-card alert reveal">
-                    <div class="kpi-value" id="kpiMantenimiento">—</div>
+                    <div class="kpi-value" id="kpiMantenimiento">â€”</div>
                     <div class="kpi-label">Requieren Mantenimiento</div>
                 </div>
             </div>
@@ -1277,7 +1277,7 @@
                         <h2 class="card-title"><i class="fas fa-satellite"></i> Eventos IoT en Tiempo Real</h2>
                         <div class="timeline" id="iotTimeline">
                             <div class="timeline-item">
-                                <span class="timeline-time">—</span>
+                                <span class="timeline-time">â€”</span>
                                 <div class="timeline-text">Cargando eventos de flota...</div>
                             </div>
                         </div>
@@ -1286,8 +1286,8 @@
                     <!-- AI Assistant Panel -->
                     <div class="ai-panel reveal" id="aiPanel" style="display:none">
                         <div class="ai-header">
-                            <div class="ai-avatar">🤖</div>
-                            <div class="ai-name">Astraea Agent <span class="ai-status">● Activo</span></div>
+                            <div class="ai-avatar">ðŸ¤–</div>
+                            <div class="ai-name">Astraea Agent <span class="ai-status">â— Activo</span></div>
                         </div>
                         <p class="ai-message" id="aiMessage">
                         </p>
@@ -1308,18 +1308,18 @@
         <div class="modal-overlay" id="vehicleModal" onclick="if(event.target===this)closeVehicleModal()">
             <div class="modal-box">
                 <div class="modal-icon"><i class="fas fa-truck"></i></div>
-                <h3>Nuevo Vehículo</h3>
+                <h3>Nuevo VehÃ­culo</h3>
                 <div style="display:grid;gap:10px;margin:14px 0;text-align:left">
                     <input id="vPlaca" class="modal-input" placeholder="Placa (ej. NVA-2027-A)" />
                     <select id="vTipo" class="modal-input">
-                        <option value="Camión Pesado (Carga)">Camión Pesado (Carga)</option>
-                        <option value="Camión Mediano">Camión Mediano</option>
-                        <option value="Van Ligera (Mensajería)">Van Ligera (Mensajería)</option>
-                        <option value="Van Ligera (Distribución)">Van Ligera (Distribución)</option>
+                        <option value="CamiÃ³n Pesado (Carga)">CamiÃ³n Pesado (Carga)</option>
+                        <option value="CamiÃ³n Mediano">CamiÃ³n Mediano</option>
+                        <option value="Van Ligera (MensajerÃ­a)">Van Ligera (MensajerÃ­a)</option>
+                        <option value="Van Ligera (DistribuciÃ³n)">Van Ligera (DistribuciÃ³n)</option>
                         <option value="Motocicleta">Motocicleta</option>
                     </select>
                     <input id="vChofer" class="modal-input" placeholder="Conductor asignado" />
-                    <input id="vUbicacion" class="modal-input" placeholder="Ubicación (ej. Base Norte)" />
+                    <input id="vUbicacion" class="modal-input" placeholder="UbicaciÃ³n (ej. Base Norte)" />
                     <div>
                         <label style="font-size:12px;color:var(--gray)">Combustible (%)</label>
                         <input id="vCombustible" class="modal-input" type="number" min="0" max="100" value="100" />
@@ -1336,18 +1336,18 @@
         <div class="modal-overlay" id="logoutModal" onclick="if(event.target===this)this.classList.remove('active')">
             <div class="modal-box">
                 <div class="modal-icon"><i class="fas fa-sign-out-alt"></i></div>
-                <h3>¿Cerrar sesión?</h3>
-                <p>Serás redirigido a la página de inicio de sesión.</p>
+                <h3>Â¿Cerrar sesiÃ³n?</h3>
+                <p>SerÃ¡s redirigido a la pÃ¡gina de inicio de sesiÃ³n.</p>
                 <div class="modal-actions">
                     <button class="btn btn-ghost" id="modalCancel">Cancelar</button>
-                    <button class="btn btn-acc" id="modalConfirm">Cerrar Sesión</button>
+                    <button class="btn btn-acc" id="modalConfirm">Cerrar SesiÃ³n</button>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        // ── Custom Cursor ─────────────────
+        // â”€â”€ Custom Cursor â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         const dot = document.getElementById('cursor-dot'), ring = document.getElementById('cursor-ring'), glow = document.getElementById('cursor-glow');
         let mx = 0, my = 0, rx = 0, ry = 0;
         document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; dot.style.left = mx + 'px'; dot.style.top = my + 'px'; glow.style.left = mx + 'px'; glow.style.top = my + 'px'; });
@@ -1358,14 +1358,14 @@
             el.addEventListener('mouseleave', () => { ring.style.width = '36px'; ring.style.height = '36px'; ring.style.opacity = '1'; });
         });
 
-        // ── Scroll Progress ──────────────
+        // â”€â”€ Scroll Progress â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         window.addEventListener('scroll', () => { const p = (window.scrollY / (document.documentElement.scrollHeight - innerHeight)) * 100; document.getElementById('progress-fill').style.width = Math.min(100, Math.max(0, p)) + '%'; });
 
-        // ── Reveal on Scroll ─────────────
+        // â”€â”€ Reveal on Scroll â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         const obs = new IntersectionObserver(entries => { entries.forEach((e, i) => { if (e.isIntersecting) setTimeout(() => e.target.classList.add('in'), i * 50); }); }, { threshold: 0.05 });
         document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
 
-        // ── Sidebar Toggle ───────────────
+        // â”€â”€ Sidebar Toggle â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         const sidebar = document.getElementById('sidebar'), toggleBtn = document.getElementById('toggleSidebar'), overlay = document.getElementById('overlay'), dashboard = document.getElementById('dashboard');
         let isMobile = window.innerWidth <= 900;
         function updateLayout() {
@@ -1379,11 +1379,11 @@
         toggleBtn.addEventListener('click', () => { if (isMobile) { sidebar.classList.toggle('active'); overlay.classList.toggle('active'); } else { sidebar.classList.toggle('collapsed'); dashboard.classList.toggle('sidebar-collapsed'); localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed')); } updateLayout(); });
         overlay.addEventListener('click', () => { sidebar.classList.remove('active'); overlay.classList.remove('active'); });
 
-        // ── Dark Mode ────────────────────
+        // â”€â”€ Dark Mode â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         const darkModeBtn = document.getElementById('darkModeToggle');
         darkModeBtn.addEventListener('click', () => { document.body.classList.toggle('light-mode'); const isLight = document.body.classList.contains('light-mode'); darkModeBtn.innerHTML = isLight ? '<i class="fas fa-sun"></i> <span>Light Mode</span>' : '<i class="fas fa-moon"></i> <span>Dark Mode</span>'; });
 
-        // ── Logout Modal ─────────────────
+        // â”€â”€ Logout Modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         const logoutBtn = document.getElementById('logoutBtn'), logoutModal = document.getElementById('logoutModal'), modalCancel = document.getElementById('modalCancel'), modalConfirm = document.getElementById('modalConfirm');
         logoutBtn.addEventListener('click', (e) => { e.preventDefault(); e.stopImmediatePropagation(); logoutModal.classList.add('active'); });
         modalCancel.addEventListener('click', () => { logoutModal.classList.remove('active'); });
@@ -1394,7 +1394,7 @@
         });
         logoutModal.addEventListener('click', (e) => { if (e.target === logoutModal) { logoutModal.classList.remove('active'); } });
 
-        // ── Fleet Functions ──────────────
+        // â”€â”€ Fleet Functions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         let vehicles = [];
 
         function apiFetch(url, options) {
@@ -1428,11 +1428,11 @@
         function renderFleet() {
             const grid = document.getElementById('fleetGrid');
             if (!vehicles.length) {
-                grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:30px;color:var(--gray);">Sin vehículos registrados. Agrega el primero con "Nuevo Vehículo".</div>';
+                grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:30px;color:var(--gray);">Sin vehÃ­culos registrados. Agrega el primero con "Nuevo VehÃ­culo".</div>';
             } else {
                 grid.innerHTML = vehicles.map(v => {
                     const st = estadosFleet[v.estado] || estadosFleet['disponible'];
-                    const badge = v.estado === 'alerta' ? '<span class="maintenance-badge critical">CRÍTICO</span>'
+                    const badge = v.estado === 'alerta' ? '<span class="maintenance-badge critical">CRÃTICO</span>'
                         : v.estado === 'taller' ? '<span class="maintenance-badge workshop">TALLER</span>' : '';
                     const fuelClass = v.combustible <= 25 ? 'low' : (v.combustible <= 60 ? 'medium' : '');
                     const fuelStyle = v.combustible <= 25 ? 'color:var(--red)' : (v.combustible <= 60 ? 'color:var(--yellow)' : '');
@@ -1440,7 +1440,7 @@
                         ${badge}
                         <div class="asset-plate">${v.placa}</div>
                         <div class="asset-meta">
-                            <b>Tipo:</b> ${v.tipo || 'Vehículo'}<br>
+                            <b>Tipo:</b> ${v.tipo || 'VehÃ­culo'}<br>
                             <b>Asignado:</b> ${v.chofer || 'Sin asignar'}<br>
                             <b>Estado:</b> ${st.label}${v.ubicacion ? ' (' + v.ubicacion + ')' : ''}
                         </div>
@@ -1460,7 +1460,7 @@
 
         function updateKpis() {
             const total = vehicles.length;
-            const camiones = vehicles.filter(v => /camión|camion/i.test(v.tipo || '')).length;
+            const camiones = vehicles.filter(v => /camiÃ³n|camion/i.test(v.tipo || '')).length;
             const vans = vehicles.filter(v => /van/i.test(v.tipo || '')).length;
             const operativos = vehicles.filter(v => v.estado === 'en-ruta' || v.estado === 'disponible').length;
             const mantenimiento = vehicles.filter(v => v.estado === 'alerta' || v.estado === 'taller').length;
@@ -1480,15 +1480,15 @@
             vehicles.forEach(v => {
                 const loc = v.ubicacion ? ' (' + v.ubicacion + ')' : '';
                 if (v.estado === 'alerta') {
-                    eventos.push({ cls: 'alert', html: `<b>${v.placa}:</b> ⚠️ Alerta telemetría — requiere atención inmediata${loc}` });
+                    eventos.push({ cls: 'alert', html: `<b>${v.placa}:</b> âš ï¸ Alerta telemetrÃ­a â€” requiere atenciÃ³n inmediata${loc}` });
                 } else if (v.estado === 'taller') {
                     eventos.push({ cls: '', html: `<b>${v.placa}:</b> Ingreso a taller programado. Mantenimiento preventivo iniciado` });
                 } else if (v.estado === 'en-ruta') {
-                    eventos.push({ cls: '', html: `<b>${v.placa}:</b> En ruta${v.ubicacion ? ' hacia ' + v.ubicacion : ''}. Estable ✅` });
+                    eventos.push({ cls: '', html: `<b>${v.placa}:</b> En ruta${v.ubicacion ? ' hacia ' + v.ubicacion : ''}. Estable âœ…` });
                 }
             });
             if (!eventos.length) {
-                t.innerHTML = '<div class="timeline-item"><span class="timeline-time">—</span><div class="timeline-text">Sin eventos recientes. Agrega vehículos para monitorearlos.</div></div>';
+                t.innerHTML = '<div class="timeline-item"><span class="timeline-time">â€”</span><div class="timeline-text">Sin eventos recientes. Agrega vehÃ­culos para monitorearlos.</div></div>';
                 return;
             }
             t.innerHTML = eventos.slice(0, 5).map(e =>
@@ -1506,8 +1506,8 @@
                 aiSugerenciaId = alerta.id;
                 document.getElementById('aiMessage').innerHTML =
                     `He detectado que la unidad <b>${alerta.placa}</b> requiere mantenimiento inmediato.<br><br>` +
-                    `• 📋 Orden de taller en borrador<br>• 📄 Reporte técnico preliminar<br>• 🔔 Notificación al propietario<br><br>` +
-                    `<i style="color:var(--cyan)">¿Deseas aprobar y enviar la orden de servicio?</i>`;
+                    `â€¢ ðŸ“‹ Orden de taller en borrador<br>â€¢ ðŸ“„ Reporte tÃ©cnico preliminar<br>â€¢ ðŸ”” NotificaciÃ³n al propietario<br><br>` +
+                    `<i style="color:var(--cyan)">Â¿Deseas aprobar y enviar la orden de servicio?</i>`;
                 panel.style.display = 'block';
             } else {
                 panel.style.display = 'none';
@@ -1556,7 +1556,7 @@
                     body: JSON.stringify(body)
                 });
                 if (!res.ok) throw new Error((await res.json()).error || 'Error');
-                showToast('✓ Vehículo registrado', 'success');
+                showToast('âœ“ VehÃ­culo registrado', 'success');
                 document.getElementById('vehicleModal').classList.remove('active');
                 document.getElementById('vPlaca').value = '';
                 document.getElementById('vChofer').value = '';
@@ -1592,13 +1592,13 @@
                     body: JSON.stringify({ estado: 'disponible' })
                 });
                 if (!res.ok) throw new Error((await res.json()).error || 'Error');
-                showToast('Vehículo marcado como disponible.', 'success');
+                showToast('VehÃ­culo marcado como disponible.', 'success');
                 loadFleet();
             } catch (err) { showToast('Error: ' + err.message, 'error'); }
         }
 
         function exportFleetReport() {
-            if (!vehicles.length) { showToast('No hay vehículos para exportar', 'warning'); return; }
+            if (!vehicles.length) { showToast('No hay vehÃ­culos para exportar', 'warning'); return; }
             const header = ['Placa', 'Tipo', 'Chofer', 'Estado', 'Combustible%', 'Ubicacion', 'Km'];
             const rows = vehicles.map(v => [v.placa, v.tipo, v.chofer, v.estado, v.combustible, v.ubicacion, v.km]);
             const csv = [header, ...rows].map(r => r.map(c => `"${String(c ?? '').replace(/"/g, '""')}"`).join(',')).join('\n');
@@ -1615,14 +1615,14 @@
             if (icon) icon.classList.add('fa-spin');
             await loadFleet();
             if (icon) icon.classList.remove('fa-spin');
-            showToast('Flota actualizada con los últimos datos.', 'success');
+            showToast('Flota actualizada con los Ãºltimos datos.', 'success');
         }
 
         function dismissAI() {
             showToast('Sugerencia de IA descartada.', 'info');
         }
 
-        // ── Initialize ──────────────────
+        // â”€â”€ Initialize â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         // Toast unificado (showToast estaba referenciado pero nunca definido)
         function showToast(msg, type){
             if (window.ppToast) window.ppToast(msg, type === 'success' ? 'ok' : (type === 'warning' ? 'ok' : 'err'));
@@ -1638,8 +1638,8 @@
 <script src="../js/notif-panel.js"></script>
 <script src="../js/plan-gate.js"></script>
 <script src="../js/portales.js"></script>
-<script src="../js/sidebar-empresa.js"></script>
-<script src="../js/sidebar-loader.js"></script>
+
+<script src="../js/pp-sidebar-empresa.js"></script>
 <script src="../js/printer-loader.js"></script>
 <script src="../auth-check.js"></script>
 </body>

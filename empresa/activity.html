@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
 <link rel="icon" type="image/png" href="../img/iconos/robot_logo.png">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Actividad — Portal Pilot</title>
+<title>Actividad â€” Portal Pilot</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <link rel="stylesheet" href="../css/portales.css">
@@ -25,15 +25,15 @@
       <a href="dashboard.html" class="pp-nav-link"><i class="fas fa-home"></i> <span>Dashboard</span></a>
       <a href="team.html" class="pp-nav-link"><i class="fas fa-users"></i> <span>Equipo</span></a>
       <div class="pp-nav-sep">Transparencia</div>
-      <a href="audit.html" class="pp-nav-link"><i class="fas fa-clipboard-list"></i> <span>Auditoría</span></a>
+      <a href="audit.html" class="pp-nav-link"><i class="fas fa-clipboard-list"></i> <span>AuditorÃ­a</span></a>
       <a href="activity.html" class="pp-nav-link active"><i class="fas fa-wave-square"></i> <span>Actividad</span></a>
       <div class="pp-nav-sep">Cuenta</div>
-      <a href="suscripcion.html" class="pp-nav-link"><i class="fas fa-crown"></i> <span>Suscripción</span></a>
+      <a href="suscripcion.html" class="pp-nav-link"><i class="fas fa-crown"></i> <span>SuscripciÃ³n</span></a>
       <a href="security.html" class="pp-nav-link"><i class="fas fa-shield-alt"></i> <span>Seguridad</span></a>
       <a href="perfil.html" class="pp-nav-link"><i class="fas fa-user"></i> <span>Mi Perfil</span></a>
     </nav>
     <div class="pp-sidebar-footer">
-      <button class="pp-btn pp-btn-ghost pp-btn-sm" onclick="window.location.href='/login.html'"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</button>
+      <button class="pp-btn pp-btn-ghost pp-btn-sm" onclick="window.location.href='/login.html'"><i class="fas fa-sign-out-alt"></i> Cerrar SesiÃ³n</button>
     </div>
   </aside>
   <main class="main-content">
@@ -41,15 +41,15 @@
     <div class="pp-page-header">
       <div>
         <h1 class="pp-page-title">Actividad <span>operacional</span></h1>
-        <p class="pp-page-subtitle">Movimiento reciente del negocio del tenant: facturación, POS, compras, inventario, flota y automatizaciones. Los eventos administrativos (usuarios, roles, plan) viven en <a href="audit.html" style="color:var(--accent)">Auditoría</a>.</p>
+        <p class="pp-page-subtitle">Movimiento reciente del negocio del tenant: facturaciÃ³n, POS, compras, inventario, flota y automatizaciones. Los eventos administrativos (usuarios, roles, plan) viven en <a href="audit.html" style="color:var(--accent)">AuditorÃ­a</a>.</p>
       </div>
       <div class="pp-toolbar">
-        <select class="pp-select" id="fTipo" style="width:auto"><option value="">Todos los módulos</option></select>
+        <select class="pp-select" id="fTipo" style="width:auto"><option value="">Todos los mÃ³dulos</option></select>
         <button class="pp-btn pp-btn-ghost pp-btn-sm" onclick="load()"><i class="fas fa-sync-alt"></i></button>
       </div>
     </div>
     <div class="pp-content">
-      <div id="msg" class="pp-info-box"><i class="fas fa-spinner fa-spin"></i> Cargando actividad real…</div>
+      <div id="msg" class="pp-info-box"><i class="fas fa-spinner fa-spin"></i> Cargando actividad realâ€¦</div>
       <div id="lista" style="display:none;flex-direction:column;gap:10px"></div>
       <div id="empty" style="display:none"></div>
     </div>
@@ -72,7 +72,7 @@
     if (!rows.length) {
       lista.style.display = 'none';
       empty.style.display = 'block';
-      empty.innerHTML = '<div class="pp-empty"><i class="fas fa-wave-square"></i><div class="pp-empty-title">Sin actividad operacional</div><p>Cuando el equipo opere el negocio (facturar, vender, inventariar) el movimiento aparecerá aquí.</p></div>';
+      empty.innerHTML = '<div class="pp-empty"><i class="fas fa-wave-square"></i><div class="pp-empty-title">Sin actividad operacional</div><p>Cuando el equipo opere el negocio (facturar, vender, inventariar) el movimiento aparecerÃ¡ aquÃ­.</p></div>';
       return;
     }
     empty.style.display = 'none';
@@ -96,7 +96,7 @@
       const sel = document.getElementById('fTipo');
       const tipos = [...new Set(eventos.map(e => e.tipo || 'sistema'))];
       const current = sel.value;
-      sel.innerHTML = '<option value="">Todos los módulos</option>' + tipos.map(t => `<option value="${H(t)}">${H(t)}</option>`).join('');
+      sel.innerHTML = '<option value="">Todos los mÃ³dulos</option>' + tipos.map(t => `<option value="${H(t)}">${H(t)}</option>`).join('');
       sel.value = current;
       render();
     } catch (err) {
@@ -109,5 +109,8 @@
   load();
 })();
 </script>
+  <script src="../js/pp-sidebar-empresa.js"></script>
 </body>
 </html>
+
+

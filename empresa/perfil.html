@@ -1,14 +1,14 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
     <link rel="icon" type="image/png" href="../img/iconos/robot_logo.png">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mi Perfil — Portal Pilot</title>
+  <title>Mi Perfil â€” Portal Pilot</title>
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <style>
-    /* ─── RESET & TOKENS ───────────────── */
+    /* â”€â”€â”€ RESET & TOKENS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; cursor: none; }
     :root {
       --bg: #04040a; --bg2: #07070f; --bg3: #0c0c1a; --card: #0e0e1c; --card2: #111124;
@@ -28,12 +28,12 @@
     button { font-family: inherit; cursor: pointer; }
     .container { width: 100%; max-width: 100%; margin: 0; padding: 0 clamp(12px, 3vw, 32px); }
 
-    /* ─── CUSTOM CURSOR ───────────────── */
+    /* â”€â”€â”€ CUSTOM CURSOR â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
     #cursor-dot { width: 6px; height: 6px; background: #fff; border-radius: 50%; position: fixed; pointer-events: none; z-index: 10000; transition: transform .1s; }
     #cursor-ring { width: 36px; height: 36px; border: 1px solid rgba(139, 92, 246, 0.6); border-radius: 50%; position: fixed; pointer-events: none; z-index: 9999; transition: transform .15s ease, width .2s, height .2s, opacity .2s; transform: translate(-50%, -50%); }
     #cursor-glow { width: 500px; height: 500px; background: radial-gradient(circle, rgba(139, 92, 246, 0.12) 0%, transparent 70%); position: fixed; pointer-events: none; z-index: 0; transform: translate(-50%, -50%); transition: transform .08s; }
 
-    /* ─── SCROLLBAR & PROGRESS ───────── */
+    /* â”€â”€â”€ SCROLLBAR & PROGRESS â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
     ::-webkit-scrollbar { width: 10px; }
     ::-webkit-scrollbar-track { background: var(--bg2); border-left: 1px solid var(--border); }
     ::-webkit-scrollbar-thumb { background: linear-gradient(180deg, var(--accent), var(--accent2)); border-radius: 5px; border: 1px solid var(--bg2); }
@@ -42,7 +42,7 @@
     #progress { position: fixed; top: 0; left: 0; right: 0; height: 2px; z-index: 999; background: transparent; }
     #progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--cyan)); width: 0; transition: width .1s linear; }
 
-    /* ─── BUTTONS ─────────────────────── */
+    /* â”€â”€â”€ BUTTONS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
     .btn { display: inline-flex; align-items: center; gap: 8px; padding: 11px 24px; border-radius: 40px; font-size: 13px; font-weight: 600; border: none; transition: all .25s; white-space: nowrap; font-family: 'DM Sans', sans-serif; }
     .btn-acc { background: var(--accent); color: #fff; }
     .btn-acc:hover { background: var(--accent2); transform: translateY(-1px); box-shadow: 0 8px 28px var(--accent-glow); }
@@ -55,11 +55,11 @@
     .btn-sm { padding: 8px 18px; font-size: 12px; }
     .btn-xs { padding: 6px 14px; font-size: 11px; }
 
-    /* ─── LAYOUT ──────────────────────── */
+    /* â”€â”€â”€ LAYOUT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
     .dashboard { display: grid; grid-template-columns: var(--sidebar-width) 1fr; min-height: 100vh; transition: grid-template-columns 0.3s ease; width: 100vw; }
     .dashboard.sidebar-collapsed { grid-template-columns: var(--sidebar-collapsed) 1fr; }
     
-    /* ─── SIDEBAR ─────────────────────── */
+    /* â”€â”€â”€ SIDEBAR â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
     .sidebar { background: var(--bg2); border-right: 1px solid var(--border); padding: 20px 16px; position: sticky; top: 0; height: 100vh; display: flex; flex-direction: column; z-index: 50; transition: width 0.3s ease; width: var(--sidebar-width); overflow: visible; }
     .sidebar.collapsed { width: var(--sidebar-collapsed); padding: 20px 8px; }
     .sidebar-header { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
@@ -99,10 +99,10 @@
     .sidebar.collapsed .footer-btn { justify-content: center; padding: 11px; }
     .footer-btn i { width: 18px; text-align: center; font-size: 14px; flex-shrink: 0; }
 
-    /* ─── MAIN CONTENT ────────────────── */
+    /* â”€â”€â”€ MAIN CONTENT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
     .main-content { display: flex; flex-direction: column; width: 100%; min-width: 0; transition: all 0.3s ease; }
     
-    /* ─── TOP BAR ─────────────────────── */
+    /* â”€â”€â”€ TOP BAR â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
     .topbar { position: sticky; top: 0; z-index: 40; background: rgba(4,4,10,0.85); backdrop-filter: blur(24px); border-bottom: 1px solid var(--border); padding: 0 clamp(12px,3vw,32px); height: 64px; display: flex; align-items: center; justify-content: space-between; width: 100%; }
     .topbar-left { display: flex; align-items: center; gap: 16px; min-width: 0; }
     .topbar-title { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 700; color: var(--white); }
@@ -116,7 +116,7 @@
     .topbar-btn:hover { background: rgba(139,92,246,0.1); color: var(--accent); border-color: var(--border2); }
     .topbar-btn .badge { position: absolute; top: -4px; right: -4px; width: 16px; height: 16px; border-radius: 50%; background: var(--red); color: #fff; font-size: 9px; display: flex; align-items: center; justify-content: center; font-weight: 600; }
 
-    /* ─── PROFILE PAGE STYLES ───────── */
+    /* â”€â”€â”€ PROFILE PAGE STYLES â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
     .profile-header { padding: clamp(24px,4vw,40px) clamp(12px,3vw,32px) 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 24px; flex-wrap: wrap; }
     .profile-avatar-large { width: 96px; height: 96px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--cyan)); display: flex; align-items: center; justify-content: center; font-size: 32px; color: #fff; font-weight: 800; border: 3px solid var(--accent); position: relative; flex-shrink: 0; }
     .profile-avatar-large img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
@@ -268,7 +268,7 @@
 .plan-locked::after{content:'\f023';font-family:'Font Awesome 6 Free';font-weight:900;position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:11px;color:#fbbf24}
   </style>
 <link rel="stylesheet" href="../css/notifications.css">
-<link rel="stylesheet" href="../css/sidebar-empresa.css">
+
 </head>
 <body>
 
@@ -296,14 +296,14 @@
         <a href="fleet.html" class="sidebar-link" data-min-plan="enterprise"><i class="fas fa-truck"></i> <span>Flota</span></a>
         <a href="automation.html" class="sidebar-link" data-min-plan="enterprise"><i class="fas fa-robot"></i> <span>Bots RPA</span></a>
         <a href="api_keys.html" class="sidebar-link" data-min-plan="enterprise"><i class="fas fa-key"></i> <span>API Keys</span></a>
-        <a href="security.html" class="sidebar-link" data-min-plan="business"><i class="fas fa-shield-alt"></i> <span>Auditoría</span></a>
+        <a href="security.html" class="sidebar-link" data-min-plan="business"><i class="fas fa-shield-alt"></i> <span>AuditorÃ­a</span></a>
       <a href="consumo.html" class="sidebar-link"><i class="fas fa-chart-pie"></i> <span>Consumo</span></a>
       </nav>
 
       <!-- Footer -->
       <div class="sidebar-footer">
         <button class="footer-btn" id="darkModeToggle"><i class="fas fa-moon"></i> <span>Dark Mode</span></button>
-        <button class="footer-btn logout" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> <span>Cerrar Sesión</span></button>
+        <button class="footer-btn logout" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> <span>Cerrar SesiÃ³n</span></button>
       </div>
 
       <!-- Toggle Button -->
@@ -317,7 +317,7 @@
       <header class="topbar">
         <div class="topbar-left">
           <div class="topbar-title">Mi <span>Perfil</span></div>
-          <div class="topbar-search"><i class="fas fa-search"></i><input type="text" placeholder="Buscar en configuración..."></div>
+          <div class="topbar-search"><i class="fas fa-search"></i><input type="text" placeholder="Buscar en configuraciÃ³n..."></div>
         </div>
         <div class="topbar-right">
           <button class="topbar-btn" title="Notificaciones"><i class="fas fa-bell"></i><span class="badge" style="display:none">0</span></button>
@@ -366,21 +366,21 @@
           <!-- Personal Information -->
           <div class="card reveal">
             <div class="card-header">
-              <h2 class="card-title"><i class="fas fa-user"></i> Información Personal</h2>
+              <h2 class="card-title"><i class="fas fa-user"></i> InformaciÃ³n Personal</h2>
               <button class="btn btn-ghost btn-xs" onclick="editSection('personal')"><i class="fas fa-edit"></i> Editar</button>
             </div>
             <div class="form-grid">
               <div class="field">
                 <label>NOMBRE COMPLETO</label>
-                <input type="text" id="fullName" value="Ajendra Sánchez" disabled>
+                <input type="text" id="fullName" value="Ajendra SÃ¡nchez" disabled>
               </div>
               <div class="field">
-                <label>CORREO ELECTRÓNICO</label>
+                <label>CORREO ELECTRÃ“NICO</label>
                 <input type="email" id="email" value="ajendra@portalpilot.io" disabled>
                 <div class="field-hint">Para cambiar tu email, contacta a soporte</div>
               </div>
               <div class="field">
-                <label>Teléfono</label>
+                <label>TelÃ©fono</label>
                 <input type="tel" id="phone" value="" placeholder="No registrado" disabled>
               </div>
               <div class="field">
@@ -394,8 +394,8 @@
                 </select>
               </div>
               <div class="field" style="grid-column: 1/-1;">
-                <label>Biografía</label>
-                <textarea id="bio" rows="3" placeholder="Cuéntanos sobre tu trabajo..." disabled></textarea>
+                <label>BiografÃ­a</label>
+                <textarea id="bio" rows="3" placeholder="CuÃ©ntanos sobre tu trabajo..." disabled></textarea>
               </div>
             </div>
           </div>
@@ -408,16 +408,16 @@
             
             <div class="security-item">
               <div class="security-info">
-                <div class="security-title">Contraseña</div>
-                <div class="security-desc">Último cambio: hace 45 días</div>
+                <div class="security-title">ContraseÃ±a</div>
+                <div class="security-desc">Ãšltimo cambio: hace 45 dÃ­as</div>
               </div>
               <button class="btn btn-outline btn-sm" onclick="openModal('changePasswordModal')">Cambiar</button>
             </div>
             
             <div class="security-item">
               <div class="security-info">
-                <div class="security-title">Autenticación en Dos Pasos (2FA)</div>
-                <div class="security-desc">Protege tu cuenta con un código adicional</div>
+                <div class="security-title">AutenticaciÃ³n en Dos Pasos (2FA)</div>
+                <div class="security-desc">Protege tu cuenta con un cÃ³digo adicional</div>
               </div>
               <label class="toggle-switch">
                 <input type="checkbox" id="toggle2fa" onchange="toggle2FA()">
@@ -461,11 +461,11 @@
                 <label class="field-row"><input type="checkbox"> <span style="font-size:12px">Email</span></label>
               </div>
               <div class="info-item">
-                <span class="info-label">Menciones en auditoría</span>
+                <span class="info-label">Menciones en auditorÃ­a</span>
                 <label class="field-row"><input type="checkbox" checked> <span style="font-size:12px">Push</span></label>
               </div>
               <div class="info-item">
-                <span class="info-label">Boletín de novedades</span>
+                <span class="info-label">BoletÃ­n de novedades</span>
                 <label class="field-row"><input type="checkbox"> <span style="font-size:12px">Email</span></label>
               </div>
             </div>
@@ -482,33 +482,33 @@
             <div class="info-list">
               <div class="info-item">
                 <span class="info-label">Miembro desde</span>
-                <span class="info-value" id="accMemberSince">—</span>
+                <span class="info-value" id="accMemberSince">â€”</span>
               </div>
               <div class="info-item">
-                <span class="info-label">Último acceso</span>
-                <span class="info-value" id="accLastAccess">—</span>
+                <span class="info-label">Ãšltimo acceso</span>
+                <span class="info-value" id="accLastAccess">â€”</span>
               </div>
               <div class="info-item">
                 <span class="info-label">Tenant principal</span>
-                <span class="info-value" id="accTenant">—</span>
+                <span class="info-value" id="accTenant">â€”</span>
               </div>
               <div class="info-item">
                 <span class="info-label">Rol</span>
-                <span class="info-value" id="accRole">—</span>
+                <span class="info-value" id="accRole">â€”</span>
               </div>
               <div class="info-item">
                 <span class="info-label">ID de usuario</span>
-                <span class="info-value" id="accUserId"><code>—</code></span>
+                <span class="info-value" id="accUserId"><code>â€”</code></span>
               </div>
             </div>
           </div>
 
           <!-- Quick Actions -->
           <div class="card reveal">
-            <h2 class="card-title"><i class="fas fa-bolt"></i> Acciones Rápidas</h2>
+            <h2 class="card-title"><i class="fas fa-bolt"></i> Acciones RÃ¡pidas</h2>
             <div style="display:flex;flex-direction:column;gap:10px;">
               <button class="btn btn-ghost" style="justify-content:flex-start;" onclick="openModal('changePasswordModal')">
-                <i class="fas fa-key" style="width:20px;color:var(--accent)"></i> Cambiar contraseña
+                <i class="fas fa-key" style="width:20px;color:var(--accent)"></i> Cambiar contraseÃ±a
               </button>
               <button class="btn btn-ghost" style="justify-content:flex-start;" onclick="openModal('sessionsModal')">
                 <i class="fas fa-laptop" style="width:20px;color:var(--cyan)"></i> Cerrar otras sesiones
@@ -560,7 +560,7 @@
       <div class="modal-body">
         <div style="text-align:center;margin-bottom:20px;">
           <div class="profile-avatar-large" style="margin:0 auto 16px;width:80px;height:80px;font-size:24px;">AS</div>
-          <p style="font-size:13px;color:var(--gray)">Formatos: JPG, PNG. Máx. 5MB.</p>
+          <p style="font-size:13px;color:var(--gray)">Formatos: JPG, PNG. MÃ¡x. 5MB.</p>
         </div>
         <div class="field">
           <label>Seleccionar imagen</label>
@@ -578,31 +578,31 @@
   <div class="modal-overlay" id="changePasswordModal">
     <div class="modal">
       <div class="modal-header">
-        <div class="modal-title">Cambiar Contraseña</div>
+        <div class="modal-title">Cambiar ContraseÃ±a</div>
         <button class="modal-close" onclick="closeModal('changePasswordModal')"><i class="fas fa-times"></i></button>
       </div>
       <div class="modal-body">
         <div class="field">
-          <label>Contraseña Actual</label>
-          <input type="password" id="currentPass" placeholder="••••••••">
+          <label>ContraseÃ±a Actual</label>
+          <input type="password" id="currentPass" placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢">
         </div>
         <div class="field">
-          <label>Nueva Contraseña</label>
-          <input type="password" id="newPass" placeholder="Mínimo 12 caracteres" oninput="checkStrength(this)">
+          <label>Nueva ContraseÃ±a</label>
+          <input type="password" id="newPass" placeholder="MÃ­nimo 12 caracteres" oninput="checkStrength(this)">
           <div class="strength-wrap" style="margin-top:8px;">
             <div class="strength-bar" style="height:3px;background:rgba(255,255,255,.06);border-radius:2px;"><div class="strength-fill" id="strengthFill" style="height:100%;width:0;border-radius:2px;transition:all.3s"></div></div>
-            <div class="strength-label" style="font-size:10px;color:var(--gray);margin-top:4px;"><span id="strengthText">Contraseña débil</span></div>
+            <div class="strength-label" style="font-size:10px;color:var(--gray);margin-top:4px;"><span id="strengthText">ContraseÃ±a dÃ©bil</span></div>
           </div>
         </div>
         <div class="field">
-          <label>Confirmar Nueva Contraseña</label>
-          <input type="password" id="confirmPass" placeholder="••••••••" oninput="checkMatch()">
+          <label>Confirmar Nueva ContraseÃ±a</label>
+          <input type="password" id="confirmPass" placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢" oninput="checkMatch()">
           <div id="matchStatus" style="font-size:11px;margin-top:6px;"></div>
         </div>
       </div>
       <div class="modal-footer">
         <button class="btn btn-ghost" onclick="closeModal('changePasswordModal')">Cancelar</button>
-        <button class="btn btn-acc" id="btnChangePass" onclick="changePassword()" disabled>Actualizar Contraseña</button>
+        <button class="btn btn-acc" id="btnChangePass" onclick="changePassword()" disabled>Actualizar ContraseÃ±a</button>
       </div>
     </div>
   </div>
@@ -650,7 +650,7 @@
       </div>
       <div class="modal-body" style="text-align:center;">
         <p style="font-size:14px;color:var(--gray);margin-bottom:20px;">
-          Esta acción es <strong>irreversible</strong>. Todos tus datos, proyectos y configuraciones serán eliminados permanentemente.
+          Esta acciÃ³n es <strong>irreversible</strong>. Todos tus datos, proyectos y configuraciones serÃ¡n eliminados permanentemente.
         </p>
         <div class="field" style="text-align:left;">
           <label>Confirma escribiendo "ELIMINAR"</label>
@@ -667,18 +667,18 @@
   <!-- LOGOUT MODAL -->
   <div class="modal-overlay" id="logoutModal" onclick="if(event.target===this)closeModal('logoutModal')">
     <div class="modal-box">
-      <h3 style="font-family:'Syne',sans-serif;font-size:20px;font-weight:700;color:var(--white);margin-bottom:8px;">Cerrar Sesión</h3>
-      <p style="font-size:14px;color:var(--text-dim);margin-bottom:20px;">¿Estás seguro que deseas cerrar sesión?</p>
+      <h3 style="font-family:'Syne',sans-serif;font-size:20px;font-weight:700;color:var(--white);margin-bottom:8px;">Cerrar SesiÃ³n</h3>
+      <p style="font-size:14px;color:var(--text-dim);margin-bottom:20px;">Â¿EstÃ¡s seguro que deseas cerrar sesiÃ³n?</p>
       <div class="modal-footer">
         <button class="btn btn-ghost" id="modalCancel" onclick="closeModal('logoutModal')">Cancelar</button>
-        <button class="btn btn-acc" id="modalConfirm">Cerrar Sesión</button>
+        <button class="btn btn-acc" id="modalConfirm">Cerrar SesiÃ³n</button>
       </div>
     </div>
   </div>
 
   <script src="../auth-check.js"></script>
   <script>
-    // ── Custom Cursor ─────────────────
+    // â”€â”€ Custom Cursor â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     const dot = document.getElementById('cursor-dot'), ring = document.getElementById('cursor-ring'), glow = document.getElementById('cursor-glow');
     let mx = 0, my = 0, rx = 0, ry = 0;
     document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; dot.style.left = mx+'px'; dot.style.top = my+'px'; glow.style.left = mx+'px'; glow.style.top = my+'px'; });
@@ -689,14 +689,14 @@
       el.addEventListener('mouseleave', () => { ring.style.width='36px'; ring.style.height='36px'; ring.style.opacity='1'; });
     });
 
-    // ── Scroll Progress ──────────────
+    // â”€â”€ Scroll Progress â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     window.addEventListener('scroll', () => { const p = (window.scrollY / (document.documentElement.scrollHeight - innerHeight)) * 100; document.getElementById('progress-fill').style.width = Math.min(100, Math.max(0, p)) + '%'; });
 
-    // ── Reveal on Scroll ─────────────
+    // â”€â”€ Reveal on Scroll â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     const obs = new IntersectionObserver(entries => { entries.forEach((e,i) => { if(e.isIntersecting) setTimeout(() => e.target.classList.add('in'), i*50); }); }, { threshold: 0.05 });
     document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
 
-    // ── Sidebar Toggle ───────────────
+    // â”€â”€ Sidebar Toggle â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     const sidebar = document.getElementById('sidebar'), toggleBtn = document.getElementById('toggleSidebar'), overlay = document.getElementById('overlay'), dashboard = document.getElementById('dashboard');
     let isMobile = window.innerWidth <= 900;
     if (localStorage.getItem('sidebarCollapsed') === 'true' && !isMobile) { sidebar.classList.add('collapsed'); dashboard.classList.add('sidebar-collapsed'); }
@@ -710,11 +710,11 @@
     toggleBtn.addEventListener('click', () => { if(isMobile) { sidebar.classList.toggle('active'); overlay.classList.toggle('active'); } else { sidebar.classList.toggle('collapsed'); dashboard.classList.toggle('sidebar-collapsed'); localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed')); } updateLayout(); });
     overlay.addEventListener('click', () => { sidebar.classList.remove('active'); overlay.classList.remove('active'); });
 
-    // ── Dark Mode ────────────────────
+    // â”€â”€ Dark Mode â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     const darkModeBtn = document.getElementById('darkModeToggle');
     darkModeBtn.addEventListener('click', () => { document.body.classList.toggle('light-mode'); const isLight = document.body.classList.contains('light-mode'); darkModeBtn.innerHTML = isLight ? '<i class="fas fa-sun"></i> <span>Light Mode</span>' : '<i class="fas fa-moon"></i> <span>Dark Mode</span>'; });
 
-    // ── Perfil: helpers (la carga real del backend se hace al final del documento) ────
+    // â”€â”€ Perfil: helpers (la carga real del backend se hace al final del documento) â”€â”€â”€â”€
     function tokenSub() {
       try {
         const token = localStorage.getItem('token');
@@ -771,14 +771,14 @@
       localStorage.setItem('userBanner', u.banner_perfil_url || '');
     }
 
-    // ── Logout Modal ─────────────────
+    // â”€â”€ Logout Modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     const logoutBtn = document.getElementById('logoutBtn'), logoutModal = document.getElementById('logoutModal'), modalCancel = document.getElementById('modalCancel'), modalConfirm = document.getElementById('modalConfirm');
     logoutBtn.addEventListener('click', (e) => { e.preventDefault(); e.stopImmediatePropagation(); logoutModal.classList.add('active'); });
     modalCancel.addEventListener('click', () => { logoutModal.classList.remove('active'); });
     modalConfirm.addEventListener('click', () => { logoutModal.classList.remove('active'); if (window.ppLogout) window.ppLogout('../login.html'); else window.location.href = '../login.html'; });
     logoutModal.addEventListener('click', (e) => { if(e.target === logoutModal) { logoutModal.classList.remove('active'); } });
 
-    // ── Profile Functions ──────────────
+    // â”€â”€ Profile Functions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     let isEditing = false;
     function editSection(section) {
       isEditing = true;
@@ -788,7 +788,7 @@
         el.style.borderColor = 'var(--accent)';
       });
       document.getElementById('saveBar').classList.remove('hidden');
-      showMessage('Modo edición activado. Haz tus cambios y guarda.', 'info');
+      showMessage('Modo ediciÃ³n activado. Haz tus cambios y guarda.', 'info');
     }
     function cancelEdit() {
       isEditing = false;
@@ -836,7 +836,7 @@
         document.getElementById('saveBar').classList.add('hidden');
         isEditing = false;
         
-        showMessage('✓ Perfil actualizado exitosamente', 'success');
+        showMessage('âœ“ Perfil actualizado exitosamente', 'success');
       } catch(err) {
         showMessage('Error al guardar: ' + err.message, 'error');
       } finally {
@@ -845,14 +845,14 @@
       }
     }
 
-    // ── Modal Functions ──────────────
+    // â”€â”€ Modal Functions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     function openModal(id) { document.getElementById(id).classList.add('active'); if (id === 'apiKeysModal') loadApiKeys(); if (id === 'sessionsModal') loadSessions(); }
     function closeModal(id) { document.getElementById(id).classList.remove('active'); }
     document.querySelectorAll('.modal-overlay').forEach(overlay => {
       overlay.addEventListener('click', e => { if(e.target === overlay) overlay.classList.remove('active'); });
     });
 
-    // ── Avatar Upload ──────────────
+    // â”€â”€ Avatar Upload â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     function uploadAvatar() {
       const file = document.getElementById('avatarFile').files[0];
       if(!file) { showMessage('Selecciona una imagen primero', 'error'); return; }
@@ -882,7 +882,7 @@
           const pa = document.getElementById('profileAvatarLarge');
           if (pa) pa.innerHTML = '<img src="' + up.url + '" alt="Foto de perfil" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;">';
           closeModal('uploadAvatarModal');
-          showMessage('✓ Foto de perfil actualizada', 'success');
+          showMessage('âœ“ Foto de perfil actualizada', 'success');
         } catch(err) {
           showMessage('Error al subir imagen: ' + err.message, 'error');
         }
@@ -890,7 +890,7 @@
       reader.readAsDataURL(file);
     }
 
-    // ── Password Strength & Match ──────────────
+    // â”€â”€ Password Strength & Match â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     function checkStrength(input) {
       const val = input.value;
       const fill = document.getElementById('strengthFill');
@@ -905,7 +905,7 @@
       if(/[^A-Za-z0-9]/.test(val)) score += 25;
       
       fill.style.width = score + '%';
-      if(score < 40) { fill.style.background = 'var(--red)'; text.textContent = 'Débil'; text.style.color = 'var(--red)'; }
+      if(score < 40) { fill.style.background = 'var(--red)'; text.textContent = 'DÃ©bil'; text.style.color = 'var(--red)'; }
       else if(score < 70) { fill.style.background = 'var(--yellow)'; text.textContent = 'Regular'; text.style.color = 'var(--yellow)'; }
       else { fill.style.background = 'var(--green)'; text.textContent = 'Fuerte'; text.style.color = 'var(--green)'; }
       
@@ -926,7 +926,7 @@
         status.innerHTML = '<span style="color:var(--red)"><i class="fas fa-times-circle"></i> No coinciden</span>';
         btn.disabled = true;
       } else {
-        status.innerHTML = '<span style="color:var(--yellow)">Mínimo 12 caracteres requeridos</span>';
+        status.innerHTML = '<span style="color:var(--yellow)">MÃ­nimo 12 caracteres requeridos</span>';
         btn.disabled = true;
       }
     }
@@ -946,7 +946,7 @@
         if (!res.ok) throw new Error((await res.json()).error || 'Error');
         
         closeModal('changePasswordModal');
-        showMessage('✓ Contraseña actualizada', 'success');
+        showMessage('âœ“ ContraseÃ±a actualizada', 'success');
         // Reset form
         document.getElementById('currentPass').value = '';
         document.getElementById('newPass').value = '';
@@ -954,16 +954,16 @@
         document.getElementById('strengthFill').style.width = '0';
         document.getElementById('matchStatus').textContent = '';
       } catch(err) {
-        showMessage('Error al cambiar contraseña: ' + err.message, 'error');
+        showMessage('Error al cambiar contraseÃ±a: ' + err.message, 'error');
       } finally {
-        btn.innerHTML = 'Actualizar Contraseña';
+        btn.innerHTML = 'Actualizar ContraseÃ±a';
         btn.disabled = false;
       }
     }
 
     function setBtnLoading(btn) { try { btn.disabled = true; setTimeout(() => { btn.disabled = false; }, 900); } catch(e) {} }
 
-    // ── Sessions ──────────────
+    // â”€â”€ Sessions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     async function loadSessions() {
       const list = document.getElementById('sessionsList');
       if (!list) return;
@@ -984,9 +984,9 @@
         list.innerHTML = sessions.map(s => `
           <div class="session-item${s.isCurrent ? ' current' : ''}">
             <div class="session-info">
-              <div class="session-device"><i class="fas ${s.deviceType === 'mobile' ? 'fa-mobile-alt' : 'fa-laptop'}"></i> ${s.deviceName || 'Dispositivo'}${s.browser && s.browser !== 'Navegador actual' ? ' • ' + s.browser : ''}${s.os && s.os !== 'Sistema actual' ? ' • ' + s.os : ''}</div>
-              <div class="session-meta">Última actividad: ${s.lastActivity ? new Date(s.lastActivity).toLocaleString('es-ES', { weekday: 'short', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—'}${s.isActive ? '<span style="color:var(--green)"> • Activa</span>' : ''}</div>
-              <div class="session-location">${s.location || 'Ubicación desconocida'}${s.ip ? ' • ' + s.ip : ''}</div>
+              <div class="session-device"><i class="fas ${s.deviceType === 'mobile' ? 'fa-mobile-alt' : 'fa-laptop'}"></i> ${s.deviceName || 'Dispositivo'}${s.browser && s.browser !== 'Navegador actual' ? ' â€¢ ' + s.browser : ''}${s.os && s.os !== 'Sistema actual' ? ' â€¢ ' + s.os : ''}</div>
+              <div class="session-meta">Ãšltima actividad: ${s.lastActivity ? new Date(s.lastActivity).toLocaleString('es-ES', { weekday: 'short', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : 'â€”'}${s.isActive ? '<span style="color:var(--green)"> â€¢ Activa</span>' : ''}</div>
+              <div class="session-location">${s.location || 'UbicaciÃ³n desconocida'}${s.ip ? ' â€¢ ' + s.ip : ''}</div>
             </div>
             ${s.isCurrent ? '<span class="profile-badge verified" style="font-size:10px;padding:2px 8px;">Actual</span>' : '<button class="btn btn-ghost btn-xs" onclick="endSession(\'' + s.id + '\')">Cerrar</button>'}
           </div>
@@ -996,34 +996,34 @@
       }
     }
     async function endSession(id) {
-      if(!confirm('¿Cerrar esta sesión?')) return;
+      if(!confirm('Â¿Cerrar esta sesiÃ³n?')) return;
       const uid = currentUserId();
       if (!uid) return;
       try {
         const res = await apiFetch('/api/users/' + encodeURIComponent(uid) + '/revoke-sessions', { method: 'POST' });
         if (!res.ok) throw new Error((await res.json()).error || 'Error');
-        showMessage('✓ Sesión cerrada', 'success');
+        showMessage('âœ“ SesiÃ³n cerrada', 'success');
         await loadSessions();
       } catch (err) {
-        showMessage('Error al cerrar sesión: ' + err.message, 'error');
+        showMessage('Error al cerrar sesiÃ³n: ' + err.message, 'error');
       }
     }
     async function endAllSessions() {
-      if(!confirm('¿Cerrar TODAS las sesiones excepto la actual?')) return;
+      if(!confirm('Â¿Cerrar TODAS las sesiones excepto la actual?')) return;
       const uid = currentUserId();
       if (!uid) return;
       try {
         const res = await apiFetch('/api/users/' + encodeURIComponent(uid) + '/revoke-sessions', { method: 'POST' });
         if (!res.ok) throw new Error((await res.json()).error || 'Error');
         closeModal('sessionsModal');
-        showMessage('✓ Todas las sesiones cerradas', 'success');
+        showMessage('âœ“ Todas las sesiones cerradas', 'success');
         await loadSessions();
       } catch (err) {
         showMessage('Error: ' + err.message, 'error');
       }
     }
 
-    // ── API Keys ──────────────
+    // â”€â”€ API Keys â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     function apiFetch(url, options) {
       const token = localStorage.getItem('token');
       const headers = Object.assign({}, options?.headers || {}, token ? { 'Authorization': 'Bearer ' + token } : {});
@@ -1038,7 +1038,7 @@
         if (!res.ok) throw new Error((await res.json()).error || 'Error');
         const { keys } = await res.json();
         if (!keys || keys.length === 0) {
-          list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--gray);">Aún no tienes claves API.<br>Genera la primera con el botón inferior.</div>';
+          list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--gray);">AÃºn no tienes claves API.<br>Genera la primera con el botÃ³n inferior.</div>';
           return;
         }
         list.innerHTML = keys.map(k => `
@@ -1046,7 +1046,7 @@
             <div class="api-key-info">
               <div class="api-key-name">${k.nombre}</div>
               <div class="api-key-value">${k.clave.slice(0, 14)}...${k.clave.slice(-6)}</div>
-              <div class="api-key-meta">Creada: ${new Date(k.created_at).toLocaleDateString('es')}${k.ultimo_uso ? ' • Última usada: ' + new Date(k.ultimo_uso).toLocaleDateString('es') : ''}</div>
+              <div class="api-key-meta">Creada: ${new Date(k.created_at).toLocaleDateString('es')}${k.ultimo_uso ? ' â€¢ Ãšltima usada: ' + new Date(k.ultimo_uso).toLocaleDateString('es') : ''}</div>
             </div>
             <div class="api-key-actions">
               <button class="btn btn-ghost btn-xs" onclick="copyApiKey('${k.clave}')"><i class="fas fa-copy"></i></button>
@@ -1060,11 +1060,11 @@
     }
     function copyApiKey(key) {
       navigator.clipboard.writeText(key).then(() => {
-        showMessage('✓ Clave copiada al portapapeles', 'success');
+        showMessage('âœ“ Clave copiada al portapapeles', 'success');
       });
     }
     async function revokeApiKey(id) {
-      if (!confirm('¿Revocar esta clave API? Las aplicaciones que la usen dejarán de funcionar.')) return;
+      if (!confirm('Â¿Revocar esta clave API? Las aplicaciones que la usen dejarÃ¡n de funcionar.')) return;
       try {
         const res = await apiFetch('/api/tenant/apikeys/' + encodeURIComponent(id), { method: 'DELETE' });
         if (!res.ok) throw new Error((await res.json()).error || 'Error');
@@ -1075,7 +1075,7 @@
       }
     }
     async function createApiKey() {
-      const name = prompt('Nombre para la nueva clave API:', 'Nueva Integración');
+      const name = prompt('Nombre para la nueva clave API:', 'Nueva IntegraciÃ³n');
       if (!name) return;
       try {
         const res = await apiFetch('/api/tenant/apikeys', {
@@ -1086,19 +1086,19 @@
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Error');
         loadApiKeys();
-        showMessage('✓ Clave generada correctamente', 'success');
+        showMessage('âœ“ Clave generada correctamente', 'success');
       } catch (err) {
         showMessage('Error al generar: ' + err.message, 'error');
       }
     }
 
-    // ── Delete Account ──────────────
+    // â”€â”€ Delete Account â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     document.getElementById('deleteConfirm')?.addEventListener('input', function() {
       document.getElementById('btnDeleteAccount').disabled = this.value.trim().toUpperCase() !== 'ELIMINAR';
     });
     async function deleteAccount() {
       if(document.getElementById('deleteConfirm').value.trim().toUpperCase() !== 'ELIMINAR') return;
-      if(!confirm('⚠️ ÚLTIMA CONFIRMACIÓN: ¿Estás 100% seguro de eliminar tu cuenta? Esta acción NO se puede deshacer.')) return;
+      if(!confirm('âš ï¸ ÃšLTIMA CONFIRMACIÃ“N: Â¿EstÃ¡s 100% seguro de eliminar tu cuenta? Esta acciÃ³n NO se puede deshacer.')) return;
       const id = currentUserId();
       if (!id) return;
       const btn = document.getElementById('btnDeleteAccount');
@@ -1120,7 +1120,7 @@
       }
     }
 
-    // ── Utilities ──────────────
+    // â”€â”€ Utilities â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     async function exportProfile() {
       const id = currentUserId();
       if (!id) return;
@@ -1133,14 +1133,14 @@
         a.download = 'mis_datos_' + id.slice(0, 8) + '.json';
         a.click();
         URL.revokeObjectURL(a.href);
-        showMessage('✓ Datos exportados correctamente', 'success');
+        showMessage('âœ“ Datos exportados correctamente', 'success');
       } catch (err) {
         showMessage('Error al exportar: ' + err.message, 'error');
       }
     }
     function downloadData() { exportProfile(); }
 
-    // ── Initialize ──────────────
+    // â”€â”€ Initialize â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     // Toast unificado (showToast estaba referenciado pero nunca definido)
     function showToast(msg, type){
       if (window.ppToast) window.ppToast(msg, type === 'success' ? 'ok' : (type === 'warning' ? 'ok' : 'err'));
@@ -1156,8 +1156,8 @@
 <script src="../js/notif-panel.js"></script>
 <script src="../js/plan-gate.js"></script>
 <script src="../js/portales.js"></script>
-<script src="../js/sidebar-empresa.js"></script>
-<script src="../js/sidebar-loader.js"></script>
+
+<script src="../js/pp-sidebar-empresa.js"></script>
 <script src="../js/printer-loader.js"></script>
 <script src="../js/qrcode.min.js"></script>
 <script src="../js/two-factor.js"></script>
@@ -1171,10 +1171,10 @@
   function fmtFsDate(iso) {
     try {
       return new Date(iso).toLocaleDateString('es-ES', { month: 'short', year: 'numeric' });
-    } catch (e) { return '—'; }
+    } catch (e) { return 'â€”'; }
   }
   function fmtLastAccess(iso) {
-    if (!iso) return '—';
+    if (!iso) return 'â€”';
     try {
       const d = new Date(iso);
       const now = new Date();
@@ -1182,19 +1182,19 @@
         return 'Hoy, ' + d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
       }
       return d.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
-    } catch (e) { return '—'; }
+    } catch (e) { return 'â€”'; }
   }
   function fillAccountSummary(u) {
     const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
     set('accMemberSince', fmtFsDate(u.registered));
     set('accLastAccess', fmtLastAccess(u.lastActivity));
-    set('accTenant', u.tenant && u.tenant !== 'N/A' ? u.tenant : (u.tenant_code || '—'));
-    set('accRole', u.rol || '—');
+    set('accTenant', u.tenant && u.tenant !== 'N/A' ? u.tenant : (u.tenant_code || 'â€”'));
+    set('accRole', u.rol || 'â€”');
     const uid = document.getElementById('accUserId');
-    if (uid) uid.innerHTML = '<code>' + (u.id ? u.id.slice(0, 8) + '…' : '—') + '</code>';
+    if (uid) uid.innerHTML = '<code>' + (u.id ? u.id.slice(0, 8) + 'â€¦' : 'â€”') + '</code>';
   }
   function fmtRelE(iso) {
-    if (!iso) return '—';
+    if (!iso) return 'â€”';
     try {
       const d = new Date(iso);
       const now = new Date();
@@ -1202,23 +1202,23 @@
         return 'Hoy, ' + d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
       }
       const dias = Math.max(0, Math.floor((Date.now() - d.getTime()) / 86400000));
-      if (dias < 30) return 'Hace ' + dias + ' días';
+      if (dias < 30) return 'Hace ' + dias + ' dÃ­as';
       return fmtFsDate(iso);
-    } catch (e) { return '—'; }
+    } catch (e) { return 'â€”'; }
   }
   function fillActivityPreview(u) {
     const act = document.getElementById('activityPreviewList');
     if (!act) return;
     const items = [];
-    if (u.lastActivity) items.push({ t: 'Último acceso', d: fmtRelE(u.lastActivity) });
+    if (u.lastActivity) items.push({ t: 'Ãšltimo acceso', d: fmtRelE(u.lastActivity) });
     if (u.registered) items.push({ t: 'Cuenta creada', d: fmtFsDate(u.registered) });
     act.innerHTML = items.length
       ? items.map((it, i) => '<div style="font-size:12px;color:var(--gray);padding:8px 0;' + (i < items.length - 1 ? 'border-bottom:1px solid var(--border);' : '') + '"><strong style="color:var(--white)">' + it.t + '</strong><br><span>' + it.d + '</span></div>').join('')
-      : '<div style="font-size:12px;color:var(--gray);padding:8px 0;">Sin actividad registrada todavía.</div>';
+      : '<div style="font-size:12px;color:var(--gray);padding:8px 0;">Sin actividad registrada todavÃ­a.</div>';
   }
   // Al cargar sin backend, deja el resumen visible con lo que haya en localStorage
   const idTmp = localStorage.getItem('currentAccountId') || '';
-  if (idTmp) fillAccountSummary({ id: idTmp, rol: localStorage.getItem('userRole') || '—', tenant: localStorage.getItem('empresaNombre') || localStorage.getItem('empresaCodigo') || '—', tenant_code: localStorage.getItem('empresaCodigo') || '—' });
+  if (idTmp) fillAccountSummary({ id: idTmp, rol: localStorage.getItem('userRole') || 'â€”', tenant: localStorage.getItem('empresaNombre') || localStorage.getItem('empresaCodigo') || 'â€”', tenant_code: localStorage.getItem('empresaCodigo') || 'â€”' });
 
   // 1. Muestra inmediatamente lo que haya en localStorage (identidad base)
   applyProfileToDom({

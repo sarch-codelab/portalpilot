@@ -1,14 +1,14 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
     <link rel="icon" type="image/png" href="../img/iconos/robot_logo.png">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Automatización — Portal Pilot</title>
+<title>AutomatizaciÃ³n â€” Portal Pilot</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <style>
-/* ─── RESET & TOKENS (MISMOS QUE INDEX) ───────────────── */
+/* â”€â”€â”€ RESET & TOKENS (MISMOS QUE INDEX) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;cursor:none}
 :root{
   --bg:#04040a;--bg2:#07070f;--bg3:#0c0c1a;--card:#0e0e1c;--card2:#111124;
@@ -22,17 +22,17 @@ html{scroll-behavior:smooth;font-size:16px}
 body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden;line-height:1.6;-webkit-font-smoothing:antialiased}
 a{text-decoration:none;color:inherit}ul{list-style:none}img{max-width:100%;display:block}button{font-family:inherit;cursor:pointer}
 
-/* ─── CUSTOM CURSOR ──────────────────────────────────── */
+/* â”€â”€â”€ CUSTOM CURSOR â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 #cursor-dot{width:6px;height:6px;background:#fff;border-radius:50%;position:fixed;pointer-events:none;z-index:10000;transition:transform .1s}
 #cursor-ring{width:36px;height:36px;border:1px solid rgba(139,92,246,0.6);border-radius:50%;position:fixed;pointer-events:none;z-index:9999;transition:transform .15s ease,width .2s,height .2s,opacity .2s;transform:translate(-50%,-50%)}
 #cursor-glow{width:500px;height:500px;background:radial-gradient(circle,rgba(139,92,246,0.12) 0,transparent 70%);position:fixed;pointer-events:none;z-index:0;transform:translate(-50%,-50%);transition:transform .08s}
 
-/* ─── SCROLLBAR & PROGRESS ──────────────────────────── */
+/* â”€â”€â”€ SCROLLBAR & PROGRESS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--accent);border-radius:2px}
 #progress{position:fixed;top:0;left:0;right:0;height:2px;z-index:999;background:transparent}
 #progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--cyan));width:0;transition:width .1s linear}
 
-/* ─── BUTTONS ───────────────────────────────────────── */
+/* â”€â”€â”€ BUTTONS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .btn{display:inline-flex;align-items:center;gap:8px;padding:11px 24px;border-radius:40px;font-size:13px;font-weight:600;border:none;transition:all .25s;white-space:nowrap;font-family:'DM Sans',sans-serif;cursor:pointer}
 .btn-acc{background:var(--accent);color:#fff}.btn-acc:hover{background:var(--accent2);transform:translateY(-1px);box-shadow:0 8px 28px var(--accent-glow)}
 .btn-ghost{background:rgba(255,255,255,0.05);color:var(--white);border:1px solid var(--border2)}.btn-ghost:hover{background:rgba(139,92,246,0.1);border-color:var(--border2)}
@@ -41,7 +41,7 @@ a{text-decoration:none;color:inherit}ul{list-style:none}img{max-width:100%;displ
 .btn-success{background:rgba(52,211,153,0.15);color:var(--green);border:1px solid rgba(52,211,153,0.3)}.btn-success:hover{background:var(--green);color:#fff}
 .btn-sm{padding:8px 18px;font-size:12px}.btn-xs{padding:6px 14px;font-size:11px}
 
-/* ─── DASHBOARD LAYOUT ──────────────────────────────── */
+/* â”€â”€â”€ DASHBOARD LAYOUT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .dashboard{display:grid;grid-template-columns:240px 1fr;min-height:100vh}
 .sidebar{background:var(--bg2);border-right:1px solid var(--border);padding:24px 16px;position:sticky;top:0;height:100vh;display:flex;flex-direction:column;gap:8px;z-index:50}
 .sidebar-logo{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:var(--white);display:flex;align-items:center;gap:10px;padding:8px 12px;margin-bottom:24px;border-radius:var(--radius)}
@@ -57,7 +57,7 @@ a{text-decoration:none;color:inherit}ul{list-style:none}img{max-width:100%;displ
 .sidebar-avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--cyan));display:flex;align-items:center;justify-content:center;font-size:14px;color:#fff;font-weight:600}
 .sidebar-username{font-size:12px;font-weight:600;color:var(--white)}.sidebar-role{font-size:11px;color:var(--gray)}
 
-/* ─── MAIN & TOPBAR ─────────────────────────────────── */
+/* â”€â”€â”€ MAIN & TOPBAR â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .main-content{display:flex;flex-direction:column;gap:0}
 .topbar{position:sticky;top:0;z-index:40;background:rgba(4,4,10,0.85);backdrop-filter:blur(24px);border-bottom:1px solid var(--border);padding:0 clamp(16px,4vw,40px);height:64px;display:flex;align-items:center;justify-content:space-between}
 .topbar-left{display:flex;align-items:center;gap:16px}
@@ -70,12 +70,12 @@ a{text-decoration:none;color:inherit}ul{list-style:none}img{max-width:100%;displ
 .topbar-btn:hover{background:rgba(139,92,246,0.1);color:var(--accent);border-color:var(--border2)}
 .topbar-btn .badge{position:absolute;top:-4px;right:-4px;width:16px;height:16px;border-radius:50%;background:var(--red);color:#fff;font-size:9px;display:flex;align-items:center;justify-content:center;font-weight:600}
 
-/* ─── PAGE HEADER ───────────────────────────────────── */
+/* â”€â”€â”€ PAGE HEADER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .page-header{padding:clamp(24px,4vw,40px) clamp(16px,4vw,40px) 24px;display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:16px;border-bottom:1px solid var(--border)}
 .page-title{font-family:'Syne',sans-serif;font-size:clamp(24px,4vw,32px);font-weight:800;color:var(--white);letter-spacing:-1px}.page-title span{color:var(--accent)}
 .page-subtitle{font-size:14px;color:var(--gray);max-width:480px;line-height:1.6}.page-actions{display:flex;gap:12px;flex-wrap:wrap}
 
-/* ─── METRICS BAR ───────────────────────────────────── */
+/* â”€â”€â”€ METRICS BAR â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .metrics-bar{padding:20px clamp(16px,4vw,40px);display:grid;grid-template-columns:repeat(4,1fr);gap:16px;border-bottom:1px solid var(--border);background:var(--bg2)}
 .metric-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px 20px;display:flex;align-items:center;gap:14px}
 .metric-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
@@ -87,17 +87,17 @@ a{text-decoration:none;color:inherit}ul{list-style:none}img{max-width:100%;displ
 .metric-value{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--white);letter-spacing:-0.5px}
 .metric-label{font-size:12px;color:var(--gray)}
 
-/* ─── MAIN GRID ─────────────────────────────────────── */
+/* â”€â”€â”€ MAIN GRID â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .main-grid{padding:24px clamp(16px,4vw,40px);display:grid;grid-template-columns:1.2fr 1fr;gap:20px}
 .main-grid.full{grid-template-columns:1fr}
 
-/* ─── CARDS ─────────────────────────────────────────── */
+/* â”€â”€â”€ CARDS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px;display:flex;flex-direction:column;gap:16px}
 .card-header{display:flex;justify-content:space-between;align-items:center;padding-bottom:16px;border-bottom:1px solid var(--border)}
 .card-title{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:var(--white);display:flex;align-items:center;gap:10px}.card-title i{color:var(--accent)}
 .card-badge{padding:4px 10px;border-radius:20px;font-size:10px;font-weight:700;text-transform:uppercase;background:rgba(139,92,246,0.15);color:var(--cyan)}
 
-/* ─── AGENTS GRID ───────────────────────────────────── */
+/* â”€â”€â”€ AGENTS GRID â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .agents-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
 .agent-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;position:relative;overflow:hidden;transition:all .3s}
 .agent-card:hover{border-color:var(--border2);transform:translateY(-3px);box-shadow:0 8px 30px rgba(0,0,0,0.4)}
@@ -124,7 +124,7 @@ a{text-decoration:none;color:inherit}ul{list-style:none}img{max-width:100%;displ
 .agent-toggle input:checked+.agent-toggle-slider{background:var(--accent);border-color:var(--accent)}
 .agent-toggle input:checked+.agent-toggle-slider:before{transform:translateX(20px)}
 
-/* ─── FLOW EDITOR ───────────────────────────────────── */
+/* â”€â”€â”€ FLOW EDITOR â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .flow-pipeline{display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;padding:20px 0}
 .flow-node{background:var(--card2);border:1px solid var(--border);border-radius:var(--radius);padding:14px 18px;display:flex;flex-direction:column;gap:8px;min-width:140px;text-align:center;transition:all .2s;cursor:pointer}
 .flow-node:hover{border-color:var(--accent);background:rgba(139,92,246,0.08)}
@@ -141,7 +141,7 @@ a{text-decoration:none;color:inherit}ul{list-style:none}img{max-width:100%;displ
 .flow-option:hover{border-color:var(--accent);color:var(--white)}
 .flow-option.selected{background:var(--accent);color:#fff;border-color:var(--accent)}
 
-/* ─── AI CONFIG ─────────────────────────────────────── */
+/* â”€â”€â”€ AI CONFIG â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .ai-config-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 .ai-config-item{display:flex;flex-direction:column;gap:8px}
 .ai-config-label{font-size:12px;font-weight:600;color:var(--gray)}
@@ -153,7 +153,7 @@ a{text-decoration:none;color:inherit}ul{list-style:none}img{max-width:100%;displ
 .ai-prompt{width:100%;min-height:100px;padding:12px 14px;border-radius:8px;background:var(--card2);border:1px solid var(--border);color:var(--text);font-family:'JetBrains Mono',monospace;font-size:12px;outline:none;resize:vertical;line-height:1.6}
 .ai-prompt:focus{border-color:var(--accent)}
 
-/* ─── LOG CONSOLE ───────────────────────────────────── */
+/* â”€â”€â”€ LOG CONSOLE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .log-console{background:#0a0a14;border:1px solid var(--border);border-radius:var(--radius);font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.7;height:240px;overflow-y:auto;padding:14px;scroll-behavior:smooth}
 .log-entry{display:flex;gap:10px;padding:4px 0;border-bottom:1px dashed rgba(139,92,246,0.08)}
 .log-time{color:var(--gray);min-width:60px;font-size:11px}
@@ -179,7 +179,7 @@ a{text-decoration:none;color:inherit}ul{list-style:none}img{max-width:100%;displ
 .log-status .live{width:6px;height:6px;border-radius:50%;background:var(--green);animation:blink 1s infinite}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
 
-/* ─── MODALS ─────────────────────────────────────────── */
+/* â”€â”€â”€ MODALS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;z-index:1000;opacity:0;pointer-events:none;transition:opacity .3s}
 .modal-overlay.active{opacity:1;pointer-events:auto}
 .modal{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);width:100%;max-width:480px;max-height:90vh;overflow-y:auto;transform:translateY(20px);transition:transform .3s}
@@ -198,16 +198,16 @@ a{text-decoration:none;color:inherit}ul{list-style:none}img{max-width:100%;displ
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 .form-hint{font-size:11px;color:var(--gray);margin-top:6px;display:flex;align-items:center;gap:4px}.form-hint i{color:var(--accent)}
 
-/* ─── TOAST ─────────────────────────────────────────── */
+/* â”€â”€â”€ TOAST â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .toast{position:fixed;bottom:24px;right:24px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px 20px;font-size:13px;color:var(--white);z-index:2000;box-shadow:0 8px 32px rgba(0,0,0,0.4);display:flex;align-items:center;gap:10px;animation:slideIn .3s ease}
 .toast.success{border-left:3px solid var(--green)}.toast.error{border-left:3px solid var(--red)}.toast.info{border-left:3px solid var(--cyan)}.toast.warning{border-left:3px solid var(--yellow)}
 @keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
 @keyframes slideOut{from{transform:translateX(0);opacity:1}to{transform:translateX(100%);opacity:0}}
 
-/* ─── REVEAL ─────────────────────────────────────────── */
+/* â”€â”€â”€ REVEAL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .reveal{opacity:0;transform:translateY(20px);transition:opacity .6s ease,transform .6s ease}.reveal.in{opacity:1;transform:translateY(0)}
 
-/* ─── RESPONSIVE ────────────────────────────────────── */
+/* â”€â”€â”€ RESPONSIVE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 @media(max-width:1200px){.main-grid{grid-template-columns:1fr}.ai-config-grid{grid-template-columns:1fr}}
 @media(max-width:900px){
   .dashboard{grid-template-columns:1fr}
@@ -221,7 +221,7 @@ a{text-decoration:none;color:inherit}ul{list-style:none}img{max-width:100%;displ
 }
 @media(max-width:600px){.metrics-bar{grid-template-columns:1fr}.agents-grid{grid-template-columns:1fr}}
 
-/* ─── SIDEBAR TOGGLE ────────────────────────────────── */
+/* â”€â”€â”€ SIDEBAR TOGGLE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .sidebar-toggle{display:none;position:fixed;top:16px;left:16px;z-index:60;width:40px;height:40px;border-radius:50%;background:var(--card);border:1px solid var(--border);align-items:center;justify-content:center;color:var(--white);font-size:16px}
 @keyframes shimmer{0%{background-position:-400px 0}100%{background-position:400px 0}}
 .skeleton{background:linear-gradient(90deg,var(--card2) 25%,rgba(139,92,246,0.06) 50%,var(--card2) 75%);background-size:800px 100%;animation:shimmer 1.5s infinite;border-radius:8px}
@@ -241,7 +241,7 @@ a{text-decoration:none;color:inherit}ul{list-style:none}img{max-width:100%;displ
 .plan-locked::after{content:'\f023';font-family:'Font Awesome 6 Free';font-weight:900;position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:11px;color:#fbbf24}
 </style>
 <link rel="stylesheet" href="../css/notifications.css">
-<link rel="stylesheet" href="../css/sidebar-empresa.css">
+
 </head>
 <body>
 
@@ -254,7 +254,7 @@ a{text-decoration:none;color:inherit}ul{list-style:none}img{max-width:100%;displ
 <div class="modal-overlay" id="newFlowModal">
   <div class="modal">
     <div class="modal-header">
-      <div class="modal-title"><i class="fas fa-project-diagram" style="margin-right:8px;color:var(--accent)"></i>Nuevo Flujo de Automatización</div>
+      <div class="modal-title"><i class="fas fa-project-diagram" style="margin-right:8px;color:var(--accent)"></i>Nuevo Flujo de AutomatizaciÃ³n</div>
       <button class="modal-close" onclick="closeModal('newFlowModal')"><i class="fas fa-times"></i></button>
     </div>
     <div class="modal-body">
@@ -264,37 +264,37 @@ a{text-decoration:none;color:inherit}ul{list-style:none}img{max-width:100%;displ
           <input type="text" class="form-input" id="flowName" placeholder="Ej: Clasificador de Facturas" required>
         </div>
         <div class="form-group">
-          <label class="form-label">Descripción</label>
-          <textarea class="form-textarea" id="flowDesc" placeholder="¿Qué tarea realizará este agente?"></textarea>
+          <label class="form-label">DescripciÃ³n</label>
+          <textarea class="form-textarea" id="flowDesc" placeholder="Â¿QuÃ© tarea realizarÃ¡ este agente?"></textarea>
         </div>
         <div class="form-row">
           <div class="form-group">
             <label class="form-label">Trigger Principal *</label>
             <select class="form-select" id="flowTrigger" required>
               <option value="">Seleccionar...</option>
-              <option value="email">📧 Llega Email</option>
-              <option value="webhook">🌐 Webhook Externo</option>
-              <option value="schedule">⏰ Programado (CRON)</option>
-              <option value="manual">🖱️ Manual / API</option>
+              <option value="email">ðŸ“§ Llega Email</option>
+              <option value="webhook">ðŸŒ Webhook Externo</option>
+              <option value="schedule">â° Programado (CRON)</option>
+              <option value="manual">ðŸ–±ï¸ Manual / API</option>
             </select>
           </div>
           <div class="form-group">
-            <label class="form-label">Acción IA *</label>
+            <label class="form-label">AcciÃ³n IA *</label>
             <select class="form-select" id="flowAction" required>
               <option value="">Seleccionar...</option>
-              <option value="reply">💬 Responder Automáticamente</option>
-              <option value="classify">🏷️ Clasificar Documento</option>
-              <option value="extract">📊 Extraer Datos</option>
-              <option value="generate">📝 Generar Reporte</option>
+              <option value="reply">ðŸ’¬ Responder AutomÃ¡ticamente</option>
+              <option value="classify">ðŸ·ï¸ Clasificar Documento</option>
+              <option value="extract">ðŸ“Š Extraer Datos</option>
+              <option value="generate">ðŸ“ Generar Reporte</option>
             </select>
           </div>
         </div>
         <div class="form-group">
           <label class="form-label">Modelo IA</label>
           <select class="form-select" id="flowModel">
-            <option value="gemma3n">🤖 Gemma 3N (Recomendado)</option>
-            <option value="llama3">🦙 Llama 3 Local</option>
-            <option value="mistral">🌪️ Mistral 7B</option>
+            <option value="gemma3n">ðŸ¤– Gemma 3N (Recomendado)</option>
+            <option value="llama3">ðŸ¦™ Llama 3 Local</option>
+            <option value="mistral">ðŸŒªï¸ Mistral 7B</option>
           </select>
         </div>
       </form>
@@ -324,14 +324,14 @@ a{text-decoration:none;color:inherit}ul{list-style:none}img{max-width:100%;displ
       <a href="fleet.html" class="sidebar-link" data-min-plan="enterprise"><i class="fas fa-truck"></i> <span>Flota</span></a>
       <a href="automation.html" class="sidebar-link active" data-min-plan="enterprise"><i class="fas fa-robot"></i> <span>Bots RPA</span></a>
       <a href="api_keys.html" class="sidebar-link" data-min-plan="enterprise"><i class="fas fa-key"></i> <span>API Keys</span></a>
-      <a href="security.html" class="sidebar-link" data-min-plan="business"><i class="fas fa-shield-alt"></i> <span>Auditoría</span></a>
+      <a href="security.html" class="sidebar-link" data-min-plan="business"><i class="fas fa-shield-alt"></i> <span>AuditorÃ­a</span></a>
       <a href="consumo.html" class="sidebar-link"><i class="fas fa-chart-pie"></i> <span>Consumo</span></a>
     </nav>
 
     <!-- Footer -->
     <div class="sidebar-footer">
       <button class="footer-btn" id="darkModeToggle"><i class="fas fa-moon"></i> <span>Dark Mode</span></button>
-      <button class="footer-btn logout" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> <span>Cerrar Sesión</span></button>
+      <button class="footer-btn logout" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> <span>Cerrar SesiÃ³n</span></button>
     </div>
 
     <!-- Toggle Button -->
@@ -352,8 +352,8 @@ a{text-decoration:none;color:inherit}ul{list-style:none}img{max-width:100%;displ
 
     <div class="page-header">
       <div>
-        <h1 class="page-title">Automatización <span>Inteligente</span></h1>
-        <p class="page-subtitle">Configura y monitorea flujos de trabajo impulsados por IA. Control total sobre triggers, acciones y respuestas automáticas.</p>
+        <h1 class="page-title">AutomatizaciÃ³n <span>Inteligente</span></h1>
+        <p class="page-subtitle">Configura y monitorea flujos de trabajo impulsados por IA. Control total sobre triggers, acciones y respuestas automÃ¡ticas.</p>
       </div>
       <div class="page-actions">
         <button class="btn btn-outline btn-sm" onclick="PPPrinter.run(exportFlows)"><i class="fas fa-download"></i> Exportar Flujos</button>
@@ -379,11 +379,11 @@ a{text-decoration:none;color:inherit}ul{list-style:none}img{max-width:100%;displ
       </div>
       <div class="metric-card reveal" style="transition-delay:.1s">
         <div class="metric-icon cyan"><i class="fas fa-chart-line"></i></div>
-        <div class="metric-info"><div class="metric-value" id="successRate">0%</div><div class="metric-label">Tasa de Éxito</div></div>
+        <div class="metric-info"><div class="metric-value" id="successRate">0%</div><div class="metric-label">Tasa de Ã‰xito</div></div>
       </div>
       <div class="metric-card reveal" style="transition-delay:.15s">
         <div class="metric-icon yellow"><i class="fas fa-clock-rotate-left"></i></div>
-        <div class="metric-info"><div class="metric-value" id="execRuns">0</div><div class="metric-label">Registros de Ejecución</div></div>
+        <div class="metric-info"><div class="metric-value" id="execRuns">0</div><div class="metric-label">Registros de EjecuciÃ³n</div></div>
       </div>
     </div>
 
@@ -405,16 +405,16 @@ a{text-decoration:none;color:inherit}ul{list-style:none}img{max-width:100%;displ
       <div style="display:flex;flex-direction:column;gap:20px">
         <div class="card reveal">
           <div class="card-header">
-            <div class="card-title"><i class="fas fa-brain"></i>Configuración IA Global</div>
+            <div class="card-title"><i class="fas fa-brain"></i>ConfiguraciÃ³n IA Global</div>
             <button class="btn btn-ghost btn-xs" onclick="resetAIConfig()"><i class="fas fa-undo"></i> Resetear</button>
           </div>
           <div class="ai-config-grid">
             <div class="ai-config-item">
               <span class="ai-config-label">Modelo Principal</span>
               <select class="ai-select" id="globalModel" onchange="saveAIConfig()">
-                <option value="gemma3n">🤖 Gemma 3N Local</option>
-                <option value="llama3">🦙 Llama 3 8B</option>
-                <option value="mistral">🌪️ Mistral 7B</option>
+                <option value="gemma3n">ðŸ¤– Gemma 3N Local</option>
+                <option value="llama3">ðŸ¦™ Llama 3 8B</option>
+                <option value="mistral">ðŸŒªï¸ Mistral 7B</option>
               </select>
             </div>
             <div class="ai-config-item">
@@ -423,7 +423,7 @@ a{text-decoration:none;color:inherit}ul{list-style:none}img{max-width:100%;displ
             </div>
             <div class="ai-config-item" style="grid-column:1/-1">
               <span class="ai-config-label">Prompt Base del Sistema</span>
-              <textarea class="ai-prompt" id="systemPrompt" placeholder="Eres un asistente empresarial de Portal Pilot...">Eres un asistente empresarial especializado en automatización de procesos. Responde de forma concisa, profesional y en español. Prioriza la precisión sobre la creatividad.</textarea>
+              <textarea class="ai-prompt" id="systemPrompt" placeholder="Eres un asistente empresarial de Portal Pilot...">Eres un asistente empresarial especializado en automatizaciÃ³n de procesos. Responde de forma concisa, profesional y en espaÃ±ol. Prioriza la precisiÃ³n sobre la creatividad.</textarea>
               <div class="form-hint"><i class="fas fa-shield-alt"></i> Este prompt se aplica a todos los agentes como contexto base</div>
             </div>
           </div>
@@ -431,7 +431,7 @@ a{text-decoration:none;color:inherit}ul{list-style:none}img{max-width:100%;displ
 
         <div class="card reveal" style="transition-delay:.1s">
           <div class="card-header">
-            <div class="card-title"><i class="fas fa-diagram-project"></i>Editor de Flujo Rápido</div>
+            <div class="card-title"><i class="fas fa-diagram-project"></i>Editor de Flujo RÃ¡pido</div>
           </div>
           <div class="flow-pipeline" id="flowPipeline">
             <div class="flow-node selected" onclick="selectFlowNode(this)">
@@ -448,13 +448,13 @@ a{text-decoration:none;color:inherit}ul{list-style:none}img{max-width:100%;displ
             <div class="flow-connector"><i class="fas fa-arrow-right"></i></div>
             <div class="flow-node" onclick="selectFlowNode(this)">
               <div class="flow-node-icon"><i class="fas fa-paper-plane"></i></div>
-              <div class="flow-node-label">Acción</div>
+              <div class="flow-node-label">AcciÃ³n</div>
               <div class="flow-node-sub">Responder Auto</div>
             </div>
           </div>
           <div class="flow-options">
             <span style="font-size:12px;color:var(--gray);margin-right:8px">Agregar:</span>
-            <div class="flow-option" onclick="addFlowStep('condición')"><i class="fas fa-code-branch"></i> Condición</div>
+            <div class="flow-option" onclick="addFlowStep('condiciÃ³n')"><i class="fas fa-code-branch"></i> CondiciÃ³n</div>
             <div class="flow-option" onclick="addFlowStep('delay')"><i class="fas fa-clock"></i> Delay</div>
             <div class="flow-option" onclick="addFlowStep('webhook')"><i class="fas fa-globe"></i> Webhook</div>
             <div class="flow-option" onclick="addFlowStep('db')"><i class="fas fa-database"></i> Guardar DB</div>
@@ -471,7 +471,7 @@ a{text-decoration:none;color:inherit}ul{list-style:none}img{max-width:100%;displ
       </div>
       <div class="ai-chat" id="aiChat">
         <div class="ai-chat-msg bot">
-          <div class="ai-chat-bubble">Hola, soy Monica. ¿Qué necesitas automatizar o resolver hoy?</div>
+          <div class="ai-chat-bubble">Hola, soy Monica. Â¿QuÃ© necesitas automatizar o resolver hoy?</div>
         </div>
       </div>
       <div class="ai-chat-input">
@@ -483,7 +483,7 @@ a{text-decoration:none;color:inherit}ul{list-style:none}img{max-width:100%;displ
     <!-- LOG CONSOLE -->
     <div class="card full reveal" style="margin-top:0">
       <div class="card-header">
-        <div class="card-title"><i class="fas fa-terminal"></i>Monitor de Ejecución en Vivo</div>
+        <div class="card-title"><i class="fas fa-terminal"></i>Monitor de EjecuciÃ³n en Vivo</div>
         <div class="log-status"><span class="live"></span> action_service conectado</div>
       </div>
       <div class="log-console" id="logConsole">
@@ -492,7 +492,7 @@ a{text-decoration:none;color:inherit}ul{list-style:none}img{max-width:100%;displ
       <div class="log-controls">
         <div style="display:flex;gap:8px">
           <button class="btn btn-ghost btn-xs" onclick="filterLogs('all')"><i class="fas fa-list"></i> Todos</button>
-          <button class="btn btn-ghost btn-xs" onclick="filterLogs('success')"><i class="fas fa-check" style="color:var(--green)"></i> Éxito</button>
+          <button class="btn btn-ghost btn-xs" onclick="filterLogs('success')"><i class="fas fa-check" style="color:var(--green)"></i> Ã‰xito</button>
           <button class="btn btn-ghost btn-xs" onclick="filterLogs('error')"><i class="fas fa-times" style="color:var(--red)"></i> Errores</button>
         </div>
         <button class="btn btn-ghost btn-xs" onclick="clearLogs()"><i class="fas fa-trash"></i> Limpiar</button>
@@ -503,7 +503,7 @@ a{text-decoration:none;color:inherit}ul{list-style:none}img{max-width:100%;displ
 </div>
 
 <script>
-// ── Custom Cursor ────────────────────────────────────
+// â”€â”€ Custom Cursor â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const dot=document.getElementById('cursor-dot'),ring=document.getElementById('cursor-ring'),glow=document.getElementById('cursor-glow');
 let mx=0,my=0,rx=0,ry=0;
 document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;dot.style.left=mx+'px';dot.style.top=my+'px';glow.style.left=mx+'px';glow.style.top=my+'px'});
@@ -512,18 +512,18 @@ document.querySelectorAll('a,button,.sidebar-link,.agent-toggle,.flow-node,.flow
   el.addEventListener('mouseenter',()=>{ring.style.width='50px';ring.style.height='50px';ring.style.opacity='.5'});
   el.addEventListener('mouseleave',()=>{ring.style.width='36px';ring.style.height='36px';ring.style.opacity='1'})});
 
-// ── Scroll Progress ──────────────────────────────────
+// â”€â”€ Scroll Progress â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 window.addEventListener('scroll',()=>{const p=(window.scrollY/(document.documentElement.scrollHeight-innerHeight))*100;document.getElementById('progress-fill').style.width=p+'%'});
 
-// ── Reveal ───────────────────────────────────────────
+// â”€â”€ Reveal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const obs=new IntersectionObserver(entries=>{entries.forEach((e,i)=>{if(e.isIntersecting)setTimeout(()=>e.target.classList.add('in'),i*50)})},{threshold:0.05});
 document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
 
-// ── Sidebar ────────────────────────────────────────
+// â”€â”€ Sidebar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function toggleSidebar(){document.getElementById('sidebar').classList.toggle('open')}
 document.addEventListener('click',e=>{const sb=document.getElementById('sidebar'),tg=document.getElementById('sidebarToggle');if(window.innerWidth<=900&&sb.classList.contains('open')&&!sb.contains(e.target)&&!tg.contains(e.target))sb.classList.remove('open')});
 
-// ── API Helpers ─────────────────────────────────────
+// â”€â”€ API Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function apiFetch(url, options) {
   const token = localStorage.getItem('token');
   const headers = Object.assign({}, options?.headers || {}, token ? { 'Authorization': 'Bearer ' + token } : {});
@@ -532,7 +532,7 @@ function apiFetch(url, options) {
 let agents = [];
 let logsLoaded = [];
 
-// ── Agents Data & Render ─────────────────────────────
+// â”€â”€ Agents Data & Render â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async function loadAgents() {
   try {
     const res = await apiFetch('/api/automation');
@@ -587,7 +587,7 @@ function renderAgents(){
       <div class="agent-footer">
         <div class="agent-stats">
           <span><i class="fas fa-bolt"></i> ${a.tareas||0} tareas</span>
-          <span><i class="fas fa-check-circle"></i> ${a.exito||0}% éxito</span>
+          <span><i class="fas fa-check-circle"></i> ${a.exito||0}% Ã©xito</span>
         </div>
         <label class="agent-toggle">
           <input type="checkbox" ${a.estado==='activo'?'checked':''} onchange="toggleAgent('${a.id}',this.checked)">
@@ -615,23 +615,23 @@ async function toggleAgent(id,active){
   } catch(err){ showToast('Error: '+err.message,'error'); loadAgents(); }
 }
 
-// ── AI Config ────────────────────────────────────────
+// â”€â”€ AI Config â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function updateTemp(val){document.getElementById('tempValue').textContent=parseFloat(val).toFixed(1)}
 function saveAIConfig(){
   localStorage.setItem('ai_global_model', document.getElementById('globalModel').value);
   localStorage.setItem('ai_temperature', document.getElementById('tempRange').value);
   localStorage.setItem('ai_system_prompt', document.getElementById('systemPrompt').value);
-  showToast('✓ Configuración IA actualizada','success');
+  showToast('âœ“ ConfiguraciÃ³n IA actualizada','success');
 }
 function resetAIConfig(){
   document.getElementById('globalModel').value='gemma3n';
   document.getElementById('tempRange').value=0.7;updateTemp(0.7);
-  document.getElementById('systemPrompt').value='Eres un asistente empresarial especializado en automatización de procesos. Responde de forma concisa, profesional y en español. Prioriza la precisión sobre la creatividad.';
+  document.getElementById('systemPrompt').value='Eres un asistente empresarial especializado en automatizaciÃ³n de procesos. Responde de forma concisa, profesional y en espaÃ±ol. Prioriza la precisiÃ³n sobre la creatividad.';
   saveAIConfig();
-  showToast('↩️ Configuración reseteada a valores por defecto','info');
+  showToast('â†©ï¸ ConfiguraciÃ³n reseteada a valores por defecto','info');
 }
 
-// ── Asistente IA (Monica) ────────────────────────────
+// â”€â”€ Asistente IA (Monica) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 let aiHistory = [];
 async function sendAiChat(){
   const input=document.getElementById('aiInput');
@@ -656,12 +656,12 @@ async function sendAiChat(){
     aiHistory.push({role:'user',content:text},{role:'assistant',content:reply});
     chat.querySelector('.ai-chat-msg.bot:last-child .ai-chat-bubble').innerHTML=reply.replace(/</g,'&lt;');
   }catch(err){
-    chat.querySelector('.ai-chat-msg.bot:last-child .ai-chat-bubble').innerHTML='⚠️ '+err.message;
+    chat.querySelector('.ai-chat-msg.bot:last-child .ai-chat-bubble').innerHTML='âš ï¸ '+err.message;
   }
   chat.scrollTop=chat.scrollHeight;
 }
 
-// ── Log Console (registros reales) ───────────────────
+// â”€â”€ Log Console (registros reales) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function addLog(level,msg,agent='Sistema'){
   const now=new Date();const time=now.toTimeString().slice(0,8);
   logsLoaded.unshift({time,level,msg,agent});
@@ -688,7 +688,7 @@ function renderLogs(filter='all'){
   if(!consoleEl) return;
   const filtered=filter==='all'?logsLoaded:logsLoaded.filter(l=>l.level===filter);
   if(!filtered.length){
-    consoleEl.innerHTML='<div class="log-entry"><span class="log-time">--:--:--</span><span class="log-level info">info</span><span class="log-msg">Sin ejecuciones registradas todavía</span></div>';
+    consoleEl.innerHTML='<div class="log-entry"><span class="log-time">--:--:--</span><span class="log-level info">info</span><span class="log-msg">Sin ejecuciones registradas todavÃ­a</span></div>';
     return;
   }
   consoleEl.innerHTML='';
@@ -702,25 +702,25 @@ function renderLogs(filter='all'){
 function filterLogs(level){renderLogs(level)}
 function clearLogs(){showToast('Los registros provienen del servidor y no pueden limpiarse localmente','info')}
 
-// ── Flow Editor ──────────────────────────────────────
+// â”€â”€ Flow Editor â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function selectFlowNode(node){
   document.querySelectorAll('.flow-node').forEach(n=>n.classList.remove('selected'));
   node.classList.add('selected');
 }
 function addFlowStep(type){
   const pipeline=document.getElementById('flowPipeline');
-  const names={condición:'Condición',delay:'Delay 5m',webhook:'Webhook POST',db:'Guardar NocoDB'};
-  const icons={condición:'fa-code-branch',delay:'fa-clock',webhook:'fa-globe',db:'fa-database'};
+  const names={condiciÃ³n:'CondiciÃ³n',delay:'Delay 5m',webhook:'Webhook POST',db:'Guardar NocoDB'};
+  const icons={condiciÃ³n:'fa-code-branch',delay:'fa-clock',webhook:'fa-globe',db:'fa-database'};
   const newNode=document.createElement('div');newNode.className='flow-node';
   newNode.onclick=()=>selectFlowNode(newNode);
   newNode.innerHTML=`<div class="flow-node-icon"><i class="fas ${icons[type]}"></i></div><div class="flow-node-label">${names[type]}</div><div class="flow-node-sub">Paso nuevo</div>`;
   const connector=document.createElement('div');connector.className='flow-connector';connector.innerHTML='<i class="fas fa-arrow-right"></i>';
   pipeline.insertBefore(connector,pipeline.lastElementChild);
   pipeline.insertBefore(newNode,pipeline.lastElementChild);
-  showToast(`➕ Paso "${names[type]}" agregado al flujo`,'info');
+  showToast(`âž• Paso "${names[type]}" agregado al flujo`,'info');
 }
 
-// ── New Flow ─────────────────────────────────────────
+// â”€â”€ New Flow â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function openModal(id){document.getElementById(id).classList.add('active')}
 function closeModal(id){document.getElementById(id).classList.remove('active')}
 async function createFlow(){
@@ -739,17 +739,17 @@ async function createFlow(){
     if(!res.ok) throw new Error((await res.json()).error||'Error');
     closeModal('newFlowModal');form.reset();
     await loadAgents();
-    showToast(`🚀 Agente "${name}" creado y activado`,'success');
+    showToast(`ðŸš€ Agente "${name}" creado y activado`,'success');
   }catch(err){showToast('Error: '+err.message,'error')}
 }
 
-// ── Utilities ────────────────────────────────────────
+// â”€â”€ Utilities â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function exportFlows(){
   const line = row => row.map(c => `"${String(c ?? '').replace(/"/g, '""')}"`).join(',');
   let csv = '\uFEFF';
-  csv += line(['Nombre', 'Descripción', 'Estado', 'Tareas', 'Éxito %', 'Icono']) + '\n';
+  csv += line(['Nombre', 'DescripciÃ³n', 'Estado', 'Tareas', 'Ã‰xito %', 'Icono']) + '\n';
   agents.forEach(a => { csv += line([a.nombre, a.descripcion || '', a.estado, a.tareas || 0, a.exito || 0, a.icono || '']) + '\n'; });
-  csv += '\n' + line(['Registros de Ejecución']) + '\n';
+  csv += '\n' + line(['Registros de EjecuciÃ³n']) + '\n';
   csv += line(['Fecha', 'Nivel', 'Mensaje', 'Agente']) + '\n';
   logsLoaded.forEach(l => { csv += line([l.time, l.level, l.msg, l.agent]) + '\n'; });
   const a = document.createElement('a');
@@ -757,11 +757,11 @@ function exportFlows(){
   a.download = 'automatizacion_' + (localStorage.getItem('empresaCodigo') || 'tenant') + '.csv';
   a.click();
   URL.revokeObjectURL(a.href);
-  showToast('📄 Flujos y registros exportados','success');
+  showToast('ðŸ“„ Flujos y registros exportados','success');
 }
-async function refreshAgents(){showToast('🔄 Sincronizando estado de agentes...','info');await loadAgents();showToast('✓ Todos los agentes actualizados','success')}
+async function refreshAgents(){showToast('ðŸ”„ Sincronizando estado de agentes...','info');await loadAgents();showToast('âœ“ Todos los agentes actualizados','success')}
 
-// ── Init ────────────────────────────────────────────
+// â”€â”€ Init â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Toast unificado (showToast estaba referenciado pero nunca definido)
 function showToast(msg, type){
   if (window.ppToast) window.ppToast(msg, type === 'success' ? 'ok' : (type === 'warning' ? 'ok' : 'err'));
@@ -789,8 +789,8 @@ document.addEventListener('keydown',e=>{
 <script src="../js/notif-panel.js"></script>
 <script src="../js/plan-gate.js"></script>
 <script src="../js/portales.js"></script>
-<script src="../js/sidebar-empresa.js"></script>
-<script src="../js/sidebar-loader.js"></script>
+
+<script src="../js/pp-sidebar-empresa.js"></script>
 <script src="../js/printer-loader.js"></script>
 <script src="../auth-check.js"></script>
 </body>

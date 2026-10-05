@@ -7,16 +7,47 @@ entorno desplegado (producción). Local es la referencia de diseño: si cambia l
 
 ## 1. Causa raíz de que no se vieran en producción
 
-No era un problema de CSS ni de autoplay. Eran **assets y una página que nunca se versionaron**:
+Eran **tres fallos encadenados**, todos de despliegue/archivos (no de CSS ni de autoplay):
 
 | # | Hallazgo | Impacto en producción |
 |---|---|---|
 | 1 | `planes.html` era un archivo **nuevo sin versionar** (`?? planes.html`) | La página **no existía** en el repo. Los 5 archivos versionados que la enlazan (`index.html`, `download.html`, `registrov2.html`, `empresa/modules.html`, `pp/consumo_planes.html`) daban **404**. |
 | 2 | La carpeta `vid/` **no estaba versionada** | `vid/fondo1.mp4`, `vid/fondo1_rev.mp4`, `vid/fondo2.mp4`, `vid/fondo2_rev.mp4` devolvían **404**. Ambas páginas los referencian, así que **ninguna** mostraba video. |
-| 3 | Imágenes referenciadas por esas dos páginas tampoco versionadas | `img/telefonos.png` y 4 iconos en `img/iconos/` quedaban rotos al no existir en el despliegue. |
+| 3 | `vercel.json` **no tenía ningún patrón para video** en `builds` | Aun con los MP4 en el repo, Vercel los **excluía del deployment**: la lista blanca de `builds` cubría `png/jpg/jpeg/svg/webp/ico` pero no `.mp4`. Un archivo que no matchea ningún patrón no se sube. |
+| 4 | Los MP4 estaban codificados **sin *faststart*** | El átomo `moov` (metadatos) estaba **al final** del archivo y `mdat` (datos) en el offset 44. El navegador debe **descargar el archivo completo** antes de decodificar → el video nunca arrancaba en producción. |
 
-En local todo funcionaba porque los archivos existían en disco; el servidor estático de desarrollo
-los servía. En producción, al no estar en el repo, simplemente no había nada que servir.
+### El detalle del punto 4 (el más difícil de detectar)
+
+Con los 4 puntos anteriores arreglados, el sitio en vivo todavía mostraba el video en negro.
+El diagnóstico en el navegador daba un resultado muy confuso:
+
+```
+paused=true   readyState=0   videoWidth=0   videoHeight=0
+```
+
+**Sin errores de consola y sin requests fallidos** — el MP4 respondía `200` con
+`Content-Type: video/mp4`. El video simplemente nunca cargaba datos.
+
+La causa: **falta de *faststart***. En un MP4 el átomo `moov` contiene los metadatos (dimensiones,
+duración, índice). Si está al final, el navegador tiene que bajarse el archivo entero (8.75 MB)
+antes de poder pintar el primer frame. En local eso es instantáneo y **el problema pasa
+desapercibido**; en producción se ve como "el video no funciona".
+
+Verificación del encabezado del archivo (los primeros 4 KB):
+
+| | `moov` | `mdat` | Estado |
+|---|---|---|---|
+| Antes | ausente | offset 44 | Sin faststart |
+| Después | offset 36 | offset 1865 | **Faststart OK** |
+
+Remux aplicado (sin recodificar, sin pérdida de calidad):
+
+```bash
+ffmpeg -i vid/fondo1.mp4 -c copy -movflags +faststart vid/fondo1.new.mp4
+```
+
+**Si alguna vez se vuelve a codificar un video de fondo, hay que repetir este paso.**
+x264 no activa *faststart* por defecto; hay que pedirlo explícitamente al codificar.
 
 ---
 
@@ -109,9 +140,22 @@ Si falta cualquiera de los 4 archivos, el loop queda roto (salto al inicio).
 
 - **`Content-Type: video/mp4`** en los `.mp4`.
 - **Soporte de Range requests (respuestas `206`)** para streaming/seek.
-- El pipeline de deploy **no debe filtrar** `vid/`, `img/` ni `*.mp4`.
+- **`vercel.json` debe incluir el patrón del video en `builds`**:
+  ```json
+  { "src": "**/*.mp4", "use": "@vercel/static" }
+  ```
+  `builds` es una **lista blanca**: lo que no matchea no se despliega. Si se agrega un tipo de
+  archivo nuevo hay que añadirlo aquí o no existirá en producción.
+- El pipeline de deploy **no debe filtrar** `vid/`, `img/` ni `*.mp4` (`.vercelignore` ya está bien).
 - GitHub: límite de **100 MB por archivo**. Hoy el mayor es 8.75 MB (OK). Si alguna vez se sube un
   video mayor, hay que usar Git LFS o un CDN.
+
+### Checklist antes de commitear un video nuevo
+
+1. `ffmpeg -i nuevo.mp4 -c copy -movflags +faststart salida.mp4`
+2. Verificar que `moov` quedó antes de `mdat` en los primeros KB.
+3. Confirmar que el patrón de la extensión está en `vercel.json` → `builds`.
+4. Confirmar que el archivo aparece en `git status` como staged (no untracked).
 
 ## 7. Checklist de verificación (por hacer en cada despliegue)
 
@@ -123,6 +167,8 @@ Si falta cualquiera de los 4 archivos, el loop queda roto (salto al inicio).
    console.log(v.paused, v.readyState, v.videoWidth, v.currentSrc);
    // esperado: false, >=3, >0, ".../vid/fondo1.mp4"
    ```
+   Si `readyState` es **0** y `videoWidth` **0** sin errores → falta *faststart* (punto 4 de la
+   sección 1).
 4. Verificar en **escritorio** (>= 768px, `fondo1`) y **móvil** (<= 767px, `fondo2`), idealmente
    redimensionando la ventana, no solo con emulación.
 5. El texto debe ser legible sobre el video (overlay `::after` presente).
@@ -130,9 +176,22 @@ Si falta cualquiera de los 4 archivos, el loop queda roto (salto al inicio).
    nuevo puede no verse hasta que expire la caché.
 7. Confirmar que `planes.html` responde **200** (antes daba 404).
 
-## 8.preventivo
+## 8. Preventivo
 
 - Al crear una página o un asset nuevo, verificar `git status` antes de hacer deploy: un archivo
   sin versionar funciona en local y **no existe** en producción.
-- Si alguna vez el video "desaparece" pero los 4 MP4 devuelven 200, el problema es CSS: revisar
-  `html { background: transparent }` y cualquier overlay opaco nuevo.
+- Si el video "no aparece" pero el MP4 devuelve 200 y no hay errores de consola, el problema es
+  **faststart**: el navegador descarga el archivo entero antes de pintar. Reverificar que `moov`
+  esté antes de `mdat`.
+- Si el MP4 da 404, el problema es `vercel.json` → `builds` (lista blanca) o que el archivo esté
+  sin versionar.
+- **Local no es evidencia de que producción funcione**: en local los 8.75 MB se descargan al
+  instante y ocultan el problema de faststart. Verificar siempre contra el dominio real.
+
+## 9. Commits relacionados
+
+| Commit | Contenido |
+|---|---|
+| `8bbf0d5` | Versiona `planes.html`, `vid/` y las imágenes referenciadas |
+| `04ecaf2` | Agrega `**/*.mp4` / `**/*.webm` a `vercel.json` → `builds` |
+| `9ffc55f` | Remux con *faststart* de los 4 MP4 |

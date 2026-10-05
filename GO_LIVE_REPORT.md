@@ -206,8 +206,14 @@ Incluye ciclo de pago real y reactivación inmediata en serverless.
 
 ## OWNER ACTION REQUIRED
 
-1. Añadir `GROQ_API_KEY` (y opcionalmente `OPENROUTER_API_KEY`) en Vercel →
-   Production → redeploy. Verificar con:
+1. Añadir `GROQ_API_KEY` en Vercel → Production → redeploy. Groq es el único
+   proveedor imprescindible; el resto de la cadena es opcional y se omite solo:
+   `MISTRAL_API_KEY`, `CLOUDFLARE_API_KEY` + `CLOUDFLARE_ACCOUNT_ID` (ambos),
+   `ZAI_API_KEY`, `HUGGINGFACE_API_KEY`.
+   Ya no se usan por ningún motivo: `OPENROUTER_API_KEY` (retirado de la cadena y
+   del despliegue), OVH (pool anónimo de 2 req/min, no escala) ni Gemini (su free
+   tier exige tarjeta para recargar tokens).
+   Verificar con:
    `TEST_BASE=https://portal-pilot.vercel.app node backend/test_ai_smoke.js`
 2. Subir los workflows CI (requiere PAT con scope `workflow`):
    `git add .github && git commit -m "ci: activate workflows" && git push` en ambos repos.

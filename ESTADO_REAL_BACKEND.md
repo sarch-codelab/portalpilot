@@ -75,10 +75,34 @@ Verificado por `test_seguridad_ataque.js` (revocación + operación + re-login).
 ## 7. AI Gateway
 
 - Proxy único server-side: `/api/ai/chat|vision|barcode/:code|dashboard|pos/analyze|pos/upsell|crm/customer|support`
-  → `callAIGateway` → Groq → fallback OpenRouter. Claves SOLO en el servidor (`GROQ_API_KEY`,
-  `OPENROUTER_API_KEY`).
+  → `callAIGateway` → cadena de proveedores gratuitos: Groq → Mistral → Cloudflare Workers AI → Z.AI →
+  Hugging Face. Claves SOLO en el servidor (`GROQ_API_KEY`, `MISTRAL_API_KEY`,
+  `CLOUDFLARE_API_KEY` + `CLOUDFLARE_ACCOUNT_ID`, `ZAI_API_KEY`, `HUGGINGFACE_API_KEY`).
+- Descartados de la cadena y por qué:
+  - **OVH AI Endpoints**: el pool anónimo son 2 req/min por IP y no escala con el número de usuarios. Como no
+    necesita clave, `alwaysAvailable` lo hacía pasar siempre el filtro `providerConfigured()` y cada request
+    gastaba un 429 real para ganar cero capacidad. Retirado (2026-10); el código queda en git.
+  - **Gemini**: el free tier exige tarjeta para recargar tokens. Si pide tarjeta, no es free tier.
+  - **Cerebras**: exige tarjeta. **GitHub Models**: el proveedor retiró el servicio en 2026.
+- Los providers sin clave se descartan en `providerConfigured()` **antes** de abrir conexión: mantenerlos en el
+  código no cuesta tráfico, es capacidad gratis en cuanto se configuren.
+- Tres capas de resiliencia en `callAIGateway`:
+  - **Auto-descubrimiento por provider**: cada uno con `modelsUrl` consulta su `/models` (caché 5 min) y su
+    cadena se filtra contra los IDs que realmente expone. Antes solo se hacía con Groq, así que un modelo
+    retirado en otro provider reventaba en `model_not_found` sin salida.
+  - **Circuit breaker por provider**: un 5xx/red abre un cooldown de 15 s que crece ×2 hasta 300 s; un **429**
+    arranca en 60 s, porque su ventana de cuota es de ~1 min y reiniciar a 15 s solo garantiza reintentar.
+  - **Presupuesto de tiempo por petición**: 10 s por intento a un provider y 25 s de deadline global para toda
+    la cadena. Antes eran 30 s por intento sin deadline, así que un corte de cuota se convertía en una petición
+    de minutos que el usuario ya había abandonado (y que seguía gastando cuota del tenant).
+  - Un `404`/`model_not_found` o un `403/5035` de Cloudflare se marcan como *modelo* muerto (siguiente modelo
+    de la cadena) sin castigar al provider entero. Un `200` con respuesta vacía se trata igual: suele ser un modelo
+    de razonamiento que se come el `max_tokens`.
+- OpenRouter se retiró de la cadena (2026-10, sin créditos) y también de las variables de entorno.
 - Modelos corregidos: chat/fast `openai/gpt-oss-20b`; **vision `meta-llama/llama-4-scout-17b-16e-instruct`**
   (el ID anterior `qwen/qwen3.6-27b` no existe en Groq y degradaba TODA la ruta vision al fallback).
+- Z.AI/GLM llega con *thinking* activado por defecto, que consume el `max_tokens` antes de responder; el gateway
+  lo desactiva vía `bodyExtra` y limpia cualquier `<think>...</think>` residual.
 - Logging por llamada en `ai_usage_log`: tenant, usuario, provider, modelo, función, tokens in/out/total,
   coste estimado, duración, éxito/error. Además suma `ai_tokens` y `api_requests` en `tenant_usage`.
 - `requirePlanFeature('ia')` + presupuesto mensual (`assertAiTokenBudget`).
@@ -129,8 +153,11 @@ Migración `consolidated_pending_backend_objects` aplicada (2026-09-14). Verific
 |---|---|---|
 | `JWT_SECRET` | firmar JWT | ✅ definida |
 | `SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` | DB | ✅ definidas |
-| `GROQ_API_KEY` | IA (primario) | ⚠️ configurable — si falta, fallback a OpenRouter o 503 controlado |
-| `OPENROUTER_API_KEY` | IA (fallback) | ⚠️ opcional |
+| `GROQ_API_KEY` | IA (primario) | ✅ necesaria — sin ella, la cadena cae al siguiente provider configurado; sin ninguno, `/api/ai` devuelve error |
+| `MISTRAL_API_KEY` | IA (2.º) | ⚪ opcional — free tier exige verificación telefónica |
+| `CLOUDFLARE_API_KEY` + `CLOUDFLARE_ACCOUNT_ID` | IA (3.º) | ⚪ opcional — **ambos**, el ACCOUNT_ID va en la ruta |
+| `ZAI_API_KEY` | IA (4.º) | ⚪ opcional |
+| `HUGGINGFACE_API_KEY` (o `HF_TOKEN`) | IA (5.º) | ⚪ opcional |
 | `SMTP_HOST/PORT/SECURE/USER/PASS` (o `EMAIL_USER/PASS`) | email | ⚠️ **PENDIENTE del propietario** — sin esto, correos devuelven 503 SMTP_NOT_CONFIGURED |
 | `EMAIL_FROM` | remitente | opcional (default SMTP_USER) |
 | `FRONTEND_URL` | CORS allowlist | opcional en prod (defaults correctos) |

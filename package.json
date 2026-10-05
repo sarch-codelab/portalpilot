@@ -7,7 +7,17 @@
     "start": "node backend/server.js",
     "dev": "node backend/server.js",
     "post-deploy-ping": "node scripts/post-deploy-ping.js",
-    "ping": "node scripts/post-deploy-ping.js"
+    "ping": "node scripts/post-deploy-ping.js",
+    "test": "node --test backend/test-erp-integrity.js backend/test-plan-features.js backend/test-consolidacion.js backend/test-modulos-operativos.js backend/test-productos-catalogo.js",
+    "test:integridad": "node --test backend/test-erp-integrity.js",
+    "test:planes": "node --test backend/test-plan-features.js",
+    "test:modulos": "node --test backend/test-modulos-operativos.js",
+    "test:catalogos": "node --test backend/test-productos-catalogo.js",
+    "test:consolidacion": "node --test backend/test-consolidacion.js",
+    "test:e2e": "node backend/test_release_e2e.js",
+    "test:todo": "npm test && npm run test:e2e",
+    "lint": "node --check backend/server.js && node --check backend/erpIntegrity.js && node --check backend/check_schema.js",
+    "typecheck": "npm run lint"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.115.0",

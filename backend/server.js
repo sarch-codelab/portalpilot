@@ -23,6 +23,16 @@ console.log(`[STARTUP] Supabase client: ${supabase ? 'ACTIVO' : 'INACTIVO'}`);
 // nuevas páginas de supervisión (tickets, bots, renovaciones, KYC, etc.).
 const adminPortal = require('./adminPortalEndpoints');
 
+// Integridad transaccional del ERP: precios autoritativos en servidor y
+// movimientos de inventario todo-o-nada (ver erpIntegrity.js).
+const {
+  IntegridadError,
+  money: money2,
+  calcularLineas,
+  aplicarMovimientoStock,
+  revertirMovimientos,
+} = require('./erpIntegrity');
+
 
 
 const app = express();
@@ -631,7 +641,27 @@ const ALL_PLAN_FEATURES = Object.freeze([
   'membresias', 'socios', 'puntos',
   'roles', 'auditoria', 'seguridad_avanzada',
   'api_keys', 'automation', 'fleet', 'multiempresa',
-  'ia', 'ia_avanzada'
+  'ia', 'ia_avanzada',
+  // 'cotizaciones' faltaba aquí pese a que /api/cotizaciones lo exige por
+  // requirePlanFeature('cotizaciones') y tanto PLAN_CATALOGO_MODULOS.starter
+  // como .enterprise lo activan. Resultado: un tenant de enterprise pagaba el
+  // plan más caro y la API le rechazaba el módulo con "plan superior".
+  'cotizaciones',
+  // Módulos del catálogo comercial que también son features reales de la API.
+  // 'retail_pasillos' lo exige GET/POST/PUT/DELETE /api/pasillos y
+  // 'gestion_membresias' las mesas y cuentas abiertas. Sin declararlos aquí,
+  // requirePlanFeature los rechazaba para todos los planes (ver test-plan-features).
+  'retail_pasillos',
+  'gestion_membresias'
+]);
+
+// Catálogo canónico del cotizador (23 módulos reales de la app Flutter).
+const MODULOS_COTIZADOR = Object.freeze([
+  'pos', 'facturacion', 'inventario', 'contabilidad', 'rrhh',
+  'crm', 'comercial', 'membresias', 'canal_tradicional', 'canal_moderno',
+  'cotizaciones', 'compras_proveedores', 'analytics', 'reportes', 'supply_chain',
+  'multi_empresa', 'chat_ia', 'seguridad', 'crm_advanced', 'fiscal_advanced',
+  'sector_retail', 'settings', 'soporte'
 ]);
 
 const PLAN_ENTITLEMENTS = Object.freeze({
@@ -639,6 +669,27 @@ const PLAN_ENTITLEMENTS = Object.freeze({
   starter: {
     maxUsers: 5, maxCompanies: 1,
     features: ALL_PLAN_FEATURES
+  },
+  // ─── NUEVO MODELO DE PRECIOS HONDURAS (planes.html / JUSTIFICACION_PRECIOS_HONDURAS.md) ───
+  // Pulpería L.299/mes: POS de mostrador + libreta de fiado + caja + inventario básico + SAR simplificado.
+  pulperia: {
+    maxUsers: 3, maxCompanies: 1,
+    features: ['operacion_basica', 'operacion_completa', 'inventario', 'facturacion_sar', 'web_consulta', 'pos_basico', 'pos', 'clientes', 'canal_tradicional', 'fiado', 'cobros', 'ia', 'reportes_basicos']
+  },
+  // Tienda/Supermercado L.799/mes: retail completo con SAR formal, compras y cotizaciones.
+  tienda: {
+    maxUsers: 15, maxCompanies: 1,
+    features: ['operacion_completa', 'inventario', 'facturacion_sar', 'web_admin', 'reportes', 'ia', 'roles', 'auditoria', 'pos', 'clientes', 'proveedores', 'compras', 'precios', 'promociones', 'canal_moderno', 'cotizaciones', 'reportes_basicos', 'retail_pasillos']
+  },
+  // Club/Membresía L.1,399/mes: suite completa (membresías QR, BI, seguridad 2FA, IA).
+  club: {
+    maxUsers: 35, maxCompanies: 1,
+    features: [...ALL_PLAN_FEATURES, ...MODULOS_COTIZADOR]
+  },
+  // Personalizado: cotizador a la carta; los módulos reales viven en tenants.funciones_plan.
+  personalizado: {
+    maxUsers: 15, maxCompanies: 1,
+    features: [...ALL_PLAN_FEATURES, ...MODULOS_COTIZADOR]
   },
   business: {
     maxUsers: 15, maxCompanies: 3,
@@ -655,10 +706,163 @@ const PLAN_ENTITLEMENTS = Object.freeze({
   }
 });
 
+// ─── Puente cotizador (planes.html) ↔ módulos reales de la app Flutter ───
+// Los slugs del cotizador AHORA coinciden con los IDs reales de la app (23 módulos).
+// Mantenemos los mapeos ANTIGUOS (slugs viejos de planes.html) para retrocompatibilidad.
+const MODULO_APP_MAP = Object.freeze({
+  // NUEVOS IDs (identidad - el cotizador ya usa IDs reales de la app)
+  pos: ['pos'],
+  facturacion: ['facturacion', 'fiscal_advanced'],
+  inventario: ['inventario'],
+  contabilidad: ['contabilidad'],
+  rrhh: ['rrhh'],
+  crm: ['crm'],
+  comercial: ['comercial', 'compras_proveedores', 'cotizaciones'],
+  membresias: ['membresias'],
+  canal_tradicional: ['canal_tradicional'],
+  canal_moderno: ['canal_moderno'],
+  cotizaciones: ['cotizaciones'],
+  compras_proveedores: ['compras_proveedores'],
+  analytics: ['analytics'],
+  reportes: ['reportes', 'analytics'],
+  supply_chain: ['supply_chain'],
+  multi_empresa: ['multi_empresa'],
+  chat_ia: ['chat_ia'],
+  seguridad: ['seguridad'],
+  crm_advanced: ['crm_advanced'],
+  fiscal_advanced: ['fiscal_advanced'],
+  sector_retail: ['sector_retail'],
+  settings: ['settings'],
+  soporte: ['soporte'],
+
+  // ANTIGUOS slugs (planes.html viejos) - mantenidos para retrocompatibilidad
+  pos_caja: ['pos'],
+  cuentas_por_cobrar: ['canal_tradicional'],
+  control_caja: ['pos'],
+  facturacion_sar: ['facturacion', 'fiscal_advanced'],
+  inventario_basico: ['inventario'],
+  retail_pasillos: ['sector_retail'],
+  gestion_membresias: ['membresias'],
+  clientes_proveedores: ['compras_proveedores', 'comercial'],
+  cotizaciones: ['cotizaciones', 'comercial'],
+  crm_clientes: ['crm'],
+  fidelizacion_puntos: ['crm_advanced', 'membresias'],
+  contabilidad_pyme: ['contabilidad'],
+  rrhh_planillas: ['rrhh'],
+  rutas_delivery: ['supply_chain', 'canal_tradicional'],
+  transferencias_bodega: ['canal_moderno', 'supply_chain'],
+  multi_sucursal: ['multi_empresa', 'canal_moderno'],
+  chat_ia_groq: ['chat_ia'],
+  reportes_comerciales: ['analytics'],
+  analytics_ventas: ['analytics'],
+  seguridad_2fa: ['seguridad'],
+  automatizacion_alertas: []   // Módulo solo-web (alertas WhatsApp / email)
+});
+
+// Módulos que la app siempre necesita para operar (configuración fiscal, etc.).
+const MODULOS_APP_BASE = Object.freeze(['settings']);
+
+// Catálogo comercial de módulos del cotizador (espejo de planes.html y de la
+// tabla modulos_cotizador). Si la DB responde, la DB manda; esto es el fallback.
+const MODULOS_COTIZADOR_META = Object.freeze({
+  // NUEVOS módulos (23 reales de la app)
+  pos: { nombre: 'Punto de Venta (POS)', categoria: 'Ventas & Cobro', icono: 'fa-cash-register', precio: 45 },
+  facturacion: { nombre: 'Facturación Fiscal SAR', categoria: 'Tributario & Fiscal', icono: 'fa-file-invoice-dollar', precio: 70 },
+  inventario: { nombre: 'Inventario & Stock', categoria: 'Inventario', icono: 'fa-boxes-stacked', precio: 65 },
+  contabilidad: { nombre: 'Contabilidad & Finanzas', categoria: 'Finanzas', icono: 'fa-calculator', precio: 85 },
+  rrhh: { nombre: 'RRHH, Planilla & Asistencias', categoria: 'Recursos Humanos', icono: 'fa-user-check', precio: 85 },
+  crm: { nombre: 'CRM Clientes & Ventas', categoria: 'Clientes', icono: 'fa-users', precio: 40 },
+  comercial: { nombre: 'Comercial: Compras, Cotizaciones, OC', categoria: 'Comercial', icono: 'fa-storefront', precio: 60 },
+  membresias: { nombre: 'Membresías & Socios QR', categoria: 'Socios & Club', icono: 'fa-id-card', precio: 95 },
+  canal_tradicional: { nombre: 'Canal Tradicional / Libreta de Fiado', categoria: 'Crédito Barrial', icono: 'fa-book-bookmark', precio: 35 },
+  canal_moderno: { nombre: 'Canal Moderno / Multi-Sucursal Retail', categoria: 'Retail & Tienda', icono: 'fa-account-balance', precio: 95 },
+  cotizaciones: { nombre: 'Cotizaciones & Proformas PDF', categoria: 'Ventas B2B', icono: 'fa-file-lines', precio: 35 },
+  compras_proveedores: { nombre: 'Compras & Proveedores Mayoristas', categoria: 'Compras', icono: 'fa-truck-field', precio: 60 },
+  analytics: { nombre: 'Analytics & BI', categoria: 'Business Intelligence', icono: 'fa-chart-line', precio: 95 },
+  reportes: { nombre: 'Reportes Comerciales & Financieros', categoria: 'Estadísticas', icono: 'fa-chart-pie', precio: 55 },
+  supply_chain: { nombre: 'Cadena de Suministro & Logística', categoria: 'Logística', icono: 'fa-local-shipping', precio: 90 },
+  multi_empresa: { nombre: 'Multi-Empresa / Holding', categoria: 'Expansión', icono: 'fa-building', precio: 110 },
+  chat_ia: { nombre: 'Asistente IA (Groq + Local)', categoria: 'Inteligencia Artificial', icono: 'fa-brain', precio: 120 },
+  seguridad: { nombre: 'Seguridad, Roles Granulares & 2FA', categoria: 'Seguridad', icono: 'fa-shield-halved', precio: 50 },
+  crm_advanced: { nombre: 'CRM Avanzado: Leads, Campañas', categoria: 'Clientes Avanzado', icono: 'fa-groups', precio: 75 },
+  fiscal_advanced: { nombre: 'Fiscal Avanzado: Retenciones, Libros', categoria: 'Fiscal Avanzado', icono: 'fa-gavel', precio: 80 },
+  sector_retail: { nombre: 'Sector Retail: Pasillos, Marcas, Promos', categoria: 'Retail Especializado', icono: 'fa-store', precio: 70 },
+  settings: { nombre: 'Configuración del Sistema', categoria: 'Sistema', icono: 'fa-gear', precio: 0 },
+  soporte: { nombre: 'Soporte & Mesa de Ayuda', categoria: 'Sistema', icono: 'fa-headset', precio: 0 },
+
+  // ANTIGUOS slugs (planes.html viejos) - mantenidos para retrocompatibilidad
+  pos_caja: { nombre: 'POS Rápido de Mostrador', categoria: 'Ventas & Cobro', icono: 'fa-cash-register', precio: 45 },
+  cuentas_por_cobrar: { nombre: 'Canal Tradicional / Libreta de Fiado', categoria: 'Crédito Barrial', icono: 'fa-book-bookmark', precio: 35 },
+  control_caja: { nombre: 'Control de Caja & Arqueo Diario', categoria: 'Caja & Efectivo', icono: 'fa-vault', precio: 40 },
+  facturacion_sar: { nombre: 'Facturación Fiscal SAR Honduras', categoria: 'Tributario & Fiscal', icono: 'fa-file-invoice-dollar', precio: 70 },
+  inventario_basico: { nombre: 'Inventario & Stock con Alertas', categoria: 'Inventario', icono: 'fa-boxes-stacked', precio: 65 },
+  retail_pasillos: { nombre: 'Canal Moderno / Sector Retail', categoria: 'Retail & Tienda', icono: 'fa-barcode', precio: 60 },
+  gestion_membresias: { nombre: 'Club de Membresías & Accesos QR', categoria: 'Socios & Club', icono: 'fa-id-card', precio: 95 },
+  clientes_proveedores: { nombre: 'Compras & Proveedores Mayoristas', categoria: 'Compras', icono: 'fa-truck-field', precio: 60 },
+  cotizaciones: { nombre: 'Cotizaciones & Proformas PDF', categoria: 'Ventas B2B', icono: 'fa-file-lines', precio: 35 },
+  crm_clientes: { nombre: 'Directorio CRM de Clientes', categoria: 'Clientes', icono: 'fa-users', precio: 40 },
+  fidelizacion_puntos: { nombre: 'Fidelización, Puntos & Cupones', categoria: 'Marketing', icono: 'fa-award', precio: 55 },
+  contabilidad_pyme: { nombre: 'Contabilidad & Finanzas PyME', categoria: 'Finanzas', icono: 'fa-calculator', precio: 85 },
+  rrhh_planillas: { nombre: 'RRHH, Planilla & Asistencias', categoria: 'Recursos Humanos', icono: 'fa-user-check', precio: 85 },
+  rutas_delivery: { nombre: 'Rutas de Reparto & Delivery Local', categoria: 'Logística', icono: 'fa-route', precio: 90 },
+  transferencias_bodega: { nombre: 'Multi-Bodega & Traslados', categoria: 'Inventario Pro', icono: 'fa-warehouse', precio: 85 },
+  multi_sucursal: { nombre: 'Multi-Sucursal / Multi-Empresa', categoria: 'Expansión', icono: 'fa-building', precio: 110 },
+  chat_ia_groq: { nombre: 'Asistente IA Portal Pilot (Groq)', categoria: 'Inteligencia Artificial', icono: 'fa-brain', precio: 120 },
+  reportes_comerciales: { nombre: 'Reportes de Ventas & Ganancias', categoria: 'Estadísticas', icono: 'fa-chart-pie', precio: 55 },
+  analytics_ventas: { nombre: 'Analytics BI & Pronóstico', categoria: 'Business Intelligence', icono: 'fa-chart-line', precio: 95 },
+  seguridad_2fa: { nombre: 'Seguridad, Roles & 2FA', categoria: 'Seguridad', icono: 'fa-shield-halved', precio: 50 },
+  automatizacion_alertas: { nombre: 'Automatizaciones & Alertas WhatsApp', categoria: 'Automatización', icono: 'fa-robot', precio: 65 },
+});
+
+// Paquetes de módulos por plan (mismos que planes.html y plan_modulos en DB).
+// Ahora usan los NUEVOS IDs reales de la app (23 módulos).
+const PLAN_CATALOGO_MODULOS = Object.freeze({
+  pulperia: ['pos', 'canal_tradicional', 'inventario', 'facturacion', 'contabilidad'],
+  tienda: ['pos', 'canal_moderno', 'inventario', 'facturacion', 'compras_proveedores', 'cotizaciones', 'reportes', 'analytics'],
+  club: ['pos', 'membresias', 'inventario', 'facturacion', 'crm', 'seguridad', 'chat_ia'],
+  personalizado: [], // lo define el cotizador (tenant_modulos / funciones_plan.modulos)
+  starter: [...MODULOS_COTIZADOR], // trial de 15 días con todo abierto
+  business: ['pos', 'inventario', 'facturacion', 'crm', 'reportes'],
+  enterprise: [...MODULOS_COTIZADOR]
+});
+
+// Precios locales (HNL) — espejo de planes.html. La DB (planes.precio_*_hnl)
+// manda cuando está disponible.
+const PLAN_PRECIOS_HNL = Object.freeze({
+  starter: { mensual: 0, anual: 0 },
+  pulperia: { mensual: 299, anual: 2990 },
+  tienda: { mensual: 799, anual: 7990 },
+  club: { mensual: 1399, anual: 13990 },
+  personalizado: { mensual: 150, anual: 1500 }, // cuota base de plataforma
+  business: { mensual: 1499, anual: 14990 },
+  enterprise: { mensual: 4999, anual: 49990 }
+});
+
+// Escala de descuento por volumen del cotizador (planes.html).
+function descuentoVolumenCotizador(cantidad) {
+  if (cantidad >= 16) return 0.25;
+  if (cantidad >= 10) return 0.15;
+  if (cantidad >= 5) return 0.10;
+  return 0;
+}
+
+// Traduce slugs del cotizador a ids de módulos de la app Flutter (únicos).
+function modulosAppDesdeCotizador(slugs) {
+  const set = new Set(MODULOS_APP_BASE);
+  (Array.isArray(slugs) ? slugs : []).forEach(slug => {
+    (MODULO_APP_MAP[slug] || []).forEach(appId => set.add(appId));
+  });
+  return [...set];
+}
+
 function normalizePlan(plan) {
   const value = String(plan || '').trim().toLowerCase();
   if (['enterprise', 'corporativo'].includes(value)) return 'enterprise';
   if (['business', 'pro'].includes(value)) return 'business';
+  if (['pulperia', 'pulpería', 'mercadito', 'abarroteria'].includes(value)) return 'pulperia';
+  if (['tienda', 'supermercado', 'retail'].includes(value)) return 'tienda';
+  if (['club', 'membresia', 'membresía'].includes(value)) return 'club';
+  if (['personalizado', 'custom', 'cotizador'].includes(value)) return 'personalizado';
   return 'starter';
 }
 
@@ -772,11 +976,17 @@ function requirePlanFeature(feature) {
 
 function requireTenantAdmin(req, res, next) {
   if (isRootUser(req)) return next();
-  const role = String(req.user?.rol || '').trim().toLowerCase();
-  if (!['owner', 'administrador', 'admin'].includes(role)) {
-    return res.status(403).json({ error: 'Esta acción requiere rol Owner o Administrador.' });
+  if (!isTenantAdminRole(req)) {
+    return res.status(403).json({ error: 'Esta accion requiere rol Owner o Administrador.' });
   }
   next();
+}
+
+// Predicado de rol (sin side-effects) para usar dentro de handlers que ya
+// pasaron por authenticate. requireTenantAdmin es el middleware equivalente.
+function isTenantAdminRole(req) {
+  const role = String(req.user?.rol || '').trim().toLowerCase();
+  return OWNER_LIKE_ROLES.includes(role);
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -1169,8 +1379,8 @@ async function enviarEmailTrialVencido({ email, nombre, empresaCodigo, empresaNo
       <div style="font-family:sans-serif;max-width:600px;margin:0 auto;background:#0b0a15;color:#e2e8f0;padding:24px;border-radius:12px;">
         <h2 style="color:#fbbf24;">Tu prueba gratuita ha vencido</h2>
         <p>Hola ${nombre || ''}, tu prueba gratuita de 15 días de <strong>Portal Pilot</strong> ha finalizado.</p>
-        <p>Para seguir usando tus datos, elige el plan <strong>Business (L1,499/mes)</strong> o <strong>Enterprise (L4,999/mes)</strong>.</p>
-        <p style="text-align:center;margin:24px 0;"><a href="https://portal-pilot.vercel.app/pay_plan.html?plan=business" style="background:#8b5cf6;color:#fff;padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:700;">Elegir un Plan</a></p>
+        <p>Para seguir usando tus datos, elige tu plan según tu negocio: <strong>Pulpería (L.299/mes)</strong>, <strong>Tienda (L.799/mes)</strong> o <strong>Club (L.1,399/mes)</strong> — o arma un plan personalizado con el cotizador de 21 módulos.</p>
+        <p style="text-align:center;margin:24px 0;"><a href="https://portal-pilot.vercel.app/planes.html" style="background:#8b5cf6;color:#fff;padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:700;">Ver Planes</a></p>
       </div>
       </body></html>`;
 
@@ -1594,6 +1804,55 @@ app.get('/api/config', (req, res) => {
   // Auth huérfanos con id distinto al perfil. Se mantiene la respuesta por
   // si existe cache, PERO ya no se expone la URL del proyecto.
   res.json({ supabaseUrl: null, supabaseAnonKey: null, registroLegacy: false });
+});
+
+// -------------------------------------------------------------------------
+// AUTOACTUALIZACION DE LA APP MOVIL (fuera de Google Play)
+// -------------------------------------------------------------------------
+// La app Flutter (Android) consulta este endpoint al arrancar y compara por
+// versionCode. Si el servidor devuelve un versionCode MAYOR al suyo, ofrece
+// descargar e instalar el APK.
+//
+// AL PUBLICAR UNA NUEVA VERSION:
+//   1. Sube el APK a una release de GitHub.
+//   2. Actualiza SOLO el objeto APP_VERSION_LATEST de abajo.
+//   3. Si publicas una BETA, la siguiente ESTABLE debe llevar un versionCode
+//      MAYOR (p.ej. beta 1.0.14 = 14, estable 1.0.14 = 15) para que los
+//      usuarios de la beta reciban la estable automaticamente.
+//
+// IMPORTANTE: la app compara `versionCode`, no `versionName`. Subir solo el
+// nombre sin subir el code no hara que nadie vea la actualizacion.
+const APP_VERSION_LATEST = {
+  // Debe coincidir con el `+N` de `version` en pubspec.yaml del proyecto Flutter.
+  versionCode: 15,
+  versionName: '1.0.15',
+  apkUrl: 'https://github.com/sarch-codelab/portalpilot-app/releases/download/v1.0.15/PortalPilot-Android-v1.0.15.apk',
+  // Metadata de integridad. OJO: el cliente Dart todavia NO valida el hash
+  // antes de abrir el instalador; hoy es solo informativa.
+  sha256: 'D2171BFC50D1FC499810C5EB7422DF8E07B2148BCC4CAAB9BB5FB65DBE7A5A56',
+  fileSizeBytes: 118018394,
+  channel: 'stable',
+  forceUpdate: false,
+  changelog: [
+    'Autoactualizacion en app: consulta de version, descarga y apertura del instalador.',
+    'Permiso de instalar apps desconocidas con aviso al usuario.',
+    'Suscripcion al topic FCM app_updates para avisos de version nueva.',
+    'El splash muestra la version real del binario en lugar de un texto fijo.'
+  ],
+  // Versiones anteriores a esta deben actualizar obligatoriamente.
+  // REGLA ETICA: mantenlo en 8 mientras v1.0.15 sea la version "de bien".
+  // Subirlo a 15 junto con forceUpdate:true convierte la actualizacion en
+  // obligatoria e incuestionable (el usuario no podria aplazar ni negarse), y
+  // eso si seria una practica enganosa. Mantenlo aqui hasta que exista una
+  // version posterior real que justifique la presión.
+  minSupportedVersionCode: 8
+};
+
+app.get('/api/app-version', (req, res) => {
+  // Publico y accessible desde la app movil.
+  res.set('Access-Control-Allow-Origin', '*');
+  res.set('Cache-Control', 'no-store');
+  res.json(APP_VERSION_LATEST);
 });
 // -------------------------------------------------------------------------
 // CONFIGURACION GLOBAL (panel ROOT) - persiste en configuraciones_globales
@@ -2067,16 +2326,31 @@ app.post('/api/registro', async (req, res) => {
       // suben a Storage y se guardan las URLs públicas en tenants y usuarios.
       const branding = await subirBrandingRegistro(req.body, codigoNorm);
 
-      // Crear tenant en Supabase
+      // Crear tenant en Supabase. El plan se guarda normalizado a la clave
+      // canónica (pulperia/tienda/club/personalizado/starter/business/enterprise)
+      // para que el Plan Engine lo resuelva siempre.
+      const planNormalizado = normalizePlan(plan || 'starter');
       const tenantRow = {
         codigo: codigoNorm,
         nombre_empresa: empresaNombre || 'Portal Pilot',
         dominio: (dominioWorkspace && dominioWorkspace.trim()) ? dominioWorkspace.trim() : null,
-        plan: plan || 'starter',
+        plan: planNormalizado,
         area: modeloNegocio || industria,
         tamano: tamano,
         estado: 'activo'
       };
+      // Cotizador de 21 módulos: la selección (a la carta o preset del plan)
+      // se persiste en funciones_plan y en tenant_modulos — es la fuente de
+      // verdad de qué módulos ve la app y el portal del cliente.
+      const modulosCotizador = String(req.body.modulos || '')
+        .split(',').map(s => s.trim()).filter(m => MODULOS_COTIZADOR.includes(m)).slice(0, 21);
+      const billingCiclo = String(req.body.billing || 'monthly').toLowerCase() === 'annual' ? 'annual' : 'monthly';
+      const modulosEfectivos = modulosCotizador.length
+        ? modulosCotizador
+        : (PLAN_CATALOGO_MODULOS[planNormalizado] || []);
+      if (modulosEfectivos.length) {
+        tenantRow.funciones_plan = { modulos: modulosEfectivos, billing: billingCiclo, plan: planNormalizado };
+      }
       if (branding.logo_url) tenantRow.logo_url = branding.logo_url;
       if (branding.banner_url) tenantRow.banner_url = branding.banner_url;
 
@@ -2084,6 +2358,23 @@ app.post('/api/registro', async (req, res) => {
       if (!tenantRes.ok) {
         console.error('[REGISTRO] Error creando tenant en Supabase:', JSON.stringify(tenantRes.error));
         return res.status(500).json({ error: 'No se pudo crear la empresa. Inténtalo de nuevo en unos minutos.' });
+      }
+
+      // Módulos contratados por empresa (cotizador o paquete del plan).
+      if (modulosEfectivos.length) {
+        // Supabase NO lanza excepción en un upsert fallido: devuelve { error }.
+        // Por eso el error se revisa explícitamente; ignorarlo perdía los
+        // módulos del cotizador en silencio y el cliente pagaba por nada.
+        const { error: tmErr } = await supabase.from('tenant_modulos').upsert(
+          modulosEfectivos.map(m => ({
+            empresa_codigo: codigoNorm,
+            modulo_clave: m,
+            activo: true,
+            origen: planNormalizado === 'personalizado' ? 'cotizador' : 'plan',
+            asignado_por: emailNorm,
+            updated_at: new Date().toISOString()
+          })), { onConflict: 'empresa_codigo,modulo_clave' });
+        if (tmErr) console.error('[REGISTRO] No se pudieron guardar los módulos contratados:', tmErr.message);
       }
 
       // Hashear contraseña y crear usuario en Supabase
@@ -2117,7 +2408,7 @@ app.post('/api/registro', async (req, res) => {
 
       // Suscripción inicial (Blueprint §14): trial 15 días para starter, activa para planes pagados.
       try {
-        const planClave = normalizePlan(plan || 'starter');
+        const planClave = planNormalizado;
         const { data: planRow } = await supabase.from('planes').select('id').eq('clave', planClave).maybeSingle();
         await supabase.from('subscriptions').upsert({
           empresa_codigo: codigoNorm,
@@ -2193,31 +2484,83 @@ app.post('/api/enviar-codigo-verificacion', emailLimiter, async (req, res) => {
   }
 });
 
-function getModulesForAreaAndPlan(area = '', plan = 'pro') {
+function getModulesForAreaAndPlan(area = '', plan = 'pro', tenant = null) {
   const areaNorm = (area || '').toLowerCase();
-  const planNorm = normalizePlan(plan);
+  const planNorm = normalizePlan(plan);    // Módulos por plan del nuevo modelo (mismos paquetes que ofrece planes.html).
+    // Personalizado usa su cotización guardada; starter (prueba) abre todo.
+    if (PLAN_CATALOGO_MODULOS[planNorm]) return [...PLAN_CATALOGO_MODULOS[planNorm]];
 
+  // Fallback defensivo: `normalizePlan` siempre devuelve una clave que existe en
+  // PLAN_CATALOGO_MODULOS, así que esta rama es casi inalcanzable. Si llegara
+  // aquí, se devuelven slugs CANÓNICOS (no los legacy de área) para que
+  // modulosAppDesdeCotizador() siempre pueda traducirlos a ids de la app.
   let modulos = [];
 
   if (areaNorm.includes('retail')) {
-    modulos = ['pos_caja', 'inventario_rapido', 'control_stock', 'facturacion_sar', 'credito_clientes'];
+    modulos = ['pos_caja', 'inventario_basico', 'facturacion_sar', 'crm_clientes', 'reportes_comerciales'];
   } else if (areaNorm.includes('membresía') || areaNorm.includes('tecnológica') || areaNorm.includes('membresia')) {
-    modulos = ['gestion_membresias', 'ventas_mayoreo', 'pos_escaner', 'facturacion_sar', 'analytics_ventas'];
+    modulos = ['gestion_membresias', 'pos_caja', 'facturacion_sar', 'inventario_basico', 'analytics_ventas'];
   } else if (areaNorm.includes('tradicional') || areaNorm.includes('pulpería')) {
-    modulos = ['pos_pulperia', 'control_caja', 'inventario_basico', 'cuentas_por_cobrar', 'facturacion_sar'];
+    modulos = ['pos_caja', 'control_caja', 'inventario_basico', 'cuentas_por_cobrar', 'facturacion_sar'];
   } else if (areaNorm.includes('moderno') || areaNorm.includes('supermercado')) {
-    modulos = ['pos_multicaja', 'inventario_avanzado', 'transferencias_bodega', 'facturacion_sar', 'despacho_flotas'];
+    modulos = ['pos_caja', 'retail_pasillos', 'inventario_basico', 'transferencias_bodega', 'facturacion_sar'];
   } else {
-    modulos = ['pos_ventas', 'inventario_multibodega', 'facturacion_sar', 'clientes_proveedores', 'reportes_comerciales'];
-  }
-
-  if (planNorm === 'starter') {
-    modulos = modulos.slice(0, 3);
-  } else if (planNorm === 'enterprise' || planNorm === 'corporativo') {
-    modulos.push('automatizacion_rpa', 'flota_vehiculos', 'api_keys_seguridad');
+    modulos = ['pos_caja', 'inventario_basico', 'facturacion_sar', 'clientes_proveedores', 'reportes_comerciales'];
   }
 
   return modulos;
+}
+
+// ─── Resolución de módulos reales: plan + overrides del tenant + owner ───
+// Lee las filas de tenant_modulos (cotizador y activación/desactivación del
+// owner). Best-effort: si la migración no está aplicada, devuelve [] sin romper.
+async function getTenantModulosRows(empresaCodigo) {
+  if (!supabase || !empresaCodigo) return [];
+  try {
+    const { data, error } = await supabase.from('tenant_modulos')
+      .select('modulo_clave, activo, origen')
+      .eq('empresa_codigo', normalizeTenantCode(empresaCodigo));
+    if (error || !Array.isArray(data)) return [];
+    return data.filter(r => MODULOS_COTIZADOR.includes(r.modulo_clave));
+  } catch (e) { return []; }
+}
+
+// Módulos efectivos del tenant: paquete del plan + módulos extra del cotizador
+// − módulos desactivados por el owner.
+async function resolverModulosTenant(tenantCode, tenant, plan) {
+  const planNorm = normalizePlan(plan);
+  const base = getModulesForAreaAndPlan(tenant?.area, planNorm, tenant);
+  const rows = await getTenantModulosRows(tenantCode);
+  if (!rows.length) return base;
+  if (planNorm === 'personalizado') {
+    const activos = rows.filter(r => r.activo !== false).map(r => r.modulo_clave);
+    return activos.length ? activos : base;
+  }
+  const desactivados = new Set(rows.filter(r => r.activo === false).map(r => r.modulo_clave));
+  const extra = rows.filter(r => r.activo !== false && r.origen === 'cotizador').map(r => r.modulo_clave);
+  return [...new Set([...base, ...extra].filter(m => !desactivados.has(m)))];
+}
+
+// Módulos visibles para un usuario: plan del tenant ∩ asignación del owner
+// (tabla usuario_modulos). Sin asignación explícita → ve todo el plan.
+async function resolverModulosUsuario(userRow, tenantCode, tenant, plan) {
+  const tenantModules = await resolverModulosTenant(tenantCode, tenant, plan);
+  if (!supabase || !userRow?.id) return tenantModules;
+  const rol = String(userRow.rol || userRow.rol_global || '').toLowerCase();
+  if (['owner', 'admin', 'administrador', 'root', 'superadmin', 'ceo'].includes(rol)) return tenantModules;
+  try {
+    const { data: rows, error } = await supabase.from('usuario_modulos')
+      .select('modulo_id, activo').eq('usuario_id', userRow.id);
+    if (error || !Array.isArray(rows) || !rows.length) return tenantModules;
+    const activos = rows.filter(r => r.activo !== false).map(r => String(r.modulo_id || ''));
+    const permitidos = new Set(tenantModules);
+    const resultado = activos.filter(m => permitidos.has(m));
+    // También acepta ids de la app Flutter (pos, inventario, ...).
+    Object.entries(MODULO_APP_MAP).forEach(([slug, apps]) => {
+      if (apps.some(a => activos.includes(a)) && permitidos.has(slug)) resultado.push(slug);
+    });
+    return [...new Set(resultado)];
+  } catch (e) { return tenantModules; }
 }
 
 // Mensaje genérico: nunca revelar si el correo existe (evita enumeración de usuarios).
@@ -2319,7 +2662,11 @@ app.post('/api/login', loginLimiter, async (req, res) => {
 
     const userArea = tenantData?.area || userRow.area || 'Área Comercial';
     const userPlan = tenantData?.plan || 'starter';
-    const activeModules = getModulesForAreaAndPlan(userArea, userPlan);
+    const activeModules = await resolverModulosUsuario(userRow, userRow.empresa_codigo, tenantData, userPlan);
+    const modulosApp = modulosAppDesdeCotizador(activeModules);
+    // Features DB-backed (plan_features): si ROOT editó el plan en /api/plans/:id/features,
+    // el login lo refleja de inmediato. Fallback a las constantes locales.
+    const planCfgLogin = await getPlanConfigFromDB(normalizePlan(userPlan));
 
     // Persistir sesión en cookie httpOnly para la protección server-side de pp/ y empresa/
     setSessionCookie(res, accountToken);
@@ -2364,8 +2711,9 @@ app.post('/api/login', loginLimiter, async (req, res) => {
         tenant: userRow.empresa_codigo || 'ROOT',
         area: userArea,
         plan: userPlan,
-        features: PLAN_ENTITLEMENTS[normalizePlan(userPlan)]?.features || [],
+        features: planCfgLogin.features,
         modulos_activos: activeModules,
+        modulos_app: modulosApp,
         status: userRow.estado || 'activo',
         trial_expired: trialExpired,
         read_only: trialExpired,
@@ -2417,6 +2765,9 @@ app.post('/api/login/2fa', loginLimiter, async (req, res) => {
     }
     const userArea = tenantData?.area || userRow.area || 'Área Comercial';
     const userPlan = normalizePlan(tenantData?.plan);
+    const activeModules2fa = await resolverModulosUsuario(userRow, userRow.empresa_codigo, tenantData, userPlan);
+    const modulosApp2fa = modulosAppDesdeCotizador(activeModules2fa);
+    const planCfg2fa = await getPlanConfigFromDB(userPlan);
     const token = jwt.sign({
       sub: userRow.id, email: userRow.email, rol: resolveDisplayRole(userRow, tenantData),
       empresa_codigo: userRow.empresa_codigo || 'ROOT',
@@ -2447,7 +2798,7 @@ app.post('/api/login/2fa', loginLimiter, async (req, res) => {
         id: userRow.id, nombre: userRow.nombre || '', apellido: userRow.apellido || '', email: userRow.email,
         rol: resolveDisplayRole(userRow, tenantData), empresa_codigo: userRow.empresa_codigo || 'ROOT',
         tenant: userRow.empresa_codigo || 'ROOT', area: userArea, plan: userPlan,
-        features: PLAN_ENTITLEMENTS[userPlan]?.features || [], modulos_activos: getModulesForAreaAndPlan(userArea, userPlan), status: userRow.estado || 'activo', token,
+        features: planCfg2fa.features, modulos_activos: activeModules2fa, modulos_app: modulosApp2fa, status: userRow.estado || 'activo', token,
         read_only: trialExpired2fa, trial_expired: trialExpired2fa,
         foto_perfil_url: userRow.avatar_url || userRow.foto_perfil_url || null,
         banner_perfil_url: userRow.banner_perfil_url || null
@@ -2498,6 +2849,7 @@ app.post('/api/login/2fa/setup-confirm', loginLimiter, async (req, res) => {
     }
     const userArea = tenantData?.area || user.area || 'Área Comercial';
     const userPlan = normalizePlan(tenantData?.plan);
+    const activeModulesSetup = await resolverModulosUsuario(user, user.empresa_codigo, tenantData, userPlan);
     const token = jwt.sign({
       sub: user.id, email: user.email, rol: resolveDisplayRole(user, tenantData),
       empresa_codigo: user.empresa_codigo || 'ROOT', token_version: user.token_version || 0
@@ -2529,7 +2881,8 @@ app.post('/api/login/2fa/setup-confirm', loginLimiter, async (req, res) => {
         rol: resolveDisplayRole(user, tenantData), empresa_codigo: user.empresa_codigo || 'ROOT',
         tenant: user.empresa_codigo || 'ROOT', area: userArea, plan: userPlan,
         features: PLAN_ENTITLEMENTS[userPlan]?.features || [],
-        modulos_activos: getModulesForAreaAndPlan(userArea, userPlan),
+        modulos_activos: activeModulesSetup,
+        modulos_app: modulosAppDesdeCotizador(activeModulesSetup),
         status: user.estado || 'activo', token
       }
     });
@@ -2604,9 +2957,28 @@ app.get('/api/tenant/modules', authenticate, async (req, res) => {
     }
     const area = tenant?.area || 'Área Comercial';
     const plan = normalizePlan(tenant?.plan);
-    const modulos = getModulesForAreaAndPlan(area, plan);
+    const modulos = await resolverModulosUsuario(req.user, tenantCode, tenant, plan);
     const entitlements = await getTenantEntitlements(req);
-    res.json({ success: true, empresa_codigo: tenantCode, area, plan, features: PLAN_ENTITLEMENTS[plan]?.features || [], read_only: entitlements.status === 'expired', modulos_activos: modulos });
+    res.json({
+      success: true,
+      empresa_codigo: tenantCode,
+      area,
+      plan,
+      plan_nombre: PLAN_ENTITLEMENTS[plan] ? plan : plan,
+      precios: PLAN_PRECIOS_HNL[plan] || null,
+      features: PLAN_ENTITLEMENTS[plan]?.features || [],
+      read_only: entitlements.status === 'expired',
+      modulos_activos: modulos,
+      modulos_app: modulosAppDesdeCotizador(modulos),
+      modulos_detalle: modulos.map(m => ({
+        clave: m,
+        nombre: MODULOS_COTIZADOR_META[m]?.nombre || m,
+        categoria: MODULOS_COTIZADOR_META[m]?.categoria || '',
+        icono: MODULOS_COTIZADOR_META[m]?.icono || 'fa-cube',
+        precio_mensual_hnl: MODULOS_COTIZADOR_META[m]?.precio || 0,
+        modulo_app: MODULO_APP_MAP[m] || []
+      }))
+    });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message || 'Error consultando módulos' });
   }
@@ -2638,7 +3010,7 @@ app.post('/api/confirmar-pago', pagoLimiter, async (req, res) => {
     if (!plan) {
       return res.status(400).json({ error: 'El plan es obligatorio.' });
     }
-    const allowedPlans = ['starter', 'business', 'enterprise'];
+    const allowedPlans = ['starter', 'business', 'enterprise', 'pulperia', 'tienda', 'club', 'personalizado'];
     const planLower = String(plan).toLowerCase();
     if (!allowedPlans.includes(planLower)) {
       return res.status(400).json({ error: `Plan inválido. Debe ser uno de: ${allowedPlans.join(', ')}.` });
@@ -2654,14 +3026,18 @@ app.post('/api/confirmar-pago', pagoLimiter, async (req, res) => {
 
     const emailNorm = String(email).trim().toLowerCase();
     const planNombre = plan ? String(plan).toUpperCase() : 'PRO';
-    const amountMap = { STARTER: 0, BUSINESS: 1499, ENTERPRISE: 4999 };
+    // Facturación local en Lempiras: mensual o anual (2 meses gratis = 10×mes).
+    const billingCiclo = String(req.body?.billing || 'monthly').toLowerCase() === 'annual' ? 'annual' : 'monthly';
+    const amountMap = { STARTER: 0, BUSINESS: 1499, ENTERPRISE: 4999, PULPERIA: 299, TIENDA: 799, CLUB: 1399, PERSONALIZADO: 650 };
+    const amountMapAnual = { STARTER: 0, BUSINESS: 14990, ENTERPRISE: 49990, PULPERIA: 2990, TIENDA: 7990, CLUB: 13990, PERSONALIZADO: 1500 };
+    const amountHnl = (billingCiclo === 'annual' ? amountMapAnual : amountMap)[planNombre] || 0;
 
     // Traza de seguridad: endpoint público de billing → todo intento queda
     // auditado (éxito, fallo y origen), no solo los pagos aplicados.
     try {
       await registrarEventoSeguridad(empresaCodigo || 'ROOT', 'pago_confirmado_intento', {
         usuarioEmail: emailNorm, req, severidad: 'info',
-        descripcion: `Confirmación de pago plan ${planNombre} vía ${metodoPago || 'transferencia'}`
+        descripcion: `Confirmación de pago plan ${planNombre} (${billingCiclo}) vía ${metodoPago || 'transferencia'}`
       });
     } catch (e) { /* best-effort */ }
 
@@ -2703,7 +3079,7 @@ app.post('/api/confirmar-pago', pagoLimiter, async (req, res) => {
         empresa_codigo: empresaCodigo || null,
         email: emailNorm,
         plan: planNombre.toLowerCase(),
-        amount: amountMap[planNombre] || 0,
+        amount: amountHnl,
         currency: 'HNL',
         payment_method: metodoPago || 'transferencia',
         status: paymentStatus,
@@ -2770,7 +3146,8 @@ app.post('/api/tigo-money-reference', emailLimiter, async (req, res) => {
       return res.status(400).json({ error: 'El correo electrónico es obligatorio y válido.' });
     }
     const emailNorm = String(email).trim().toLowerCase();
-    const planNombre = String(plan || 'business').toUpperCase();
+    const planNombre = String(plan || 'pulperia').toUpperCase();
+    const billingCiclo = String(req.body?.billing || 'monthly').toLowerCase() === 'annual' ? 'annual' : 'monthly';
     const empresa = empresaCodigo || 'ROOT';
 
     const timestamp = Date.now().toString(36).toUpperCase();
@@ -2786,8 +3163,15 @@ app.post('/api/tigo-money-reference', emailLimiter, async (req, res) => {
       }).eq('codigo', empresa);
     }
 
-    const amountMap = { STARTER: 'L.0.00', BUSINESS: 'L.1,499.00', ENTERPRISE: 'L.4,999.00' };
-    const amount = amountMap[planNombre] || 'L.1,499.00';
+    const amountMap = {
+      STARTER: 'L.0.00', PULPERIA: 'L.299.00', TIENDA: 'L.799.00', CLUB: 'L.1,399.00',
+      PERSONALIZADO: 'L.650.00', BUSINESS: 'L.1,499.00', ENTERPRISE: 'L.4,999.00'
+    };
+    const amountMapAnual = {
+      STARTER: 'L.0.00', PULPERIA: 'L.2,990.00', TIENDA: 'L.7,990.00', CLUB: 'L.13,990.00',
+      PERSONALIZADO: 'L.1,500.00', BUSINESS: 'L.14,990.00', ENTERPRISE: 'L.49,990.00'
+    };
+    const amount = (billingCiclo === 'annual' ? amountMapAnual : amountMap)[planNombre] || 'L.299.00';
 
     return res.json({
       success: true,
@@ -2999,6 +3383,7 @@ app.post('/api/tenants', authenticate, requireRoot, async (req, res) => {
   try {
     const { nombre, dominio, plan, emailAdmin, pais, zonaHoraria, notas } = req.body;
     const codigo = `PP-${Date.now().toString().slice(-6)}`;
+    let empresaId = null;
 
     // 1. Crear tenant en Supabase
     if (supabase) {
@@ -3008,9 +3393,6 @@ app.post('/api/tenants', authenticate, requireRoot, async (req, res) => {
         dominio,
         plan: plan || 'starter',
         estado: 'activo',
-        pais,
-        zona_horaria: zonaHoraria,
-        notas,
         email: emailAdmin,
         limite_usuarios: 10
       });
@@ -3018,6 +3400,23 @@ app.post('/api/tenants', authenticate, requireRoot, async (req, res) => {
         console.error('[CREAR_TENANT] Error Supabase tenant:', tenantErr.message);
         throw new Error('No se pudo crear el tenant en la base de datos');
       }
+
+      // Modelo dual: las filas de negocio guardan `empresa_id` = empresas.id.
+      // Sin esta fila el tenant queda huérfano (no puede operar).
+      const { data: empresaRow, error: empresaErr } = await supabase
+        .from('empresas')
+        .upsert({
+          codigo,
+          nombre,
+          email: emailAdmin ? String(emailAdmin).toLowerCase().trim() : null,
+          pais: pais || 'Honduras',
+          plan: plan || 'starter',
+          estado: 'activo'
+        }, { onConflict: 'codigo' })
+        .select('id')
+        .maybeSingle();
+      if (empresaErr) console.error('[CREAR_TENANT] Error Supabase empresa:', empresaErr.message);
+      empresaId = empresaRow?.id || null;
     }
 
     const passwordTemporal = generateSecurePassword();
@@ -3046,6 +3445,7 @@ app.post('/api/tenants', authenticate, requireRoot, async (req, res) => {
         adminUserId = authData.user.id;
         const { error: insertErr } = await supabase.from('usuarios').insert({
           id: adminUserId,
+          empresa_id: empresaId,
           email: emailAdmin.toLowerCase().trim(),
           nombre: 'Owner',
           apellido: 'Tenant',
@@ -3153,6 +3553,10 @@ app.get('/api/tenant/:id', authenticate, async (req, res, next) => {
 // Límites de plan compartidos (tenants y usuarios)
 const PLAN_LIMITS = {
   starter: { usuarios: 5, bots: 2, tokens: 100000, storage: 5, soporte: 'Email', sla: '99.0%' },
+  pulperia: { usuarios: 3, bots: 1, tokens: 100000, storage: 5, soporte: 'WhatsApp horario hábil', sla: '99.0%' },
+  tienda: { usuarios: 15, bots: 5, tokens: 500000, storage: 25, soporte: 'Prioridad WhatsApp', sla: '99.5%' },
+  club: { usuarios: 35, bots: 10, tokens: 2000000, storage: 100, soporte: 'Priority 24/7', sla: '99.9%' },
+  personalizado: { usuarios: 15, bots: 5, tokens: 500000, storage: 25, soporte: 'Email', sla: '99.5%' },
   business: { usuarios: 50, bots: 15, tokens: 2000000, storage: 100, soporte: 'Priority 24/7', sla: '99.9%' },
   enterprise: { usuarios: 200, bots: 50, tokens: 10000000, storage: 500, soporte: 'Dedicado 24/7', sla: '99.99%' },
   custom: { usuarios: 9999, bots: 9999, tokens: 99999999, storage: 9999, soporte: 'Dedicado 24/7', sla: '99.99%' }
@@ -3285,40 +3689,30 @@ async function handleTenantUpdate(req, res) {
 
     // Update in Supabase
     if (supabase) {
+      // `tenants` real: plan, estado, nombre_empresa, dominio, rtn, telefono,
+      // direccion. `pais` NO existe en tenants: pertenece a `empresas` (mismo
+      // `codigo`). zona_horaria/moneda/formato_fecha/idioma/email_facturacion no
+      // tienen columna en ningún esquema actual → se descartan en vez de forzar
+      // un 500 que además perdería plan/estado.
       const supaUpdate = {};
       if (plan) supaUpdate.plan = plan;
       if (estado) supaUpdate.estado = estado;
       if (nombre_empresa) supaUpdate.nombre_empresa = nombre_empresa;
       if (dominio) supaUpdate.dominio = dominio;
-      if (pais) supaUpdate.pais = pais;
-      if (zona_horaria) supaUpdate.zona_horaria = zona_horaria;
-      // Info legal / configuración general del Portal Empresa (Bloque A).
-      // Columnas nuevas (migracion_portales_v2) se aplican en un segundo intento
-      // para que un esquema aún no migrado no descarte TODO el update.
-      const coreUpdate = {};
-      if (rtn !== undefined) coreUpdate.rtn = String(rtn).slice(0, 40);
-      if (telefono !== undefined) coreUpdate.telefono = String(telefono).slice(0, 40);
-      if (direccion !== undefined) coreUpdate.direccion = String(direccion).slice(0, 500);
-      Object.assign(supaUpdate, coreUpdate);
-      const newColsUpdate = {};
-      if (email_facturacion !== undefined) newColsUpdate.email_facturacion = String(email_facturacion).slice(0, 200);
-      if (moneda !== undefined) newColsUpdate.moneda = String(moneda).slice(0, 10);
-      if (formato_fecha !== undefined) newColsUpdate.formato_fecha = String(formato_fecha).slice(0, 20);
-      if (idioma !== undefined) newColsUpdate.idioma = String(idioma).slice(0, 10);
-      Object.assign(supaUpdate, newColsUpdate);
+      if (rtn !== undefined) supaUpdate.rtn = String(rtn).slice(0, 40);
+      if (telefono !== undefined) supaUpdate.telefono = String(telefono).slice(0, 40);
+      if (direccion !== undefined) supaUpdate.direccion = String(direccion).slice(0, 500);
       if (Object.keys(supaUpdate).length > 0) {
-        let upErr = null;
-        const res1 = await supabase.from('tenants').update(supaUpdate).eq('codigo', id);
-        upErr = res1.error;
-        if (upErr && Object.keys(newColsUpdate).length) {
-          // Esquema sin las columnas nuevas: reintentar solo con las core.
-          const res2 = await supabase.from('tenants').update(coreUpdate).eq('codigo', id);
-          upErr = res2.error;
-        }
+        const { error: upErr } = await supabase.from('tenants').update(supaUpdate).eq('codigo', id);
         if (upErr) {
           await registrarAuditoria(id, 'Error actualizando tenant', upErr.message, 'sistema', req.user?.email || '', req);
           return res.status(500).json({ error: upErr.message });
         }
+      }
+      // `pais` vive en `empresas` (comparte `codigo`). Best-effort.
+      if (pais !== undefined) {
+        const { error: empErr } = await supabase.from('empresas').update({ pais: String(pais).slice(0, 100) }).eq('codigo', id);
+        if (empErr) console.warn('[TENANT_UPDATE] no se pudo actualizar pais en empresas:', empErr.message);
       }
     }
 
@@ -4757,177 +5151,442 @@ app.delete('/api/tenant/apikeys/:id', authenticate, requireTenantAdmin, requireP
 // AI GATEWAY — Centralized AI provider abstraction
 // ═══════════════════════════════════════════════════════════════
 
+// Todos los proveedores de la cadena son free-tier sin tarjeta. Ordenados de mayor
+// a menor capacidad: el que más aguanta va primero para no quemar las cuotas escasas.
+// OpenRouter se retiró (2026-10) por falta de créditos; Cerebras ya no sirve (exige
+// tarjeta) y GitHub Models fue retirado por su proveedor en 2026.
+//
+// Descartados de la cadena, con motivo:
+//   Gemini  → el free tier pide tarjeta para recargar tokens. Si exige tarjeta, ya no
+//             es un free tier: es un payload sin SLA.
+//   OVH     → el pool anónimo son 2 req/min por IP y no escala con el número de
+//             usuarios. Como no necesita clave, `alwaysAvailable` lo hacía pasar el
+//             filtro providerConfigured() siempre: cada request se gastaba un 429
+//             real para ganar cero capacidad. Se queda el código en git.
+//   Mistral / Cloudflare / Z.AI / Hugging Face → se conservan: sin clave no cuestan
+//             nada (providerConfigured() los descarta ANTES de abrir conexión), así
+//             que son capacidad gratis en cuanto se	configuren.
 const AI_PROVIDERS = {
   groq: {
     name: 'Groq',
-    baseUrl: 'https://api.groq.com/openai/v1/chat/completions',
+    env: ['GROQ_API_KEY'],
+    chatUrl: () => 'https://api.groq.com/openai/v1/chat/completions',
+    modelsUrl: () => 'https://api.groq.com/openai/v1/models',
     getKey: () => process.env.GROQ_API_KEY,
+    auth: 'bearer',
+    supportsVision: true,
     models: {
       chat: 'openai/gpt-oss-20b',
       // CORREGIDO (2026-09-16): Groq eliminó 'meta-llama/llama-4-scout-17b-16e-instruct'
       // de su oferta de visión 2026 (model_not_found → toda la ruta vision caía a 503).
-      // Los modelos de visión vigentes en GroqCloud son la serie Qwen 3.6/3.8 27B.
+      // PENDIENTE de confirmar con key real qué id de visión sigue vivo: los comentarios
+      // históricos de este repo se contradicen (uno decía que qwen3.6 no existía, otro
+      // que sí). No lo fijes a ciegas: la cadena AI_MODEL_PRIORITY.groq.vision + el
+      // auto-descubrimiento filtran contra /models, y un 404 marca el modelo
+      // muerto y salta al siguiente de la cadena.
       vision: 'qwen/qwen3.6-27b',
       fast: 'openai/gpt-oss-20b'
     }
   },
+
+  mistral: {
+    name: 'Mistral',
+    env: ['MISTRAL_API_KEY'],
+    chatUrl: () => 'https://api.mistral.ai/v1/chat/completions',
+    modelsUrl: () => 'https://api.mistral.ai/v1/models',
+    getKey: () => process.env.MISTRAL_API_KEY,
+    auth: 'bearer',
+    // El free tier (~1B tokens/mes) no incluye modelos de visión; se reserva para chat.
+    supportsVision: false,
+    models: {
+      chat: 'mistral-small-latest',
+      fast: 'open-mistral-nemo'
+    }
+  },
+
+  cloudflare: {
+    name: 'Cloudflare Workers AI',
+    // Necesita AMBAS: el account_id va en la ruta, así que sin él el provider
+    // queda inutilizable aunque exista la API key.
+    env: ['CLOUDFLARE_API_KEY', 'CLOUDFLARE_ACCOUNT_ID'],
+    chatUrl: () => {
+      const acc = process.env.CLOUDFLARE_ACCOUNT_ID;
+      return acc ? `https://api.cloudflare.com/client/v4/accounts/${acc}/ai/v1/chat/completions` : null;
+    },
+    modelsUrl: () => {
+      const acc = process.env.CLOUDFLARE_ACCOUNT_ID;
+      return acc ? `https://api.cloudflare.com/client/v4/accounts/${acc}/ai/v1/models` : null;
+    },
+    getKey: () => process.env.CLOUDFLARE_API_KEY,
+    auth: 'bearer',
+    // Sin visión a propósito: los modelos de visión de Cloudflare exigen aceptar la
+    // licencia Meta con un request previo ({"prompt":"agree"}) y el endpoint nativo
+    // /ai/run no devuelve el shape OpenAI. No compensa ese setup por 10k neurons/día.
+    supportsVision: false,
+    models: {
+      // Los modelos grandes (70b, 120b, kimi, nemotron) devuelven 403/5035 en el
+      // plan Workers Free; la cadena arranca por los pequeños para no fallar de entrada.
+      chat: '@cf/meta/llama-3.1-8b-instruct-fp8',
+      fast: '@cf/meta/llama-3.1-8b-instruct-fp8'
+    }
+  },
+
+  zai: {
+    name: 'Z.AI',
+    env: ['ZAI_API_KEY'],
+    // Ruta Zhipu v4, no /v1: es el path que documenta Z.AI para su API OpenAI-compatible.
+    chatUrl: () => 'https://api.z.ai/api/paas/v4/chat/completions',
+    modelsUrl: null,
+    getKey: () => process.env.ZAI_API_KEY,
+    auth: 'bearer',
+    supportsVision: true,
+    // IDs del enum oficial de docs.z.ai (chat: glm-5.2|5.1|5|5-turbo|4.7|
+    // 4.7-flash|4.7-flashx|4.6|4.5*|4-32b-0414-128k; visión: glm-5v-turbo|
+    // 4.6v|4.6v-flash|4.6v-flashx|4.5v). OJO: 'glm-4-flash' NO existe.
+    models: {
+      chat: 'glm-4.7',
+      vision: 'glm-4.6v-flash',
+      fast: 'glm-4.7-flash'
+    },
+    // GLM viene con thinking ACTIVADO por defecto: gasta max_tokens en razonar
+    // antes de responder, y con presupuestos de 800-1500 tokens no queda casi
+    // nada para la respuesta real.
+    bodyExtra: { thinking: { type: 'disabled' } }
+  },
+
   huggingface: {
     name: 'Hugging Face',
-    baseUrl: 'https://router.huggingface.co/v1/chat/completions',
+    // HF_TOKEN es el alias histórico; ambos valen, se listan los dos porque `env`
+    // es lo que expone /api/ai/providers para saber qué configurar.
+    env: ['HUGGINGFACE_API_KEY', 'HF_TOKEN'],
+    chatUrl: () => 'https://router.huggingface.co/v1/chat/completions',
+    // Sin /models: el catálogo del router cambia por provider y no todos los ids
+    // sirven para chat. Se queda con la lista estática y la marca de modelo muerto
+    // ante un 404 hace el resto.
+    modelsUrl: null,
     getKey: () => process.env.HUGGINGFACE_API_KEY || process.env.HF_TOKEN,
+    auth: 'bearer',
+    supportsVision: true,
     models: {
       chat: 'meta-llama/Llama-3.3-70B-Instruct',
       vision: 'meta-llama/Llama-4-Scout-17B-16E-Instruct',
       fast: 'meta-llama/Llama-3.3-70B-Instruct'
     }
-  },
-  openrouter: {
-    name: 'OpenRouter',
-    baseUrl: 'https://openrouter.ai/api/v1/chat/completions',
-    getKey: () => process.env.OPENROUTER_API_KEY,
-    models: {
-      chat: 'meta-llama/llama-3.3-70b-instruct:free',
-      vision: 'meta-llama/llama-4-scout-17b-16e-instruct:free',
-      fast: 'meta-llama/llama-3.1-8b-instruct:free'
-    }
   }
 };
 
-const AI_PROVIDER_ORDER = ['groq', 'huggingface', 'openrouter'];
+const AI_PROVIDER_ORDER = ['groq', 'mistral', 'cloudflare', 'zai', 'huggingface'];
 
-// ── Auto-descubrimiento de modelos vivos (Groq depreca modelos seguido) ──────
-// Consulta https://api.groq.com/openai/v1/models y cachea 5 min. Si un modelo
-// preferido ya no existe, se usa automáticamente el siguiente disponible.
-const _pickCache = { models: null, at: 0 };
-const _PICK_CACHE_MS = 5 * 60 * 1000;
+// ── Auto-descubrimiento de modelos vivos (los free tiers deprecan modelos seguido) ──
+// Antes solo se consultaba /models a Groq, así que un modelo caído en cualquier otro
+// provider reventaba en hard (model_not_found) sin tener cadena de rescate. Ahora cada
+// provider con `modelsUrl` mantiene su propia caché y su cadena se filtra contra los
+// ids que ese provider expone realmente hoy.
+const _MODEL_DISCOVERY_TTL = 5 * 60 * 1000;
+const _liveModelCache = new Map(); // provKey -> { ids:Set<string>, at:number }
+const _deadModels = new Map();    // provKey -> { ids:Set<string>, at:number }
+const _DEAD_MODEL_TTL = 30 * 60 * 1000;
 
-const _CHAT_PRIORITY = [
-  'openai/gpt-oss-20b',
-  'openai/gpt-oss-120b',
-  'meta-llama/llama-3.3-70b-versatile',
-  'llama-3.3-70b-versatile',
-  'meta-llama/llama-3.1-8b-instant',
-  'llama-3.1-8b-instant',
-];
+// Se excluye en todas las cadenas: son modelos de audio, embeddings, guardas o
+// moderación, que no responden a /chat/completions.
+const _EXCLUDE_MODEL_RE = /whisper|guard|compound|sarif|safety|embed|bge|m3-|tts|moderation|rerank|translat/i;
 
-const _VISION_PRIORITY = [
-  'qwen/qwen3.6-27b',
-  'qwen/qwen3.8-27b',
-  'qwen/qwen3.5-27b',
-  'llama-3.2-11b-vision-preview',
-  'llama-3.2-90b-vision-preview',
-];
+const AI_MODEL_PRIORITY = {
+  groq: {
+    chat: [
+      'openai/gpt-oss-20b',
+      'openai/gpt-oss-120b',
+      'meta-llama/llama-3.3-70b-versatile',
+      'llama-3.3-70b-versatile',
+      'meta-llama/llama-3.1-8b-instant',
+      'llama-3.1-8b-instant',
+    ],
+    vision: [
+      'qwen/qwen3.6-27b',
+      'qwen/qwen3.8-27b',
+      'qwen/qwen3.5-27b',
+      'llama-3.2-11b-vision-preview',
+      'llama-3.2-90b-vision-preview',
+    ],
+  },
+};
 
-async function _fetchLiveGroqModels(apiKey) {
+const AI_MODEL_FILTERS = {
+  groq: {
+    chat: (id) => /gpt-oss|llama-3|qwen/i.test(id),
+    vision: (id) => /qwen|vision/i.test(id),
+  },
+};
+
+// Un provider es utilizable si tiene todo lo que necesita para abrir una conexión.
+// Se evalúa ANTES de cualquier petición de red, así que un provider sin clave
+// cuesta exactamente cero: no se le intenta ni se le espera.
+function providerConfigured(provKey) {
+  const prov = AI_PROVIDERS[provKey];
+  if (!prov) return false;
+  if (!prov.alwaysAvailable && !prov.getKey()) return false;
+  // Cloudflare mete el account_id en la ruta: sin él chatUrl() devuelve null.
+  if (typeof prov.chatUrl === 'function' && !prov.chatUrl()) return false;
+  return true;
+}
+
+function deadModelsFor(provKey) {
+  const rec = _deadModels.get(provKey);
+  if (!rec) return null;
+  if (Date.now() - rec.at > _DEAD_MODEL_TTL) {
+    _deadModels.delete(provKey);
+    return null;
+  }
+  return rec.ids;
+}
+
+function markModelDead(provKey, modelId) {
+  const now = Date.now();
+  let rec = _deadModels.get(provKey);
+  if (!rec || now - rec.at > _DEAD_MODEL_TTL) {
+    rec = { ids: new Set(), at: now };
+    _deadModels.set(provKey, rec);
+  }
+  rec.ids.add(modelId);
+}
+
+// ── Circuit breaker por provider ─────────────────────────────────────────────
+// Sin esto, cada request reintenta a ciegas el provider que acaba de devolver 429
+// y se come los ~30s de timeout antes de llegar al fallback. Un free tier agotado
+// se convierte así en latencia enorme y constante para todos los tenants.
+const _breaker = new Map(); // provKey -> { until:number, fails:number, reason:string }
+// Un rate limit (429) NO se recupera en 15s: la ventana del proveedor es de un
+// minuto. Arrancar el cooldown corto solo garantiza reintentar y volver a fallar.
+const BREAKER_COOLDOWN_RATE_LIMIT_MS = 60_000;
+const BREAKER_COOLDOWN_ERROR_MS = 15_000;
+const BREAKER_MAX_COOLDOWN_MS = 300_000;
+
+function breakerOpen(provKey) {
+  const b = _breaker.get(provKey);
+  return !!(b && b.until > Date.now());
+}
+
+function breakerFail(provKey, reason, isRateLimit) {
+  const now = Date.now();
+  const b = _breaker.get(provKey) || { until: 0, fails: 0, reason: '' };
+  b.fails += 1;
+  const base = isRateLimit ? BREAKER_COOLDOWN_RATE_LIMIT_MS : BREAKER_COOLDOWN_ERROR_MS;
+  b.until = now + Math.min(BREAKER_MAX_COOLDOWN_MS, base * 2 ** (b.fails - 1));
+  b.reason = reason || '';
+  _breaker.set(provKey, b);
+}
+
+function breakerReset(provKey) {
+  const b = _breaker.get(provKey);
+  if (b) {
+    b.fails = 0;
+    b.until = 0;
+    b.reason = '';
+  }
+}
+
+// ids de /models del provider, cacheados 5 min. null si no hay descubrimiento.
+async function discoverModels(provKey, deadline) {
+  const prov = AI_PROVIDERS[provKey];
+  if (!prov) return null;
+
+  const now = Date.now();
+  const cached = _liveModelCache.get(provKey);
+  if (cached && now - cached.at < _MODEL_DISCOVERY_TTL) return cached.ids;
+
+  const url = typeof prov.modelsUrl === 'function' ? prov.modelsUrl() : prov.modelsUrl;
+  if (!url) return null;
+
+  const headers = { 'Content-Type': 'application/json' };
+  if (prov.auth === 'bearer') {
+    const k = prov.getKey();
+    if (!k) return null;
+    headers.Authorization = `Bearer ${k}`;
+  }
+
+  // El discovery es una optimización: nunca puede sobrevivir al deadline de la
+  // petición, así que se acota a lo que quede del presupuesto global.
+  const budget = deadline ? Math.min(5000, deadline - now) : 5000;
+  if (budget <= 0) return null;
+
   try {
-    const r = await axios.get('https://api.groq.com/openai/v1/models', {
-      headers: { Authorization: `Bearer ${apiKey}` },
-      timeout: 5000,
-    });
-    const ids = (r.data && r.data.data || [])
-      .map((m) => m && m.id)
+    const r = await axios.get(url, { headers, timeout: budget });
+    const raw = r?.data?.data || r?.data?.models || [];
+    const ids = (Array.isArray(raw) ? raw : [])
+      .map((m) => (typeof m === 'string' ? m : m && (m.id || m.name)))
+      .filter(Boolean)
+      .map((s) => String(s).trim())
       .filter(Boolean);
-    return ids.length ? ids : null;
+    if (!ids.length) return null;
+    const set = new Set(ids);
+    _liveModelCache.set(provKey, { ids: set, at: now });
+    return set;
   } catch (err) {
-    console.warn('[AI_PICK] fallback a lista estática:', err.response?.status || err.message);
+    console.warn(`[AI_DISCOVER] ${prov.name}:`, err.response?.status || err.message);
     return null;
   }
 }
 
-// Devuelve { chat: [...], vision: [...] } cadenas de fallback con modelos vivos.
-async function pickLiveModels(requested) {
-  const providers = AI_PROVIDERS;
-  const pk = providers.groq && providers.groq.getKey();
-  const now = Date.now();
-  if (pk && (!_pickCache.models || now - _pickCache.at > _PICK_CACHE_MS)) {
-    const live = await _fetchLiveGroqModels(pk);
-    if (live && live.length) {
-      _pickCache.models = new Set(live.map((id) => String(id).trim()));
-      _pickCache.at = now;
-    }
-  }
-  const liveIds = _pickCache.models;
+// Cadena de modelos para un provider y un rol, restringida a lo que ese provider
+// expone hoy. Sin descubrimiento disponible cae a su lista estática.
+async function buildModelChain(provKey, modelRole, requested, deadline) {
+  const prov = AI_PROVIDERS[provKey];
+  if (!prov) return [];
+  if (modelRole === 'vision' && !prov.supportsVision) return [];
 
-  const buildChain = (priority, filter) => {
-    const chain = [];
-    const push = (id) => {
-      if (!id) return;
-      id = String(id).trim();
-      if (!id || chain.includes(id)) return;
-      if (liveIds && !liveIds.has(id) && id !== requested) return;
-      chain.push(id);
-    };
-    if (requested) push(requested);
-    for (const id of priority) push(id);
-    if (liveIds) {
-      for (const id of Array.from(liveIds)) {
-        if (chain.length >= 5) break;
-        if (filter && !filter(id)) continue;
-        push(id);
-      }
-    }
-    return chain;
+  const live = await discoverModels(provKey, deadline);
+  const dead = deadModelsFor(provKey);
+  const priority = (AI_MODEL_PRIORITY[provKey] || {})[modelRole] || [];
+  const filter = (AI_MODEL_FILTERS[provKey] || {})[modelRole];
+
+  const chain = [];
+  const push = (id) => {
+    if (!id) return;
+    id = String(id).trim();
+    if (!id || chain.includes(id)) return;
+    if (dead && dead.has(id) && id !== requested) return;
+    if (live && !live.has(id) && id !== requested) return;
+    if (_EXCLUDE_MODEL_RE.test(id)) return;
+    if (filter && !filter(id)) return;
+    chain.push(id);
   };
 
-  const chat = buildChain(_CHAT_PRIORITY, (id) => {
-    const l = id.toLowerCase();
-    if (/whisper|guard|compound|sarif|safety/i.test(l)) return false;
-    return /gpt-oss|llama-3|qwen/i.test(l);
-  });
-
-  const vision = buildChain(_VISION_PRIORITY, (id) => {
-    const l = id.toLowerCase();
-    if (/whisper|guard|compound|safety/i.test(l)) return false;
-    return l.includes('qwen') || l.includes('vision');
-  });
-
-  return { chat, vision, live: liveIds ? Array.from(liveIds) : null };
+  if (requested) push(requested);
+  push(prov.models && prov.models[modelRole]);
+  for (const id of priority) push(id);
+  // Rellena con el catálogo en vivo cuando no hay lista de prioridad para el provider.
+  if (live && chain.length < 3) {
+    for (const id of live) {
+      if (chain.length >= 4) break;
+      push(id);
+    }
+  }
+  return chain;
 }
 
-async function callAIGateway({ provider, modelRole, messages, temperature, maxTokens, imageBase64 }) {
-  const providers = provider ? [provider] : AI_PROVIDER_ORDER;
-  const picked = await pickLiveModels('');
+// Presupuesto de tiempo de UNA petición de IA, de principio a fin.
+// El cliente móvil espera segundos. Encadenar 6 providers con 30s cada uno daba un
+// peor caso de minutos, con el usuario ya habiéndose ido: la petición se quedaba
+// quemando cuota y cuota de los tenants para nada.
+const AI_GATEWAY_ATTEMPT_TIMEOUT_MS = 10_000; // por intento a un provider
+const AI_GATEWAY_DEADLINE_MS = 25_000;       // presupuesto total de la cadena
 
-  for (const provKey of providers) {
+// Varios modelos de razonamiento (GLM, gpt-oss, Qwen) dejan el análisis dentro
+// del content con etiquetas <think>, o lo devuelven en un campo aparte
+// (reasoning_content) que el resto del pipeline no espera.
+function stripReasoning(content) {
+  return String(content)
+    .replace(/<(think|thinking|reasoning)>[\s\S]*?<\/\1>/gi, '')
+    .replace(/<\/?(?:think|thinking|reasoning)>/gi, '')
+    .trim();
+}
+
+async function callAIGateway({ provider, modelRole, messages, temperature, maxTokens }) {
+  const role = modelRole === 'vision' ? 'vision' : 'chat';
+
+  // Un cliente puede pedir un provider explícito. Si ya no existe —p. ej. un
+  // cliente viejo que aún manda 'openrouter'— no reventamos con 4xx: avisamos y
+  // usamos la cadena completa, que es lo que ese cliente quiere de todas formas.
+  let order = AI_PROVIDER_ORDER;
+  if (provider) {
+    if (AI_PROVIDERS[provider]) {
+      order = [provider];
+    } else {
+      console.warn(`[AI_GATEWAY] provider desconocido "${provider}", se usa la cadena completa`);
+    }
+  }
+  if (role === 'vision') {
+    order = order.filter((k) => AI_PROVIDERS[k] && AI_PROVIDERS[k].supportsVision);
+  }
+
+  // El reloj arranca ANTES del discovery: el presupuesto es de la petición
+  // completa, no solo de los intentos. Si el discovery tarda, los intentos
+  // heredan lo que queda.
+  const deadline = Date.now() + AI_GATEWAY_DEADLINE_MS;
+
+  // Descubrimiento en paralelo: el primer request tras un cold start paga el coste
+  // de todos los /models a la vez en vez de encadenarlos provider por provider.
+  const chains = await Promise.all(order.map((k) => buildModelChain(k, role, '', deadline)));
+  const chainByProvider = new Map(order.map((k, i) => [k, chains[i]]));
+
+  const attempted = [];
+
+  // Deadline global: el cliente espera unos segundos, no minutos. Con 6 providers
+  // y timeouts por intento, el peor caso era de minutos y el usuario ya había
+  // cerrado la app. Cortamos la cadena en cuanto se agota este presupuesto.
+
+  for (const provKey of order) {
     const prov = AI_PROVIDERS[provKey];
     if (!prov) continue;
-    const apiKey = prov.getKey();
-    if (!apiKey) continue;
+    if (!providerConfigured(provKey)) continue;
 
-    // Cadena de modelos: primero los vivos auto-descubiertos, luego el hardcodeado.
-    let modelChain = null;
-    if (provKey === 'groq') {
-      modelChain = modelRole === 'vision'
-        ? (picked.vision.length ? picked.vision : [prov.models.vision])
-        : (picked.chat.length ? picked.chat : [prov.models.chat]);
-    } else {
-      modelChain = modelRole ? [prov.models[modelRole] || prov.models.chat] : [prov.models.chat];
+    // Breaker abierto: saltamos sin gastar un timeout en un provider que ya
+    // sabemos que está sin cuota.
+    if (breakerOpen(provKey)) {
+      attempted.push(`${prov.name}=cooldown`);
+      continue;
     }
+
+    if (Date.now() >= deadline) {
+      attempted.push('deadline');
+      break;
+    }
+
+    const url = prov.chatUrl();
+    if (!url) continue;
+
+    const modelChain = chainByProvider.get(provKey) || [];
+    if (!modelChain.length) {
+      attempted.push(`${prov.name}=sin-modelos`);
+      continue;
+    }
+
+    const headers = { 'Content-Type': 'application/json' };
+    const key = prov.getKey();
+    if (prov.auth === 'bearer' && key) headers.Authorization = `Bearer ${key}`;
+
+    // ¿El fallo fue del provider (rompemos al siguiente) o de este modelo
+    // concreto (probamos el siguiente modelo)?
+    let provFailedHard = false;
 
     for (const modelId of modelChain) {
       try {
         const startTime = Date.now();
+        // El timeout por intento se acota además con lo que queda de deadline, así
+        // que el último provider de la cadena no puede pasarse.
+        const timeoutMs = Math.max(2000, Math.min(AI_GATEWAY_ATTEMPT_TIMEOUT_MS, deadline - Date.now()));
         const response = await axios.post(
-          prov.baseUrl,
+          url,
           {
             model: modelId,
             messages,
             temperature: typeof temperature === 'number' ? temperature : 0.7,
-            max_tokens: maxTokens || 800
+            max_tokens: maxTokens || 800,
+            ...(prov.bodyExtra || {})
           },
-          {
-            headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-            timeout: 30000
-          }
+          { headers, timeout: timeoutMs }
         );
 
-        const reply = (response.data?.choices?.[0]?.message?.content || '').trim();
+        const message = response.data?.choices?.[0]?.message;
+        const reply = (message?.content || '').trim();
         const usage = response.data?.usage || {};
         const durationMs = Date.now() - startTime;
 
+        if (!reply) {
+          // HTTP 200 sin texto utilizable. Típico de un modelo de razonamiento
+          // (gpt-oss, GLM) que se come el max_tokens antes de responder: es un
+          // problema del MODELO, así que probamos el siguiente de la cadena y no
+          // castigamos al provider con el breaker.
+          console.warn(`[AI_GATEWAY] ${prov.name} ${modelId} devolvió respuesta vacía`);
+          markModelDead(provKey, modelId);
+          continue;
+        }
+
+        breakerReset(provKey);
+
         return {
           success: true,
-          reply,
+          reply: stripReasoning(reply),
           provider: provKey,
           model: response.data?.model || modelId,
           tokensInput: usage.prompt_tokens || 0,
@@ -4936,26 +5595,57 @@ async function callAIGateway({ provider, modelRole, messages, temperature, maxTo
           durationMs
         };
       } catch (err) {
+        const status = err.response?.status;
         const errMsg = (err.response?.data?.error?.message || err.message || '').toString().toLowerCase();
-        console.warn(`[AI_GATEWAY] ${prov.name} model ${modelId} failed:`, err.response?.status || err.message);
-        // Modelo deprecado/inexistente: probar el siguiente de la cadena.
-        if (!/does not exist|model_not_found|decommissioned|not found/.test(errMsg) &&
-            err.response?.status !== 404) {
-          break; // error no relacionado con el modelo: pasar al siguiente provider
+        console.warn(`[AI_GATEWAY] ${prov.name} model ${modelId} failed:`, status || err.message);
+
+        // El modelo no existe o no está disponible en este plan: probar el
+        // siguiente de la cadena sin castigar al provider entero.
+        const modelGone = status === 404
+          || /does not exist|model_not_found|decommissioned|not found|no such model/.test(errMsg);
+        if (modelGone) {
+          markModelDead(provKey, modelId);
+          continue;
         }
-        continue;
+
+        // Cloudflare Workers Free responde 403/5035 a los modelos grandes: es un
+        // problema del modelo, no del provider.
+        if (status === 403 && /5035|upgrade|paid plan/.test(errMsg)) {
+          markModelDead(provKey, modelId);
+          continue;
+        }
+
+        // Cuota/capacidad agotada o provider caído: breaker y siguiente provider.
+        // Un 401 (key inválida) tampoco se arregla probando más modelos.
+        // El 429 se distingue porque su cooldown debe ser largo: la ventana de
+        // rate limit del proveedor es de ~1 min, no de 15s.
+        breakerFail(provKey, `HTTP ${status || 'network'}`, status === 429);
+        provFailedHard = true;
+        break;
       }
     }
+
+    // Si recorrimos toda la cadena sin fallo duro (p. ej. todos los modelos
+    // estaban caídos), el provider sigue siendo sano: no lo castigamos.
+    if (!provFailedHard) breakerReset(provKey);
+    attempted.push(prov.name);
   }
 
-  return { success: false, error: 'Todos los proveedores de IA fallaron o no están configurados' };
+  const detail = attempted.length ? ` (probados: ${attempted.join(', ')})` : '';
+  console.warn('[AI_GATEWAY] sin proveedor disponible:', attempted.join(', ') || 'ninguno configurado');
+  return { success: false, error: `No hay proveedor de IA disponible${detail}` };
 }
 
 // Precios de referencia USD por 1M tokens (conservadores, para uso interno).
+// Son los precios de lista del proveedor: la cadena usa free tiers, así que el
+// coste real facturado es 0. La cifra sirve para dimensionar qué tan rápido se
+// agota cada cuota free antes de tener que pagar.
 const AI_TOKEN_COSTS_USD_PER_M = {
   groq: { input: 0.15, output: 0.60 },
-  huggingface: { input: 0.10, output: 0.30 },
-  openrouter: { input: 0.10, output: 0.30 }
+  mistral: { input: 0.10, output: 0.30 },
+  cloudflare: { input: 0.20, output: 0.30 },
+  zai: { input: 0.10, output: 0.30 },
+  huggingface: { input: 0.10, output: 0.30 }
 };
 const DEFAULT_TOKEN_COST_PER_M = { input: 0.30, output: 0.60 };
 
@@ -6294,12 +6984,12 @@ app.post('/api/sucursales', authenticate, requireTenantAdmin, requirePlanFeature
       nombre: nombre.slice(0, 200),
       direccion: (b.direccion || '').toString().slice(0, 300),
       telefono: (b.telefono || '').toString().slice(0, 50),
-      responsable: (b.responsable || '').toString().slice(0, 150),
-      estado: b.estado || 'activa',
+      encargado: (b.encargado ?? b.responsable ?? '').toString().slice(0, 150),
+      activa: b.activa !== undefined ? !!b.activa : (b.estado ? b.estado === 'activa' : true),
       es_principal: !!b.es_principal
-    }]);
+    }]).select().maybeSingle();
     if (error) return res.status(500).json({ error: error.message });
-    const row = Array.isArray(data) ? data[0] : null;
+    const row = data || null;
     await registrarAuditoria(tenant, 'Sucursal creada', 'Se creo la sucursal ' + nombre, 'sucursales', req.user?.nombre || '', req);
     return res.status(201).json({ sucursal: row });
   } catch (err) { return handleServerError(res, err); }
@@ -6329,14 +7019,15 @@ app.put('/api/sucursales/:id', authenticate, requireTenantAdmin, requirePlanFeat
     const tenant = normalizeTenantCode(getTenantCode(req));
     const empresa = await resolverEmpresaSupabase(tenant);
     if (!empresa) return res.status(404).json({ error: 'Empresa no encontrada' });
-    const campos = ['nombre', 'direccion', 'telefono', 'responsable', 'estado', 'es_principal'];
+    if (req.body.responsable !== undefined && req.body.encargado === undefined) req.body.encargado = req.body.responsable;
+    if (req.body.estado !== undefined && req.body.activa === undefined) req.body.activa = req.body.estado === 'activa';
+    const campos = ['nombre', 'direccion', 'telefono', 'encargado', 'activa', 'es_principal', 'codigo', 'email', 'tipo', 'latitud', 'longitud', 'horario'];
     const update = { updated_at: new Date().toISOString() };
     campos.forEach(c => { if (req.body[c] !== undefined) update[c] = req.body[c]; });
     const { data, error } = await supabase.from('sucursales').update(update)
-      .eq('id', req.params.id).eq('empresa_id', empresa.id);
+      .eq('id', req.params.id).eq('empresa_id', empresa.id).select().maybeSingle();
     if (error) return res.status(500).json({ error: error.message });
-    const row = Array.isArray(data) ? data[0] : null;
-    return res.json({ sucursal: row, success: true });
+    return res.json({ sucursal: data || null, success: true });
   } catch (err) { return handleServerError(res, err); }
 });
 
@@ -6386,12 +7077,11 @@ app.post('/api/bodegas', authenticate, requireTenantAdmin, requirePlanFeature('s
       nombre: nombre.slice(0, 200),
       sucursal_id: b.sucursal_id || null,
       direccion: (b.direccion || '').toString().slice(0, 300),
-      capacidad: parseFloat(b.capacidad) || 0,
-      estado: b.estado || 'activa'
-    }]);
+      capacidad_maxima: parseInt(b.capacidad_maxima ?? b.capacidad, 10) || 0,
+      activa: b.activa !== undefined ? !!b.activa : (b.estado ? b.estado === 'activa' : true)
+    }]).select().maybeSingle();
     if (error) return res.status(500).json({ error: error.message });
-    const row = Array.isArray(data) ? data[0] : null;
-    return res.status(201).json({ bodega: row });
+    return res.status(201).json({ bodega: data || null });
   } catch (err) { return handleServerError(res, err); }
 });
 
@@ -6401,14 +7091,15 @@ app.put('/api/bodegas/:id', authenticate, requireTenantAdmin, requirePlanFeature
     const tenant = normalizeTenantCode(getTenantCode(req));
     const empresa = await resolverEmpresaSupabase(tenant);
     if (!empresa) return res.status(404).json({ error: 'Empresa no encontrada' });
-    const campos = ['nombre', 'sucursal_id', 'direccion', 'capacidad', 'estado'];
+    if (req.body.capacidad !== undefined && req.body.capacidad_maxima === undefined) req.body.capacidad_maxima = req.body.capacidad;
+    if (req.body.estado !== undefined && req.body.activa === undefined) req.body.activa = req.body.estado === 'activa';
+    const campos = ['nombre', 'sucursal_id', 'direccion', 'capacidad_maxima', 'activa', 'codigo', 'tipo', 'es_principal'];
     const update = { updated_at: new Date().toISOString() };
     campos.forEach(c => { if (req.body[c] !== undefined) update[c] = req.body[c]; });
     const { data, error } = await supabase.from('bodegas').update(update)
-      .eq('id', req.params.id).eq('empresa_id', empresa.id);
+      .eq('id', req.params.id).eq('empresa_id', empresa.id).select().maybeSingle();
     if (error) return res.status(500).json({ error: error.message });
-    const row = Array.isArray(data) ? data[0] : null;
-    return res.json({ bodega: row, success: true });
+    return res.json({ bodega: data || null, success: true });
   } catch (err) { return handleServerError(res, err); }
 });
 
@@ -6462,25 +7153,28 @@ app.post('/api/proveedores', authenticate, requireTenantAdmin, requirePlanFeatur
     if (!nombre) return res.status(400).json({ error: 'El nombre del proveedor es requerido' });
     // Reintentar una operación offline no debe crear otro proveedor. El NIT
     // es la clave de negocio preferida; sin NIT se usa el nombre por empresa.
+    const rtnKey = b.rtn || b.nit;
     let existingQuery = supabase.from('proveedores').select('*').eq('empresa_id', empresa.id);
-    existingQuery = b.nit ? existingQuery.eq('nit', String(b.nit).trim()) : existingQuery.eq('nombre', nombre);
+    existingQuery = rtnKey ? existingQuery.eq('rtn', String(rtnKey).trim()) : existingQuery.eq('nombre', nombre);
     const { data: existing } = await existingQuery.maybeSingle();
     if (existing) return res.status(200).json({ proveedor: existing, idempotent: true });
     const { data, error } = await supabase.from('proveedores').insert([{
       empresa_id: empresa.id,
       empresa_codigo: tenant,
       nombre: nombre.slice(0, 200),
-      nit: (b.nit || '').toString().slice(0, 30),
+      rtn: (b.rtn || b.nit || '').toString().slice(0, 30),
       telefono: (b.telefono || '').toString().slice(0, 50),
       email: (b.email || '').toString().slice(0, 150),
       direccion: (b.direccion || '').toString().slice(0, 300),
-      contacto: (b.contacto || '').toString().slice(0, 150),
+      contacto_nombre: (b.contacto_nombre || b.contacto || '').toString().slice(0, 150),
+      contacto_telefono: (b.contacto_telefono || '').toString().slice(0, 50),
+      dias_credito: parseInt(b.dias_credito, 10) || 0,
+      limite_credito: parseFloat(b.limite_credito) || 0,
       notas: (b.notas || '').toString().slice(0, 500),
-      estado: b.estado || 'activo'
-    }]);
+      activo: b.activo !== undefined ? !!b.activo : (b.estado ? b.estado === 'activo' : true)
+    }]).select().maybeSingle();
     if (error) return res.status(500).json({ error: error.message });
-    const row = Array.isArray(data) ? data[0] : null;
-    return res.status(201).json({ proveedor: row });
+    return res.status(201).json({ proveedor: data || null });
   } catch (err) { return handleServerError(res, err); }
 });
 
@@ -6533,8 +7227,123 @@ app.delete('/api/proveedores/:id', authenticate, requireTenantAdmin, requirePlan
 });
 
 // ═══════════════════════════════════════════════════════════════
-// COMPRAS
+// COMPRAS — fuente única de verdad (FASE 4)
 // ═══════════════════════════════════════════════════════════════
+/**
+ * Registra una compra en `compras` + `compras_detalle`.
+ *
+ * Antes existian dos caminos para el mismo hecho: `/api/compras` (filas
+ * normalizadas) y `/api/ordenes-compra` (la misma compra en `ordenes_compra`
+ * con el detalle guardado como un unico JSONB `items`). El dato quedaba
+ * duplicado y las compras hechas desde la app movil nunca aparecian en los
+ * reportes que leen `compras`. Ahora hay una sola ruta de escritura.
+ */
+async function registrarCompraEnLedger({ tenant, empresa, user, body }) {
+  const items = Array.isArray(body.items) ? body.items : [];
+  if (!body.proveedor_id) return { status: 400, body: { error: 'proveedor_id es requerido' } };
+  if (items.length === 0) return { status: 400, body: { error: 'Debe incluir al menos un item' } };
+
+  const now = new Date();
+  const dateStr = now.toISOString().slice(0, 10).replace(/-/g, '');
+  // El conteo se hace por `empresa_codigo` (NOT NULL) y no por `empresa_id`,
+  // que es nullable: contar por empresa_id descuenta encabezados sin empresa y
+  // reutiliza su correlativo.
+  const { count } = await supabase
+    .from('compras').select('id', { count: 'exact', head: true })
+    .eq('empresa_codigo', tenant)
+    .gte('created_at', now.toISOString().slice(0, 10) + 'T00:00:00');
+  const correlativoBase = (count || 0) + 1;
+
+  let subtotal = 0;
+  const detalle = items.map(item => {
+    const cantidad = parseFloat(item.cantidad) || 0;
+    const costo_unitario = parseFloat(item.costo_unitario ?? item.precio_unitario) || 0;
+    const linea = cantidad * costo_unitario;
+    subtotal += linea;
+    return {
+      producto_id: item.producto_id ?? null,
+      codigo: (item.codigo || item.producto_codigo || '').toString().slice(0, 100),
+      nombre: (item.nombre || item.producto_nombre || '').toString().slice(0, 200),
+      cantidad,
+      costo_unitario,
+      subtotal: linea,
+      // FASE 4: cada linea hereda el tenant del encabezado. `empresa_codigo`
+      // es NOT NULL en compras_detalle y la FK compuesta
+      // (compra_id, empresa_codigo) -> compras(id, empresa_codigo) impide que
+      // una linea quede asociada a la compra de otra empresa.
+      empresa_id: empresa.id,
+      empresa_codigo: tenant,
+    };
+  });
+
+  const isv = parseFloat(body.impuestos ?? body.isv) || 0;
+  const descuento = parseFloat(body.descuento) || 0;
+
+  const encabezadoBase = {
+    empresa_id: empresa.id,
+    empresa_codigo: tenant,
+    proveedor_id: body.proveedor_id,
+    sucursal_id: body.sucursal_id ?? null,
+    bodega_destino_id: body.bodega_id ?? null,
+    fecha_orden: now.toISOString().slice(0, 10),
+    subtotal,
+    isv,
+    descuento,
+    total: subtotal + isv - descuento,
+    estado: (body.estado || 'pendiente').toString().slice(0, 20),
+    metodo_pago: (body.metodo_pago || '').toString().slice(0, 50),
+    notas: (body.notas || '').toString().slice(0, 500),
+    usuario_id: user?.sub || null,
+    created_at: now.toISOString(),
+    updated_at: now.toISOString(),
+  };
+
+  // El correlativo se armaba con COUNT+1 y sin indice unico: dos compras
+  // simultaneas del mismo tenant obtenian el mismo numero y el modulo perdia
+  // la trazabilidad. Ahora manda el indice ux_compras_empresa_numero_orden: si
+  // otra peticion gano el numero, esta reintenta con el siguiente candidato.
+  let compra = null;
+  let compraErr = null;
+  for (let intento = 0; intento < 5; intento++) {
+    const numero_orden = 'COM-' + dateStr + '-' + String(correlativoBase + intento).padStart(4, '0');
+    const resultado = await supabase.from('compras')
+      .insert([Object.assign({}, encabezadoBase, { numero_orden })])
+      .select().maybeSingle();
+    compra = resultado.data;
+    compraErr = resultado.error;
+    if (!compraErr) break;
+    const esDuplicado = compraErr.code === '23505' || /duplicate key|unique/i.test(compraErr.message || '');
+    if (!esDuplicado) break;
+    compra = null;
+  }
+  if (compraErr) return { status: 500, body: { error: compraErr.message } };
+
+  const { error: detErr } = await supabase.from('compras_detalle')
+    .insert(detalle.map(d => Object.assign({}, d, { compra_id: compra.id })));
+  if (detErr) {
+    // Sin transaccion SQL: se borra el encabezado para no dejar una compra sin
+    // lineas, que es el estado que descuadraba los totales de compras. El
+    // borrado se acota al tenant; la FK CASCADE limpia las lineas que hubieran
+    // entrado a medias.
+    await supabase.from('compras').delete().eq('id', compra.id).eq('empresa_codigo', tenant);
+    return { status: 500, body: { error: detErr.message } };
+  }
+
+  return { status: 201, compra: Object.assign({}, compra, { items: detalle }) };
+}
+
+/** Adjunta las lineas de varias compras en una sola consulta (evita N+1). */
+async function cargarDetalleCompras(compraIds) {
+  if (!compraIds.length) return new Map();
+  const { data } = await supabase.from('compras_detalle').select('*').in('compra_id', compraIds);
+  const porCompra = new Map();
+  for (const linea of data || []) {
+    if (!porCompra.has(linea.compra_id)) porCompra.set(linea.compra_id, []);
+    porCompra.get(linea.compra_id).push(linea);
+  }
+  return porCompra;
+}
+
 app.get('/api/compras', authenticate, requirePlanFeature('compras'), async (req, res) => {
   if (!requireSupabase(res)) return;
   try {
@@ -6557,54 +7366,10 @@ app.post('/api/compras', authenticate, requireTenantAdmin, requirePlanFeature('c
     const tenant = normalizeTenantCode(getTenantCode(req));
     const empresa = await resolverEmpresaSupabase(tenant);
     if (!empresa) return res.status(404).json({ error: 'Empresa no encontrada' });
-    const b = req.body || {};
-    const items = Array.isArray(b.items) ? b.items : [];
-    if (!b.proveedor_id) return res.status(400).json({ error: 'proveedor_id es requerido' });
-    if (items.length === 0) return res.status(400).json({ error: 'Debe incluir al menos un item' });
-
-    const now = new Date();
-    const dateStr = now.toISOString().slice(0, 10).replace(/-/g, '');
-    const { data: countData } = await supabase
-      .from('compras').select('id', { count: 'exact', head: true })
-      .eq('empresa_id', empresa.id)
-      .gte('created_at', now.toISOString().slice(0, 10) + 'T00:00:00');
-    const seq = String((countData || 0) + 1).padStart(4, '0');
-    const numero_orden = 'COM-' + dateStr + '-' + seq;
-
-    let subtotal = 0;
-    items.forEach(item => {
-      subtotal += (parseFloat(item.cantidad) || 0) * (parseFloat(item.costo_unitario) || 0);
-    });
-
-    const { data: compraData, error: compraErr } = await supabase.from('compras').insert([{
-      empresa_id: empresa.id,
-      empresa_codigo: tenant,
-      numero_orden: numero_orden,
-      proveedor_id: b.proveedor_id,
-      subtotal: subtotal,
-      impuestos: parseFloat(b.impuestos) || 0,
-      total: subtotal + (parseFloat(b.impuestos) || 0),
-      estado: 'pendiente',
-      notas: (b.notas || '').toString().slice(0, 500),
-      usuario: req.user?.nombre || '',
-      created_at: now.toISOString()
-    }]).select().maybeSingle();
-    if (compraErr) return res.status(500).json({ error: compraErr.message });
-
-    const detalle = items.map(item => ({
-      empresa_id: empresa.id,
-      empresa_codigo: tenant,
-      compra_id: compraData.id,
-      producto_id: item.producto_id,
-      cantidad: parseFloat(item.cantidad) || 0,
-      costo_unitario: parseFloat(item.costo_unitario) || 0,
-      subtotal: (parseFloat(item.cantidad) || 0) * (parseFloat(item.costo_unitario) || 0)
-    }));
-    const { error: detErr } = await supabase.from('compras_detalle').insert(detalle);
-    if (detErr) return res.status(500).json({ error: detErr.message });
-
-    await registrarAuditoria(tenant, 'Compra creada', 'Compra ' + numero_orden + ' registrada', 'compras', req.user?.nombre || '', req);
-    return res.status(201).json({ compra: Object.assign({}, compraData, { items: detalle }) });
+    const r = await registrarCompraEnLedger({ tenant, empresa, user: req.user, body: req.body || {} });
+    if (r.status !== 201) return res.status(r.status).json(r.body);
+    await registrarAuditoria(tenant, 'Compra creada', 'Compra ' + r.compra.numero_orden + ' registrada', 'compras', req.user?.nombre || '', req);
+    return res.status(201).json({ compra: r.compra });
   } catch (err) { return handleServerError(res, err); }
 });
 
@@ -6651,26 +7416,31 @@ app.patch('/api/compras/:id', authenticate, requireTenantAdmin, requirePlanFeatu
       const { data: items } = await supabase.from('compras_detalle').select('*').eq('compra_id', compra.id);
       if (items && items.length) {
         for (const item of items) {
-          const { data: prod } = await supabase.from('productos').select('id, stock_actual').eq('id', item.producto_id).maybeSingle();
-          if (prod) {
-            const anterior = Number(prod.stock_actual) || 0;
-            const nuevo = anterior + (Number(item.cantidad) || 0);
-            await supabase.from('productos').update({ stock_actual: nuevo, updated_at: new Date().toISOString() }).eq('id', item.producto_id);
-            await supabase.from('kardex').insert([{
-              empresa_id: empresa.id,
-              empresa_codigo: tenant,
-              producto_id: item.producto_id,
-              tipo: 'entrada',
-              cantidad: Number(item.cantidad) || 0,
-              costo_unitario: Number(item.costo_unitario) || 0,
-              cantidad_anterior: anterior,
-              cantidad_nueva: nuevo,
-              referencia: compra.numero_orden,
-              notas: 'Recepcion de compra ' + compra.numero_orden,
-              usuario: req.user?.nombre || '',
-              created_at: new Date().toISOString()
-            }]);
-          }
+          if (!item.producto_id) continue;
+          const cant = Number(item.cantidad) || 0;
+          if (cant <= 0) continue;
+          const { data: ajuste, error: stockErr } = await supabase.rpc('pp_ajustar_stock', {
+            p_empresa_codigo: tenant, p_producto_id: item.producto_id, p_delta: cant
+          });
+          if (stockErr) { console.error('[Compra recibida] stock', item.producto_id, stockErr.message); continue; }
+          const anterior = ajuste && ajuste[0] ? ajuste[0].anterior : null;
+          const nuevo = ajuste && ajuste[0] ? ajuste[0].nuevo : null;
+          const { error: kdxErr } = await supabase.from('kardex').insert([{
+            empresa_id: empresa.id,
+            empresa_codigo: tenant,
+            producto_id: item.producto_id,
+            tipo_movimiento: 'ENTRADA_COMPRA',
+            cantidad: cant,
+            cantidad_anterior: anterior,
+            cantidad_nueva: nuevo,
+            costo_unitario: Number(item.costo_unitario) || 0,
+            referencia_tipo: 'COMPRA',
+            referencia_id: compra.id,
+            notas: 'Recepción de compra ' + (compra.numero_orden || ''),
+            usuario_id: req.user?.sub || null,
+            usuario_nombre: req.user?.nombre || ''
+          }]);
+          if (kdxErr) console.error('[Compra recibida] kardex', item.producto_id, kdxErr.message);
         }
       }
     }
@@ -6712,13 +7482,12 @@ app.post('/api/listas-precios', authenticate, requireTenantAdmin, requirePlanFea
       empresa_codigo: tenant,
       nombre: nombre.slice(0, 200),
       descripcion: (b.descripcion || '').toString().slice(0, 500),
-      moneda: (b.moneda || 'GTQ').toString().slice(0, 5),
-      es_por_defecto: !!b.es_por_defecto,
-      estado: b.estado || 'activa'
-    }]);
+      tipo: (b.tipo || 'venta').toString().slice(0, 50),
+      es_default: b.es_default !== undefined ? !!b.es_default : !!b.es_por_defecto,
+      activa: b.activa !== undefined ? !!b.activa : (b.estado ? b.estado === 'activa' : true)
+    }]).select().maybeSingle();
     if (error) return res.status(500).json({ error: error.message });
-    const row = Array.isArray(data) ? data[0] : null;
-    return res.status(201).json({ lista: row });
+    return res.status(201).json({ lista: data || null });
   } catch (err) { return handleServerError(res, err); }
 });
 
@@ -6728,14 +7497,15 @@ app.put('/api/listas-precios/:id', authenticate, requireTenantAdmin, requirePlan
     const tenant = normalizeTenantCode(getTenantCode(req));
     const empresa = await resolverEmpresaSupabase(tenant);
     if (!empresa) return res.status(404).json({ error: 'Empresa no encontrada' });
-    const campos = ['nombre', 'descripcion', 'moneda', 'es_por_defecto', 'estado'];
+    if (req.body.es_por_defecto !== undefined && req.body.es_default === undefined) req.body.es_default = req.body.es_por_defecto;
+    if (req.body.estado !== undefined && req.body.activa === undefined) req.body.activa = req.body.estado === 'activa';
+    const campos = ['nombre', 'descripcion', 'tipo', 'es_default', 'activa'];
     const update = { updated_at: new Date().toISOString() };
     campos.forEach(c => { if (req.body[c] !== undefined) update[c] = req.body[c]; });
     const { data, error } = await supabase.from('listas_precios').update(update)
-      .eq('id', req.params.id).eq('empresa_id', empresa.id);
+      .eq('id', req.params.id).eq('empresa_id', empresa.id).select().maybeSingle();
     if (error) return res.status(500).json({ error: error.message });
-    const row = Array.isArray(data) ? data[0] : null;
-    return res.json({ lista: row, success: true });
+    return res.json({ lista: data || null, success: true });
   } catch (err) { return handleServerError(res, err); }
 });
 
@@ -6756,7 +7526,7 @@ app.delete('/api/listas-precios/:id', authenticate, requireTenantAdmin, requireP
 // PRODUCTOS CRUD
 // ═══════════════════════════════════════════════════════════════════════════
 
-app.get('/api/productos', authenticate, async (req, res) => {
+app.get('/api/productos', authenticate, requirePlanFeature('inventario'), async (req, res) => {
   if (!requireSupabase(res)) return;
   try {
     const tenant = normalizeTenantCode(getTenantCode(req));
@@ -6764,6 +7534,12 @@ app.get('/api/productos', authenticate, async (req, res) => {
     if (!empresa) return res.status(404).json({ error: 'Empresa no encontrada' });
     let query = supabase.from('productos').select('*').eq('empresa_id', empresa.id);
     if (req.query.categoria) query = query.eq('categoria', req.query.categoria);
+    // FASE 5: filtros por la FK real del catalogo, no por el texto.
+    if (req.query.categoria_id) query = query.eq('categoria_id', String(req.query.categoria_id));
+    if (req.query.marca_id) query = query.eq('marca_id', String(req.query.marca_id));
+    if (req.query.pasillo_id) query = query.eq('pasillo_id', String(req.query.pasillo_id));
+    // "Bajo stock" no se filtra en SQL porque compara stock_actual contra
+    // stock_minimo (dos columnas de la misma fila). Se calcula en memoria.
     if (req.query.activo !== undefined) query = query.eq('activo', req.query.activo === 'true');
     if (req.query.search) {
       const resultado = await filtrarBusquedaEnMemoria({ query, columnas: ['nombre', 'codigo', 'barcode'], termino: req.query.search, orderCol: 'nombre', limit: Math.min(Math.max(parseInt(req.query.limit, 10) || 100, 1), 500) });
@@ -6783,7 +7559,7 @@ app.get('/api/productos', authenticate, async (req, res) => {
   } catch (err) { return handleServerError(res, err); }
 });
 
-app.get('/api/productos/:id', authenticate, async (req, res) => {
+app.get('/api/productos/:id', authenticate, requirePlanFeature('inventario'), async (req, res) => {
   if (!requireSupabase(res)) return;
   try {
     const tenant = normalizeTenantCode(getTenantCode(req));
@@ -6798,7 +7574,7 @@ app.get('/api/productos/:id', authenticate, async (req, res) => {
   } catch (err) { return handleServerError(res, err); }
 });
 
-app.post('/api/productos', authenticate, async (req, res) => {
+app.post('/api/productos', authenticate, requireTenantAdmin, requirePlanFeature('inventario'), async (req, res) => {
   if (!requireSupabase(res)) return;
   try {
     const tenant = normalizeTenantCode(getTenantCode(req));
@@ -6889,13 +7665,20 @@ app.post('/api/productos', authenticate, async (req, res) => {
         });
       }
     }
+// FASE 5: categoria / marca / pasillo son referencias validadas del tenant.
+    // El texto se conserva porque es lo que leen los sincronizadores antiguos.
+    const catalogos = await resolverCatalogosProducto(tenant, b);
+    if (catalogos.error) return res.status(400).json({ error: catalogos.error });
     const { data, error } = await supabase.from('productos').insert([{
       empresa_id: empresa.id,
       empresa_codigo: tenant,
       codigo: (b.codigo || '').toString().slice(0, 100),
       nombre: b.nombre.toString().slice(0, 200),
       descripcion: (b.descripcion || '').toString().slice(0, 500),
-      categoria: (b.categoria || 'General').toString().slice(0, 100),
+      categoria: (catalogos.categoria !== undefined ? catalogos.categoria : b.categoria || 'General').toString().slice(0, 100),
+      categoria_id: catalogos.categoria_id ?? null,
+      marca_id: catalogos.marca_id ?? null,
+      pasillo_id: catalogos.pasillo_id ?? null,
       unidad_medida: (b.unidad_medida || 'Unidad').toString().slice(0, 50),
       imagen_url: b.imagen_url || null,
       precio_compra: parseFloat(b.precio_compra) || 0,
@@ -6906,8 +7689,8 @@ app.post('/api/productos', authenticate, async (req, res) => {
       exento: !!b.exento,
       bodega: (b.bodega || 'General').toString().slice(0, 100),
       barcode: (b.barcode || '').toString().slice(0, 100),
-      marca: (b.marca || '').toString().slice(0, 100),
-      presentacion: (b.presentacion || '').toString().slice(0, 100),
+      marca: (catalogos.marca !== undefined ? catalogos.marca : b.marca || '').toString().slice(0, 100) || null,
+      presentacion: (b.presentacion || '').toString().slice(0, 100) || null,
       sucursal_id: b.sucursal_id || null,
       bodega_id: b.bodega_id || null,
       activo: b.activo !== false
@@ -6917,7 +7700,7 @@ app.post('/api/productos', authenticate, async (req, res) => {
   } catch (err) { return handleServerError(res, err); }
 });
 
-app.put('/api/productos/:id', authenticate, async (req, res) => {
+app.put('/api/productos/:id', authenticate, requireTenantAdmin, requirePlanFeature('inventario'), async (req, res) => {
   if (!requireSupabase(res)) return;
   try {
     const tenant = normalizeTenantCode(getTenantCode(req));
@@ -6927,6 +7710,14 @@ app.put('/api/productos/:id', authenticate, async (req, res) => {
     const updates = {};
     const allowed = ['codigo','nombre','descripcion','categoria','unidad_medida','imagen_url','precio_compra','precio_venta','stock_actual','stock_minimo','isv_rate','exento','bodega','barcode','marca','presentacion','sucursal_id','bodega_id','activo'];
     allowed.forEach(f => { if (b[f] !== undefined) updates[f] = b[f]; });
+    // Las referencias del catalogo se validan aparte: si categoria_id, marca_id o
+    // pasillo_id vienen en el cuerpo, se comprueban contra el tenant antes de
+    // tocar el producto, y el texto legacy se sincroniza con el nombre real.
+    const catalogos = await resolverCatalogosProducto(tenant, b);
+    if (catalogos.error) return res.status(400).json({ error: catalogos.error });
+    for (const campo of ['categoria_id', 'marca_id', 'pasillo_id', 'categoria', 'marca']) {
+      if (catalogos[campo] !== undefined) updates[campo] = catalogos[campo] || null;
+    }
     if (Object.keys(updates).length === 0) return res.status(400).json({ error: 'Sin cambios para actualizar' });
     const { data, error } = await supabase
       .from('productos').update(updates)
@@ -6937,7 +7728,7 @@ app.put('/api/productos/:id', authenticate, async (req, res) => {
   } catch (err) { return handleServerError(res, err); }
 });
 
-app.delete('/api/productos/:id', authenticate, async (req, res) => {
+app.delete('/api/productos/:id', authenticate, requireTenantAdmin, requirePlanFeature('inventario'), async (req, res) => {
   if (!requireSupabase(res)) return;
   try {
     const tenant = normalizeTenantCode(getTenantCode(req));
@@ -6959,7 +7750,7 @@ app.delete('/api/productos/:id', authenticate, async (req, res) => {
 // POS VENTAS
 // ═══════════════════════════════════════════════════════════════════════════
 
-app.get('/api/pos/ventas', authenticate, async (req, res) => {
+app.get('/api/pos/ventas', authenticate, requirePlanFeature('pos'), async (req, res) => {
   if (!requireSupabase(res)) return;
   try {
     const tenant = normalizeTenantCode(getTenantCode(req));
@@ -6977,7 +7768,7 @@ app.get('/api/pos/ventas', authenticate, async (req, res) => {
   } catch (err) { return handleServerError(res, err); }
 });
 
-app.get('/api/pos/ventas/resumen', authenticate, async (req, res) => {
+app.get('/api/pos/ventas/resumen', authenticate, requirePlanFeature('pos'), async (req, res) => {
   if (!requireSupabase(res)) return;
   try {
     const tenant = normalizeTenantCode(getTenantCode(req));
@@ -7003,7 +7794,7 @@ app.get('/api/pos/ventas/resumen', authenticate, async (req, res) => {
   } catch (err) { return handleServerError(res, err); }
 });
 
-app.post('/api/pos/ventas', authenticate, async (req, res) => {
+app.post('/api/pos/ventas', authenticate, requirePlanFeature('pos'), async (req, res) => {
   if (!requireSupabase(res)) return;
   try {
     const tenant = normalizeTenantCode(getTenantCode(req));
@@ -7012,33 +7803,68 @@ app.post('/api/pos/ventas', authenticate, async (req, res) => {
     const b = req.body || {};
     const items = Array.isArray(b.items) ? b.items : [];
     if (items.length === 0) return res.status(400).json({ error: 'Debe incluir al menos un item' });
-    const subtotal = parseFloat(b.subtotal) || 0;
-    const isv = parseFloat(b.isv) || 0;
-    const descuento = parseFloat(b.descuento) || 0;
-    const total = parseFloat(b.total) || (subtotal + isv - descuento);
+
+    // INTEGRIDAD: el importe y el precio los decide el servidor leyendo el
+    // catálogo del tenant. El body solo aporta quantities y el descuento.
+    const esOwnerLike = isOwnerUser(req) || isTenantAdminRole(req);
+    const calculo = await calcularLineas(supabase, tenant, items, {
+      permitirPrecioManual: esOwnerLike,
+      descuento: b.descuento,
+      permitirStockNegativo: b.permitir_stock_negativo === true && esOwnerLike,
+    });
+    const { lines, subtotal, isv, descuento, total, preciosModificados } = calculo;
     // CHECK productivo: tipo ∈ ('ingreso','gasto','transferencia','ajuste'). Una
     // venta POS es un ingreso (tipo); el detalle de la venta se preserva en
     // metadata y categoria NO se usa (columna libre). Se mapea 'venta_pos' → 'ingreso'
     // conservando el marcador original en metadata.origen_tipo para trazabilidad.
     const ventaRef = `venta_pos:${b.numero_venta || ''}`.trim();
+
+    // IDEMPOTENCIA: el POS es un cobro real y no puede repetirse. El cliente
+    // manda `numero_venta`; si esa referencia ya existe para el tenant, el
+    // reintento (doble clic o retry de red) debe devolver la MISMA venta, no
+    // insertar una segunda. El indice unico parcial
+    // ux_transacciones_venta_referencia lo vuelve imposible en la base.
+    if (b.numero_venta) {
+      const { data: ventaPrevia } = await supabase
+        .from('transacciones').select('*')
+        .eq('empresa_codigo', tenant)
+        .eq('referencia', ventaRef.slice(0, 200))
+        .maybeSingle();
+      if (ventaPrevia) {
+        return res.status(200).json({
+          venta: ventaPrevia,
+          totales: { subtotal, isv, descuento, total },
+          items: lines,
+          precios_modificados: preciosModificados,
+          duplicada: true,
+        });
+      }
+    }
+
     const insertVenta = (withUsuario) => {
       const payload = {
         empresa_id: empresa.id,
         empresa_codigo: tenant,
         tipo: 'ingreso',
         categoria: 'venta',
-        descripcion: `Venta POS - ${items.length} item(s)`,
+        descripcion: `Venta POS - ${lines.length} item(s)`,
         monto: total,
         metodo_pago: (b.metodo_pago || 'efectivo').toString().slice(0, 50),
         referencia: ventaRef.slice(0, 200),
-        metadata: JSON.stringify({
-          items, subtotal, isv, descuento,
+        // `metadata` es una columna jsonb: se manda el objeto, NO el texto.
+        // Con JSON.stringify() el valor llegaba como string y quedaba doble
+        // codificado, de modo que metadata->>'subtotal' devolvía NULL y todos
+        // los reportes de venta salían vacíos.
+        metadata: {
+          items: lines, subtotal, isv, descuento, total,
+          precios_modificados: preciosModificados,
+          cliente_id: b.cliente_id || null,
           cliente_nombre: b.cliente_nombre || '',
           numero_venta: b.numero_venta || '',
           origen_tipo: 'venta_pos',
           usuario_id: withUsuario ? (req.user?.sub || null) : null,
           sucursal_id: b.sucursal_id || null
-        }),
+        },
         sucursal_id: b.sucursal_id || null,
         fecha: new Date().toISOString()
       };
@@ -7049,32 +7875,90 @@ app.post('/api/pos/ventas', authenticate, async (req, res) => {
     // si el schema cache no lo conoce, reintentar sin la columna (drift-tolerante).
     let { data: ventaData, error: ventaErr } = await insertVenta(true);
     if (ventaErr) ({ data: ventaData, error: ventaErr } = await insertVenta(false));
-    if (ventaErr) return res.status(500).json({ error: ventaErr.message });
-    for (const item of items) {
-      if (item.producto_id) {
-        const { data: prod } = await supabase.from('productos').select('stock_actual').eq('id', item.producto_id).eq('empresa_id', empresa.id).maybeSingle();
-        if (prod) {
-          const newStock = (prod.stock_actual || 0) - (parseInt(item.cantidad, 10) || 0);
-          await supabase.from('productos').update({ stock_actual: Math.max(0, newStock) }).eq('id', item.producto_id);
+    if (ventaErr) {
+      // Carrera: dos peticiones con el mismo numero_venta entraron a la vez y
+      // la segunda choca con el indice unico. Se devuelve la venta ganadora en
+      // lugar de un 500, para que el reintento del cliente sea seguro.
+      const esDuplicado = ventaErr.code === '23505' || /duplicate key|unique/i.test(ventaErr.message || '');
+      if (esDuplicado && b.numero_venta) {
+        const { data: ventaGanadora } = await supabase
+          .from('transacciones').select('*')
+          .eq('empresa_codigo', tenant)
+          .eq('referencia', ventaRef.slice(0, 200))
+          .maybeSingle();
+        if (ventaGanadora) {
+          return res.status(200).json({
+            venta: ventaGanadora,
+            totales: { subtotal, isv, descuento, total },
+            items: lines,
+            precios_modificados: preciosModificados,
+            duplicada: true,
+          });
         }
-        await supabase.from('kardex').insert([{
+      }
+      return res.status(500).json({ error: ventaErr.message });
+    }
+
+    // INTEGRIDAD: el inventario se mueve TODO-O-NADA. Antes esta rutina hacía
+    // `console.error` y seguía, dejando ventas sin descontar mercadería. Ahora,
+    // si un renglón falla, se revierten los ya aplicados, se elimina la venta y
+    // se devuelve 409. Es imposible que exista venta sin su asiento en kardex.
+    try {
+      await aplicarMovimientoStock(supabase, {
+        empresa, tenant,
+        referenciaTipo: 'VENTA_POS',
+        referenciaId: ventaData.id,
+        usuario: req.user,
+        notas: 'Venta POS',
+        movimiento: 'SALIDA',
+        permitirStockNegativo: b.permitir_stock_negativo === true && esOwnerLike,
+      }, lines);
+    } catch (stockError) {
+      try {
+        await supabase.from('transacciones').delete().eq('id', ventaData.id).eq('empresa_codigo', tenant);
+      } catch (e) {
+        console.error('[POS venta] no se pudo revertir la venta:', e.message);
+      }
+      if (stockError instanceof IntegridadError) {
+        return res.status(stockError.status).json({
+          error: stockError.message,
+          code: stockError.code,
+          detalles: stockError.detalles || undefined,
+        });
+      }
+      throw stockError;
+    }
+
+    // Historial de consumo del cliente (módulo CRM) para no romper la cadena.
+    // ventas_crm guarda el nombre del cliente en `cliente` (texto), no un id.
+    const clienteCrm = (b.cliente_nombre || '').toString().trim();
+    if (clienteCrm) {
+      try {
+        await supabase.from('ventas_crm').insert([{
           empresa_id: empresa.id,
           empresa_codigo: tenant,
-          producto_id: item.producto_id,
-          tipo_movimiento: 'salida',
-          cantidad: parseInt(item.cantidad, 10) || 0,
-          precio_unitario: parseFloat(item.precio_unitario) || 0,
-          referencia: ventaData.id,
-          notas: `Venta POS`,
-          usuario_id: req.user?.sub || null
-        }]).then(() => {}).catch(() => {});
+          usuario_id: req.user?.sub || null,
+          cliente: clienteCrm.slice(0, 200),
+          descripcion: `Venta POS${b.numero_venta ? ` #${b.numero_venta}` : ''}`.slice(0, 250),
+          monto: total,
+          estado: 'ganada',
+          fecha: new Date().toISOString(),
+        }]);
+      } catch (e) {
+        console.warn('[POS venta] historial CRM no actualizado:', e.message);
       }
     }
-    return res.status(201).json({ venta: ventaData });
+
+    return res.status(201).json({
+      venta: ventaData,
+      totales: { subtotal, isv, descuento, total },
+      items: lines,
+      precios_modificados: preciosModificados,
+    });
   } catch (err) { return handleServerError(res, err); }
 });
 
-app.get('/api/pos/ventas/:id', authenticate, async (req, res) => {
+app.get('/api/pos/ventas/:id', authenticate, requirePlanFeature('pos'), async (req, res) => {
   if (!requireSupabase(res)) return;
   try {
     const tenant = normalizeTenantCode(getTenantCode(req));
@@ -7131,7 +8015,7 @@ app.post('/api/recibos', authenticate, async (req, res) => {
     }
     let invoice = null;
     if (body.factura_id) {
-      const result = await supabase.from('facturas').select('id, total, cliente_nombre, cliente_rtn, cliente_email')
+      const result = await supabase.from('facturas').select('id, total, cliente_nombre, cliente_rtn')
         .eq('id', body.factura_id).eq('empresa_id', empresa.id).maybeSingle();
       invoice = result.data;
       if (!invoice) return res.status(404).json({ error: 'Factura relacionada no encontrada' });
@@ -7468,7 +8352,7 @@ app.get('/api/clientes/:id', authenticate, async (req, res) => {
   } catch (err) { return handleServerError(res, err); }
 });
 
-app.post('/api/clientes', authenticate, async (req, res) => {
+app.post('/api/clientes', authenticate, requirePlanFeature('clientes'), async (req, res) => {
   if (!requireSupabase(res)) return;
   try {
     const tenant = normalizeTenantCode(getTenantCode(req));
@@ -7490,13 +8374,14 @@ app.post('/api/clientes', authenticate, async (req, res) => {
       email: (b.email || '').toString().slice(0, 100),
       telefono: (b.telefono || '').toString().slice(0, 30),
       direccion: (b.direccion || '').toString().slice(0, 300),
+      limite_credito: parseFloat(b.limite_credito) || 0,
+      saldo_pendiente: parseFloat(b.saldo_pendiente) || 0,
       notas: (b.notas || '').toString().slice(0, 500),
       activo: true,
       created_at: new Date().toISOString()
     }]).select().maybeSingle();
-    // Esquema productivo vigente: clientes SIN limite_credito/saldo_pendiente
-    // (drift detectado en release audit). Si llegan a existir tras una migración,
-    // se reintenta incluyendo esos campos para no perder funcionalidad de crédito.
+    // Fallback tolerante a drift: si el esquema remoto no tuviera las columnas de
+    // crédito, se reintenta sin ellas para no bloquear el alta del cliente.
     if (error) {
       const r2 = await supabase.from('clientes').insert([{
         empresa_id: empresa.id,
@@ -7506,8 +8391,6 @@ app.post('/api/clientes', authenticate, async (req, res) => {
         email: (b.email || '').toString().slice(0, 100),
         telefono: (b.telefono || '').toString().slice(0, 30),
         direccion: (b.direccion || '').toString().slice(0, 300),
-        limite_credito: parseFloat(b.limite_credito) || 0,
-        saldo_pendiente: 0,
         notas: (b.notas || '').toString().slice(0, 500),
         activo: true,
         created_at: new Date().toISOString()
@@ -7519,7 +8402,7 @@ app.post('/api/clientes', authenticate, async (req, res) => {
   } catch (err) { return handleServerError(res, err); }
 });
 
-app.put('/api/clientes/:id', authenticate, async (req, res) => {
+app.put('/api/clientes/:id', authenticate, requirePlanFeature('clientes'), async (req, res) => {
   if (!requireSupabase(res)) return;
   try {
     const tenant = normalizeTenantCode(getTenantCode(req));
@@ -7539,7 +8422,7 @@ app.put('/api/clientes/:id', authenticate, async (req, res) => {
   } catch (err) { return handleServerError(res, err); }
 });
 
-app.delete('/api/clientes/:id', authenticate, async (req, res) => {
+app.delete('/api/clientes/:id', authenticate, requireTenantAdmin, requirePlanFeature('clientes'), async (req, res) => {
   if (!requireSupabase(res)) return;
   try {
     const tenant = normalizeTenantCode(getTenantCode(req));
@@ -7557,7 +8440,7 @@ app.delete('/api/clientes/:id', authenticate, async (req, res) => {
 // KARDEX
 // ═══════════════════════════════════════════════════════════════════════════
 
-app.get('/api/kardex', authenticate, async (req, res) => {
+app.get('/api/kardex', authenticate, requirePlanFeature('inventario'), async (req, res) => {
   if (!requireSupabase(res)) return;
   try {
     const tenant = normalizeTenantCode(getTenantCode(req));
@@ -7576,7 +8459,7 @@ app.get('/api/kardex', authenticate, async (req, res) => {
   } catch (err) { return handleServerError(res, err); }
 });
 
-app.post('/api/kardex', authenticate, async (req, res) => {
+app.post('/api/kardex', authenticate, requireTenantAdmin, requirePlanFeature('inventario'), async (req, res) => {
   if (!requireSupabase(res)) return;
   try {
     const tenant = normalizeTenantCode(getTenantCode(req));
@@ -7594,19 +8477,27 @@ app.post('/api/kardex', authenticate, async (req, res) => {
     if (prodErr || !producto) return res.status(404).json({ error: 'Producto no encontrado' });
 
     const stockActual = Number(producto.stock_actual) || 0;
-    let nuevoStock = stockActual;
-    if (tipoMov === 'entrada') {
-      nuevoStock = stockActual + cantidad;
-    } else if (tipoMov === 'salida') {
-      if (stockActual < cantidad) return res.status(400).json({ error: 'Stock insuficiente. Disponible: ' + stockActual });
-      nuevoStock = stockActual - cantidad;
-    } else {
-      nuevoStock = cantidad;
-    }
+    const delta = tipoMov === 'entrada' ? cantidad
+                : tipoMov === 'salida' ? -cantidad
+                : cantidad - stockActual;
 
-    const { error: updateErr } = await supabase
-      .from('productos').update({ stock_actual: nuevoStock, updated_at: new Date().toISOString() }).eq('id', b.producto_id);
-    if (updateErr) return res.status(500).json({ error: updateErr.message });
+    // Ajuste atómico (FOR UPDATE): evita perder movimientos concurrentes y
+    // devuelve el stock anterior/nuevo que kardex necesita.
+    const { data: ajuste, error: stockErr } = await supabase.rpc('pp_ajustar_stock', {
+      p_empresa_codigo: tenant, p_producto_id: b.producto_id, p_delta: delta
+    });
+    if (stockErr) {
+      const msg = stockErr.message || 'No se pudo ajustar el stock';
+      if (msg.includes('no encontrado')) return res.status(404).json({ error: 'Producto no encontrado' });
+      if (msg.includes('insuficiente')) return res.status(400).json({ error: msg });
+      return res.status(500).json({ error: msg });
+    }
+    const stockAnterior = ajuste && ajuste[0] ? ajuste[0].anterior : stockActual;
+    const stockNuevo = ajuste && ajuste[0] ? ajuste[0].nuevo : stockActual;
+
+    const refId = typeof b.referencia_id === 'string' &&
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(b.referencia_id)
+        ? b.referencia_id : null;
 
     const { data, error } = await supabase.from('kardex').insert([{
       empresa_id: empresa.id,
@@ -7614,16 +8505,17 @@ app.post('/api/kardex', authenticate, async (req, res) => {
       producto_id: b.producto_id,
       tipo_movimiento: tipoMov,
       cantidad: cantidad,
-      cantidad_anterior: stockActual,
-      cantidad_nueva: nuevoStock,
+      cantidad_anterior: stockAnterior,
+      cantidad_nueva: stockNuevo,
       costo_unitario: parseFloat(b.costo_unitario || b.precio_unitario) || 0,
-      referencia: (b.referencia || '').toString().slice(0, 200),
-      notas: (b.notas || '').toString().slice(0, 500),
+      referencia_tipo: (b.referencia_tipo || 'AJUSTE_MANUAL').toString().slice(0, 60),
+      referencia_id: refId,
+      notas: [(b.referencia || '').toString().trim(), (b.notas || '').toString().trim()].filter(Boolean).join(' · ').slice(0, 500),
       usuario_id: req.user?.sub || null,
       usuario_nombre: req.user?.nombre || ''
     }]).select().maybeSingle();
     if (error) return res.status(500).json({ error: error.message });
-    return res.status(201).json({ movimiento: data, stock_anterior: stockActual, stock_nuevo: nuevoStock });
+    return res.status(201).json({ movimiento: data, stock_anterior: stockAnterior, stock_nuevo: stockNuevo });
   } catch (err) { return handleServerError(res, err); }
 });
 
@@ -7635,11 +8527,20 @@ app.get('/api/productos/:id/precios', authenticate, requirePlanFeature('precios'
     if (!empresa) return res.status(404).json({ error: 'Empresa no encontrada' });
     const { data, error } = await supabase
       .from('productos_precio')
-      .select('*, listas_precios(nombre)')
+      .select('*')
       .eq('producto_id', req.params.id)
       .eq('empresa_codigo', tenant);
     if (error) return res.status(500).json({ error: error.message });
-    return res.json({ precios: data || [] });
+    // No hay FK entre productos_precio y listas_precios (el proyecto no usa
+    // foreign keys), asi que el embed de PostgREST no resuelve. Se cruza a mano.
+    const listaIds = [...new Set((data || []).map(p => p.lista_precio_id).filter(Boolean))];
+    let nombres = {};
+    if (listaIds.length) {
+      const { data: listas } = await supabase
+        .from('listas_precios').select('id, nombre').in('id', listaIds);
+      nombres = Object.fromEntries((listas || []).map(l => [l.id, l.nombre]));
+    }
+    return res.json({ precios: (data || []).map(p => ({ ...p, lista_nombre: nombres[p.lista_precio_id] || null })) });
   } catch (err) { return handleServerError(res, err); }
 });
 
@@ -7654,30 +8555,32 @@ app.post('/api/productos/:id/precios', authenticate, requireTenantAdmin, require
     const precio = parseFloat(b.precio) || 0;
     if (precio <= 0) return res.status(400).json({ error: 'El precio debe ser mayor a 0' });
 
-    const { data: existing } = await supabase
-      .from('productos_precios')
+    // Tabla real: productos_precio (en singular). Antes se escribia en
+// 'productos_precios', que no existe, con columnas inventadas
+// (empresa_id, lista_id, precio_descuento, updated_at). El esquema real es:
+// id, empresa_codigo, producto_id, lista_precio_id, precio, precio_minimo.
+const { data: existing } = await supabase
+      .from('productos_precio')
       .select('id')
       .eq('producto_id', req.params.id)
-      .eq('lista_id', b.lista_id)
-      .eq('empresa_id', empresa.id)
+      .eq('lista_precio_id', b.lista_id)
+      .eq('empresa_codigo', tenant)
       .maybeSingle();
 
     if (existing) {
-      const { data, error } = await supabase.from('productos_precios').update({
+      const { data, error } = await supabase.from('productos_precio').update({
         precio: precio,
-        precio_descuento: parseFloat(b.precio_descuento) || null,
-        updated_at: new Date().toISOString()
+        precio_minimo: parseFloat(b.precio_descuento) || null
       }).eq('id', existing.id).select().maybeSingle();
       if (error) return res.status(500).json({ error: error.message });
       return res.json({ precio_item: data, updated: true });
     } else {
-      const { data, error } = await supabase.from('productos_precios').insert([{
-        empresa_id: empresa.id,
+      const { data, error } = await supabase.from('productos_precio').insert([{
         empresa_codigo: tenant,
         producto_id: req.params.id,
-        lista_id: b.lista_id,
+        lista_precio_id: b.lista_id,
         precio: precio,
-        precio_descuento: parseFloat(b.precio_descuento) || null
+        precio_minimo: parseFloat(b.precio_descuento) || null
       }]).select().maybeSingle();
       if (error) return res.status(500).json({ error: error.message });
       return res.status(201).json({ precio_item: data, updated: false });
@@ -7740,15 +8643,18 @@ app.post('/api/promociones', authenticate, requireTenantAdmin, requirePlanFeatur
       descripcion: (b.descripcion || '').toString().slice(0, 500),
       tipo: (b.tipo || 'descuento_porcentaje').toString().slice(0, 50),
       valor: parseFloat(b.valor) || 0,
-      producto_ids: b.producto_ids || [],
-      compra_minima: parseFloat(b.compra_minima) || 0,
+      compra_minima: parseInt(b.compra_minima, 10) || 0,
+      descuento_maximo: parseFloat(b.descuento_maximo) || 0,
+      aplica_a: (b.aplica_a || (Array.isArray(b.producto_ids) && b.producto_ids.length ? 'productos' : 'todos')).toString().slice(0, 50),
+      aplica_valor: (b.aplica_valor || (Array.isArray(b.producto_ids) ? b.producto_ids.join(',') : '')).toString().slice(0, 200) || null,
+      uso_maximo: parseInt(b.uso_maximo, 10) || 0,
+      uso_actual: 0,
       fecha_inicio: b.fecha_inicio,
       fecha_fin: b.fecha_fin,
-      estado: b.estado || 'activa'
-    }]);
+      activa: b.activa !== undefined ? !!b.activa : (b.estado ? b.estado === 'activa' : true)
+    }]).select().maybeSingle();
     if (error) return res.status(500).json({ error: error.message });
-    const row = Array.isArray(data) ? data[0] : null;
-    return res.status(201).json({ promocion: row });
+    return res.status(201).json({ promocion: data || null });
   } catch (err) { return handleServerError(res, err); }
 });
 
@@ -7758,13 +8664,14 @@ app.put('/api/promociones/:id', authenticate, requireTenantAdmin, requirePlanFea
     const tenant = normalizeTenantCode(getTenantCode(req));
     const empresa = await resolverEmpresaSupabase(tenant);
     if (!empresa) return res.status(404).json({ error: 'Empresa no encontrada' });
-    const campos = ['nombre', 'descripcion', 'tipo', 'valor', 'producto_ids', 'compra_minima', 'fecha_inicio', 'fecha_fin', 'estado'];
+    if (req.body.estado !== undefined && req.body.activa === undefined) req.body.activa = req.body.estado === 'activa';
+    const campos = ['nombre', 'descripcion', 'tipo', 'valor', 'compra_minima', 'descuento_maximo', 'aplica_a', 'aplica_valor', 'uso_maximo', 'uso_actual', 'fecha_inicio', 'fecha_fin', 'activa'];
     const update = { updated_at: new Date().toISOString() };
     campos.forEach(c => { if (req.body[c] !== undefined) update[c] = req.body[c]; });
     const { data, error } = await supabase.from('promociones').update(update)
-      .eq('id', req.params.id).eq('empresa_id', empresa.id);
+      .eq('id', req.params.id).eq('empresa_id', empresa.id).select().maybeSingle();
     if (error) return res.status(500).json({ error: error.message });
-    const row = Array.isArray(data) ? data[0] : null;
+    const row = data || null;
     return res.json({ promocion: row, success: true });
   } catch (err) { return handleServerError(res, err); }
 });
@@ -7833,45 +8740,128 @@ app.post('/api/ventas-fiadas', authenticate, requirePlanFeature('fiado'), async 
     if (!b.cliente_nombre) return res.status(400).json({ error: 'cliente_nombre es requerido' });
     if (items.length === 0) return res.status(400).json({ error: 'Debe incluir al menos un item' });
 
-    let subtotal = 0;
-    items.forEach(item => {
-      subtotal += (parseFloat(item.cantidad) || 0) * (parseFloat(item.precio_unitario) || 0);
+    // INTEGRIDAD: mismo precio autoritativo que el POS. El fiado es una venta
+    // más: si el precio lo fija el cliente, la deuda nace falseada.
+    const esOwnerLike = isOwnerUser(req) || isTenantAdminRole(req);
+    const { lines, subtotal, total } = await calcularLineas(supabase, tenant, items, {
+      permitirPrecioManual: esOwnerLike,
+      permitirStockNegativo: false,
     });
-    const total = subtotal;
-    const saldo_pendiente = total - (parseFloat(b.abono_inicial) || 0);
+    const abonoInicial = Math.max(0, Number(b.abono_inicial) || 0);
+    if (abonoInicial > total) {
+      return res.status(400).json({ error: 'El abono inicial no puede superar el total de la venta.' });
+    }
+    const saldo_pendiente = money2(total - abonoInicial);
 
     const { data: ventaData, error: ventaErr } = await supabase.from('ventas_fiadas').insert([{
       empresa_id: empresa.id,
       empresa_codigo: tenant,
+      cliente_id: b.cliente_id || null,
       cliente_nombre: (b.cliente_nombre || '').toString().slice(0, 200),
       cliente_telefono: (b.cliente_telefono || '').toString().slice(0, 50),
-      cliente_email: (b.cliente_email || '').toString().slice(0, 150),
+      cliente_direccion: (b.cliente_direccion || '').toString().slice(0, 250),
       vendedor_id: b.vendedor_id || null,
+      vendedor_nombre: (req.user?.nombre || '').toString().slice(0, 150),
       subtotal: subtotal,
       total: total,
       saldo_pendiente: saldo_pendiente > 0 ? saldo_pendiente : 0,
-      estado: saldo_pendiente <= 0 ? 'pagada' : (parseFloat(b.abono_inicial) > 0 ? 'parcial' : 'pendiente'),
+      estado: saldo_pendiente <= 0.01 ? 'pagada' : (abonoInicial > 0 ? 'parcial' : 'pendiente'),
+      fecha_venta: new Date().toISOString(),
       fecha_vencimiento: b.fecha_vencimiento || null,
+      dias_credito: parseInt(b.dias_credito, 10) || 0,
       notas: (b.notas || '').toString().slice(0, 500),
-      usuario: req.user?.nombre || '',
       created_at: new Date().toISOString()
     }]).select().maybeSingle();
     if (ventaErr) return res.status(500).json({ error: ventaErr.message });
 
-    const detalle = items.map(item => ({
-      empresa_id: empresa.id,
-      empresa_codigo: tenant,
+    const detalle = lines.map((l) => ({
       venta_fiada_id: ventaData.id,
-      producto_id: item.producto_id,
-      cantidad: parseFloat(item.cantidad) || 0,
-      precio_unitario: parseFloat(item.precio_unitario) || 0,
-      subtotal: (parseFloat(item.cantidad) || 0) * (parseFloat(item.precio_unitario) || 0)
+      producto_id: l.producto_id,
+      codigo: l.codigo,
+      nombre: l.nombre,
+      cantidad: l.cantidad,
+      precio_unitario: l.precio_unitario,
+      subtotal: l.total_linea
     }));
     const { error: detErr } = await supabase.from('ventas_fiadas_detalle').insert(detalle);
-    if (detErr) return res.status(500).json({ error: detErr.message });
+    if (detErr) {
+      await supabase.from('ventas_fiadas').delete().eq('id', ventaData.id).eq('empresa_codigo', tenant);
+      return res.status(500).json({ error: detErr.message });
+    }
+
+    // INTEGRIDAD (P0-3): la venta fiada TAMBIÉN es una venta. Antes no tocaba
+    // inventario: la deuda crecía mientras la mercancía seguía en el anaquel.
+    // Ahora descuenta stock y deja asiento en kardex, todo-o-nada.
+    try {
+      await aplicarMovimientoStock(supabase, {
+        empresa, tenant,
+        referenciaTipo: 'VENTA_FIADA',
+        referenciaId: ventaData.id,
+        usuario: req.user,
+        notas: `Venta fiada a ${b.cliente_nombre}`,
+        movimiento: 'SALIDA',
+      }, lines);
+    } catch (stockError) {
+      try {
+        await supabase.from('ventas_fiadas_detalle').delete().eq('venta_fiada_id', ventaData.id);
+        await supabase.from('ventas_fiadas').delete().eq('id', ventaData.id).eq('empresa_codigo', tenant);
+      } catch (e) {
+        console.error('[ventas-fiadas] reversión fallida:', e.message);
+      }
+      if (stockError instanceof IntegridadError) {
+        return res.status(stockError.status).json({
+          error: stockError.message,
+          code: stockError.code,
+          detalles: stockError.detalles || undefined,
+        });
+      }
+      throw stockError;
+    }
+
+    // El abono inicial debe existir como abono real para que el historial cuadre.
+    if (abonoInicial > 0) {
+      try {
+        await supabase.from('abonos').insert([{
+          empresa_id: empresa.id,
+          empresa_codigo: tenant,
+          venta_fiada_id: ventaData.id,
+          monto: abonoInicial,
+          metodo_pago: (b.metodo_pago_abono || 'efectivo').toString().slice(0, 50),
+          referencia: `Abono inicial - ${(b.cliente_nombre || '').toString().slice(0, 150)}`.slice(0, 200),
+          notas: 'Abono inicial de la venta',
+          fecha: new Date().toISOString(),
+        }]);
+      } catch (e) {
+        console.warn('[ventas-fiadas] abono inicial no registrado:', e.message);
+      }
+    }
+
+    // Historial de consumo del cliente (módulo CRM) para no romper la cadena.
+    const clienteCrmFiada = (b.cliente_nombre || '').toString().trim();
+    if (clienteCrmFiada) {
+      try {
+        await supabase.from('ventas_crm').insert([{
+          empresa_id: empresa.id,
+          empresa_codigo: tenant,
+          usuario_id: req.user?.sub || null,
+          cliente: clienteCrmFiada.slice(0, 200),
+          descripcion: `Venta fiada${b.dias_credito ? ` - ${b.dias_credito} dias de credito` : ''}`.slice(0, 250),
+          monto: total,
+          estado: 'ganada',
+          fecha: new Date().toISOString(),
+        }]);
+      } catch (e) {
+        console.warn('[ventas-fiadas] historial CRM no actualizado:', e.message);
+      }
+    }
 
     return res.status(201).json({ venta: Object.assign({}, ventaData, { items: detalle }) });
-  } catch (err) { return handleServerError(res, err); }
+  } catch (err) {
+    if (err instanceof IntegridadError) {
+      return res.status(err.status).json({ error: err.message, code: err.code, detalles: err.detalles || undefined });
+    }
+    return handleServerError(res, err);
+  }
 });
 
 app.get('/api/ventas-fiadas/:id', authenticate, requirePlanFeature('fiado'), async (req, res) => {
@@ -8028,7 +9018,7 @@ app.post('/api/abonos', authenticate, requirePlanFeature('fiado'), async (req, r
     if (!empresa) return res.status(404).json({ error: 'Empresa no encontrada' });
     const b = req.body || {};
     if (!b.venta_fiada_id) return res.status(400).json({ error: 'venta_fiada_id es requerido' });
-    const monto = parseFloat(b.monto) || 0;
+    const monto = Number(b.monto) || 0;
     if (monto <= 0) return res.status(400).json({ error: 'El monto debe ser mayor a 0' });
 
     const { data: venta, error: vErr } = await supabase
@@ -8039,27 +9029,65 @@ app.post('/api/abonos', authenticate, requirePlanFeature('fiado'), async (req, r
       .maybeSingle();
     if (vErr || !venta) return res.status(404).json({ error: 'Venta fiada no encontrada' });
 
-    const nuevoSaldo = Math.max(0, (Number(venta.saldo_pendiente) || 0) - monto);
-    const nuevoEstado = nuevoSaldo <= 0 ? 'pagada' : 'parcial';
+    const saldoActual = money2(Number(venta.saldo_pendiente) || 0);
+    if (saldoActual <= 0) {
+      return res.status(409).json({ error: 'Esta venta fiada ya está pagada.', code: 'VENTA_YA_PAGADA' });
+    }
+
+    // INTEGRIDAD: no se puede abonar más de lo adeudado. Antes el saldo se
+    // truncaba con Math.max(0, ...) y el excedente se perdía sin aviso:
+    // el cobrador entregaba L.1000 y el sistema registraba L.50.
+    const saldoAPagar = money2(monto);
+    if (saldoAPagar > saldoActual) {
+      return res.status(400).json({
+        error: `El abono supera el saldo pendiente. Saldo actual: ${saldoActual.toFixed(2)}.`,
+        code: 'ABONO_EXCEDE_SALDO',
+        saldo_pendiente: saldoActual,
+      });
+    }
+
+    const nuevoSaldo = money2(saldoActual - saldoAPagar);
+    const nuevoEstado = nuevoSaldo <= 0.01 ? 'pagada' : 'parcial';
 
     const { data: abonoData, error: abErr } = await supabase.from('abonos').insert([{
       empresa_id: empresa.id,
       empresa_codigo: tenant,
       venta_fiada_id: b.venta_fiada_id,
-      monto: monto,
+      monto: saldoAPagar,
       metodo_pago: (b.metodo_pago || 'efectivo').toString().slice(0, 50),
+      referencia: (b.referencia || '').toString().slice(0, 100),
       notas: (b.notas || '').toString().slice(0, 300),
-      usuario: req.user?.nombre || '',
+      usuario_id: req.user?.sub || null,
+      usuario_nombre: (req.user?.nombre || '').toString().slice(0, 150),
+      fecha: new Date().toISOString(),
       created_at: new Date().toISOString()
     }]).select().maybeSingle();
     if (abErr) return res.status(500).json({ error: abErr.message });
 
-    const { error: upErr } = await supabase.from('ventas_fiadas').update({
+    // INTEGRIDAD: (a) el update se acota al tenant, (b) se usa bloqueo
+    // optimista sobre el saldo leído para que dos cobradores simultáneos no
+    // sobrescriban el saldo del otro, y (c) si el update no pega, se borra el
+    // abono: nunca queda un cobro registrado sin aplicarlo a la deuda.
+    const { data: upd, error: upErr } = await supabase.from('ventas_fiadas').update({
       saldo_pendiente: nuevoSaldo,
       estado: nuevoEstado,
       updated_at: new Date().toISOString()
-    }).eq('id', b.venta_fiada_id);
-    if (upErr) return res.status(500).json({ error: upErr.message });
+    }).eq('id', b.venta_fiada_id)
+      .eq('empresa_id', empresa.id)
+      .eq('empresa_codigo', tenant)
+      .eq('saldo_pendiente', saldoActual)
+      .select();
+    if (upErr) {
+      await supabase.from('abonos').delete().eq('id', abonoData.id).eq('empresa_codigo', tenant);
+      return res.status(500).json({ error: upErr.message });
+    }
+    if (!upd || upd.length === 0) {
+      await supabase.from('abonos').delete().eq('id', abonoData.id).eq('empresa_codigo', tenant);
+      return res.status(409).json({
+        error: 'Otro cobro se aplicó a esta venta al mismo tiempo. Intente de nuevo.',
+        code: 'ABONO_CONFLICTO',
+      });
+    }
 
     return res.status(201).json({ abono: abonoData, saldo_pendiente: nuevoSaldo, estado: nuevoEstado });
   } catch (err) { return handleServerError(res, err); }
@@ -8113,13 +9141,13 @@ app.post('/api/rutas', authenticate, requireTenantAdmin, requirePlanFeature('rut
       nombre: nombre.slice(0, 200),
       descripcion: (b.descripcion || '').toString().slice(0, 500),
       vendedor_id: b.vendedor_id || null,
-      dias: b.dias || [],
+      vendedor_nombre: (b.vendedor_nombre || '').toString().slice(0, 150) || null,
+      dias_recorrido: b.dias_recorrido ?? b.dias ?? [],
       zona: (b.zona || '').toString().slice(0, 100),
-      estado: b.estado || 'activa'
-    }]);
+      activa: b.activa !== undefined ? !!b.activa : (b.estado ? b.estado === 'activa' : true)
+    }]).select().maybeSingle();
     if (error) return res.status(500).json({ error: error.message });
-    const row = Array.isArray(data) ? data[0] : null;
-    return res.status(201).json({ ruta: row });
+    return res.status(201).json({ ruta: data || null });
   } catch (err) { return handleServerError(res, err); }
 });
 
@@ -8129,14 +9157,15 @@ app.put('/api/rutas/:id', authenticate, requireTenantAdmin, requirePlanFeature('
     const tenant = normalizeTenantCode(getTenantCode(req));
     const empresa = await resolverEmpresaSupabase(tenant);
     if (!empresa) return res.status(404).json({ error: 'Empresa no encontrada' });
-    const campos = ['nombre', 'descripcion', 'vendedor_id', 'dias', 'zona', 'estado'];
+    if (req.body.dias !== undefined && req.body.dias_recorrido === undefined) req.body.dias_recorrido = req.body.dias;
+    if (req.body.estado !== undefined && req.body.activa === undefined) req.body.activa = req.body.estado === 'activa';
+    const campos = ['nombre', 'descripcion', 'vendedor_id', 'vendedor_nombre', 'dias_recorrido', 'orden_clientes', 'zona', 'activa'];
     const update = { updated_at: new Date().toISOString() };
     campos.forEach(c => { if (req.body[c] !== undefined) update[c] = req.body[c]; });
     const { data, error } = await supabase.from('rutas').update(update)
-      .eq('id', req.params.id).eq('empresa_id', empresa.id);
+      .eq('id', req.params.id).eq('empresa_id', empresa.id).select().maybeSingle();
     if (error) return res.status(500).json({ error: error.message });
-    const row = Array.isArray(data) ? data[0] : null;
-    return res.json({ ruta: row, success: true });
+    return res.json({ ruta: data || null, success: true });
   } catch (err) { return handleServerError(res, err); }
 });
 
@@ -8209,13 +9238,13 @@ app.post('/api/visitas', authenticate, requirePlanFeature('rutas'), async (req, 
       cliente_nombre: (b.cliente_nombre || '').toString().slice(0, 200),
       cliente_direccion: (b.cliente_direccion || '').toString().slice(0, 300),
       cliente_telefono: (b.cliente_telefono || '').toString().slice(0, 50),
-      fecha: b.fecha || new Date().toISOString(),
+      fecha_programada: String(b.fecha_programada || b.fecha || new Date().toISOString()).slice(0, 10),
       hora_inicio: b.hora_inicio || null,
       hora_fin: b.hora_fin || null,
       estado: b.estado || 'pendiente',
       resultado: b.resultado || null,
       notas: (b.notas || '').toString().slice(0, 500),
-      usuario: req.user?.nombre || '',
+      vendedor_nombre: (b.vendedor_nombre || req.user?.nombre || '').toString().slice(0, 150),
       created_at: new Date().toISOString()
     }]).select().maybeSingle();
     if (error) return res.status(500).json({ error: error.message });
@@ -8286,19 +9315,23 @@ app.post('/api/transferencias', authenticate, requireTenantAdmin, requirePlanFea
       numero: numero,
       sucursal_origen_id: b.sucursal_origen_id,
       sucursal_destino_id: b.sucursal_destino_id,
+      bodega_origen_id: b.bodega_origen_id || null,
+      bodega_destino_id: b.bodega_destino_id || null,
       estado: 'pendiente',
       notas: (b.notas || '').toString().slice(0, 500),
-      usuario: req.user?.nombre || '',
+      usuario_id: req.user?.sub || null,
+      usuario_nombre: req.user?.nombre || '',
+      fecha: now.toISOString(),
       created_at: now.toISOString()
     }]).select().maybeSingle();
     if (trfErr) return res.status(500).json({ error: trfErr.message });
 
     const detalle = items.map(item => ({
-      empresa_id: empresa.id,
-      empresa_codigo: tenant,
       transferencia_id: trfData.id,
       producto_id: item.producto_id,
-      cantidad: parseFloat(item.cantidad) || 0
+      codigo: (item.codigo || '').toString(),
+      nombre: (item.nombre || item.producto_nombre || '').toString(),
+      cantidad_solicitada: parseFloat(item.cantidad) || 0
     }));
     const { error: detErr } = await supabase.from('transferencias_detalle').insert(detalle);
     if (detErr) return res.status(500).json({ error: detErr.message });
@@ -8350,46 +9383,51 @@ app.patch('/api/transferencias/:id', authenticate, requireTenantAdmin, requirePl
       const { data: items } = await supabase.from('transferencias_detalle').select('*').eq('transferencia_id', trf.id);
       if (items && items.length) {
         for (const item of items) {
-          const { data: prod } = await supabase.from('productos').select('id, stock_actual').eq('id', item.producto_id).maybeSingle();
-          if (prod) {
-            const anterior = Number(prod.stock_actual) || 0;
-            const nuevoSaldo = anterior - (Number(item.cantidad) || 0);
-            if (nuevoSaldo < 0) continue;
-            await supabase.from('productos').update({ stock_actual: nuevoSaldo, updated_at: new Date().toISOString() }).eq('id', item.producto_id);
-            await supabase.from('kardex').insert([{
-              empresa_id: empresa.id,
-              empresa_codigo: tenant,
-              producto_id: item.producto_id,
-              sucursal_id: trf.sucursal_origen_id,
-              tipo: 'salida',
-              cantidad: Number(item.cantidad) || 0,
-              cantidad_anterior: anterior,
-              cantidad_nueva: nuevoSaldo,
-              referencia: trf.numero,
-              notas: 'Transferencia saliente ' + trf.numero,
-              usuario: req.user?.nombre || '',
-              created_at: new Date().toISOString()
-            }]);
+          if (!item.producto_id) continue;
+          const cant = Number(item.cantidad_enviada ?? item.cantidad_solicitada ?? item.cantidad) || 0;
+          if (cant <= 0) continue;
 
-            const { data: prodDest } = await supabase.from('productos').select('id, stock_actual').eq('id', item.producto_id).maybeSingle();
-            const stockDest = Number(prodDest?.stock_actual) || 0;
-            const nuevoDest = stockDest + (Number(item.cantidad) || 0);
-            await supabase.from('productos').update({ stock_actual: nuevoDest, updated_at: new Date().toISOString() }).eq('id', item.producto_id);
-            await supabase.from('kardex').insert([{
-              empresa_id: empresa.id,
-              empresa_codigo: tenant,
-              producto_id: item.producto_id,
-              sucursal_id: trf.sucursal_destino_id,
-              tipo: 'entrada',
-              cantidad: Number(item.cantidad) || 0,
-              cantidad_anterior: stockDest,
-              cantidad_nueva: nuevoDest,
-              referencia: trf.numero,
-              notas: 'Transferencia entrante ' + trf.numero,
-              usuario: req.user?.nombre || '',
-              created_at: new Date().toISOString()
-            }]);
-          }
+          const { data: outA, error: outErr } = await supabase.rpc('pp_ajustar_stock', {
+            p_empresa_codigo: tenant, p_producto_id: item.producto_id, p_delta: -cant
+          });
+          if (outErr) { console.error('[Transferencia] salida', item.producto_id, outErr.message); continue; }
+          const { error: kx1 } = await supabase.from('kardex').insert([{
+            empresa_id: empresa.id,
+            empresa_codigo: tenant,
+            producto_id: item.producto_id,
+            sucursal_id: trf.sucursal_origen_id,
+            tipo_movimiento: 'TRANSFERENCIA_SALIDA',
+            cantidad: cant,
+            cantidad_anterior: outA && outA[0] ? outA[0].anterior : null,
+            cantidad_nueva: outA && outA[0] ? outA[0].nuevo : null,
+            referencia_tipo: 'TRANSFERENCIA',
+            referencia_id: trf.id,
+            notas: 'Transferencia saliente ' + (trf.numero || ''),
+            usuario_id: req.user?.sub || null,
+            usuario_nombre: req.user?.nombre || ''
+          }]);
+          if (kx1) console.error('[Transferencia] kardex salida', item.producto_id, kx1.message);
+
+          const { data: inA, error: inErr } = await supabase.rpc('pp_ajustar_stock', {
+            p_empresa_codigo: tenant, p_producto_id: item.producto_id, p_delta: cant
+          });
+          if (inErr) { console.error('[Transferencia] entrada', item.producto_id, inErr.message); continue; }
+          const { error: kx2 } = await supabase.from('kardex').insert([{
+            empresa_id: empresa.id,
+            empresa_codigo: tenant,
+            producto_id: item.producto_id,
+            sucursal_id: trf.sucursal_destino_id,
+            tipo_movimiento: 'TRANSFERENCIA_ENTRADA',
+            cantidad: cant,
+            cantidad_anterior: inA && inA[0] ? inA[0].anterior : null,
+            cantidad_nueva: inA && inA[0] ? inA[0].nuevo : null,
+            referencia_tipo: 'TRANSFERENCIA',
+            referencia_id: trf.id,
+            notas: 'Transferencia entrante ' + (trf.numero || ''),
+            usuario_id: req.user?.sub || null,
+            usuario_nombre: req.user?.nombre || ''
+          }]);
+          if (kx2) console.error('[Transferencia] kardex entrada', item.producto_id, kx2.message);
         }
       }
     }
@@ -8433,14 +9471,15 @@ app.post('/api/membresias/planes', authenticate, requireTenantAdmin, requirePlan
       descripcion: (b.descripcion || '').toString().slice(0, 500),
       precio_mensual: parseFloat(b.precio_mensual) || 0,
       precio_anual: parseFloat(b.precio_anual) || 0,
-      duracion_dias: parseInt(b.duracion_dias, 10) || 30,
+      nivel: (b.nivel || '').toString().slice(0, 50) || null,
+      descuento_porcentaje: parseFloat(b.descuento_porcentaje) || 0,
+      puntos_por_lempira: parseFloat(b.puntos_por_lempira ?? b.puntos_por_quetzal) || 1,
       beneficios: b.beneficios || [],
-      puntos_por_quetzal: parseFloat(b.puntos_por_quetzal) || 1,
-      estado: b.estado || 'activo'
-    }]);
+      limite_compras_mensuales: parseInt(b.limite_compras_mensuales, 10) || 0,
+      activo: b.activo !== undefined ? !!b.activo : (b.estado ? b.estado === 'activo' : true)
+    }]).select().maybeSingle();
     if (error) return res.status(500).json({ error: error.message });
-    const row = Array.isArray(data) ? data[0] : null;
-    return res.status(201).json({ plan: row });
+    return res.status(201).json({ plan: data || null });
   } catch (err) { return handleServerError(res, err); }
 });
 
@@ -8450,14 +9489,15 @@ app.put('/api/membresias/planes/:id', authenticate, requireTenantAdmin, requireP
     const tenant = normalizeTenantCode(getTenantCode(req));
     const empresa = await resolverEmpresaSupabase(tenant);
     if (!empresa) return res.status(404).json({ error: 'Empresa no encontrada' });
-    const campos = ['nombre', 'descripcion', 'precio_mensual', 'precio_anual', 'duracion_dias', 'beneficios', 'puntos_por_quetzal', 'estado'];
+    const campos = ['nombre', 'descripcion', 'precio_mensual', 'precio_anual', 'nivel', 'descuento_porcentaje', 'puntos_por_lempira', 'beneficios', 'limite_compras_mensuales', 'activo'];
     const update = { updated_at: new Date().toISOString() };
     campos.forEach(c => { if (req.body[c] !== undefined) update[c] = req.body[c]; });
+    if (req.body.estado !== undefined && req.body.activo === undefined) update.activo = req.body.estado === 'activo';
+    if (req.body.puntos_por_quetzal !== undefined && req.body.puntos_por_lempira === undefined) update.puntos_por_lempira = req.body.puntos_por_quetzal;
     const { data, error } = await supabase.from('planes_membresia').update(update)
-      .eq('id', req.params.id).eq('empresa_id', empresa.id);
+      .eq('id', req.params.id).eq('empresa_id', empresa.id).select().maybeSingle();
     if (error) return res.status(500).json({ error: error.message });
-    const row = Array.isArray(data) ? data[0] : null;
-    return res.json({ plan: row, success: true });
+    return res.json({ plan: data || null, success: true });
   } catch (err) { return handleServerError(res, err); }
 });
 
@@ -8504,12 +9544,9 @@ app.post('/api/membresias/socios', authenticate, requireTenantAdmin, requirePlan
 
     let fecha_vencimiento = b.fecha_vencimiento;
     if (!fecha_vencimiento && b.plan_id) {
-      const { data: plan } = await supabase.from('planes_membresia').select('duracion_dias').eq('id', b.plan_id).maybeSingle();
-      if (plan && plan.duracion_dias) {
-        const fv = new Date();
-        fv.setDate(fv.getDate() + Number(plan.duracion_dias));
-        fecha_vencimiento = fv.toISOString().slice(0, 10);
-      }
+      const fv = new Date();
+      fv.setDate(fv.getDate() + 30);
+      fecha_vencimiento = fv.toISOString().slice(0, 10);
     }
 
     const { data, error } = await supabase.from('socios').insert([{
@@ -8521,7 +9558,7 @@ app.post('/api/membresias/socios', authenticate, requireTenantAdmin, requirePlan
       telefono: (b.telefono || '').toString().slice(0, 50),
       direccion: (b.direccion || '').toString().slice(0, 300),
       plan_id: b.plan_id || null,
-      fecha_registro: new Date().toISOString().slice(0, 10),
+      fecha_inicio: new Date().toISOString().slice(0, 10),
       fecha_vencimiento: fecha_vencimiento || null,
       puntos_acumulados: 0,
       estado: b.estado || 'activo',
@@ -8575,10 +9612,20 @@ app.get('/api/membresias/socios/:id/puntos', authenticate, requirePlanFeature('p
     const tenant = normalizeTenantCode(getTenantCode(req));
     const empresa = await resolverEmpresaSupabase(tenant);
     if (!empresa) return res.status(404).json({ error: 'Empresa no encontrada' });
+    // Antes solo filtraba por socio_id: cualquier usuario autenticado con el
+// feature 'puntos' podia leer el libro de puntos de un socio de otro tenant
+// pasando su UUID. Se valida que el socio sea de ESTE tenant y la consulta
+// se acota por empresa_codigo.
+const { data: socio, error: socioErr } = await supabase
+      .from('socios').select('id').eq('id', req.params.id).eq('empresa_id', empresa.id).maybeSingle();
+    if (socioErr) return res.status(500).json({ error: socioErr.message });
+    if (!socio) return res.status(404).json({ error: 'Socio no encontrado' });
+
     const { data, error } = await supabase
       .from('socios_puntos')
       .select('*')
       .eq('socio_id', req.params.id)
+      .eq('empresa_codigo', tenant)
       .order('created_at', { ascending: false });
     if (error) return res.status(500).json({ error: error.message });
     return res.json({ puntos: data || [] });
@@ -8597,41 +9644,37 @@ app.post('/api/membresias/socios/:id/puntos', authenticate, requirePlanFeature('
     if (!['acumular', 'canjear'].includes(tipo)) return res.status(400).json({ error: 'tipo debe ser acumular o canjear' });
     if (cantidad <= 0) return res.status(400).json({ error: 'La cantidad debe ser mayor a 0' });
 
-    const { data: socio, error: sErr } = await supabase
-      .from('socios').select('id, puntos_acumulados').eq('id', req.params.id).eq('empresa_id', empresa.id).maybeSingle();
-    if (sErr || !socio) return res.status(404).json({ error: 'Socio no encontrado' });
-
-    const puntosActuales = Number(socio.puntos_acumulados) || 0;
-    let nuevosPuntos = puntosActuales;
-    if (tipo === 'acumular') {
-      nuevosPuntos = puntosActuales + cantidad;
-    } else {
-      if (puntosActuales < cantidad) return res.status(400).json({ error: 'Puntos insuficientes. Disponibles: ' + puntosActuales });
-      nuevosPuntos = puntosActuales - cantidad;
+    // Saldo y asiento se escriben en UNA transaccion (socios_mover_puntos).
+    // Antes se actualizaba el saldo y luego se insertaba el movimiento: si el
+    // insert fallaba el saldo ya habia cambiado y el 500 invitaba a reintentar,
+    // descontando dos veces. La funcion ademas bloquea la fila (FOR UPDATE)
+    // para que dos canjes simultaneos no gasten el mismo saldo.
+    const { data: movRows, error: rpcErr } = await supabase.rpc('socios_mover_puntos', {
+      p_empresa_codigo: tenant,
+      p_empresa_id: empresa.id,
+      p_socio_id: req.params.id,
+      p_tipo: tipo,
+      p_cantidad: cantidad,
+      p_referencia: (b.referencia || '').toString().slice(0, 200),
+      p_notas: (b.notas || '').toString().slice(0, 300),
+      p_usuario: req.user?.nombre || ''
+    });
+    if (rpcErr) {
+      const msg = rpcErr.message || '';
+      if (msg.includes('Socio no encontrado')) return res.status(404).json({ error: msg });
+      if (msg.includes('Puntos insuficientes')) return res.status(400).json({ error: msg });
+      return res.status(500).json({ error: msg });
     }
 
-    const { error: upErr } = await supabase.from('socios').update({
-      puntos_acumulados: nuevosPuntos,
-      updated_at: new Date().toISOString()
-    }).eq('id', socio.id);
-    if (upErr) return res.status(500).json({ error: upErr.message });
-
-    const { data: puntosData, error: pErr } = await supabase.from('socios_puntos').insert([{
-      empresa_id: empresa.id,
-      empresa_codigo: tenant,
-      socio_id: socio.id,
-      tipo: tipo,
-      cantidad: cantidad,
-      puntos_anteriores: puntosActuales,
-      puntos_nuevos: nuevosPuntos,
-      referencia: (b.referencia || '').toString().slice(0, 200),
-      notas: (b.notas || '').toString().slice(0, 300),
-      usuario: req.user?.nombre || '',
-      created_at: new Date().toISOString()
-    }]).select().maybeSingle();
-    if (pErr) return res.status(500).json({ error: pErr.message });
-
-    return res.status(201).json({ movimiento: puntosData, puntos_anteriores: puntosActuales, puntos_nuevos: nuevosPuntos });
+    const mov = Array.isArray(movRows) ? movRows[0] : movRows;
+    return res.status(201).json({
+      movimiento: {
+        id: mov?.movimiento_id, socio_id: req.params.id, tipo, cantidad,
+        puntos_anteriores: mov?.puntos_anteriores, puntos_nuevos: mov?.puntos_nuevos
+      },
+      puntos_anteriores: mov?.puntos_anteriores,
+      puntos_nuevos: mov?.puntos_nuevos
+    });
   } catch (err) { return handleServerError(res, err); }
 });
 
@@ -8708,9 +9751,8 @@ async function registrarEventoSeguridad(empresaCodigo, evento, { usuarioId = nul
       evento: String(evento).slice(0, 80),
       severidad,
       ip,
-      dispositivo: obtenerDispositivo(req?.headers?.['user-agent']),
       descripcion: String(descripcion).slice(0, 1000),
-      metadata
+      metadata: { ...metadata, dispositivo: obtenerDispositivo(req?.headers?.['user-agent']) }
     });
   } catch (e) { console.warn('[SEC_EVENT] Non-critical:', e.message); }
 }
@@ -8890,81 +9932,75 @@ app.get('/api/empresa/roles', authenticate, requireTenantAdmin, async (req, res)
   } catch (err) { return handleServerError(res, err); }
 });
 
-// ── GET /api/empresa/modules — catálogo derivado de tenant → plan → entitlements ──
-const MODULO_CATALOGO = Object.freeze({
-  pos:             { nombre: 'POS',                     icono: 'fa-cash-register',       feature: 'pos' },
-  inventario:      { nombre: 'Inventario',              icono: 'fa-boxes-stacked',       feature: 'inventario' },
-  facturacion:     { nombre: 'Facturación',             icono: 'fa-file-invoice-dollar', feature: 'facturacion_sar' },
-  contabilidad:    { nombre: 'Contabilidad',            icono: 'fa-calculator',          feature: 'operacion_completa' },
-  crm:             { nombre: 'CRM',                     icono: 'fa-users',               feature: 'clientes' },
-  rrhh:            { nombre: 'RRHH',                    icono: 'fa-id-badge',            feature: 'operacion_completa' },
-  educacion:       { nombre: 'Educación',               icono: 'fa-graduation-cap',      feature: 'operacion_basica' },
-  soporte:         { nombre: 'Soporte',                 icono: 'fa-headset',             feature: 'operacion_basica' },
-  ia:              { nombre: 'Inteligencia Artificial', icono: 'fa-wand-magic-sparkles', feature: 'ia' },
-  reportes:        { nombre: 'Reportes',                icono: 'fa-chart-bar',           feature: 'reportes' },
-  sucursales:      { nombre: 'Sucursales',              icono: 'fa-store',               feature: 'sucursales' },
-  rutas:           { nombre: 'Rutas y Cobros',          icono: 'fa-route',               feature: 'rutas' },
-  automatizacion:  { nombre: 'Automatizaciones',        icono: 'fa-robot',               feature: 'automation' },
-  api:             { nombre: 'API',                     icono: 'fa-plug',                feature: 'api_keys' },
-  flota:           { nombre: 'Flota',                   icono: 'fa-truck',               feature: 'fleet' }
-});
-
+// ── GET /api/empresa/modules — catálogo real de 21 módulos del cotizador ──
+// Cada módulo viaja con su precio en HNL y su mapeo al módulo de la app
+// (`modulo_app`), para que el owner sepa exactamente qué habilita.
 app.get('/api/empresa/modules', authenticate, requireTenantAdmin, async (req, res) => {
   if (!requireSupabase(res)) return;
   try {
     const tenant = normalizeTenantCode(getTenantCode(req));
     const ent = await getTenantEntitlements(req);
-    const features = ent.features || [];
-    // Activación real por tenant (override en tenant_features)
-    const { data: activadas } = await supabase.from('tenant_features')
-      .select('feature_key, enabled').eq('empresa_codigo', tenant);
-    const activadasMap = {};
-    (activadas || []).forEach(f => { activadasMap[f.feature_key] = f.enabled !== false; });
+    const { data: tenantRow } = await supabase.from('tenants').select('*').eq('codigo', tenant).maybeSingle();
+    const plan = normalizePlan(tenantRow?.plan || ent.plan);
+    const activos = new Set(await resolverModulosTenant(tenant, tenantRow, plan));
+    const rows = await getTenantModulosRows(tenant);
+    const desactivados = new Set(rows.filter(r => r.activo === false).map(r => r.modulo_clave));
+    const planBase = new Set(getModulesForAreaAndPlan(tenantRow?.area, plan, tenantRow));
 
-    const modulos = Object.entries(MODULO_CATALOGO).map(([key, m]) => {
-      const enPlan = features.includes(m.feature);
-      const activada = activadasMap[key];
-      let estado = 'activo';
+    const modulos = MODULOS_COTIZADOR.map(clave => {
+      const meta = MODULOS_COTIZADOR_META[clave] || {};
+      const enPlan = plan === 'personalizado' ? activos.has(clave) : planBase.has(clave);
+      let estado = 'disponible';
       if (!enPlan) estado = 'requiere_upgrade';
-      else if (activada === false) estado = 'bloqueado';
-      else if (activada === undefined && key !== 'pos') estado = 'disponible';
+      else if (activos.has(clave)) estado = 'activo';
+      else if (desactivados.has(clave)) estado = 'bloqueado';
       return {
-        key,
-        nombre: m.nombre,
-        icono: m.icono,
+        key: clave,
+        nombre: meta.nombre || clave,
+        icono: meta.icono || 'fa-cube',
+        categoria: meta.categoria || '',
         estado,
         en_plan: enPlan,
-        feature: m.feature,
-        limite: (ent.customLimits && ent.customLimits[key] !== undefined) ? ent.customLimits[key] : (key === 'sucursales' ? ent.maxCompanies : null)
+        feature: 'modulo:' + clave,
+        precio_mensual_hnl: meta.precio || 0,
+        modulo_app: MODULO_APP_MAP[clave] || [],
+        limite: null
       };
     });
-    return res.json({ plan: ent.plan, estado: ent.status, modulos });
+    return res.json({ plan, estado: ent.status, cotizador_base_hnl: 150, modulos });
   } catch (err) { return handleServerError(res, err); }
 });
 
-// Activar/desactivar módulo del catálogo (persistido en tenant_features)
+// Activar/desactivar módulo del catálogo (persistido en tenant_modulos).
+// En planes fijos solo se puede desactivar lo que el plan ya incluye; en
+// Personalizado el owner arma su plan desde el cotizador.
 app.put('/api/empresa/modules/:key', authenticate, requireTenantAdmin, async (req, res) => {
   if (!requireSupabase(res)) return;
   try {
     const tenant = normalizeTenantCode(getTenantCode(req));
     const key = String(req.params.key || '').trim();
-    const meta = MODULO_CATALOGO[key];
-    if (!meta) return res.status(404).json({ error: 'Módulo desconocido.' });
+    if (!MODULOS_COTIZADOR.includes(key)) return res.status(404).json({ error: 'Módulo desconocido.' });
     const enabled = req.body?.enabled !== false;
-    if (enabled) {
-      const ent = await getTenantEntitlements(req);
-      if (!(ent.features || []).includes(meta.feature)) {
-        return res.status(403).json({ error: `El módulo ${meta.nombre} requiere un plan superior.`, code: 'PLAN_LIMIT' });
-      }
+    const { data: tenantRow } = await supabase.from('tenants').select('*').eq('codigo', tenant).maybeSingle();
+    const ent = req.entitlements || await getTenantEntitlements(req);
+    const plan = normalizePlan(tenantRow?.plan || ent.plan);
+    const planBase = new Set(getModulesForAreaAndPlan(tenantRow?.area, plan, tenantRow));
+    if (enabled && plan !== 'personalizado' && plan !== 'starter' && !planBase.has(key)) {
+      return res.status(403).json({
+        error: `El módulo ${MODULOS_COTIZADOR_META[key]?.nombre || key} no está incluido en tu plan. Agrégalo desde el cotizador o mejora tu plan.`,
+        code: 'PLAN_LIMIT'
+      });
     }
-    const { data: existing } = await supabase.from('tenant_features')
-      .select('id').eq('empresa_codigo', tenant).eq('feature_key', key).maybeSingle();
-    if (existing) {
-      await supabase.from('tenant_features').update({ enabled, updated_at: new Date().toISOString() }).eq('id', existing.id);
-    } else {
-      await supabase.from('tenant_features').insert({ empresa_codigo: tenant, feature_key: key, enabled });
-    }
-    await registrarAuditoria(tenant, enabled ? 'Módulo activado' : 'Módulo desactivado', `${meta.nombre} (${key})`, 'configuracion', req.user?.email || '', req);
+    const { error: upErr } = await supabase.from('tenant_modulos').upsert({
+      empresa_codigo: tenant,
+      modulo_clave: key,
+      activo: enabled,
+      origen: plan === 'personalizado' ? 'cotizador' : 'owner',
+      asignado_por: req.user?.email || '',
+      updated_at: new Date().toISOString()
+    }, { onConflict: 'empresa_codigo,modulo_clave' });
+    if (upErr) return res.status(500).json({ error: 'No se pudo guardar la configuración del módulo.' });
+    await registrarAuditoria(tenant, enabled ? 'Módulo activado' : 'Módulo desactivado', `${MODULOS_COTIZADOR_META[key]?.nombre || key} (${key})`, 'configuracion', req.user?.email || '', req);
     return res.json({ success: true, key, enabled });
   } catch (err) { return handleServerError(res, err); }
 });
@@ -9253,6 +10289,174 @@ app.put('/api/empresa/integrations/:key', authenticate, requireTenantAdmin, asyn
   } catch (err) { return handleServerError(res, err); }
 });
 
+// ════════════════════════════════════════════════════════════════════════════════
+// GOOGLE SHEETS OAUTH2 — Flujo completo: authorize → callback → tokens → sync
+// ════════════════════════════════════════════════════════════════════════════════
+const GOOGLE_SHEETS_SCOPES = [
+  'https://www.googleapis.com/auth/spreadsheets',
+  'https://www.googleapis.com/auth/drive.file'
+].join(' ');
+
+function getGoogleOAuth2Client() {
+  const clientId = process.env.GOOGLE_CLIENT_ID;
+  const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+  const redirectUri = process.env.GOOGLE_REDIRECT_URI || `${process.env.FRONTEND_URL || 'http://localhost:5173'}/integrations/google/callback`;
+  if (!clientId || !clientSecret) return null;
+  const { OAuth2Client } = require('google-auth-library');
+  return new OAuth2Client(clientId, clientSecret, redirectUri);
+}
+
+// 1. Iniciar flujo OAuth2 → redirige a Google
+app.get('/api/integrations/google/authorize', authenticate, requireTenantAdmin, async (req, res) => {
+  try {
+    const client = getGoogleOAuth2Client();
+    if (!client) return res.status(503).json({ error: 'Google OAuth2 no configurado (GOOGLE_CLIENT_ID/SECRET).' });
+    const tenant = normalizeTenantCode(getTenantCode(req));
+    const state = Buffer.from(JSON.stringify({ tenant, user: req.user?.sub })).toString('base64url');
+    const url = client.generateAuthUrl({
+      access_type: 'offline',
+      scope: GOOGLE_SHEETS_SCOPES,
+      prompt: 'consent',
+      state
+    });
+    return res.json({ url, state });
+  } catch (err) { return handleServerError(res, err); }
+});
+
+// 2. Callback de Google → intercambia code por tokens y guarda en tenant_integrations
+app.get('/api/integrations/google/callback', async (req, res) => {
+  try {
+    const { code, state, error } = req.query;
+    if (error) return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/integrations?error=${encodeURIComponent(error)}`);
+    if (!code || !state) return res.status(400).send('Faltan code o state');
+
+    let payload;
+    try { payload = JSON.parse(Buffer.from(state, 'base64url').toString()); } catch { return res.status(400).send('State inválido'); }
+    const { tenant, user } = payload;
+
+    const client = getGoogleOAuth2Client();
+    if (!client) return res.status(503).send('Google OAuth2 no configurado');
+
+    const { tokens } = await client.getToken(code);
+    if (!tokens.access_token || !tokens.refresh_token) return res.status(400).send('No se obtuvieron tokens de Google');
+
+    // Guarda tokens encriptados en tenant_integrations
+    if (!requireSupabase(res)) return res.status(503).send('Supabase no disponible');
+    const crypto = require('crypto');
+    const ENCRYPTION_KEY = process.env.INTEGRATION_ENCRYPTION_KEY || process.env.JWT_SECRET || 'dev-key-32-chars-minimum-length!!';
+    const algorithm = 'aes-256-gcm';
+    const iv = crypto.randomBytes(12);
+    const cipher = crypto.createCipheriv(algorithm, Buffer.from(ENCRYPTION_KEY).slice(0, 32), iv);
+    const encrypted = Buffer.concat([cipher.update(JSON.stringify(tokens), 'utf8'), cipher.final()]);
+    const authTag = cipher.getAuthTag();
+    const storedConfig = Buffer.concat([iv, authTag, encrypted]).toString('base64');
+
+    const ahora = new Date().toISOString();
+    const { error: upsertError } = await supabase.from('tenant_integrations').upsert({
+      empresa_codigo: tenant,
+      integration_key: 'sheets',
+      enabled: true,
+      config: storedConfig,
+      connected_by: user,
+      connected_at: ahora,
+      updated_at: ahora
+    }, { onConflict: 'empresa_codigo,integration_key' });
+
+    if (upsertError) throw upsertError;
+
+    await registrarAuditoria(tenant, 'Google Sheets conectado', 'OAuth2 completado', 'configuracion', user);
+    return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/integrations?connected=sheets`);
+  } catch (err) { return handleServerError(res, err); }
+});
+
+// 3. Desconectar Google Sheets (revoca tokens y limpia config)
+app.delete('/api/empresa/integrations/sheets', authenticate, requireTenantAdmin, async (req, res) => {
+  try {
+    const tenant = normalizeTenantCode(getTenantCode(req));
+    const { error } = await supabase.from('tenant_integrations').update({
+      enabled: false,
+      config: null,
+      connected_at: null,
+      updated_at: new Date().toISOString()
+    }).eq('empresa_codigo', tenant).eq('integration_key', 'sheets');
+    if (error) throw error;
+    await registrarAuditoria(tenant, 'Google Sheets desconectado', 'Tokens revocados', 'configuracion', req.user?.email || '');
+    return res.json({ success: true });
+  } catch (err) { return handleServerError(res, err); }
+});
+
+// 4. Sync manual: exporta ventas del día a Google Sheets
+app.post('/api/empresa/integrations/sheets/sync', authenticate, requireTenantAdmin, async (req, res) => {
+  try {
+    const tenant = normalizeTenantCode(getTenantCode(req));
+    const { data: integracion } = await supabase.from('tenant_integrations')
+      .select('config').eq('empresa_codigo', tenant).eq('integration_key', 'sheets').maybeSingle();
+    if (!integracion?.config) return res.status(400).json({ error: 'Google Sheets no conectado' });
+
+    // Desencripta tokens
+    const crypto = require('crypto');
+    const ENCRYPTION_KEY = process.env.INTEGRATION_ENCRYPTION_KEY || process.env.JWT_SECRET || 'dev-key-32-chars-minimum-length!!';
+    const buf = Buffer.from(integracion.config, 'base64');
+    const iv = buf.slice(0, 12);
+    const authTag = buf.slice(12, 28);
+    const encrypted = buf.slice(28);
+    const decipher = crypto.createDecipheriv('aes-256-gcm', Buffer.from(ENCRYPTION_KEY).slice(0, 32), iv);
+    decipher.setAuthTag(authTag);
+    const tokens = JSON.parse(Buffer.concat([decipher.update(encrypted), decipher.final()]).toString('utf8'));
+
+    const { google } = require('googleapis');
+    const client = getGoogleOAuth2Client();
+    client.setCredentials(tokens);
+
+    // Refresca access_token si expiró
+    if (tokens.expiry_date && Date.now() >= tokens.expiry_date - 60000) {
+      const { credentials } = await client.refreshAccessToken();
+      Object.assign(tokens, credentials);
+      // Re-encripta y guarda tokens actualizados
+      const cipher = crypto.createCipheriv('aes-256-gcm', Buffer.from(ENCRYPTION_KEY).slice(0, 32), crypto.randomBytes(12));
+      const encrypted = Buffer.concat([cipher.update(JSON.stringify(tokens), 'utf8'), cipher.final()]);
+      const authTag = cipher.getAuthTag();
+      const newConfig = Buffer.concat([iv, authTag, encrypted]).toString('base64');
+      await supabase.from('tenant_integrations').update({ config: newConfig, updated_at: new Date().toISOString() })
+        .eq('empresa_codigo', tenant).eq('integration_key', 'sheets');
+    }
+
+    const sheets = google.sheets({ version: 'v4', auth: client });
+    const spreadsheetId = req.body?.spreadsheetId;
+    if (!spreadsheetId) return res.status(400).json({ error: 'spreadsheetId requerido' });
+
+    // Obtiene ventas del día
+    const hoy = new Date().toISOString().slice(0, 10);
+    const { data: ventas } = await supabase.from('transacciones')
+      .select('fecha, tipo, categoria, descripcion, monto, metodo_pago, referencia')
+      .eq('empresa_codigo', tenant).gte('fecha', `${hoy}T00:00:00`).lte('fecha', `${hoy}T23:59:59`)
+      .order('fecha', { ascending: true });
+
+    // Prepara filas: encabezado + datos
+    const header = ['Fecha', 'Tipo', 'Categoría', 'Descripción', 'Monto (HNL)', 'Método Pago', 'Referencia'];
+    const rows = (ventas || []).map(v => [v.fecha, v.tipo, v.categoria, v.descripcion, v.monto, v.metodo_pago, v.referencia]);
+
+    // Escribe en la hoja (crea hoja con fecha si no existe)
+    const sheetName = `Ventas ${hoy}`;
+    try {
+      await sheets.spreadsheets.batchUpdate({
+        spreadsheetId,
+        requestBody: { requests: [{ addSheet: { properties: { title: sheetName } } }] }
+      });
+    } catch (e) { /* hoja ya existe */ }
+
+    await sheets.spreadsheets.values.update({
+      spreadsheetId,
+      range: `${sheetName}!A1`,
+      valueInputOption: 'USER_ENTERED',
+      requestBody: { values: [header, ...rows] }
+    });
+
+    await registrarAuditoria(tenant, 'Sync Google Sheets', `Exportadas ${rows.length} ventas a ${sheetName}`, 'integraciones', req.user?.email || '');
+    return res.json({ success: true, rows: rows.length, sheet: sheetName });
+  } catch (err) { return handleServerError(res, err); }
+});
+
 // COMPAT APP (Workspace) — transacciones, cotizaciones, órdenes de compra,
 // notas y sincronización. La app (Flutter) usa estos mismos endpoints.
 // ═══════════════════════════════════════════════════════════════════════════
@@ -9301,7 +10505,7 @@ app.post('/api/transacciones', authenticate, async (req, res) => {
   } catch (err) { return handleServerError(res, err); }
 });
 
-app.get('/api/cotizaciones', authenticate, async (req, res) => {
+app.get('/api/cotizaciones', authenticate, requirePlanFeature('cotizaciones'), async (req, res) => {
   if (!requireSupabase(res)) return;
   try {
     const tenant = normalizeTenantCode(getTenantCode(req));
@@ -9316,7 +10520,7 @@ app.get('/api/cotizaciones', authenticate, async (req, res) => {
   } catch (err) { return handleServerError(res, err); }
 });
 
-app.post('/api/cotizaciones', authenticate, async (req, res) => {
+app.post('/api/cotizaciones', authenticate, requirePlanFeature('cotizaciones'), async (req, res) => {
   if (!requireSupabase(res)) return;
   try {
     const tenant = normalizeTenantCode(getTenantCode(req));
@@ -9350,51 +10554,58 @@ app.post('/api/cotizaciones', authenticate, async (req, res) => {
   } catch (err) { return handleServerError(res, err); }
 });
 
-app.get('/api/ordenes-compra', authenticate, async (req, res) => {
+/**
+ * FASE 4 — `/api/ordenes-compra` queda como alias de compatibilidad.
+ *
+ * La app movil y algunos clientes web siguen llamando esta ruta, pero el dato
+ * ya no vive en `ordenes_compra` (eliminada) sino en `compras` +
+ * `compras_detalle`, la unica fuente de verdad. Se conserva el nombre de la
+ * ruta y la forma de la respuesta para no romper esos clientes.
+ */
+app.get('/api/ordenes-compra', authenticate, requirePlanFeature('compras'), async (req, res) => {
   if (!requireSupabase(res)) return;
   try {
     const tenant = normalizeTenantCode(getTenantCode(req));
     const empresa = await resolverEmpresaSupabase(tenant);
     if (!empresa) return res.status(404).json({ error: 'Empresa no encontrada' });
-    let query = supabase.from('ordenes_compra').select('*').eq('empresa_id', empresa.id);
+    let query = supabase.from('compras').select('*').eq('empresa_id', empresa.id);
     if (req.query.estado) query = query.eq('estado', req.query.estado);
     const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 100, 1), 500);
     const { data, error } = await query.order('created_at', { ascending: false }).limit(limit);
     if (error) return res.status(500).json({ error: error.message });
-    return res.json({ ordenes: data || [] });
+    const porCompra = await cargarDetalleCompras((data || []).map(c => c.id));
+    const ordenes = (data || []).map(c => Object.assign({}, c, { items: porCompra.get(c.id) || [] }));
+    return res.json({ ordenes });
   } catch (err) { return handleServerError(res, err); }
 });
 
-app.post('/api/ordenes-compra', authenticate, async (req, res) => {
+app.post('/api/ordenes-compra', authenticate, requireTenantAdmin, requirePlanFeature('compras'), async (req, res) => {
   if (!requireSupabase(res)) return;
   try {
     const tenant = normalizeTenantCode(getTenantCode(req));
     const empresa = await resolverEmpresaSupabase(tenant);
     if (!empresa) return res.status(404).json({ error: 'Empresa no encontrada' });
     const o = req.body?.ordenCompra || req.body?.orden_compra || req.body || {};
-    if (!o.proveedor_nombre) return res.status(400).json({ error: 'proveedor_nombre es requerido' });
-    const subtotal = parseFloat(o.subtotal) || 0;
-    const isv = parseFloat(o.isv) || 0;
-    const descuento = parseFloat(o.descuento) || 0;
-    const total = parseFloat(o.total) || (subtotal + isv - descuento);
-    const { data, error } = await supabase.from('ordenes_compra').insert([{
-      empresa_id: empresa.id,
-      empresa_codigo: tenant,
-      usuario_id: req.user?.sub || null,
-      correlativo: (o.correlativo || '').toString().slice(0, 50),
-      proveedor_nombre: o.proveedor_nombre.toString().slice(0, 200),
-      proveedor_rtn: (o.proveedor_rtn || '').toString().slice(0, 20),
-      items: o.items || [],
-      subtotal, isv, descuento, total,
-      estado: (o.estado || 'pendiente').toString().slice(0, 20),
-      notas: (o.notas || '').toString().slice(0, 500),
-      bodega_id: o.bodega_id || null,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    }]).select().maybeSingle();
-    if (error) return res.status(500).json({ error: error.message });
-    await registrarAuditoria(tenant, 'Orden de compra creada', `Orden a ${o.proveedor_nombre}`, 'compras', req.user?.nombre || '', req);
-    return res.status(201).json({ orden_compra: data });
+
+    // La app envia `proveedor_nombre`; el ledger exige `proveedor_id`. Se
+    // resuelve dentro del tenant para no cruzar empresas.
+    let proveedorId = o.proveedor_id || null;
+    if (!proveedorId && o.proveedor_nombre) {
+      const { data: prov } = await supabase.from('proveedores').select('id')
+        .eq('empresa_id', empresa.id)
+        .eq('nombre', o.proveedor_nombre.toString().slice(0, 200))
+        .maybeSingle();
+      proveedorId = prov?.id || null;
+    }
+    if (!proveedorId) return res.status(400).json({ error: 'proveedor_id es requerido' });
+
+    const r = await registrarCompraEnLedger({
+      tenant, empresa, user: req.user,
+      body: Object.assign({}, o, { proveedor_id: proveedorId })
+    });
+    if (r.status !== 201) return res.status(r.status).json(r.body);
+    await registrarAuditoria(tenant, 'Orden de compra creada', `Orden a ${o.proveedor_nombre || proveedorId}`, 'compras', req.user?.nombre || '', req);
+    return res.status(201).json({ orden_compra: r.compra });
   } catch (err) { return handleServerError(res, err); }
 });
 
@@ -9449,15 +10660,228 @@ app.post('/api/notas', authenticate, async (req, res) => {
   } catch (err) { return handleServerError(res, err); }
 });
 
+// Columnas que el cliente NUNCA puede fijar: las deriva siempre de la sesión.
+// Si se dejaran escribibles, un POST /api/sync podría inyectar filas en otro tenant.
+const SYNC_COLUMNAS_RESERVADAS = Object.freeze(['empresa_id', 'empresa_codigo']);
+
+// Allowlist por tabla. Generada desde information_schema (public) en producción:
+// solo columnas reales de la tabla, sin empresa_id/empresa_codigo.
+// `empresas` se excluye a propósito (no tiene empresa_id; la manages /api/empresas).
 const SYNC_SAFE_COLUMNS = Object.freeze({
-  transacciones: ['id', 'empresa_id', 'empresa_codigo', 'tipo', 'categoria', 'descripcion', 'monto', 'metodo_pago', 'referencia', 'fecha', 'created_at', 'updated_at', 'metadata', 'sucursal_id'],
-  productos: ['id', 'empresa_id', 'empresa_codigo', 'codigo', 'nombre', 'descripcion', 'categoria', 'unidad_medida', 'imagen_url', 'precio_compra', 'precio_venta', 'stock_actual', 'stock_minimo', 'isv_rate', 'exento', 'bodega', 'activo', 'created_at', 'updated_at'],
-  clientes: ['id', 'empresa_id', 'empresa_codigo', 'nombre', 'rtn', 'email', 'telefono', 'direccion', 'limite_credito', 'saldo_pendiente', 'notas', 'activo', 'created_at', 'updated_at'],
-  facturas: ['id', 'empresa_id', 'empresa_codigo', 'usuario_id', 'correlativo', 'cliente_nombre', 'cliente_rtn', 'cliente_email', 'subtotal', 'isv_15', 'isv_18', 'descuento', 'total', 'estado', 'tipo_documento', 'metodo_pago', 'notas', 'created_at', 'updated_at'],
-  cotizaciones: ['id', 'empresa_id', 'empresa_codigo', 'usuario_id', 'correlativo', 'cliente_nombre', 'cliente_rtn', 'items', 'subtotal', 'isv', 'descuento', 'total', 'estado', 'notas', 'sucursal_id', 'creado_por', 'created_at', 'updated_at'],
-  ordenes_compra: ['id', 'empresa_id', 'empresa_codigo', 'usuario_id', 'correlativo', 'proveedor_nombre', 'proveedor_rtn', 'items', 'subtotal', 'isv', 'descuento', 'total', 'estado', 'notas', 'bodega_id', 'created_at', 'updated_at'],
-  notas: ['id', 'empresa_id', 'empresa_codigo', 'clave', 'datos', 'created_at', 'updated_at']
+  bodegas: ['id', 'sucursal_id', 'codigo', 'nombre', 'tipo', 'direccion', 'activa', 'es_principal', 'capacidad_maxima', 'created_at', 'updated_at'],
+  clientes: ['id', 'nombre', 'rtn', 'dni', 'direccion', 'telefono', 'email', 'notas', 'activo', 'sync', 'last_sync', 'limite_credito', 'saldo_pendiente', 'created_at', 'updated_at'],
+  compras: ['id', 'proveedor_id', 'sucursal_id', 'bodega_destino_id', 'numero_orden', 'fecha_orden', 'fecha_recepcion', 'subtotal', 'isv', 'descuento', 'total', 'estado', 'metodo_pago', 'notas', 'usuario_id', 'created_at', 'updated_at'],
+  cotizaciones: ['id', 'usuario_id', 'correlativo', 'cliente_nombre', 'cliente_rtn', 'items', 'subtotal', 'isv', 'descuento', 'total', 'estado', 'notas', 'sucursal_id', 'creado_por', 'created_at', 'updated_at'],
+  facturas: ['id', 'correlativo', 'tipo_documento', 'cai', 'rango_inicio', 'rango_fin', 'fecha_limite_emision', 'cliente_nombre', 'cliente_rtn', 'cliente_direccion', 'condicion_pago', 'tipo_venta', 'items', 'subtotal', 'isv_15', 'isv_18', 'descuento', 'total', 'estado', 'fecha_anulacion', 'motivo_anulacion', 'notas', 'sucursal_id', 'bodega_id', 'created_at', 'updated_at'],
+  kardex: ['id', 'producto_id', 'bodega_id', 'sucursal_id', 'tipo_movimiento', 'cantidad', 'cantidad_anterior', 'cantidad_nueva', 'costo_unitario', 'referencia_tipo', 'referencia_id', 'notas', 'usuario_id', 'usuario_nombre', 'created_at'],
+  notas: ['id', 'clave', 'datos', 'created_at', 'updated_at'],
+  compras_detalle: ['id', 'compra_id', 'producto_id', 'codigo', 'nombre', 'cantidad', 'costo_unitario', 'subtotal', 'isv', 'descuento', 'cantidad_recibida', 'notas', 'created_at'],
+  productos: ['id', 'codigo', 'nombre', 'descripcion', 'categoria', 'categoria_id', 'marca_id', 'pasillo_id', 'unidad_medida', 'precio_compra', 'precio_costo_historico', 'precio_venta', 'stock_minimo', 'stock_actual', 'bodega', 'bodega_id', 'sucursal_id', 'isv_rate', 'exento', 'imagen_url', 'barcode', 'marca', 'presentacion', 'is_perishable', 'activo', 'created_at', 'updated_at'],
+  proveedores: ['id', 'codigo', 'nombre', 'rtn', 'telefono', 'email', 'direccion', 'contacto_nombre', 'contacto_telefono', 'nivel', 'dias_credito', 'limite_credito', 'saldo_pendiente', 'notas', 'activo', 'created_at', 'updated_at'],
+  rutas: ['id', 'nombre', 'descripcion', 'zona', 'vendedor_id', 'vendedor_nombre', 'dias_recorrido', 'orden_clientes', 'activa', 'created_at'],
+  socios: ['id', 'usuario_id', 'numero_socio', 'nombre', 'email', 'telefono', 'direccion', 'rtn', 'fecha_nacimiento', 'genero', 'plan_id', 'estado', 'fecha_inicio', 'fecha_vencimiento', 'renovacion_automatica', 'puntos_acumulados', 'puntos_canjeados', 'total_compras', 'total_compras_count', 'ultima_compra', 'notas', 'foto_url', 'created_at', 'updated_at'],
+  sucursales: ['id', 'codigo', 'nombre', 'direccion', 'telefono', 'email', 'encargado', 'tipo', 'activa', 'es_principal', 'latitud', 'longitud', 'horario', 'created_at', 'updated_at'],
+  transacciones: ['id', 'tipo', 'categoria', 'descripcion', 'monto', 'metodo_pago', 'referencia', 'fecha', 'metadata', 'sucursal_id', 'usuario_id', 'created_at', 'updated_at'],
+  transferencias: ['id', 'sucursal_origen_id', 'sucursal_destino_id', 'bodega_origen_id', 'bodega_destino_id', 'numero', 'fecha', 'estado', 'motivo', 'notas', 'usuario_id', 'usuario_nombre', 'recibido_por', 'fecha_recepcion', 'created_at', 'updated_at'],
+  // POS: la app no envía `id` en la venta, así que el conflict target es la
+  // clave de negocio (ver SYNC_CONFLICT_TARGET) y el id lo pone el default.
+  pos_ventas: ['id', 'usuario_id', 'terminal_id', 'correlativo', 'cliente_id', 'cliente_nombre', 'cliente_rtn', 'items', 'subtotal', 'descuento', 'isv_15', 'isv_18', 'tasa_isv_estandar', 'total', 'metodo_pago', 'estado', 'notas', 'created_at', 'updated_at'],
+  pos_arqueo_caja: ['id', 'usuario_id', 'terminal_id', 'fecha_apertura', 'fecha_cierre', 'fondo_inicial', 'total_ventas_efectivo', 'total_ventas_tarjeta', 'total_ventas_transferencia', 'total_ventas_mixto', 'total_gastos', 'total_entradas', 'total_salidas', 'sistema_total', 'conteo_fisico', 'diferencia', 'observaciones', 'estado', 'detalle_denominaciones', 'created_at', 'updated_at'],
+  pos_cliente_credito: ['id', 'cliente_id', 'cliente_nombre', 'limite_credito', 'saldo_actual', 'dias_vencimiento', 'estado', 'fecha_ultimo_pago', 'monto_ultimo_pago', 'fecha_ultima_venta', 'notas', 'created_at', 'updated_at'],
+abonos: ['id', 'venta_fiada_id', 'monto', 'metodo_pago', 'referencia', 'notas', 'usuario_id', 'usuario_nombre', 'cobrador_id', 'cobrador_nombre', 'fecha', 'created_at'],
+  cotizacion_items: ['id', 'cotizacion_id', 'producto_id', 'producto_codigo', 'producto_nombre', 'descripcion', 'cantidad', 'precio_unitario', 'descuento', 'isv_rate', 'subtotal', 'created_at'],
+  configuracion_fiscal: ['id', 'configuracion', 'created_at', 'updated_at'],
+  empleados: ['id', 'nombre', 'identidad', 'rtn', 'puesto', 'departamento', 'salario_base', 'fecha_ingreso', 'estado', 'created_at', 'updated_at', 'synced', 'last_sync_attempt'],
+  nomina: ['id', 'empleado_id', 'mes', 'anio', 'salario_base', 'bonificaciones', 'deducciones', 'isss', 'rtn', 'ihss', 'neta', 'pagado', 'fecha_pago', 'created_at', 'synced', 'last_sync_attempt'],
+  sar_correlativo: ['id', 'tipo_documento', 'cai', 'numero_resolucion', 'rango_inicio', 'rango_fin', 'fecha_limite_emision', 'siguiente_numero', 'agotado', 'created_at', 'updated_at', 'synced']
 });
+
+// Destino del ON CONFLICT por tabla. Por defecto `id`.
+// Donde la app NO manda `id` se usa la clave de negocio para que un reintento
+// offline actualice la fila en vez de duplicar una venta.
+const SYNC_CONFLICT_TARGET = Object.freeze({
+  pos_ventas: 'empresa_codigo,correlativo',
+  pos_cliente_credito: 'empresa_codigo,cliente_id',
+  configuracion_fiscal: 'empresa_codigo'
+});
+
+// Tablas que la app o un endpoint podrían intentar sincronizar pero que aún NO
+// existen en la base. Se responden con un error explícito en vez de un 400
+// genérico que oculta el problema. La app no escribe ninguna por /api/sync.
+const SYNC_TABLAS_SIN_ESQUEMA = Object.freeze([
+  'matriculas', 'membresias', 'pos_config', 'pos_promociones',
+  'ruta_clientes', 'sar_contingencia', 'socio_membresias',
+  'socio_precios'
+]);
+
+const SYNC_COLUMNAS_NUMERICAS = new Set([
+  'monto', 'subtotal', 'isv', 'isv_15', 'isv_18', 'descuento', 'total', 'precio_compra',
+  'precio_venta', 'precio_costo_historico', 'costo_promedio', 'costo_unitario', 'stock_actual',
+  'stock_minimo', 'limite_credito', 'saldo_pendiente', 'cantidad', 'cantidad_anterior',
+  'cantidad_nueva', 'capacidad_maxima', 'puntos_acumulados', 'puntos_canjeados', 'total_compras',
+  'total_compras_count', 'latitud', 'longitud', 'rango_inicio', 'rango_fin', 'tasa_isv_estandar',
+  'precio_unitario', 'dias_vencimiento', 'fondo_inicial', 'total_ventas_efectivo',
+  'total_ventas_tarjeta', 'total_ventas_transferencia', 'total_ventas_mixto', 'total_gastos',
+  'total_entradas', 'total_salidas', 'sistema_total', 'conteo_fisico', 'diferencia',
+  'monto_ultimo_pago', 'salario_base', 'bonificaciones', 'deducciones', 'isss', 'ihss',
+  'neta', 'siguiente_numero'
+]);
+const SYNC_COLUMNAS_BOOL = new Set(['activo', 'activa', 'exento', 'es_principal', 'sync', 'is_perishable', 'renovacion_automatica', 'synced', 'pagado', 'agotado']);
+
+// ── Sync de transferencias (encabezado + detalle) ──────────────
+// La app usa ids locales (no UUID) y no sincroniza `sucursales`; este handler
+// genera el UUID, resuelve/crea la sucursal remota por `codigo`, escribe el
+// encabezado de forma idempotente (empresa_codigo+numero) y reescribe el
+// detalle en `transferencias_detalle`.
+async function resolverSucursalRemotaSync(tenant, empresaId, codigo, nombre) {
+  const cod = (codigo || '').toString().trim();
+  const nom = (nombre || '').toString().trim();
+  try {
+    if (cod) {
+      const { data } = await supabase.from('sucursales')
+        .select('id').eq('empresa_codigo', tenant).eq('codigo', cod).maybeSingle();
+      if (data && data.id) return data.id;
+    }
+    const { data: nueva, error } = await supabase.from('sucursales').insert([{
+      empresa_id: empresaId,
+      empresa_codigo: tenant,
+      codigo: cod || `SUC-${Date.now()}`,
+      nombre: nom || 'Sucursal',
+      activa: true
+    }]).select('id').single();
+    if (error) return null;
+    return (nueva && nueva.id) || null;
+  } catch (_) { return null; }
+}
+
+async function syncTransferencias(tenant, empresa, rows) {
+  let sincronizadas = 0;
+  for (const row of rows) {
+    try {
+      const numero = String(row.numero || row.correlativo || '').trim() || `TR-${Date.now()}`;
+      const sucOrigen = (await resolverSucursalRemotaSync(tenant, empresa.id, row.origen_codigo, row.origen_nombre)) || crypto.randomUUID();
+      const sucDestino = (await resolverSucursalRemotaSync(tenant, empresa.id, row.destino_codigo, row.destino_nombre)) || crypto.randomUUID();
+      const ahora = new Date().toISOString();
+      const header = {
+        empresa_id: empresa.id,
+        empresa_codigo: tenant,
+        sucursal_origen_id: sucOrigen,
+        sucursal_destino_id: sucDestino,
+        numero,
+        fecha: row.fecha_envio || row.created_at || ahora,
+        estado: row.estado || 'pendiente',
+        motivo: row.observaciones || null,
+        notas: row.observaciones || null,
+        usuario_id: row.usuario_id || null,
+        usuario_nombre: row.usuario_nombre || null,
+        recibido_por: row.recibido_por || null,
+        fecha_recepcion: row.fecha_recepcion || null,
+        updated_at: ahora
+      };
+      const { data: existente } = await supabase.from('transferencias')
+        .select('id').eq('empresa_codigo', tenant).eq('numero', numero).maybeSingle();
+      let trfId;
+      if (existente && existente.id) {
+        trfId = existente.id;
+        const { error } = await supabase.from('transferencias').update(header).eq('id', trfId);
+        if (error) throw error;
+      } else {
+        const { data: creada, error } = await supabase.from('transferencias')
+          .insert([Object.assign({ created_at: row.created_at || ahora }, header)])
+          .select('id').single();
+        if (error) throw error;
+        trfId = creada.id;
+      }
+      if (Array.isArray(row.items) && row.items.length) {
+        await supabase.from('transferencias_detalle').delete().eq('transferencia_id', trfId);
+        const detalle = row.items.map(it => ({
+          transferencia_id: trfId,
+          producto_id: null,
+          codigo: it.producto_codigo || it.codigo || null,
+          nombre: it.producto_nombre || it.nombre || null,
+          cantidad_solicitada: parseInt(it.cantidad, 10) || 0,
+          created_at: ahora
+        }));
+        const { error: detErr } = await supabase.from('transferencias_detalle').insert(detalle);
+        if (detErr) throw detErr;
+      }
+      sincronizadas++;
+    } catch (err) {
+      console.warn('[SYNC transferencias]', err.message);
+    }
+  }
+  return sincronizadas;
+}
+
+/**
+ * FASE 4 - Proyeccion del POS offline al libro canonico.
+ *
+ * Flutter trabaja offline y encola sus ventas en `pos_ventas` via /api/sync,
+ * mientras que el POS web las registra directo en `transacciones`. Sin esta
+ * proyeccion existirian DOS tablas con las mismas ventas y los reportes (que
+ * leen `transacciones`) no verian nada de lo que la app vendio.
+ *
+ * `pos_ventas` se conserva como cola offline porque su clave de deduplicacion es
+ * (empresa_codigo, correlativo). `transacciones` es el unico libro financiero.
+ */
+async function proyectarVentasPosAContable(tenant, empresa, rows) {
+  if (!supabase) return { proyectadas: 0 };
+  let proyectadas = 0;
+  for (const row of rows) {
+    const correlativo = (row.correlativo || '').toString().trim();
+    if (!correlativo) continue;
+    const referencia = `venta_pos:${correlativo}`.slice(0, 200);
+
+    // Idempotencia: si la venta ya esta en el libro, no se duplica. Se usa
+    // SELECT (no ON CONFLICT) porque el indice unico es parcial y Postgres no
+    // lo infiere para la clausula ON CONFLICT.
+    const { data: existente } = await supabase
+      .from('transacciones').select('id')
+      .eq('empresa_codigo', tenant)
+      .eq('referencia', referencia)
+      .maybeSingle();
+    if (existente) continue;
+
+    const items = Array.isArray(row.items) ? row.items : [];
+    const subtotal = Number(row.subtotal) || 0;
+    const isv = (Number(row.isv_15) || 0) + (Number(row.isv_18) || 0);
+    const descuento = Number(row.descuento) || 0;
+    const total = Number(row.total) || (subtotal + isv - descuento);
+
+    const payload = {
+      empresa_id: empresa.id,
+      empresa_codigo: tenant,
+      tipo: 'ingreso',
+      categoria: 'venta',
+      descripcion: `Venta POS offline - ${items.length} item(s)`.slice(0, 1000),
+      monto: total,
+      metodo_pago: (row.metodo_pago || 'efectivo').toString().slice(0, 50),
+      referencia,
+      // `metadata` es jsonb: se envia el objeto, nunca JSON.stringify (ver FASE 4).
+      metadata: {
+        items,
+        subtotal,
+        isv,
+        isv_15: Number(row.isv_15) || 0,
+        isv_18: Number(row.isv_18) || 0,
+        descuento,
+        total,
+        cliente_id: row.cliente_id || null,
+        cliente_nombre: row.cliente_nombre || '',
+        numero_venta: correlativo,
+        origen_tipo: 'venta_pos_offline',
+        terminal_id: row.terminal_id || null,
+        usuario_id: row.usuario_id || null,
+      },
+      fecha: row.created_at || new Date().toISOString(),
+    };
+    const { error } = await supabase.from('transacciones').insert([payload]);
+    if (!error) proyectadas += 1;
+    else if (error.code === '23505') { /* carrera: otra petición ya la registró */ }
+    else console.error('[sync] no se pudo proyectar venta offline a transacciones:', error.message);
+  }
+  return { proyectadas };
+}
 
 app.post('/api/sync', authenticate, async (req, res) => {
   if (!requireSupabase(res)) return;
@@ -9467,18 +10891,40 @@ app.post('/api/sync', authenticate, async (req, res) => {
     if (!empresa) return res.status(404).json({ error: 'Empresa no encontrada' });
     const b = req.body || {};
     const tabla = (b.tabla || '').toString().trim();
+    if (SYNC_TABLAS_SIN_ESQUEMA.includes(tabla)) {
+      return res.status(501).json({
+        error: `La tabla ${tabla} aún no existe en la base de datos (migración pendiente).`,
+        tabla, pendiente_migracion: true
+      });
+    }
     const columns = SYNC_SAFE_COLUMNS[tabla];
     if (!columns) return res.status(400).json({ error: `Tabla de sincronización no soportada: ${tabla}` });
     const rows = Array.isArray(b.rows) ? b.rows : (b.row ? [b.row] : []);
     if (!rows.length) return res.status(400).json({ error: 'rows es requerido' });
-    const ahora = new Date().toISOString();
+    if (tabla === 'transferencias') {
+      const sincronizadas = await syncTransferencias(tenant, empresa, rows);
+      await registrarAuditoria(tenant, 'Sincronización', `upsert de ${sincronizadas} transferencia(s)`, 'sistema', req.user?.nombre || '', req);
+      return res.json({ sincronizadas, tabla, data: [] });
+    }
+    // FASE 5: un producto sincronizado desde la app offline puede traer las
+    // referencias de catalogo. Se validan contra el tenant ANTES de escribir;
+    // si no, un cliente podria colgar una categoria de otra empresa en su
+    // producto porque el upsert generico no pasa por el CRUD de productos.
+    if (tabla === 'productos') {
+      for (const row of rows) {
+        const refs = await resolverCatalogosProducto(tenant, row || {});
+        if (refs.error) return res.status(400).json({ error: refs.error });
+      }
+    }
     const clean = rows.map(row => {
+      // El tenant SIEMPRE viene de la sesión, nunca del cuerpo de la petición.
       const out = { empresa_id: empresa.id, empresa_codigo: tenant };
       columns.forEach(col => {
+        if (SYNC_COLUMNAS_RESERVADAS.includes(col)) return;
         if (row && row[col] !== undefined && row[col] !== null) {
-          if (col === 'monto' || col === 'subtotal' || col === 'isv' || col === 'descuento' || col === 'total' || col === 'precio_compra' || col === 'precio_venta' || col === 'costo_promedio' || col === 'stock_actual' || col === 'stock_minimo' || col === 'limite_credito' || col === 'saldo_pendiente') {
+          if (SYNC_COLUMNAS_NUMERICAS.has(col)) {
             out[col] = parseFloat(row[col]) || 0;
-          } else if (col === 'activo') {
+          } else if (SYNC_COLUMNAS_BOOL.has(col)) {
             out[col] = row[col] === true || row[col] === 'true' || row[col] === 1 || row[col] === '1';
           } else {
             out[col] = row[col];
@@ -9487,8 +10933,13 @@ app.post('/api/sync', authenticate, async (req, res) => {
       });
       return out;
     });
-    const { data, error } = await supabase.from(tabla).upsert(clean, { onConflict: 'id' });
+    const conflictTarget = SYNC_CONFLICT_TARGET[tabla] || 'id';
+    const { data, error } = await supabase.from(tabla).upsert(clean, { onConflict: conflictTarget });
     if (error) return res.status(500).json({ error: error.message, tabla });
+    // FASE 4: las ventas del POS offline se proyectan al libro canonico.
+    if (tabla === 'pos_ventas') {
+      await proyectarVentasPosAContable(tenant, empresa, clean);
+    }
     const op = (b.operacion || 'upsert').toString().slice(0, 20);
     await registrarAuditoria(tenant, 'Sincronización', `${op} de ${clean.length} fila(s) en ${tabla}`, 'sistema', req.user?.nombre || '', req);
     return res.json({ sincronizadas: clean.length, tabla, data: data || [] });
@@ -9707,13 +11158,26 @@ app.get('/api/ai/providers', authenticate, requireRoot, async (req, res) => {
   const providers = {};
   for (const key of Object.keys(AI_PROVIDERS)) {
     const p = AI_PROVIDERS[key];
+    const breaker = _breaker.get(key);
     providers[key] = {
       name: p.name,
-      configurado: !!p.getKey(),
-      models: p.models
+      // providerConfigured() en vez de !!getKey(): Cloudflare solo es utilizable si
+      // además del API key existe el ACCOUNT_ID (va en la ruta).
+      configurado: providerConfigured(key),
+      models: p.models,
+      supportsVision: !!p.supportsVision,
+      env: p.env || [],
+      // Estado del breaker para que el panel muestre por qué un provider no entra.
+      cooldownMs: breaker ? Math.max(0, breaker.until - Date.now()) : 0,
+      fallosConsecutivos: breaker ? breaker.fails : 0,
+      ultimoError: breaker ? breaker.reason : null
     };
   }
-  return res.json({ providers });
+  return res.json({
+    providers,
+    orden: AI_PROVIDER_ORDER,
+    abiertos: AI_PROVIDER_ORDER.filter((k) => providerConfigured(k))
+  });
 });
 
 // ── Límites de tokens IA del tenant según su plan ───────────────
@@ -9791,22 +11255,76 @@ app.get('/api/tenant/subscription', authenticate, async (req, res) => {
 });
 
 // ── Catálogo de planes (público; DB primero, fallback constantes) ──
-// Moneda operativa: HNL. /api/plans expone el catálogo de referencia (USD) + los montos
-// efectivos de facturación local (HNL). El cobro real lo hace amountMap del checkout.
-const HNL_MONTHLY = { starter: 0, business: 1499, enterprise: 4999, custom: null };
+// Moneda operativa: HNL. /api/plans expone el catálogo de referencia + los montos
+// efectivos de facturación local (HNL) y el cotizador de 21 módulos.
+// El cobro real lo hace amountMap del checkout.
 function toPlanPricing(p) {
   const cl = String(p?.clave || '').toLowerCase();
-  const mes = Object.prototype.hasOwnProperty.call(HNL_MONTHLY, cl) ? HNL_MONTHLY[cl] : null;
-  return { ...p, moneda: 'HNL', precio_mensual_hnl: mes, precio_anual_hnl: null };
+  const fallback = PLAN_PRECIOS_HNL[cl] || null;
+  const mensualDb = Number(p?.precio_mensual_hnl);
+  const anualDb = Number(p?.precio_anual_hnl);
+  const mensual = Number.isFinite(mensualDb) && mensualDb > 0 ? mensualDb : (fallback ? fallback.mensual : null);
+  const anual = Number.isFinite(anualDb) && anualDb > 0 ? anualDb : (fallback ? fallback.anual : null);
+  return { ...p, moneda: p?.moneda || 'HNL', precio_mensual_hnl: mensual, precio_anual_hnl: anual };
 }
+
+function catalogoCotizadorFallback() {
+  return {
+    base_mensual_hnl: 150,
+    descuentos: [
+      { minimo: 16, maximo: 21, descuento: 0.25 },
+      { minimo: 10, maximo: 15, descuento: 0.15 },
+      { minimo: 5, maximo: 9, descuento: 0.10 },
+      { minimo: 1, maximo: 4, descuento: 0 }
+    ],
+    modulos: MODULOS_COTIZADOR.map(clave => ({
+      clave,
+      nombre: MODULOS_COTIZADOR_META[clave]?.nombre || clave,
+      categoria: MODULOS_COTIZADOR_META[clave]?.categoria || '',
+      icono: MODULOS_COTIZADOR_META[clave]?.icono || 'fa-cube',
+      precio_mensual_hnl: MODULOS_COTIZADOR_META[clave]?.precio || 0,
+      precio_anual_hnl: (MODULOS_COTIZADOR_META[clave]?.precio || 0) * 10,
+      modulo_app: MODULO_APP_MAP[clave] || []
+    }))
+  };
+}
+
+async function catalogoCotizador() {
+  const fallback = catalogoCotizadorFallback();
+  if (!supabase) return fallback;
+  try {
+    // La columna `modulo_app` de la tabla es informativa: la traducción oficial
+  // cotizador → ids de la app es MODULO_APP_MAP (multi-valued y en código),
+  // para que un mapeo desactualizado en la DB no deje módulos huérfanos.
+    const { data, error } = await supabase.from('modulos_cotizador')
+      .select('clave, nombre, categoria, icono, precio_mensual_hnl, precio_anual_hnl')
+      .eq('activo', true).order('orden', { ascending: true });
+    if (error || !Array.isArray(data) || !data.length) return fallback;
+    return {
+      base_mensual_hnl: 150,
+      descuentos: fallback.descuentos,
+      modulos: data.map(m => ({
+        clave: m.clave,
+        nombre: m.nombre,
+        categoria: m.categoria,
+        icono: m.icono,
+        precio_mensual_hnl: Number(m.precio_mensual_hnl) || 0,
+        precio_anual_hnl: Number(m.precio_anual_hnl) || 0,
+        modulo_app: MODULO_APP_MAP[m.clave] || []
+      }))
+    };
+  } catch (e) { return fallback; }
+}
+
 app.get('/api/plans', async (req, res) => {
-  if (!requireSupabase(res)) return res.json({ plans: PLAN_LIMITS });
+  const cotizador = await catalogoCotizador();
+  if (!requireSupabase(res)) return res.json({ moneda: 'HNL', plans: PLAN_LIMITS, cotizador });
   try {
     const { data, error } = await supabase.from('planes').select('*').order('orden', { ascending: true });
-    if (!error && data && data.length) return res.json({ moneda: 'HNL', plans: data.map(toPlanPricing) });
-    return res.json({ plans: PLAN_LIMITS });
+    if (!error && data && data.length) return res.json({ moneda: 'HNL', plans: data.map(toPlanPricing), cotizador });
+    return res.json({ moneda: 'HNL', plans: PLAN_LIMITS, cotizador });
   } catch (err) {
-    return res.json({ plans: PLAN_LIMITS });
+    return res.json({ moneda: 'HNL', plans: PLAN_LIMITS, cotizador });
   }
 });
 
@@ -9908,6 +11426,1225 @@ app.get('/api/bots', authenticate, requireRoot, async (req, res) => {
 });
 
 // 🔧 FIX VERCEL: Exportación limpia para serverless
+// ============================================================================
+// FASE 2 - Flujos reales de los modulos que estaban sin soporte de datos:
+//   mermas | pasillos | mesas | cuentas abiertas | control de acceso socios
+// Tablas aplicadas en la migracion
+// 20261003_module_flow_tables_mermas_pasillos_mesas_cuentas_accesos.
+// Reglas: el tenant SIEMPRE sale del JWT (nunca del body), las escrituras son
+// admin-only, todo se aísla por empresa_codigo y el stock se mueve con
+// pp_ajustar_stock + asiento en kardex (todo-o-nada por compensacion).
+// ============================================================================
+
+async function productoDeEmpresa(tenant, productoId) {
+  const { data, error } = await supabase
+    .from('productos')
+    .select('id, nombre, stock_actual, activo, costo_unitario, precio_venta')
+    .eq('empresa_codigo', tenant)
+    .eq('id', productoId)
+    .maybeSingle();
+  return { producto: data, error };
+}
+
+// FASE 5: un producto puede apuntar a categoria, marca y pasillo a la vez.
+// Cada id recibido se valida contra el tenant antes de guardarse: sin esto un
+// admin de la empresa A podria colgar su producto del pasillo de la empresa B
+// (o de un registro inexistente) y romper el aislamiento entre tenants.
+// Devuelve { valor, error }. Un valor explicito `null` se respeta (desvincular);
+// `undefined` significa "el cliente no envio el campo" y no se toca.
+async function resolverCatalogoProducto(tenant, tabla, valor) {
+  if (valor === undefined) return { valor: undefined };
+  if (valor === null || valor === '') return { valor: null };
+  const id = String(valor).trim();
+  if (!id) return { valor: null };
+  const { data, error } = await supabase
+    .from(tabla).select('id, nombre').eq('empresa_codigo', tenant).eq('id', id).maybeSingle();
+  if (error) return { error: `No se pudo validar ${tabla}: ${error.message}` };
+  if (!data) return { error: 'La categoria, marca o pasillo seleccionado no existe en tu empresa' };
+  return { valor: data.id, nombre: data.nombre };
+}
+
+// Resuelve los tres catalogos de golpe para no dejar un producto a medio guardar:
+// si una de las referencias es invalida se aborta todo antes de escribir.
+async function resolverCatalogosProducto(tenant, body) {
+  const salida = {};
+  for (const [campo, tabla] of [['categoria_id', 'categorias_productos'], ['marca_id', 'marcas'], ['pasillo_id', 'pasillos']]) {
+    const r = await resolverCatalogoProducto(tenant, tabla, body[campo]);
+    if (r.error) return { error: r.error };
+    salida[campo] = r.valor;
+    if (campo === 'categoria_id' && r.nombre) salida.categoria = r.nombre;
+    if (campo === 'marca_id' && r.nombre) salida.marca = r.nombre;
+  }
+  return salida;
+}
+
+// Catalogo maestro reutilizable (categorias / marcas / pasillos): se registra por
+// (empresa_codigo, nombre) para no duplicar y se DESACTIVA en vez de borrarse,
+// preservando los datos historicos de productos que guardan el texto.
+async function catalogoRegistrar(empresa, tenant, tabla, payload, id) {
+  const nombre = String(payload.nombre || '').trim();
+  if (!nombre) return { invalid: true };
+
+  if (id) {
+    const { data: actual, error: foundErr } = await supabase
+      .from(tabla).select('*').eq('empresa_codigo', tenant).eq('id', id).maybeSingle();
+    if (foundErr) throw new Error(foundErr.message);
+    if (!actual) return { notFound: true };
+
+    const upd = { nombre, activo: payload.activo !== false };
+    if (payload.descripcion !== undefined) upd.descripcion = payload.descripcion || null;
+    if (payload.color !== undefined) upd.color = payload.color || null;
+    if (tabla === 'pasillos') {
+      if (payload.codigo !== undefined) upd.codigo = payload.codigo || null;
+      if (payload.categoria !== undefined) upd.categoria = payload.categoria || null;
+      if (payload.capacidad_productos !== undefined)
+        upd.capacidad_productos = parseInt(payload.capacidad_productos, 10) || null;
+    }
+    const { data: saved, error: upErr } = await supabase
+      .from(tabla).update(upd).eq('empresa_codigo', tenant).eq('id', id).select().maybeSingle();
+    if (upErr) {
+      if (/duplicate key|violates unique/i.test(upErr.message || '')) return { duplicate: true };
+      throw new Error(upErr.message);
+    }
+    return { saved };
+  }
+
+  const { data: dup } = await supabase
+    .from(tabla).select('id').eq('empresa_codigo', tenant).ilike('nombre', nombre).maybeSingle();
+  if (dup) return { duplicate: true };
+
+  const row = {
+    empresa_id: empresa.id,
+    empresa_codigo: tenant,
+    nombre,
+    descripcion: payload.descripcion || null,
+    activo: payload.activo !== false,
+  };
+  if (tabla === 'categorias_productos') row.color = payload.color || null;
+  if (tabla === 'pasillos') {
+    row.codigo = payload.codigo || null;
+    row.categoria = payload.categoria || null;
+    row.capacidad_productos = parseInt(payload.capacidad_productos, 10) || null;
+  }
+
+  const { data: saved, error: insErr } = await supabase.from(tabla).insert([row]).select().maybeSingle();
+  if (insErr) {
+    if (/duplicate key|violates unique/i.test(insErr.message || '')) return { duplicate: true };
+    throw new Error(insErr.message);
+  }
+  return { saved };
+}
+
+// ---------------------------------------------------------------------------
+// 1. Categorias y marcas (catalogos maestro; productos ya guarda el texto)
+// ---------------------------------------------------------------------------
+for (const cfg of [
+  { tabla: 'categorias_productos', ruta: 'categorias' },
+  { tabla: 'marcas', ruta: 'marcas' },
+]) {
+  app.get(`/api/${cfg.ruta}`, authenticate, async (req, res) => {
+    if (!requireSupabase(res)) return;
+    try {
+      const tenant = normalizeTenantCode(getTenantCode(req));
+      let q = supabase.from(cfg.tabla).select('*').eq('empresa_codigo', tenant);
+      if (String(req.query.todos || '') !== '1') q = q.eq('activo', true);
+      const { data, error } = await q.order('nombre');
+      if (error) return res.status(500).json({ error: error.message });
+      return res.json({ catalogo: data || [] });
+    } catch (err) {
+      return handleServerError(res, err);
+    }
+  });
+
+  app.post(`/api/${cfg.ruta}`, authenticate, requireTenantAdmin, async (req, res) => {
+    if (!requireSupabase(res)) return;
+    try {
+      const tenant = normalizeTenantCode(getTenantCode(req));
+      const empresa = await resolverEmpresaSupabase(tenant);
+      if (!empresa) return res.status(404).json({ error: 'Empresa no encontrada' });
+      const out = await catalogoRegistrar(empresa, tenant, cfg.tabla, req.body || {}, null);
+      if (out.invalid) return res.status(400).json({ error: 'El nombre es requerido' });
+      if (out.duplicate) return res.status(409).json({ error: 'Ya existe un registro con ese nombre.' });
+      return res.status(201).json(out.saved);
+    } catch (err) {
+      return handleServerError(res, err);
+    }
+  });
+
+  app.put(`/api/${cfg.ruta}/:id`, authenticate, requireTenantAdmin, async (req, res) => {
+    if (!requireSupabase(res)) return;
+    try {
+      const tenant = normalizeTenantCode(getTenantCode(req));
+      const empresa = await resolverEmpresaSupabase(tenant);
+      if (!empresa) return res.status(404).json({ error: 'Empresa no encontrada' });
+      const out = await catalogoRegistrar(empresa, tenant, cfg.tabla, req.body || {}, req.params.id);
+      if (out.invalid) return res.status(400).json({ error: 'El nombre es requerido' });
+      if (out.notFound) return res.status(404).json({ error: 'Registro no encontrado' });
+      if (out.duplicate) return res.status(409).json({ error: 'Ya existe un registro con ese nombre.' });
+      return res.json(out.saved);
+    } catch (err) {
+      return handleServerError(res, err);
+    }
+  });
+
+  // Borrado logico: los productos historicos guardan el texto y deben seguir siendo legibles.
+  app.delete(`/api/${cfg.ruta}/:id`, authenticate, requireTenantAdmin, async (req, res) => {
+    if (!requireSupabase(res)) return;
+    try {
+      const tenant = normalizeTenantCode(getTenantCode(req));
+      const { data, error } = await supabase
+        .from(cfg.tabla)
+        .update({ activo: false })
+        .eq('empresa_codigo', tenant)
+        .eq('id', req.params.id)
+        .select()
+        .maybeSingle();
+      if (error) return res.status(500).json({ error: error.message });
+      if (!data) return res.status(404).json({ error: 'Registro no encontrado' });
+      return res.json({ ok: true, desactivado: data });
+    } catch (err) {
+      return handleServerError(res, err);
+    }
+  });
+}
+
+// ---------------------------------------------------------------------------
+// 2. Pasillos (modulo retail_pasillos)
+// ---------------------------------------------------------------------------
+app.get('/api/pasillos', authenticate, requirePlanFeature('retail_pasillos'), async (req, res) => {
+  if (!requireSupabase(res)) return;
+  try {
+    const tenant = normalizeTenantCode(getTenantCode(req));
+    let q = supabase.from('pasillos').select('*').eq('empresa_codigo', tenant);
+    if (String(req.query.todos || '') !== '1') q = q.eq('activo', true);
+    const { data, error } = await q.order('nombre');
+    if (error) return res.status(500).json({ error: error.message });
+    const pasillos = data || [];
+
+    // Conteo de productos por pasillo. Se usa la FK (productos.pasillo_id): antes
+    // se emparejaba por texto contra productos.categoria, lo que hacia imposible
+    // tener categoria y pasillo a la vez y dejaba huerfanos al renombrar.
+    const conteos = {};
+    const ids = pasillos.map((p) => p.id);
+    if (ids.length) {
+      const { data: prods } = await supabase
+        .from('productos')
+        .select('pasillo_id, stock_actual')
+        .eq('empresa_codigo', tenant)
+        .eq('activo', true)
+        .in('pasillo_id', ids);
+      for (const p of prods || []) {
+        if (!conteos[p.pasillo_id]) conteos[p.pasillo_id] = { productos: 0, stock: 0 };
+        conteos[p.pasillo_id].productos += 1;
+        conteos[p.pasillo_id].stock += Number(p.stock_actual) || 0;
+      }
+    }
+    return res.json({
+      pasillos: pasillos.map((p) => ({
+        ...p,
+        productos_en_pasillo: conteos[p.id]?.productos || 0,
+        stock_en_pasillo: conteos[p.id]?.stock || 0,
+      })),
+    });
+  } catch (err) {
+    return handleServerError(res, err);
+  }
+});
+
+app.post('/api/pasillos', authenticate, requireTenantAdmin, requirePlanFeature('retail_pasillos'), async (req, res) => {
+  if (!requireSupabase(res)) return;
+  try {
+    const tenant = normalizeTenantCode(getTenantCode(req));
+    const empresa = await resolverEmpresaSupabase(tenant);
+    if (!empresa) return res.status(404).json({ error: 'Empresa no encontrada' });
+    const out = await catalogoRegistrar(empresa, tenant, 'pasillos', req.body || {}, null);
+    if (out.invalid) return res.status(400).json({ error: 'El nombre del pasillo es requerido' });
+    if (out.duplicate) return res.status(409).json({ error: 'Ya existe un pasillo con ese nombre.' });
+    return res.status(201).json(out.saved);
+  } catch (err) {
+    return handleServerError(res, err);
+  }
+});
+
+app.put('/api/pasillos/:id', authenticate, requireTenantAdmin, requirePlanFeature('retail_pasillos'), async (req, res) => {
+  if (!requireSupabase(res)) return;
+  try {
+    const tenant = normalizeTenantCode(getTenantCode(req));
+    const empresa = await resolverEmpresaSupabase(tenant);
+    if (!empresa) return res.status(404).json({ error: 'Empresa no encontrada' });
+    const out = await catalogoRegistrar(empresa, tenant, 'pasillos', req.body || {}, req.params.id);
+    if (out.invalid) return res.status(400).json({ error: 'El nombre del pasillo es requerido' });
+    if (out.notFound) return res.status(404).json({ error: 'Pasillo no encontrado' });
+    if (out.duplicate) return res.status(409).json({ error: 'Ya existe un pasillo con ese nombre.' });
+    return res.json(out.saved);
+  } catch (err) {
+    return handleServerError(res, err);
+  }
+});
+
+app.delete('/api/pasillos/:id', authenticate, requireTenantAdmin, requirePlanFeature('retail_pasillos'), async (req, res) => {
+  if (!requireSupabase(res)) return;
+  try {
+    const tenant = normalizeTenantCode(getTenantCode(req));
+    const { data: pasillo } = await supabase
+      .from('pasillos').select('id, nombre').eq('empresa_codigo', tenant).eq('id', req.params.id).maybeSingle();
+    if (!pasillo) return res.status(404).json({ error: 'Pasillo no encontrado' });
+    const { data: prods } = await supabase
+      .from('productos').select('id').eq('empresa_codigo', tenant).eq('activo', true)
+      .eq('pasillo_id', pasillo.id).limit(1);
+    if (prods && prods.length)
+      return res.status(409).json({ error: 'El pasillo tiene productos activos. Reubicalos antes de desactivarlo.' });
+    const { error } = await supabase
+      .from('pasillos').update({ activo: false }).eq('empresa_codigo', tenant).eq('id', req.params.id);
+    if (error) return res.status(500).json({ error: error.message });
+    return res.json({ ok: true });
+  } catch (err) {
+    return handleServerError(res, err);
+  }
+});
+
+// ---------------------------------------------------------------------------
+// 3. Mermas (perdida de inventario). Descuenta stock + asiento en kardex.
+// ---------------------------------------------------------------------------
+const TIPOS_MERMA = ['merma', 'desperdicio', 'vencimiento', 'robo', 'dano', 'devolucion', 'ajuste'];
+
+app.get('/api/mermas', authenticate, async (req, res) => {
+  if (!requireSupabase(res)) return;
+  try {
+    const tenant = normalizeTenantCode(getTenantCode(req));
+    const limite = Math.min(parseInt(req.query.limite, 10) || 100, 500);
+    let q = supabase.from('mermas').select('*').eq('empresa_codigo', tenant);
+    if (req.query.tipo && TIPOS_MERMA.includes(String(req.query.tipo).toLowerCase()))
+      q = q.eq('tipo', String(req.query.tipo).toLowerCase());
+    if (req.query.producto_id) q = q.eq('producto_id', req.query.producto_id);
+    if (req.query.desde) q = q.gte('fecha', req.query.desde);
+    if (req.query.hasta) q = q.lte('fecha', req.query.hasta);
+    const { data, error } = await q.order('fecha', { ascending: false }).limit(limite);
+    if (error) return res.status(500).json({ error: error.message });
+    return res.json({ mermas: data || [] });
+  } catch (err) {
+    return handleServerError(res, err);
+  }
+});
+
+// Resumen por tipo y por producto: alimenta el reporte de perdidas.
+app.get('/api/mermas/resumen', authenticate, async (req, res) => {
+  if (!requireSupabase(res)) return;
+  try {
+    const tenant = normalizeTenantCode(getTenantCode(req));
+    let q = supabase.from('mermas').select('tipo, cantidad, costo_total, producto_id, producto_nombre')
+      .eq('empresa_codigo', tenant);
+    if (req.query.desde) q = q.gte('fecha', req.query.desde);
+    if (req.query.hasta) q = q.lte('fecha', req.query.hasta);
+    const { data, error } = await q.limit(5000);
+    if (error) return res.status(500).json({ error: error.message });
+
+    const porTipo = {};
+    const porProducto = {};
+    let unidades = 0;
+    let costo = 0;
+    for (const m of data || []) {
+      const t = m.tipo || 'merma';
+      if (!porTipo[t]) porTipo[t] = { tipo: t, eventos: 0, unidades: 0, costo: 0 };
+      porTipo[t].eventos += 1;
+      porTipo[t].unidades += Number(m.cantidad) || 0;
+      porTipo[t].costo += Number(m.costo_total) || 0;
+      unidades += Number(m.cantidad) || 0;
+      costo += Number(m.costo_total) || 0;
+
+      const key = m.producto_id || m.producto_nombre || 'sin-producto';
+      if (!porProducto[key]) {
+        porProducto[key] = {
+          producto_id: m.producto_id || null,
+          nombre: m.producto_nombre || 'Sin producto',
+          unidades: 0,
+          costo: 0,
+        };
+      }
+      porProducto[key].unidades += Number(m.cantidad) || 0;
+      porProducto[key].costo += Number(m.costo_total) || 0;
+    }
+    return res.json({
+      total_eventos: (data || []).length,
+      unidades_perdidas: unidades,
+      costo_total: money2(costo),
+      por_tipo: Object.values(porTipo).sort((a, b) => b.costo - a.costo),
+      por_producto: Object.values(porProducto).sort((a, b) => b.costo - a.costo).slice(0, 25),
+    });
+  } catch (err) {
+    return handleServerError(res, err);
+  }
+});
+
+app.post('/api/mermas', authenticate, requireTenantAdmin, requirePlanFeature('inventario'), async (req, res) => {
+  if (!requireSupabase(res)) return;
+  try {
+    const tenant = normalizeTenantCode(getTenantCode(req));
+    const empresa = await resolverEmpresaSupabase(tenant);
+    if (!empresa) return res.status(404).json({ error: 'Empresa no encontrada' });
+    const b = req.body || {};
+
+    if (!b.producto_id) return res.status(400).json({ error: 'producto_id es requerido' });
+    const cantidad = parseInt(b.cantidad, 10) || 0;
+    if (cantidad <= 0) return res.status(400).json({ error: 'La cantidad debe ser mayor a 0' });
+
+    const tipo = String(b.tipo || 'merma').toLowerCase();
+    if (!TIPOS_MERMA.includes(tipo)) return res.status(400).json({ error: `tipo debe ser uno de: ${TIPOS_MERMA.join(', ')}` });
+
+    const motivo = String(b.motivo || '').trim();
+    if (!motivo) return res.status(400).json({ error: 'El motivo es requerido para auditar la perdida' });
+
+    const { producto, error: prodErr } = await productoDeEmpresa(tenant, b.producto_id);
+    if (prodErr) return res.status(500).json({ error: prodErr.message });
+    if (!producto) return res.status(404).json({ error: 'Producto no encontrado' });
+    if (!producto.activo) return res.status(400).json({ error: 'El producto esta inactivo' });
+
+    const stockAntes = Number(producto.stock_actual) || 0;
+    if (stockAntes < cantidad)
+      return res.status(409).json({
+        error: `Stock insuficiente. Disponible: ${stockAntes}, solicitado: ${cantidad}.`,
+        codigo: 'STOCK_INSUFICIENTE',
+      });
+
+    const costoUnitario = money2(b.costo_unitario != null ? b.costo_unitario : (producto.costo_unitario || 0));
+    const ctx = {
+      empresa,
+      tenant,
+      usuario: req.user,
+      movimiento: 'SALIDA',
+      kardexTipo: 'SALIDA_MERMA',
+      referenciaTipo: 'MERMA',
+      notas: `${tipo}: ${motivo}`,
+      permitirStockNegativo: false,
+    };
+    const linea = {
+      producto_id: producto.id,
+      nombre: producto.nombre,
+      cantidad,
+      precio_unitario: costoUnitario,
+      stock_disponible: stockAntes,
+    };
+
+    let mov;
+    try {
+      mov = await aplicarMovimientoStock(supabase, ctx, [linea]);
+    } catch (e) {
+      if (e instanceof IntegridadError)
+        return res.status(e.status || 409).json({ error: e.message, codigo: e.code, detalle: e.detalle });
+      return handleServerError(res, e);
+    }
+
+    const aplicado = mov.movimientos[0];
+    const row = {
+      empresa_id: empresa.id,
+      empresa_codigo: tenant,
+      producto_id: producto.id,
+      producto_nombre: producto.nombre,
+      cantidad,
+      tipo,
+      motivo,
+      costo_unitario: costoUnitario,
+      costo_total: money2(costoUnitario * cantidad),
+      stock_antes: aplicado ? aplicado.anterior : stockAntes,
+      stock_despues: aplicado ? aplicado.nuevo : stockAntes - cantidad,
+      usuario_id: req.user?.sub || null,
+      usuario_nombre: req.user?.nombre || '',
+      notas: b.notas || null,
+    };
+
+    const { data: saved, error: insErr } = await supabase.from('mermas').insert([row]).select().maybeSingle();
+    if (insErr) {
+      // El inventario ya se movio: hay que devolverlo antes de responder error.
+      await revertirMovimientos(supabase, tenant, mov.movimientos);
+      return res.status(500).json({ error: `No se pudo registrar la merma: ${insErr.message}` });
+    }
+    return res.status(201).json(saved);
+  } catch (err) {
+    return handleServerError(res, err);
+  }
+});
+
+// ---------------------------------------------------------------------------
+// 4. Mesas y cuentas abiertas (modulo gestion_membresias / Club)
+// ---------------------------------------------------------------------------
+const ESTADOS_MESA = ['libre', 'ocupada', 'reservada', 'fuera_servicio'];
+
+app.get('/api/mesas', authenticate, requirePlanFeature('gestion_membresias'), async (req, res) => {
+  if (!requireSupabase(res)) return;
+  try {
+    const tenant = normalizeTenantCode(getTenantCode(req));
+    const incluirInactivas = String(req.query.todos || '') === '1';
+    let q = supabase.from('mesas').select('*').eq('empresa_codigo', tenant);
+    if (!incluirInactivas) q = q.eq('activa', true);
+    const { data, error } = await q.order('nombre');
+    if (error) return res.status(500).json({ error: error.message });
+    const mesas = data || [];
+
+    // Cuenta abierta actual por mesa (incluye monto) para pintar el mapa de mesas.
+    const { data: cuentas } = await supabase
+      .from('cuentas_abiertas')
+      .select('id, mesa_id, estado, total, monto_consumos, cliente_nombre, fecha_apertura')
+      .eq('empresa_codigo', tenant)
+      .eq('estado', 'abierta');
+    const porMesa = {};
+    for (const c of cuentas || []) if (c.mesa_id) porMesa[c.mesa_id] = c;
+
+    return res.json({
+      mesas: mesas.map((m) => ({
+        ...m,
+        cuenta_abierta: porMesa[m.id] || null,
+        tiene_cuenta_abierta: !!porMesa[m.id],
+      })),
+    });
+  } catch (err) {
+    return handleServerError(res, err);
+  }
+});
+
+app.post('/api/mesas', authenticate, requireTenantAdmin, requirePlanFeature('gestion_membresias'), async (req, res) => {
+  if (!requireSupabase(res)) return;
+  try {
+    const tenant = normalizeTenantCode(getTenantCode(req));
+    const empresa = await resolverEmpresaSupabase(tenant);
+    if (!empresa) return res.status(404).json({ error: 'Empresa no encontrada' });
+    const b = req.body || {};
+    const nombre = String(b.nombre || '').trim();
+    if (!nombre) return res.status(400).json({ error: 'El nombre de la mesa es requerido' });
+
+    const { data: dup } = await supabase.from('mesas').select('id')
+      .eq('empresa_codigo', tenant).ilike('nombre', nombre).maybeSingle();
+    if (dup) return res.status(409).json({ error: 'Ya existe una mesa con ese nombre.' });
+
+    const { data, error } = await supabase.from('mesas').insert([{
+      empresa_id: empresa.id,
+      empresa_codigo: tenant,
+      nombre,
+      codigo: b.codigo || null,
+      zona: b.zona || null,
+      capacidad: parseInt(b.capacidad, 10) || 4,
+      estado: ESTADOS_MESA.includes(b.estado) ? b.estado : 'libre',
+      precio_consumo: money2(b.precio_consumo || 0),
+    }]).select().maybeSingle();
+    if (error) return res.status(500).json({ error: error.message });
+    return res.status(201).json(data);
+  } catch (err) {
+    return handleServerError(res, err);
+  }
+});
+
+app.put('/api/mesas/:id', authenticate, requireTenantAdmin, requirePlanFeature('gestion_membresias'), async (req, res) => {
+  if (!requireSupabase(res)) return;
+  try {
+    const tenant = normalizeTenantCode(getTenantCode(req));
+    const b = req.body || {};
+    const upd = {};
+    if (b.nombre !== undefined) {
+      const nombre = String(b.nombre || '').trim();
+      if (!nombre) return res.status(400).json({ error: 'El nombre de la mesa es requerido' });
+      upd.nombre = nombre;
+    }
+    if (b.codigo !== undefined) upd.codigo = b.codigo || null;
+    if (b.zona !== undefined) upd.zona = b.zona || null;
+    if (b.capacidad !== undefined) upd.capacidad = parseInt(b.capacidad, 10) || 4;
+    if (b.precio_consumo !== undefined) upd.precio_consumo = money2(b.precio_consumo || 0);
+    if (b.activa !== undefined) upd.activa = !!b.activa;
+    if (b.estado !== undefined) {
+      // occupied/libre los gobierna el ciclo de la cuenta abierta; solo se
+      // permite cambiar manualmente a reservada o fuera_servicio.
+      if (!['reservada', 'fuera_servicio', 'libre'].includes(b.estado))
+        return res.status(400).json({ error: 'El estado solo puede ser reservada, fuera_servicio o libre.' });
+      if (b.estado === 'libre') {
+        const { data: abierta } = await supabase.from('cuentas_abiertas').select('id')
+          .eq('empresa_codigo', tenant).eq('mesa_id', req.params.id).eq('estado', 'abierta').maybeSingle();
+        if (abierta) return res.status(409).json({ error: 'La mesa tiene una cuenta abierta. Cierrala primero.' });
+      }
+      upd.estado = b.estado;
+    }
+
+    const { data, error } = await supabase.from('mesas').update(upd)
+      .eq('empresa_codigo', tenant).eq('id', req.params.id).select().maybeSingle();
+    if (error) {
+      if (/duplicate key|violates unique/i.test(error.message || ''))
+        return res.status(409).json({ error: 'Ya existe una mesa con ese nombre.' });
+      return res.status(500).json({ error: error.message });
+    }
+    if (!data) return res.status(404).json({ error: 'Mesa no encontrada' });
+    return res.json(data);
+  } catch (err) {
+    return handleServerError(res, err);
+  }
+});
+
+app.delete('/api/mesas/:id', authenticate, requireTenantAdmin, requirePlanFeature('gestion_membresias'), async (req, res) => {
+  if (!requireSupabase(res)) return;
+  try {
+    const tenant = normalizeTenantCode(getTenantCode(req));
+    const { data: abierta } = await supabase.from('cuentas_abiertas').select('id')
+      .eq('empresa_codigo', tenant).eq('mesa_id', req.params.id).eq('estado', 'abierta').maybeSingle();
+    if (abierta) return res.status(409).json({ error: 'La mesa tiene una cuenta abierta. Cierrala primero.' });
+    const { data, error } = await supabase.from('mesas').update({ activa: false })
+      .eq('empresa_codigo', tenant).eq('id', req.params.id).select().maybeSingle();
+    if (error) return res.status(500).json({ error: error.message });
+    if (!data) return res.status(404).json({ error: 'Mesa no encontrada' });
+    return res.json({ ok: true, desactivada: data });
+  } catch (err) {
+    return handleServerError(res, err);
+  }
+});
+
+// --- Cuentas abiertas ---
+// Los acumulados de una cuenta SIEMPRE se derivan del detalle persistido, nunca
+// de lo que el cliente calcule. Asi el total coincide con lo que el backend
+// refleja en kardex aunque la appihara redondeando.
+async function recalcularCuentaAbierta(tenant, cuentaId, descuentoActual = 0) {
+  const { data: todoDetalle, error: detErr } = await supabase
+    .from('cuentas_abiertas_detalle').select('total, isv_total').eq('cuenta_abierta_id', cuentaId);
+  if (detErr) return { error: detErr.message };
+
+  const monto = money2((todoDetalle || []).reduce((s, d) => s + (Number(d.total) || 0), 0));
+  const isv = money2((todoDetalle || []).reduce((s, d) => s + (Number(d.isv_total) || 0), 0));
+  const descuento = money2(descuentoActual || 0);
+
+  const { data, error } = await supabase.from('cuentas_abiertas').update({
+    monto_consumos: monto,
+    monto_isv: isv,
+    total: money2(Math.max(0, money2(monto + isv) - descuento)),
+  }).eq('empresa_codigo', tenant).eq('id', cuentaId).select().maybeSingle();
+
+  if (error) return { error: error.message };
+  if (!data) return { error: 'Cuenta no encontrada' };
+  return { cuenta: data };
+}
+
+app.get('/api/cuentas-abiertas', authenticate, requirePlanFeature('gestion_membresias'), async (req, res) => {
+  if (!requireSupabase(res)) return;
+  try {
+    const tenant = normalizeTenantCode(getTenantCode(req));
+    const estado = String(req.query.estado || 'abierta');
+    let q = supabase.from('cuentas_abiertas').select('*').eq('empresa_codigo', tenant);
+    if (['abierta', 'cerrada', 'anulada'].includes(estado)) q = q.eq('estado', estado);
+    const { data, error } = await q.order('fecha_apertura', { ascending: false })
+      .limit(Math.min(parseInt(req.query.limite, 10) || 100, 500));
+    if (error) return res.status(500).json({ error: error.message });
+    return res.json({ cuentas: data || [] });
+  } catch (err) {
+    return handleServerError(res, err);
+  }
+});
+
+app.get('/api/cuentas-abiertas/:id', authenticate, requirePlanFeature('gestion_membresias'), async (req, res) => {
+  if (!requireSupabase(res)) return;
+  try {
+    const tenant = normalizeTenantCode(getTenantCode(req));
+    const { data: cuenta, error } = await supabase.from('cuentas_abiertas').select('*')
+      .eq('empresa_codigo', tenant).eq('id', req.params.id).maybeSingle();
+    if (error) return res.status(500).json({ error: error.message });
+    if (!cuenta) return res.status(404).json({ error: 'Cuenta no encontrada' });
+    const { data: detalle } = await supabase.from('cuentas_abiertas_detalle').select('*')
+      .eq('cuenta_abierta_id', cuenta.id).order('created_at');
+    let mesa = null;
+    if (cuenta.mesa_id) {
+      const r = await supabase.from('mesas').select('*')
+        .eq('empresa_codigo', tenant).eq('id', cuenta.mesa_id).maybeSingle();
+      mesa = r.data || null;
+    }
+    return res.json({ cuenta, mesa, detalle: detalle || [] });
+  } catch (err) {
+    return handleServerError(res, err);
+  }
+});
+
+app.post('/api/cuentas-abiertas', authenticate, requirePlanFeature('gestion_membresias'), async (req, res) => {
+  if (!requireSupabase(res)) return;
+  try {
+    const tenant = normalizeTenantCode(getTenantCode(req));
+    const empresa = await resolverEmpresaSupabase(tenant);
+    if (!empresa) return res.status(404).json({ error: 'Empresa no encontrada' });
+    const b = req.body || {};
+    const cliente = String(b.cliente_nombre || '').trim();
+    if (!cliente) return res.status(400).json({ error: 'cliente_nombre es requerido' });
+
+    let mesa = null;
+    if (b.mesa_id) {
+      const { data, error } = await supabase.from('mesas').select('*')
+        .eq('empresa_codigo', tenant).eq('id', b.mesa_id).maybeSingle();
+      if (error) return res.status(500).json({ error: error.message });
+      if (!data) return res.status(404).json({ error: 'Mesa no encontrada' });
+      if (!data.activa) return res.status(400).json({ error: 'La mesa esta inactiva' });
+      if (data.estado === 'fuera_servicio') return res.status(409).json({ error: 'La mesa esta fuera de servicio' });
+      mesa = data;
+    }
+
+    // El indice unico parcial (empresa_codigo, mesa_id) WHERE estado='abierta'
+    // impide dos cuentas abiertas en la misma mesa aunque haya concurrencia.
+    const { data, error } = await supabase.from('cuentas_abiertas').insert([{
+      empresa_id: empresa.id,
+      empresa_codigo: tenant,
+      mesa_id: mesa ? mesa.id : null,
+      socio_id: b.socio_id || null,
+      cliente_nombre: cliente,
+      cliente_id: b.cliente_id || null,
+      estado: 'abierta',
+      mesero_id: req.user?.sub || null,
+      mesero_nombre: req.user?.nombre || '',
+      notas: b.notas || null,
+    }]).select().maybeSingle();
+
+    if (error) {
+      if (/idx_cuentas_abiertas_mesa_abierta|violates unique/i.test(error.message || ''))
+        return res.status(409).json({ error: 'La mesa ya tiene una cuenta abierta.' });
+      return res.status(500).json({ error: error.message });
+    }
+
+    if (mesa) {
+      const { error: mesaErr } = await supabase.from('mesas')
+        .update({ estado: 'ocupada' }).eq('empresa_codigo', tenant).eq('id', mesa.id);
+      if (mesaErr) return handleServerError(res, mesaErr);
+    }
+    return res.status(201).json({ ...data, mesa });
+  } catch (err) {
+    return handleServerError(res, err);
+  }
+});
+
+// Agrega consumos: descuenta stock con compensating kardex y recalcula el total.
+app.post('/api/cuentas-abiertas/:id/consumos', authenticate, requirePlanFeature('gestion_membresias'), async (req, res) => {
+  if (!requireSupabase(res)) return;
+  try {
+    const tenant = normalizeTenantCode(getTenantCode(req));
+    const empresa = await resolverEmpresaSupabase(tenant);
+    if (!empresa) return res.status(404).json({ error: 'Empresa no encontrada' });
+
+    const { data: cuenta } = await supabase.from('cuentas_abiertas').select('*')
+      .eq('empresa_codigo', tenant).eq('id', req.params.id).maybeSingle();
+    if (!cuenta) return res.status(404).json({ error: 'Cuenta no encontrada' });
+    if (cuenta.estado !== 'abierta')
+      return res.status(409).json({ error: 'La cuenta no esta abierta.' });
+
+    const b = req.body || {};
+    const items = Array.isArray(b.items) ? b.items : (b.producto_id ? [b] : []);
+    if (!items.length) return res.status(400).json({ error: 'Se requiere al menos un item.' });
+
+    let lines;
+    try {
+      // Sin permitirPrecioManual: el precio lo manda el catalogo del tenant.
+      const calc = await calcularLineas(supabase, tenant, items, {
+        empresa, permitirDescuento: false,
+      });
+      lines = calc.lines;
+    } catch (e) {
+      if (e instanceof IntegridadError)
+        return res.status(e.status || 400).json({ error: e.message, codigo: e.code, detalle: e.detalle });
+      throw e;
+    }
+
+    let mov;
+    try {
+      mov = await aplicarMovimientoStock(supabase, {
+        empresa, tenant, usuario: req.user,
+        movimiento: 'SALIDA',
+        kardexTipo: 'SALIDA_CONSUMO',
+        referenciaTipo: 'CUENTA_ABIERTA',
+        referenciaId: cuenta.id,
+        notas: `Consumo en cuenta de ${cuenta.cliente_nombre}`,
+      }, lines);
+    } catch (e) {
+      if (e instanceof IntegridadError)
+        return res.status(e.status || 409).json({ error: e.message, codigo: e.code, detalle: e.detalle });
+      throw e;
+    }
+
+    const detalle = lines.map((l) => ({
+      cuenta_abierta_id: cuenta.id,
+      producto_id: l.producto_id || null,
+      codigo: l.codigo || null,
+      nombre: l.nombre,
+      cantidad: l.cantidad,
+      precio_unitario: l.precio_unitario,
+      isv_unitario: l.isv_rate,
+      isv_total: money2(l.total_linea * (l.isv_rate || 0)),
+      total: l.total_linea,
+      es_consumible: true,
+    }));
+
+    const { data: saved, error: detErr } = await supabase.from('cuentas_abiertas_detalle')
+      .insert(detalle).select();
+    if (detErr) {
+      await revertirMovimientos(supabase, tenant, mov.movimientos);
+      return res.status(500).json({ error: `No se pudo registrar el consumo: ${detErr.message}` });
+    }
+
+    // Recalcular los acumulados desde el detalle persistido (fuente de verdad).
+    const actualizada = await recalcularCuentaAbierta(tenant, cuenta.id, cuenta.descuento);
+    if (actualizada.error) return res.status(500).json({ error: actualizada.error });
+
+    return res.status(201).json({ cuenta: actualizada.cuenta, detalle: saved || [] });
+  } catch (err) {
+    return handleServerError(res, err);
+  }
+});
+
+// Modifica la cantidad de un consumo ya registrado. El stock se ajusta solo por
+// la diferencia: si baja, se devuelve; si sube, se exige stock disponible. El
+// precio SIEMPRE se relee del detalle, el backend no acepta que la app lo fije.
+app.put('/api/cuentas-abiertas/:id/consumos/:detalleId', authenticate, requirePlanFeature('gestion_membresias'), async (req, res) => {
+  if (!requireSupabase(res)) return;
+  try {
+    const tenant = normalizeTenantCode(getTenantCode(req));
+    const empresa = await resolverEmpresaSupabase(tenant);
+    if (!empresa) return res.status(404).json({ error: 'Empresa no encontrada' });
+
+    const { data: cuenta } = await supabase.from('cuentas_abiertas').select('*')
+      .eq('empresa_codigo', tenant).eq('id', req.params.id).maybeSingle();
+    if (!cuenta) return res.status(404).json({ error: 'Cuenta no encontrada' });
+    if (cuenta.estado !== 'abierta')
+      return res.status(409).json({ error: 'La cuenta no esta abierta.' });
+
+    const { data: linea } = await supabase.from('cuentas_abiertas_detalle').select('*')
+      .eq('id', req.params.detalleId).eq('cuenta_abierta_id', cuenta.id).maybeSingle();
+    if (!linea) return res.status(404).json({ error: 'Consumo no encontrado en esta cuenta' });
+
+    const cantidad = parseFloat(req.body?.cantidad);
+    if (!Number.isFinite(cantidad) || cantidad <= 0)
+      return res.status(400).json({ error: 'La cantidad debe ser mayor a 0' });
+
+    const antes = Number(linea.cantidad) || 0;
+    const delta = Number((cantidad - antes).toFixed(4));
+    if (delta === 0)
+      return res.json({ cuenta, detalle: linea, sin_cambios: true });
+
+    // El ISV del detalle es el que ya trae la linea; el backend no recalcula
+    // precios porque el consumo pudo llevar precio preferencial de membresia.
+    const precioUnitario = Number(linea.precio_unitario) || 0;
+    const isvRate = Number(linea.isv_unitario) || 0;
+    const total = money2(precioUnitario * cantidad);
+    const isvTotal = money2(total * isvRate);
+
+    if (delta > 0) {
+      const { producto, error: prodErr } = await productoDeEmpresa(tenant, linea.producto_id);
+      if (prodErr) return res.status(500).json({ error: prodErr.message });
+      if (!producto) return res.status(404).json({ error: 'Producto no encontrado' });
+      try {
+        await aplicarMovimientoStock(supabase, {
+          empresa, tenant, usuario: req.user,
+          movimiento: 'SALIDA',
+          kardexTipo: 'SALIDA_CONSUMO',
+          referenciaTipo: 'CUENTA_ABIERTA',
+          referenciaId: cuenta.id,
+          notas: `Ajuste de consumo en cuenta de ${cuenta.cliente_nombre}`,
+        }, [{
+          producto_id: producto.id,
+          nombre: producto.nombre,
+          cantidad: delta,
+          precio_unitario: precioUnitario,
+          stock_disponible: Number(producto.stock_actual) || 0,
+        }]);
+      } catch (e) {
+        if (e instanceof IntegridadError)
+          return res.status(e.status || 409).json({ error: e.message, codigo: e.code, detalle: e.detalle });
+        throw e;
+      }
+    } else {
+      await aplicarMovimientoStock(supabase, {
+        empresa, tenant, usuario: req.user,
+        movimiento: 'ENTRADA',
+        kardexTipo: 'ENTRADA_AJUSTE',
+        referenciaTipo: 'CUENTA_ABIERTA',
+        referenciaId: cuenta.id,
+        notas: `Correccion de consumo en cuenta de ${cuenta.cliente_nombre}`,
+      }, [{
+        producto_id: linea.producto_id,
+        nombre: linea.nombre,
+        cantidad: Math.abs(delta),
+        precio_unitario: precioUnitario,
+        stock_disponible: 0,
+      }]);
+    }
+
+    const { data: actualizada, error: updErr } = await supabase.from('cuentas_abiertas_detalle')
+      .update({ cantidad, total, isv_total: isvTotal })
+      .eq('id', linea.id).eq('cuenta_abierta_id', cuenta.id).select().maybeSingle();
+    if (updErr || !actualizada) {
+      // El stock ya se movio. Si la linea no se actualiza, el inventario queda
+      // fuera de sincronia con la cuenta, asi que se devuelve antes de fallar.
+      const motivo = updErr ? updErr.message : 'la linea ya no existe en la cuenta';
+      try {
+        // La compensacion de un SALIDA necesita stock real: si otra venta lo
+        // consumio mientras tanto, se detiene y se avisa en vez de dejar el
+        // inventario en negativo.
+        let disponible = null;
+        if (delta > 0) {
+          const { data: actual } = await productoDeEmpresa(tenant, linea.producto_id);
+          disponible = actual ? (Number(actual.stock_actual) || 0) : null;
+        }
+        await aplicarMovimientoStock(supabase, {
+          empresa, tenant, usuario: req.user,
+          movimiento: delta > 0 ? 'ENTRADA' : 'SALIDA',
+          kardexTipo: 'ENTRADA_AJUSTE',
+          referenciaTipo: 'CUENTA_ABIERTA',
+          referenciaId: cuenta.id,
+          notas: `Compensacion por fallo al ajustar consumo de ${cuenta.cliente_nombre}`,
+        }, [{
+          producto_id: linea.producto_id,
+          nombre: linea.nombre,
+          cantidad: Math.abs(delta),
+          precio_unitario: precioUnitario,
+          stock_disponible: disponible,
+        }]);
+      } catch (e) {
+        console.error('[cuentas] fallo al compensar el ajuste de consumo:', e.message || e);
+        return res.status(500).json({
+          error: `No se pudo actualizar el consumo (${motivo}) y tampoco se pudo devolver el stock. Requiere revision manual.`,
+          codigo: 'COMPENSACION_FALLIDA',
+        });
+      }
+      return res.status(updErr ? 500 : 409)
+        .json({ error: `No se pudo actualizar el consumo: ${motivo}. El stock fue devuelto.` });
+    }
+
+    const recalculo = await recalcularCuentaAbierta(tenant, cuenta.id, cuenta.descuento);
+    if (recalculo.error) return res.status(500).json({ error: recalculo.error });
+    return res.json({ cuenta: recalculo.cuenta, detalle: actualizada });
+  } catch (err) {
+    return handleServerError(res, err);
+  }
+});
+
+// Elimina un consumo y devuelve el stock. Solo con la cuenta abierta: una vez
+// cerrada, el consumo ya forma parte de la venta y se corrige por anulacion.
+app.delete('/api/cuentas-abiertas/:id/consumos/:detalleId', authenticate, requirePlanFeature('gestion_membresias'), async (req, res) => {
+  if (!requireSupabase(res)) return;
+  try {
+    const tenant = normalizeTenantCode(getTenantCode(req));
+    const empresa = await resolverEmpresaSupabase(tenant);
+    if (!empresa) return res.status(404).json({ error: 'Empresa no encontrada' });
+
+    const { data: cuenta } = await supabase.from('cuentas_abiertas').select('*')
+      .eq('empresa_codigo', tenant).eq('id', req.params.id).maybeSingle();
+    if (!cuenta) return res.status(404).json({ error: 'Cuenta no encontrada' });
+    if (cuenta.estado !== 'abierta')
+      return res.status(409).json({ error: 'La cuenta no esta abierta. No se puede quitar un consumo.' });
+
+    const { data: linea } = await supabase.from('cuentas_abiertas_detalle').select('*')
+      .eq('id', req.params.detalleId).eq('cuenta_abierta_id', cuenta.id).maybeSingle();
+    if (!linea) return res.status(404).json({ error: 'Consumo no encontrado en esta cuenta' });
+
+    const { data: borrado, error: delErr } = await supabase.from('cuentas_abiertas_detalle')
+      .delete().eq('id', linea.id).eq('cuenta_abierta_id', cuenta.id).select().maybeSingle();
+    if (delErr) return res.status(500).json({ error: delErr.message });
+    if (!borrado) return res.status(404).json({ error: 'Consumo no encontrado' });
+
+    // Devolucion al inventario. Si el producto ya no existe en el catalogo se
+    // acepta la baja: el detalle historico ya se elimino y el stock no puede
+    // quedar debiendo por una fila que ya no esta.
+    const { data: producto } = await productoDeEmpresa(tenant, linea.producto_id);
+    if (producto) {
+      try {
+        await aplicarMovimientoStock(supabase, {
+          empresa, tenant, usuario: req.user,
+          movimiento: 'ENTRADA',
+          kardexTipo: 'ENTRADA_AJUSTE',
+          referenciaTipo: 'CUENTA_ABIERTA',
+          referenciaId: cuenta.id,
+          notas: `Consumo eliminado de la cuenta de ${cuenta.cliente_nombre}`,
+        }, [{
+          producto_id: producto.id,
+          nombre: producto.nombre,
+          cantidad: Number(linea.cantidad) || 0,
+          precio_unitario: Number(linea.precio_unitario) || 0,
+          stock_disponible: Number(producto.stock_actual) || 0,
+        }]);
+      } catch (stockErr) {
+        // La linea ya se borro. Si no se puede devolver el stock, la cuenta
+        // pierde un consumo sin que el inventario lo refleje: se restaura la
+        // fila para que la operacion quede como estaba.
+        await supabase.from('cuentas_abiertas_detalle').insert([borrado]);
+        const mensaje = stockErr instanceof IntegridadError
+          ? stockErr.message
+          : (stockErr.message || 'error desconocido');
+        return res.status(500).json({
+          error: `No se pudo devolver el stock de "${linea.nombre}": ${mensaje}. El consumo se conservo; intentelo de nuevo.`,
+          codigo: 'STOCK_DEVOLUCION_FALLIDA',
+        });
+      }
+    }
+
+    const recalculo = await recalcularCuentaAbierta(tenant, cuenta.id, cuenta.descuento);
+    if (recalculo.error) return res.status(500).json({ error: recalculo.error });
+    return res.json({ ok: true, cuenta: recalculo.cuenta, eliminado: borrado, stock_devuelto: !!producto });
+  } catch (err) {
+    return handleServerError(res, err);
+  }
+});
+
+// Cierra la cuenta: exige forma de pago y libera la mesa.
+app.post('/api/cuentas-abiertas/:id/cerrar', authenticate, requirePlanFeature('gestion_membresias'), async (req, res) => {
+  if (!requireSupabase(res)) return;
+  try {
+    const tenant = normalizeTenantCode(getTenantCode(req));
+    const b = req.body || {};
+    const formaPago = String(b.forma_pago || '').trim();
+    if (!formaPago) return res.status(400).json({ error: 'forma_pago es requerida al cerrar la cuenta' });
+
+    const { data: cuenta } = await supabase.from('cuentas_abiertas').select('*')
+      .eq('empresa_codigo', tenant).eq('id', req.params.id).maybeSingle();
+    if (!cuenta) return res.status(404).json({ error: 'Cuenta no encontrada' });
+    if (cuenta.estado !== 'abierta') return res.status(409).json({ error: 'La cuenta ya no esta abierta.' });
+
+    const descuento = b.descuento !== undefined ? money2(b.descuento || 0) : money2(cuenta.descuento || 0);
+    const baseImponible = money2(money2(cuenta.monto_consumos || 0) + money2(cuenta.monto_isv || 0));
+    if (descuento < 0) return res.status(400).json({ error: 'El descuento no puede ser negativo' });
+    if (descuento > baseImponible)
+      return res.status(400).json({ error: 'El descuento no puede superar el total de la cuenta.' });
+
+    const total = money2(Math.max(0, money2(baseImponible - descuento)));
+    const { data: cerrada, error } = await supabase.from('cuentas_abiertas').update({
+      estado: 'cerrada',
+      descuento,
+      total,
+      fecha_cierre: new Date().toISOString(),
+      forma_pago: formaPago,
+    }).eq('empresa_codigo', tenant).eq('id', cuenta.id).eq('estado', 'abierta').select().maybeSingle();
+
+    if (error) return res.status(500).json({ error: error.message });
+    if (!cerrada) return res.status(409).json({ error: 'La cuenta fue cerrada por otra operacion.' });
+
+    let mesa = null;
+    if (cuenta.mesa_id) {
+      const { error: mesaErr } = await supabase.from('mesas')
+        .update({ estado: 'libre' }).eq('empresa_codigo', tenant).eq('id', cuenta.mesa_id);
+      if (mesaErr) return handleServerError(res, mesaErr);
+      const r = await supabase.from('mesas').select('*')
+        .eq('empresa_codigo', tenant).eq('id', cuenta.mesa_id).maybeSingle();
+      mesa = r.data || null;
+    }
+    return res.json({ cuenta: cerrada, mesa });
+  } catch (err) {
+    return handleServerError(res, err);
+  }
+});
+
+// ---------------------------------------------------------------------------
+// 5. Control de acceso de socios (Club)
+// ---------------------------------------------------------------------------
+const TIPOS_ACCESO = ['entrada', 'salida', 'entrada_salida', 'rechazado'];
+
+app.get('/api/socios-accesos', authenticate, requirePlanFeature('gestion_membresias'), async (req, res) => {
+  if (!requireSupabase(res)) return;
+  try {
+    const tenant = normalizeTenantCode(getTenantCode(req));
+    let q = supabase.from('socios_accesos').select('*').eq('empresa_codigo', tenant);
+    if (req.query.socio_id) q = q.eq('socio_id', req.query.socio_id);
+    if (req.query.estado) q = q.eq('estado', String(req.query.estado));
+    if (req.query.desde) q = q.gte('fecha_entrada', req.query.desde);
+    const { data, error } = await q.order('fecha_entrada', { ascending: false })
+      .limit(Math.min(parseInt(req.query.limite, 10) || 100, 500));
+    if (error) return res.status(500).json({ error: error.message });
+    return res.json({ accesos: data || [] });
+  } catch (err) {
+    return handleServerError(res, err);
+  }
+});
+
+// Quien esta dentro ahora: ultimo registro por socio.
+app.get('/api/socios-accesos/actuales', authenticate, requirePlanFeature('gestion_membresias'), async (req, res) => {
+  if (!requireSupabase(res)) return;
+  try {
+    const tenant = normalizeTenantCode(getTenantCode(req));
+    const { data, error } = await supabase.from('socios_accesos').select('*')
+      .eq('empresa_codigo', tenant)
+      .order('fecha_entrada', { ascending: false }).limit(2000);
+    if (error) return res.status(500).json({ error: error.message });
+
+    const ultimoPorSocio = {};
+    for (const a of data || []) {
+      const key = a.socio_id || a.socio_nombre || 'desconocido';
+      if (!ultimoPorSocio[key]) ultimoPorSocio[key] = a;
+    }
+    const dentro = Object.values(ultimoPorSocio).filter((a) => a.estado === 'dentro');
+    return res.json({ dentro, total_dentro: dentro.length, revisados: (data || []).length });
+  } catch (err) {
+    return handleServerError(res, err);
+  }
+});
+
+// Firma del QR de acceso con el mismo secreto que la sesion: el token es
+// autocontenido y verificable sin consulta a la base, pero sigue siendo del
+// tenant que lo emitio.
+function secretoFirmaQr() {
+  return process.env.JWT_SECRET || process.env.SESSION_SECRET || 'pp-qr-dev-secret';
+}
+
+function firmarQr(codigo) {
+  return crypto.createHmac('sha256', secretoFirmaQr()).update(codigo).digest('hex').slice(0, 12);
+}
+
+// PP1|empresa|socio_id|numero_socio|AAAAMMDD|firma
+function construirTokenQr(tenant, socio, dias = 365) {
+  const exp = new Date();
+  exp.setDate(exp.getDate() + dias);
+  const sello = exp.toISOString().slice(0, 10).replace(/-/g, '');
+  const codigo = ['PP1', tenant, socio.id, socio.numero_socio || '', sello].join('|');
+  return `${codigo}|${firmarQr(codigo)}`;
+}
+
+// El sello AAAAMMDD es un dia completo: vence al terminar ese dia en UTC.
+// Devolver null si no es una fecha real evita comparar contra un NaN silencioso.
+function qrFechaExpiracion(sello) {
+  const s = String(sello || '');
+  if (!/^\d{8}$/.test(s)) return null;
+  const anio = Number(s.slice(0, 4));
+  const mes = Number(s.slice(4, 6));
+  const dia = Number(s.slice(6, 8));
+  if (mes < 1 || mes > 12 || dia < 1 || dia > 31) return null;
+  const f = new Date(Date.UTC(anio, mes - 1, dia, 23, 59, 59, 999));
+  // Rechaza fechas que Date normalizo (por ejemplo 20260231 -> 3 de marzo).
+  if (f.getUTCFullYear() !== anio || f.getUTCMonth() !== mes - 1 || f.getUTCDate() !== dia) return null;
+  return f;
+}
+
+function verificarTokenQr(token) {
+  const partes = String(token || '').split('|');
+  if (partes.length !== 6 || partes[0] !== 'PP1') return { ok: false, error: 'Formato de QR no reconocido' };
+  const codigo = partes.slice(0, 5).join('|');
+  const esperada = firmarQr(codigo);
+  const a = Buffer.from(esperada);
+  const b = Buffer.from(String(partes[5] || ''));
+  if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) {
+    return { ok: false, error: 'El QR no es valido' };
+  }
+  // La firma autentica el token pero NO su vigencia: un QR vencido sigue
+  // teniendo firma correcta, asi que hay que compararla aparte.
+  const expiracion = qrFechaExpiracion(partes[4]);
+  if (!expiracion) return { ok: false, error: 'El QR tiene una fecha de expiracion invalida' };
+  if (expiracion.getTime() < Date.now()) {
+    return { ok: false, error: 'El QR esta vencido', vencido: true, expira: partes[4] };
+  }
+  return { ok: true, empresa: partes[1], socioId: partes[2], numero: partes[3], expira: partes[4] };
+}
+
+// Registro de acceso de un socio. Es la UNICA ruta para marcar entrada, salida
+// o rechazo: tanto el manual como el lector de QR pasan por aqui, asi las
+// reglas (socio inactivo, membresia vencida) no pueden divergir.
+async function registrarAccesoSocio(tenant, empresa, b, req) {
+  const tipo = String(b.tipo_acceso || 'entrada').toLowerCase();
+  if (!TIPOS_ACCESO.includes(tipo)) return { status: 400, error: `tipo_acceso debe ser uno de: ${TIPOS_ACCESO.join(', ')}` };
+
+  let socio = null;
+  if (b.socio_id) {
+    const { data, error } = await supabase.from('socios').select('*')
+      .eq('empresa_codigo', tenant).eq('id', b.socio_id).maybeSingle();
+    if (error) return { status: 500, error: error.message };
+    if (!data) return { status: 404, error: 'Socio no encontrado' };
+    socio = data;
+  }
+
+  // Un rechazo siempre se registra, pero no cambia el estado de presencia.
+  let estado;
+  if (tipo === 'rechazado') estado = 'rechazado';
+  else if (tipo === 'salida' || tipo === 'entrada_salida') estado = 'fuera';
+  else estado = 'dentro';
+
+  // Entrada de socio inactivo o con membresia vencida se rechaza y se explica.
+  if (tipo !== 'salida' && socio) {
+    const estadoSocio = String(socio.estado || '').toLowerCase();
+    if (estadoSocio && !['activo', 'active'].includes(estadoSocio))
+      return { status: 409, error: `El socio esta ${estadoSocio}. No puede ingresar.` };
+    if (socio.fecha_vencimiento && new Date(socio.fecha_vencimiento) < new Date())
+      return { status: 409, error: 'La membresia del socio esta vencida.' };
+  }
+
+  const { data: saved, error } = await supabase.from('socios_accesos').insert([{
+    empresa_id: empresa.id,
+    empresa_codigo: tenant,
+    socio_id: socio ? socio.id : null,
+    socio_nombre: socio ? socio.nombre : (String(b.socio_nombre || '').trim() || null),
+    tipo_acceso: tipo,
+    estado,
+    fecha_entrada: tipo === 'salida' ? (b.fecha_entrada || new Date().toISOString()) : new Date().toISOString(),
+    fecha_salida: estado === 'fuera' ? new Date().toISOString() : null,
+    turno: b.turno || null,
+    puerta: b.puerta || null,
+    motivo_rechazo: b.motivo_rechazo || null,
+    qr_validado: !!b.qr_validado,
+    usuario_id: req.user?.sub || null,
+    usuario_nombre: req.user?.nombre || '',
+    notas: b.notas || null,
+  }]).select().maybeSingle();
+
+  if (error) return { status: 500, error: error.message };
+  return { saved, socio };
+}
+
+app.post('/api/socios-accesos', authenticate, requirePlanFeature('gestion_membresias'), async (req, res) => {
+  if (!requireSupabase(res)) return;
+  try {
+    const tenant = normalizeTenantCode(getTenantCode(req));
+    const empresa = await resolverEmpresaSupabase(tenant);
+    if (!empresa) return res.status(404).json({ error: 'Empresa no encontrada' });
+
+    const out = await registrarAccesoSocio(tenant, empresa, req.body || {}, req);
+    if (out.error) return res.status(out.status).json({ error: out.error });
+    return res.status(201).json(out.saved);
+  } catch (err) {
+    return handleServerError(res, err);
+  }
+});
+
+// QR del socio para la credencial del club.
+app.get('/api/membresias/socios/:id/qr', authenticate, requirePlanFeature('socios'), async (req, res) => {
+  if (!requireSupabase(res)) return;
+  try {
+    const tenant = normalizeTenantCode(getTenantCode(req));
+    const { data: socio, error } = await supabase.from('socios').select('*')
+      .eq('empresa_codigo', tenant).eq('id', req.params.id).maybeSingle();
+    if (error) return res.status(500).json({ error: error.message });
+    if (!socio) return res.status(404).json({ error: 'Socio no encontrado' });
+
+    return res.json({
+      token: construirTokenQr(tenant, socio),
+      socio: {
+        id: socio.id,
+        nombre: socio.nombre,
+        numero_socio: socio.numero_socio,
+        estado: socio.estado,
+        fecha_vencimiento: socio.fecha_vencimiento,
+      },
+    });
+  } catch (err) {
+    return handleServerError(res, err);
+  }
+});
+
+// Lector de la puerta: valida la firma del QR y registra el acceso con las
+// mismas reglas que el registro manual.
+app.post('/api/socios-accesos/validar-qr', authenticate, requirePlanFeature('gestion_membresias'), async (req, res) => {
+  if (!requireSupabase(res)) return;
+  try {
+    const tenant = normalizeTenantCode(getTenantCode(req));
+    const empresa = await resolverEmpresaSupabase(tenant);
+    if (!empresa) return res.status(404).json({ error: 'Empresa no encontrada' });
+
+    const v = verificarTokenQr(req.body?.token);
+    if (!v.ok) return res.status(400).json({ error: v.error });
+    if (v.empresa !== tenant)
+      return res.status(403).json({ error: 'El QR pertenece a otra empresa' });
+
+    const out = await registrarAccesoSocio(tenant, empresa, {
+      socio_id: v.socioId,
+      tipo_acceso: req.body?.tipo_acceso || 'entrada',
+      puerta: req.body?.puerta || null,
+      turno: req.body?.turno || null,
+      qr_validado: true,
+    }, req);
+
+    if (out.error) return res.status(out.status).json({ error: out.error });
+    return res.status(201).json({ acceso: out.saved, socio: out.socio, numero: v.numero });
+  } catch (err) {
+    return handleServerError(res, err);
+  }
+});
+
 let server;
 if (!IS_SERVERLESS) {
   server = app.listen(PORT, () => {

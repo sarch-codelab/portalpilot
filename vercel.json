@@ -81,6 +81,14 @@
       "use": "@vercel/static"
     },
     {
+      "src": "**/*.mp4",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "**/*.webm",
+      "use": "@vercel/static"
+    },
+    {
       "src": "**/*.ico",
       "use": "@vercel/static"
     },

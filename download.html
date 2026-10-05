@@ -20,7 +20,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Descarga Portal Pilot — Android, Web y más</title>
   <link
-    href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&family=Architects+Daughter&display=swap"
     rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <style>
@@ -51,6 +51,7 @@
       --blue: #0a84ff;
       --radius: 12px;
       --radius-lg: 20px;
+      --radius-pill: 9999px;
     }
 
     html {
@@ -99,104 +100,436 @@
         radial-gradient(ellipse 60% 50% at 50% 100%, rgba(167, 139, 250, 0.03) 0%, transparent 60%);
     }
 
-    /* ─── NAV ───────────────────────────────────────────── */
+/* ─── VIDEO DE FONDO (cubre todo debajo del navbar) ─── */
+    .video-wrapper {
+        position: relative;
+        min-height: 100vh;
+        margin-top: 68px; /* Start below navbar */
+    }
+
+    @media (min-width: 768px) {
+        .video-desktop {
+            position: fixed;
+            top: 68px; /* Right below navbar */
+            left: 0;
+            width: 100%;
+            height: calc(100vh - 68px);
+            z-index: -1; /* Behind everything */
+            background: #000000;
+            pointer-events: none;
+        }
+        .video-mobile {
+            display: none;
+        }
+        .video-desktop::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(180deg, rgba(0, 0, 0, 0.25) 0%, rgba(0, 0, 0, 0.3) 55%, rgba(0, 0, 0, 0.4) 100%);
+            pointer-events: none;
+        }
+        .video-desktop video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: brightness(1.45) saturate(1.2);
+            pointer-events: none;
+        }
+        .app-hero {
+            position: relative;
+            z-index: 1;
+        }
+        .app-hero .container {
+            position: relative;
+            z-index: 1;
+        }
+    }
+
+    @media (max-width: 767px) {
+        .video-desktop {
+            display: none;
+        }
+        .video-mobile {
+            position: fixed;
+            top: 68px;
+            left: 0;
+            width: 100%;
+            height: calc(100vh - 68px);
+            z-index: -1; /* Behind everything */
+            background: #000000;
+            pointer-events: none;
+        }
+        .video-mobile::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(180deg, rgba(0, 0, 0, 0.25) 0%, rgba(0, 0, 0, 0.3) 55%, rgba(0, 0, 0, 0.4) 100%);
+            pointer-events: none;
+        }
+        .video-mobile video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: brightness(1.45) saturate(1.2);
+            pointer-events: none;
+        }
+        .app-hero {
+            position: relative;
+            z-index: 1;
+        }
+        .app-hero .container {
+            position: relative;
+            z-index: 1;
+        }
+    }
+
+    /* ─── HERO OVERLAY GRID (text + mockup) ─── */
+    .hero-overlay-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: clamp(32px, 5vw, 80px);
+        align-items: center;
+        width: 100%;
+    }
+
+    .hero-overlay-text {
+        text-align: left;
+        max-width: 560px;
+    }
+
+    .hero-overlay-text .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: rgba(17, 17, 20, 0.8);
+        border: 1px solid var(--border);
+        border-radius: 40px;
+        padding: 7px 18px;
+        font-size: 11px;
+        color: var(--text-dim);
+        margin-bottom: 24px;
+        font-weight: 500;
+        letter-spacing: .5px;
+    }
+
+    .hero-overlay-text .eyebrow i {
+        color: var(--accent-soft);
+    }
+
+    .hero-overlay-text h1 {
+        font-family: 'Syne', sans-serif;
+        font-size: clamp(40px, 6vw, 72px);
+        font-weight: 700;
+        color: var(--white);
+        letter-spacing: -2.5px;
+        line-height: 1;
+        margin-bottom: 20px;
+    }
+
+    .hero-overlay-text h1 span {
+        background: linear-gradient(135deg, var(--white) 30%, var(--accent-soft));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .hero-overlay-text p {
+        font-size: 16px;
+        color: var(--text-dim);
+        line-height: 1.7;
+        margin-bottom: 32px;
+    }
+
+    .hero-overlay-text .download-btns {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-bottom: 24px;
+    }
+
+    .hero-overlay-text .store-btn {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 14px 22px;
+        background: var(--white);
+        color: #000;
+        border-radius: 14px;
+        transition: all .25s ease;
+        min-width: 200px;
+    }
+
+    .hero-overlay-text .store-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 30px rgba(255, 255, 255, 0.1);
+    }
+
+    .hero-overlay-text .store-btn i {
+        font-size: 26px;
+    }
+
+    .hero-overlay-text .store-text {
+        display: flex;
+        flex-direction: column;
+        line-height: 1.1;
+    }
+
+    .hero-overlay-text .store-text small {
+        font-size: 10px;
+        opacity: 0.7;
+    }
+
+    .hero-overlay-text .store-text strong {
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+    .hero-overlay-text .store-text .version {
+        font-size: 10px;
+        opacity: 0.5;
+        margin-top: 2px;
+    }
+
+    .hero-overlay-text .store-btn.secondary {
+        background: var(--surface);
+        color: var(--white);
+        border: 1px solid var(--border-strong);
+    }
+
+    .hero-overlay-text .store-btn.secondary:hover {
+        background: var(--surface-2);
+        border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .hero-overlay-text .download-meta {
+        display: flex;
+        gap: 16px;
+        flex-wrap: wrap;
+        font-size: 11px;
+        color: var(--text-muted);
+        margin-bottom: 24px;
+    }
+
+    .hero-overlay-text .download-meta span {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .hero-overlay-text .download-meta i {
+        color: var(--accent-soft);
+    }
+
+    .hero-overlay-text .hero-mini-stats {
+        display: flex;
+        gap: 32px;
+        flex-wrap: wrap;
+        padding-top: 24px;
+        border-top: 1px solid var(--border);
+    }
+
+    .hero-overlay-text .mini-stat .n {
+        font-family: 'Syne', sans-serif;
+        font-size: clamp(22px, 4vw, 34px);
+        font-weight: 700;
+        color: var(--white);
+    }
+
+    .hero-overlay-text .mini-stat .l {
+        font-size: 11px;
+        color: var(--text-muted);
+        margin-top: 2px;
+        text-transform: uppercase;
+        letter-spacing: .5px;
+    }
+
+    .hero-overlay-mockup {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .hero-overlay-mockup .laptop-mockup {
+        transform: scale(1);
+        transform-origin: center center;
+    }
+
+    @media (max-width: 767px) {
+        .hero-overlay-grid {
+            grid-template-columns: 1fr;
+            gap: 40px;
+            text-align: center;
+        }
+
+        .hero-overlay-text {
+            max-width: 100%;
+            text-align: center;
+        }
+
+        .hero-overlay-text .download-btns {
+            justify-content: center;
+        }
+
+        .hero-overlay-text .download-meta {
+            justify-content: center;
+        }
+
+        .hero-overlay-text .hero-mini-stats {
+            justify-content: center;
+        }
+
+        .hero-overlay-mockup .laptop-mockup {
+            transform: scale(0.7);
+        }
+    }
+
+    @media (max-width: 1024px) {
+        .hero-overlay-grid {
+            gap: 40px;
+        }
+    }
+
+/* ─── HEADER & NAVBAR ─── */
     header {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      z-index: 100;
-      padding: 0 clamp(16px, 4vw, 40px);
-      background: rgba(0, 0, 0, 0.7);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border-bottom: 1px solid var(--border);
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 1000;
+        background: rgba(10, 10, 12, 0.75);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-bottom: 1px solid var(--border);
+        transition: var(--transition);
     }
 
     nav {
-      max-width: 1200px;
-      margin: 0 auto;
-      display: flex;
-      align-items: center;
-      height: 56px;
-      gap: 0;
+        max-width: 1440px;
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        height: 68px;
+        padding: 0 24px;
     }
 
-    .nav-logo {
-      font-family: 'Syne', sans-serif;
-      font-size: 15px;
-      font-weight: 700;
-      color: var(--white);
-      letter-spacing: 1.5px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
+    .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        text-decoration: none;
+        color: var(--white);
     }
 
-    .nav-logo .logo-icon {
-      width: 34px;
-      height: 34px;
-      border-radius: 8px;
-      overflow: hidden;
-      flex-shrink: 0;
+    .brand-logo {
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
-    .nav-logo .logo-icon img {
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
+
+    .brand-logo img {
+        width: 26px;
+        height: 26px;
+        object-fit: contain;
+    }
+
+    .brand-text {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .brand-name {
+        font-family: 'Syne', sans-serif;
+        font-size: 15px;
+        font-weight: 700;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        color: var(--white);
+    }
+
+    .brand-country {
+        font-size: 10px;
+        color: var(--accent-soft);
+        letter-spacing: 1px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 4px;
     }
 
     .nav-links {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      margin: 0 32px;
+        display: flex;
+        align-items: center;
+        gap: 28px;
+        list-style: none;
     }
 
     .nav-links a {
-      font-size: 13px;
-      font-weight: 400;
-      color: var(--text-dim);
-      padding: 6px 12px;
-      border-radius: 6px;
-      transition: color .2s;
+        color: var(--text-dim);
+        text-decoration: none;
+        font-size: 13.5px;
+        font-weight: 500;
+        transition: var(--transition);
+        display: flex;
+        align-items: center;
+        gap: 6px;
     }
 
-    .nav-links a:hover {
-      color: var(--white);
+    .nav-links a:hover, .nav-links a.active {
+        color: var(--white);
     }
 
-    .nav-back {
-      margin-left: auto;
-      font-size: 13px;
-      color: var(--text-dim);
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      transition: color .2s;
+    .nav-actions {
+        display: flex;
+        align-items: center;
+        gap: 12px;
     }
 
-    .nav-back:hover {
-      color: var(--white);
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 10px 20px;
+        border-radius: var(--radius-pill);
+        font-size: 13px;
+        font-weight: 600;
+        text-decoration: none;
+        transition: var(--transition);
+        cursor: pointer;
+        border: none;
+        font-family: inherit;
+        white-space: nowrap;
     }
 
-    .nav-download {
-      margin-left: 16px;
-      padding: 8px 16px;
-      border-radius: 40px;
-      background: var(--white);
-      color: #000;
-      font-size: 12px;
-      font-weight: 500;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      transition: all .2s;
+    .btn-ghost {
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--white);
+        border: 1px solid var(--border);
     }
 
-    .nav-download:hover {
-      background: #e8e8ed;
-      transform: scale(1.02);
+    .btn-ghost:hover {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: var(--border-strong);
+        transform: translateY(-1px);
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, var(--accent) 0%, #7c3aed 100%);
+        color: #ffffff;
+        box-shadow: 0 4px 16px var(--accent-glow);
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 24px rgba(139, 92, 246, 0.45);
     }
 
     /* ─── HERO ──────────────────────────────────────────── */
@@ -716,6 +1049,19 @@
       white-space: nowrap;
     }
 
+    /* Phone mockup a la derecha del card Android */
+    .app-phone-mockup {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .app-phone-mockup img {
+      max-width: 100%;
+      height: auto;
+      filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.5));
+    }
+
     /* Platform content transition */
     .platform-content {
       display: none;
@@ -1097,6 +1443,14 @@
       padding: 100px 0;
       position: relative;
       z-index: 1;
+    }
+    .app-features::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      z-index: -1;
+      pointer-events: none;
     }
 
     .section-header {
@@ -1636,6 +1990,14 @@
       position: relative;
       z-index: 1;
     }
+    .integrations::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      z-index: -1;
+      pointer-events: none;
+    }
 
     .integrations-grid {
       display: grid;
@@ -1787,6 +2149,14 @@
       position: relative;
       z-index: 1;
     }
+    .requirements::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      z-index: -1;
+      pointer-events: none;
+    }
 
     .requirements-grid {
       display: grid;
@@ -1916,37 +2286,136 @@
       z-index: 1;
     }
 
-    .changelog-list {
-      max-width: 800px;
-      margin: 48px auto 0;
+    .changelog-header-row {
       display: flex;
-      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      margin-bottom: 32px;
+      padding: 0 8px;
+    }
+
+    .changelog-main-version {
+      display: flex;
+      align-items: center;
       gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .changelog-version-badge {
+      font-family: 'Syne', sans-serif;
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--white);
+    }
+
+    .changelog-tag {
+      padding: 5px 14px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+    }
+
+    .changelog-tag.latest {
+      background: rgba(48, 209, 88, 0.15);
+      color: var(--green);
+    }
+
+    .changelog-tag.stable {
+      background: rgba(10, 132, 255, 0.15);
+      color: var(--blue);
+    }
+
+
+    .changelog-scroll-hint {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-muted);
+      font-size: 13px;
+      font-weight: 500;
+      white-space: nowrap;
+      opacity: 0.7;
+      animation: scrollHintPulse 2s ease-in-out infinite;
+    }
+
+    .changelog-scroll-hint i {
+      font-size: 18px;
+      color: var(--accent-soft);
+    }
+
+    @keyframes scrollHintPulse {
+      0%, 100% { transform: translateX(0); opacity: 0.7; }
+      50% { transform: translateX(6px); opacity: 1; }
+    }
+
+    .changelog-carousel {
+      display: flex;
+      gap: 16px;
+      overflow-x: auto;
+      overflow-y: hidden;
+      padding: 16px 8px 24px;
+      scroll-snap-type: x mandatory;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
+    }
+
+    .changelog-carousel::-webkit-scrollbar {
+      height: 6px;
+    }
+    .changelog-carousel::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .changelog-carousel::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 3px;
+    }
+    .changelog-carousel::-webkit-scrollbar-thumb:hover {
+      background: var(--border-strong);
     }
 
     .changelog-item {
+      flex: 0 0 clamp(280px, 30%, 380px);
+      scroll-snap-align: start;
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: var(--radius-lg);
       padding: 24px 28px;
       transition: all .3s ease;
+      min-height: 320px;
+      display: flex;
+      flex-direction: column;
     }
 
     .changelog-item:hover {
       border-color: var(--border-strong);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+    }
+
+    .changelog-item:first-child {
+      border-color: var(--accent);
+      background: linear-gradient(135deg, rgba(139, 92, 246, 0.05) 0%, var(--surface) 100%);
+    }
+
+    .changelog-item:first-child .changelog-version {
+      color: var(--accent-soft);
     }
 
     .changelog-header {
       display: flex;
       align-items: center;
       gap: 12px;
-      margin-bottom: 12px;
+      margin-bottom: 16px;
       flex-wrap: wrap;
     }
 
     .changelog-version {
       font-family: 'Syne', sans-serif;
-      font-size: 18px;
+      font-size: 16px;
       font-weight: 700;
       color: var(--white);
     }
@@ -1970,6 +2439,40 @@
       color: var(--blue);
     }
 
+
+    .changelog-dl-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 14px;
+      padding: 10px 18px;
+      border-radius: 10px;
+      background: #3ddc84;
+      color: #000;
+      font-weight: 700;
+      font-size: 13px;
+      text-decoration: none;
+      transition: transform 0.2s ease, filter 0.2s ease;
+    }
+
+    .changelog-dl-btn:hover {
+      transform: translateY(-2px);
+      filter: brightness(1.08);
+    }
+
+    .changelog-dl-sha {
+      margin-top: 10px;
+      font-size: 10.5px;
+      color: var(--text-muted);
+      word-break: break-all;
+      line-height: 1.5;
+    }
+
+    .changelog-dl-sha code {
+      font-size: 10px;
+      color: var(--text-dim);
+    }
+
     .changelog-date {
       font-size: 12px;
       color: var(--text-muted);
@@ -1979,21 +2482,22 @@
     .changelog-body {
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 10px;
+      flex: 1;
     }
 
     .changelog-entry {
       display: flex;
       align-items: flex-start;
       gap: 10px;
-      font-size: 13px;
+      font-size: 12.5px;
       color: var(--text-dim);
-      line-height: 1.6;
+      line-height: 1.55;
     }
 
     .changelog-entry i {
-      margin-top: 4px;
-      font-size: 11px;
+      margin-top: 3px;
+      font-size: 10px;
       flex-shrink: 0;
     }
 
@@ -2002,11 +2506,23 @@
     }
 
     .changelog-entry.fix i {
-      color: var(--blue);
+      color: var(--red);
     }
 
     .changelog-entry.improve i {
-      color: var(--accent-soft);
+      color: var(--gold);
+    }
+
+    @media (max-width: 768px) {
+      .changelog-scroll-hint {
+        display: none;
+      }
+      .changelog-carousel {
+        padding-bottom: 16px;
+      }
+      .changelog-item {
+        flex: 0 0 85%;
+      }
     }
 
     /* ─── TESTIMONIALS ─────────────────────────────────── */
@@ -2014,6 +2530,14 @@
       padding: 100px 0;
       position: relative;
       z-index: 1;
+    }
+    .app-testimonials::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      z-index: -1;
+      pointer-events: none;
     }
 
     .testimonials-grid {
@@ -2174,6 +2698,14 @@
       position: relative;
       z-index: 1;
     }
+    .app-cta::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      z-index: -1;
+      pointer-events: none;
+    }
 
     .app-cta h2 {
       font-family: 'Syne', sans-serif;
@@ -2210,6 +2742,14 @@
       text-align: center;
       position: relative;
       z-index: 1;
+    }
+    footer::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: -1;
+      pointer-events: none;
     }
 
     footer p {
@@ -2252,6 +2792,10 @@
       .requirements-grid,
       .apps-grid {
         grid-template-columns: 1fr;
+      }
+
+      .app-phone-mockup {
+        display: none;
       }
 
       .integrations-grid {
@@ -2510,6 +3054,261 @@
       visibility: visible !important;
     }
 
+    /* ─── FOOTER ─── */
+    .footer-top {
+        display: grid;
+        grid-template-columns: 2fr 1fr 1fr 1fr;
+        gap: clamp(24px, 4vw, 60px);
+        margin-bottom: 60px;
+    }
+
+    .footer-logo {
+        display: block;
+        margin-bottom: 14px;
+    }
+
+    .footer-logo img {
+        width: 280px;
+        height: auto;
+        object-fit: contain;
+        display: block;
+        margin-left: 20px;
+    }
+
+    .footer-desc {
+        font-size: 13px;
+        color: var(--text-dim);
+        line-height: 1.8;
+        max-width: 300px;
+        margin: 0 0 20px;
+        text-align: left;
+    }
+
+    .footer-social {
+        display: flex;
+        gap: 8px;
+    }
+
+    .fs-btn {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        color: var(--text-dim);
+        transition: var(--transition);
+    }
+
+    .fs-btn:hover {
+        background: var(--accent);
+        color: #fff;
+        border-color: var(--accent);
+    }
+
+    .footer-col h5 {
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        color: var(--white);
+        margin-bottom: 16px;
+    }
+
+    .footer-col ul li {
+        margin-bottom: 10px;
+    }
+
+    .footer-col ul li a {
+        font-size: 13px;
+        color: var(--text-dim);
+        transition: var(--transition);
+        text-decoration: none;
+    }
+
+    .footer-col ul li a:hover {
+        color: var(--white);
+        text-decoration: none;
+    }
+
+    .footer-bottom {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-top: 28px;
+        border-top: 1px solid var(--border);
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    .footer-bottom p {
+        font-size: 12px;
+        color: var(--text-dim);
+    }
+
+    .footer-links {
+        display: flex;
+        gap: 20px;
+    }
+
+    .footer-links a {
+        font-size: 12px;
+        color: var(--text-dim);
+        transition: var(--transition);
+    }
+
+    .footer-links a:hover {
+        color: var(--white);
+    }
+
+    /* FOOTER RESPONSIVE */
+    @media (max-width: 768px) {
+        footer {
+            padding: 48px 0 28px;
+        }
+        .footer-top {
+            grid-template-columns: 1fr;
+            gap: 32px;
+            text-align: center;
+            margin-bottom: 32px;
+        }
+        .footer-logo {
+            justify-content: center;
+        }
+        .footer-desc {
+            text-align: center;
+            max-width: 300px;
+            margin: 0 auto 16px;
+            font-size: 13px;
+        }
+        .footer-social {
+            justify-content: center;
+            gap: 10px;
+        }
+        .fs-btn {
+            width: 38px;
+            height: 38px;
+        }
+        .footer-col {
+            text-align: center;
+        }
+        .footer-col h5 {
+            text-align: center;
+        }
+        .footer-col ul {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+        .footer-col ul li a {
+            font-size: 13px;
+        }
+        .footer-bottom {
+            flex-direction: column;
+            gap: 8px;
+            text-align: center;
+            padding-top: 20px;
+        }
+        .footer-links {
+            justify-content: center;
+            gap: 16px;
+        }
+        .footer-bottom p {
+            font-size: 12px;
+        }
+    }
+
+    @media (max-width: 480px) {
+        footer {
+            padding: 44px 0 24px;
+        }
+    }
+
+    /* --- Badge "Descarga" neo-brutalista (copiado de planes.html) --- */
+
+    /* Contenedor principal del badge */
+    .badge-container {
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 12px 28px;
+        background-color: #7b2cbf; /* Color púrpura principal */
+        border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px; /* Bordes redondeados únicos */
+        box-shadow: 6px 6px 0px #000000; /* Sombra del badge */
+        transform: rotate(-1.5deg); /* Rotación ligera */
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        cursor: pointer;
+        user-select: none;
+        margin-bottom: 20px;
+        font-family: 'Architects Daughter', cursive;
+        width: fit-content;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    /* Efecto al pasar el mouse */
+    .badge-container:hover {
+        transform: rotate(-0.5deg) translate(-2px, -2px);
+        box-shadow: 8px 8px 0px #000000;
+    }
+
+    /* Decoraciones adicionales ::before y ::after */
+    .badge-container::before,
+    .badge-container::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        border: 2px solid #000000;
+        pointer-events: none;
+    }
+
+    .badge-container::before {
+        border-radius: 20px 255px 30px 225px / 255px 20px 225px 40px;
+        margin: -4px;
+    }
+
+    .badge-container::after {
+        border-radius: 255px 30px 225px 20px / 30px 225px 40px 255px;
+        margin: -2px;
+        transform: rotate(0.8deg);
+    }
+
+    /* Ícono de soporte dentro del badge */
+    .support-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        background: #ffffff;
+        padding: 6px;
+        border: 2px solid #000000;
+        border-radius: 52% 48% 50% 50% / 48% 52% 48% 52%; /* Círculo imperfecto */
+        box-shadow: 2px 2px 0px #000000;
+    }
+
+    /* Asegurar que las líneas internas del SVG respeten el color negro */
+    .support-icon svg {
+        stroke: #000000 !important;
+    }
+
+    /* Texto dentro del badge */
+    .badge-text {
+        color: #ffffff;
+        font-size: 1.5rem;
+        font-weight: bold;
+        letter-spacing: 1px;
+        white-space: nowrap;
+        text-shadow: 1px 1px 0px #000, -1px 1px 0px #000, 1px -1px 0px #000, -1px -1px 0px #000;
+    }
+
     </style>
 </head>
 
@@ -2520,217 +3319,244 @@
   <!-- NAV -->
   <header>
     <nav>
-      <a href="index.html" class="nav-logo" style="gap:10px;">
-        <div class="logo-icon" style="width:26px;height:26px;"><img src="img/iconos/robot_logo.png" alt="Portal Pilot" style="width:26px;height:26px;object-fit:contain;"></div>
+      <a href="index.html" class="brand">
+        <div class="brand-logo">
+          <img src="img/iconos/robot_logo.png" alt="Portal Pilot">
+        </div>
         <img src="img/iconos/Portal Pilot.png" alt="Portal Pilot" style="height:22px;width:auto;object-fit:contain;display:block;">
       </a>
-      <div class="nav-links">
-        <a href="#downloads">Descargas</a>
-        <a href="#features">Características</a>
-        <a href="#screenshots">Capturas</a>
-        <a href="#requirements">Requisitos</a>
-        <a href="#changelog">Changelog</a>
-        <a href="#faq">FAQ</a>
+
+      <ul class="nav-links">
+        <li><a href="#downloads"><i class="fas fa-download"></i> Descargas</a></li>
+        <li><a href="#features"><i class="fas fa-layer-group"></i> Características</a></li>
+        <li><a href="#screenshots"><i class="fas fa-desktop"></i> Capturas</a></li>
+        <li><a href="#requirements"><i class="fas fa-cogs"></i> Requisitos</a></li>
+        <li><a href="#changelog"><i class="fas fa-history"></i> Changelog</a></li>
+        <li><a href="#faq"><i class="fas fa-question-circle"></i> FAQ</a></li>
+      </ul>
+
+      <div class="nav-actions">
+        <a href="index.html" class="btn btn-ghost"><i class="fas fa-arrow-left"></i> Volver al inicio</a>
+        <a href="#downloads" class="btn btn-primary"><i class="fas fa-download"></i> Descargar</a>
       </div>
-      <a href="index.html" class="nav-back">
-        <i class="fas fa-arrow-left" style="font-size:11px;"></i> Volver al inicio
-      </a>
-      <a href="#downloads" class="nav-download">
-        <i class="fas fa-download"></i> Descargar
-      </a>
     </nav>
   </header>
 
-  <!-- HERO -->
-  <section class="app-hero container">
-    <div class="app-hero-grid">
-
-      <!-- Text -->
-      <div class="app-hero-text">
-        <div class="eyebrow">
-          <i class="fas fa-mobile-screen-button"></i> PORTAL PILOT v1.0.12
-        </div>
-        <h1>El poder enterprise, <span>en tu bolsillo.</span></h1>
-        <p>La aplicación de Portal Pilot para Android y Windows. Gestiona tu negocio con punto de venta POS, facturación
-          electrónica SAR, inventario y sincronización con la plataforma central.</p>
-
-        <div class="download-btns" id="download">
-          <a href="https://github.com/sarch-codelab/portalpilot-app/releases/download/v1.0.12/PortalPilot-Android-v1.0.12.apk"
-            class="store-btn" style="border-color: #3ddc84;">
-            <i class="fab fa-android" style="color:#3ddc84; font-size: 24px;"></i>
-            <div class="store-text">
-              <small>Descargar para</small>
-              <strong>Android (APK)</strong>
-              <span class="version">v1.0.12 · Android 7.0+ · 112 MB</span>
-            </div>
-          </a>
-          <a href="https://github.com/sarch-codelab/portalpilot-app/releases/download/v1.0.12/Portal_Pilot_WDx64_v1.0.12.exe"
-            class="store-btn secondary">
-            <i class="fab fa-windows" style="color:#0078d4; font-size: 24px;"></i>
-            <div class="store-text">
-              <small>Descargar para</small>
-              <strong>Windows (Escritorio)</strong>
-              <span class="version">v1.0.12 · Windows 10/11 x64 · 40 MB</span>
-            </div>
-          </a>
-        </div>
-
-        <div class="download-meta">
-          <span><i class="fas fa-shield"></i> Firmado digitalmente</span>
-          <span><i class="fas fa-code-branch"></i> v1.0.12 Android · v1.0.12 Windows</span>
-          <span><i class="fas fa-calendar"></i> Actualizado 1 Oct 2026</span>
-        </div>
-
-        <div class="hero-mini-stats">
-          <div class="mini-stat">
-            <div class="n">v1.0.12</div>
-            <div class="l">Android</div>
-          </div>
-          <div class="mini-stat">
-            <div class="n">v1.0.12</div>
-            <div class="l">Windows</div>
-          </div>
-          <div class="mini-stat">
-            <div class="n">Central</div>
-            <div class="l">API Nube</div>
-          </div>
-        </div>
+  <!-- VIDEO WRAPPER wraps HERO (like planes.html) -->
+  <div class="video-wrapper">
+      <!-- Video para Desktop/Tablet -->
+      <div class="video-bg video-desktop">
+          <video autoplay muted playsinline preload="auto">
+              <source src="vid/fondo1.mp4" type="video/mp4">
+          </video>
+      </div>
+      <!-- Video para Móvil (fondo2 con loop invertido) -->
+      <div class="video-bg video-mobile">
+          <video autoplay muted playsinline preload="auto">
+              <source src="vid/fondo2.mp4" type="video/mp4">
+          </video>
       </div>
 
-      <!-- Laptop Mockup -->
-      <div>
-        <div class="laptop-mockup">
-          <div class="laptop-screen">
-            <div class="laptop-camera"></div>
-            <div class="laptop-display">
-              <div class="desktop-screen">
-                <!-- Top bar -->
-                <div class="desktop-topbar">
-                  <div class="desktop-topbar-left">
-                    <div class="desktop-logo-mini"><i class="fas fa-robot"></i></div>
-                    <div class="desktop-app-name">Portal Pilot</div>
+      <!-- HERO - content in normal flow, video clipped to this section via JS -->
+      <section class="app-hero container">
+          <div class="hero-overlay-grid">
+              <!-- Texto a la izquierda -->
+              <div class="hero-overlay-text">
+                  <div class="eyebrow">
+                      <i class="fas fa-mobile-screen-button"></i> PORTAL PILOT v1.0.15
                   </div>
-                  <div class="desktop-topbar-menu">
-                    <span>Archivo</span>
-                    <span>Editar</span>
-                    <span>Ver</span>
-                    <span>Bots</span>
-                    <span>Ayuda</span>
+                  <!-- Estructura del Badge -->
+                  <div class="badge-container">
+                      <div class="support-icon">
+                          <!-- Icono de Descarga Reemplazado -->
+                          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                              <polyline points="7 10 12 15 17 10"></polyline>
+                              <line x1="12" y1="15" x2="12" y2="3"></line>
+                          </svg>
+                      </div>
+                      <span class="badge-text">Descarga</span>
                   </div>
-                  <div class="desktop-topbar-right">
-                    <i class="fas fa-wifi"></i>
-                    <i class="fas fa-bell"></i>
-                    <i class="fas fa-user-circle"></i>
-                    <span>JS</span>
-                  </div>
-                </div>
+                  <h1>El poder enterprise, <span>en tu bolsillo.</span></h1>
+                  <p>La aplicación de Portal Pilot para Android y Windows. Gestiona tu negocio con punto de venta POS, facturación
+                    electrónica SAR, inventario y sincronización con la plataforma central.</p>
 
-                <!-- Body -->
-                <div class="desktop-body">
-                  <!-- Sidebar -->
-                  <div class="desktop-sidebar">
-                    <div class="sidebar-section">
-                      <div class="sidebar-label">Principal</div>
-                      <div class="sidebar-item active"><i class="fas fa-house"></i> Dashboard</div>
-                      <div class="sidebar-item"><i class="fas fa-robot"></i> Bots RPA</div>
-                      <div class="sidebar-item"><i class="fas fa-chart-line"></i> Analytics</div>
-                      <div class="sidebar-item"><i class="fas fa-link"></i> Blockchain</div>
-                    </div>
-                    <div class="sidebar-section">
-                      <div class="sidebar-label">Gestión</div>
-                      <div class="sidebar-item"><i class="fas fa-building"></i> Empresas</div>
-                      <div class="sidebar-item"><i class="fas fa-users"></i> Usuarios</div>
-                      <div class="sidebar-item"><i class="fas fa-shield"></i> Cyberyx</div>
-                      <div class="sidebar-item"><i class="fas fa-cog"></i> Ajustes</div>
-                    </div>
-                  </div>
-
-                  <!-- Main -->
-                  <div class="desktop-main">
-                    <div class="desktop-main-header">
-                      <div class="desktop-main-title">Dashboard</div>
-                      <div class="desktop-main-actions">
-                        <div class="desktop-btn-mini"><i class="fas fa-download"></i> Exportar</div>
-                        <div class="desktop-btn-mini primary"><i class="fas fa-plus"></i> Nuevo bot</div>
-                      </div>
-                    </div>
-
-                    <div class="desktop-stats-grid">
-                      <div class="desktop-stat">
-                        <div class="label">Bots activos</div>
-                        <div class="value">24</div>
-                        <div class="change">↑ 12%</div>
-                      </div>
-                      <div class="desktop-stat">
-                        <div class="label">Tareas hoy</div>
-                        <div class="value">1,284</div>
-                        <div class="change">↑ 24%</div>
-                      </div>
-                      <div class="desktop-stat">
-                        <div class="label">Horas ahorradas</div>
-                        <div class="value">142h</div>
-                        <div class="change">↑ 18%</div>
-                      </div>
-                      <div class="desktop-stat">
-                        <div class="label">ROI</div>
-                        <div class="value">312%</div>
-                        <div class="change">↑ 8%</div>
-                      </div>
-                    </div>
-
-                    <div class="desktop-content-grid">
-                      <div class="desktop-panel">
-                        <div class="desktop-panel-title">Bots recientes</div>
-                        <div class="desktop-bot-row">
-                          <div class="desktop-bot-icon"><i class="fas fa-chart-line"></i></div>
-                          <div class="desktop-bot-info">
-                            <div class="name">Análisis proveedores Q4</div>
-                            <div class="status">Ejecutando · 3 min</div>
+                  <div class="download-btns" id="download">
+                      <a href="https://github.com/sarch-codelab/portalpilot-app/releases/download/v1.0.15/PortalPilot-Android-v1.0.15.apk"
+                        class="store-btn" style="border-color: #3ddc84;">
+                          <i class="fab fa-android" style="color:#3ddc84; font-size: 24px;"></i>
+                          <div class="store-text">
+                              <small>Descargar para</small>
+                              <strong>Android (APK)</strong>
+                              <span class="version">v1.0.15 · Android 7.0+ · 112 MB</span>
                           </div>
-                          <div class="desktop-bot-status"></div>
-                        </div>
-                        <div class="desktop-bot-row">
-                          <div class="desktop-bot-icon"><i class="fas fa-file-invoice"></i></div>
-                          <div class="desktop-bot-info">
-                            <div class="name">Conciliación facturas</div>
-                            <div class="status">Completado · 14:32</div>
+                      </a>
+                      <a href="https://github.com/sarch-codelab/portalpilot-app/releases/download/v1.0.12/Portal_Pilot_WDx64_v1.0.12.exe"
+                        class="store-btn secondary">
+                          <i class="fab fa-windows" style="color:#0078d4; font-size: 24px;"></i>
+                          <div class="store-text">
+                              <small>Descargar para</small>
+                              <strong>Windows (Escritorio)</strong>
+                              <span class="version">v1.0.12 · Windows 10/11 x64 · 40 MB</span>
                           </div>
-                          <div class="desktop-bot-status" style="background:var(--accent-soft)"></div>
-                        </div>
-                        <div class="desktop-bot-row">
-                          <div class="desktop-bot-icon"><i class="fas fa-database"></i></div>
-                          <div class="desktop-bot-info">
-                            <div class="name">Sync Oracle DB</div>
-                            <div class="status">Completado · 13:10</div>
-                          </div>
-                          <div class="desktop-bot-status" style="background:var(--accent-soft)"></div>
-                        </div>
-                      </div>
-                      <div class="desktop-panel">
-                        <div class="desktop-panel-title">Actividad semanal</div>
-                        <div class="desktop-chart">
-                          <div class="desktop-chart-bar" style="height:40%"></div>
-                          <div class="desktop-chart-bar" style="height:65%"></div>
-                          <div class="desktop-chart-bar" style="height:50%"></div>
-                          <div class="desktop-chart-bar" style="height:80%"></div>
-                          <div class="desktop-chart-bar" style="height:70%"></div>
-                          <div class="desktop-chart-bar" style="height:90%"></div>
-                          <div class="desktop-chart-bar" style="height:100%"></div>
-                        </div>
-                      </div>
-                    </div>
+                      </a>
                   </div>
-                </div>
+
+                  <div class="download-meta">
+                      <span><i class="fas fa-shield"></i> Firmado digitalmente</span>
+                      <span><i class="fas fa-code-branch"></i> v1.0.15 Android · v1.0.12 Windows</span>
+                      <span><i class="fas fa-calendar"></i> Actualizado 5 Oct 2026</span>
+                  </div>
+
+                  <div class="hero-mini-stats">
+                      <div class="mini-stat">
+                          <div class="n">v1.0.15</div>
+                          <div class="l">Android</div>
+                      </div>
+                      <div class="mini-stat">
+                          <div class="n">v1.0.12</div>
+                          <div class="l">Windows</div>
+                      </div>
+                      <div class="mini-stat">
+                          <div class="n">Central</div>
+                          <div class="l">API Nube</div>
+                      </div>
+                  </div>
               </div>
-            </div>
-          </div>
-          <div class="laptop-base"></div>
-          <div class="laptop-stand"></div>
-        </div>
-      </div>
 
-    </div>
-  </section>
+              <!-- Laptop Mockup a la derecha -->
+              <div class="hero-overlay-mockup">
+                  <div class="laptop-mockup">
+                      <div class="laptop-screen">
+                          <div class="laptop-camera"></div>
+                          <div class="laptop-display">
+                              <div class="desktop-screen">
+                                  <!-- Top bar -->
+                                  <div class="desktop-topbar">
+                                      <div class="desktop-topbar-left">
+                                          <div class="desktop-logo-mini"><i class="fas fa-robot"></i></div>
+                                          <div class="desktop-app-name">Portal Pilot</div>
+                                      </div>
+                                      <div class="desktop-topbar-menu">
+                                          <span>Archivo</span>
+                                          <span>Editar</span>
+                                          <span>Ver</span>
+                                          <span>Bots</span>
+                                          <span>Ayuda</span>
+                                      </div>
+                                      <div class="desktop-topbar-right">
+                                          <i class="fas fa-wifi"></i>
+                                          <i class="fas fa-bell"></i>
+                                          <i class="fas fa-user-circle"></i>
+                                          <span>JS</span>
+                                      </div>
+                                  </div>
+
+                                  <!-- Body -->
+                                  <div class="desktop-body">
+                                      <!-- Sidebar -->
+                                      <div class="desktop-sidebar">
+                                          <div class="sidebar-section">
+                                              <div class="sidebar-label">Principal</div>
+                                              <div class="sidebar-item active"><i class="fas fa-house"></i> Dashboard</div>
+                                              <div class="sidebar-item"><i class="fas fa-robot"></i> Bots RPA</div>
+                                              <div class="sidebar-item"><i class="fas fa-chart-line"></i> Analytics</div>
+                                              <div class="sidebar-item"><i class="fas fa-link"></i> Blockchain</div>
+                                          </div>
+                                          <div class="sidebar-section">
+                                              <div class="sidebar-label">Gestión</div>
+                                              <div class="sidebar-item"><i class="fas fa-building"></i> Empresas</div>
+                                              <div class="sidebar-item"><i class="fas fa-users"></i> Usuarios</div>
+                                              <div class="sidebar-item"><i class="fas fa-shield"></i> Cyberyx</div>
+                                              <div class="sidebar-item"><i class="fas fa-cog"></i> Ajustes</div>
+                                          </div>
+                                      </div>
+
+                                      <!-- Main -->
+                                      <div class="desktop-main">
+                                          <div class="desktop-main-header">
+                                              <div class="desktop-main-title">Dashboard</div>
+                                              <div class="desktop-main-actions">
+                                                  <div class="desktop-btn-mini"><i class="fas fa-download"></i> Exportar</div>
+                                                  <div class="desktop-btn-mini primary"><i class="fas fa-plus"></i> Nuevo bot</div>
+                                              </div>
+                                          </div>
+
+                                          <div class="desktop-stats-grid">
+                                              <div class="desktop-stat">
+                                                  <div class="label">Bots activos</div>
+                                                  <div class="value">24</div>
+                                                  <div class="change">↑ 12%</div>
+                                              </div>
+                                              <div class="desktop-stat">
+                                                  <div class="label">Tareas hoy</div>
+                                                  <div class="value">1,284</div>
+                                                  <div class="change">↑ 24%</div>
+                                              </div>
+                                              <div class="desktop-stat">
+                                                  <div class="label">Horas ahorradas</div>
+                                                  <div class="value">142h</div>
+                                                  <div class="change">↑ 18%</div>
+                                              </div>
+                                              <div class="desktop-stat">
+                                                  <div class="label">ROI</div>
+                                                  <div class="value">312%</div>
+                                                  <div class="change">↑ 8%</div>
+                                              </div>
+                                          </div>
+
+                                          <div class="desktop-content-grid">
+                                              <div class="desktop-panel">
+                                                  <div class="desktop-panel-title">Bots recientes</div>
+                                                  <div class="desktop-bot-row">
+                                                      <div class="desktop-bot-icon"><i class="fas fa-chart-line"></i></div>
+                                                      <div class="desktop-bot-info">
+                                                          <div class="name">Análisis proveedores Q4</div>
+                                                          <div class="status">Ejecutando · 3 min</div>
+                                                      </div>
+                                                      <div class="desktop-bot-status"></div>
+                                                  </div>
+                                                  <div class="desktop-bot-row">
+                                                      <div class="desktop-bot-icon"><i class="fas fa-file-invoice"></i></div>
+                                                      <div class="desktop-bot-info">
+                                                          <div class="name">Conciliación facturas</div>
+                                                          <div class="status">Completado · 14:32</div>
+                                                      </div>
+                                                      <div class="desktop-bot-status" style="background:var(--accent-soft)"></div>
+                                                  </div>
+                                                  <div class="desktop-bot-row">
+                                                      <div class="desktop-bot-icon"><i class="fas fa-database"></i></div>
+                                                      <div class="desktop-bot-info">
+                                                          <div class="name">Sync Oracle DB</div>
+                                                          <div class="status">Completado · 13:10</div>
+                                                      </div>
+                                                      <div class="desktop-bot-status" style="background:var(--accent-soft)"></div>
+                                                  </div>
+                                              </div>
+                                              <div class="desktop-panel">
+                                                  <div class="desktop-panel-title">Actividad semanal</div>
+                                                  <div class="desktop-chart">
+                                                      <div class="desktop-chart-bar" style="height:40%"></div>
+                                                      <div class="desktop-chart-bar" style="height:65%"></div>
+                                                      <div class="desktop-chart-bar" style="height:50%"></div>
+                                                      <div class="desktop-chart-bar" style="height:80%"></div>
+                                                      <div class="desktop-chart-bar" style="height:70%"></div>
+                                                      <div class="desktop-chart-bar" style="height:90%"></div>
+                                                      <div class="desktop-chart-bar" style="height:100%"></div>
+                                                  </div>
+                                              </div>
+                                          </div>
+                                      </div>
+                                  </div>
+                              </div>
+                          </div>
+                          <div class="laptop-base"></div>
+                          <div class="laptop-stand"></div>
+                      </div>
+                  </div>
+          </div>
+      </section>
+  </div>
 
   <!-- PLATFORM SELECTOR / DOWNLOADS -->
   <section class="platform-selector" id="downloads">
@@ -2778,7 +3604,7 @@
           </div>
         </div>
 
-        <div class="apps-grid">
+        <div class="apps-grid" style="grid-template-columns: 1fr 1fr;">
           <!-- Android APK Direct Download Card -->
           <div class="app-card" style="border-color: rgba(61, 220, 132, 0.4);">
             <div class="app-card-header">
@@ -2787,7 +3613,7 @@
               </div>
               <div class="app-title-wrap">
                 <div class="app-title">Portal Pilot App Móvil</div>
-                <div class="app-version-badge" style="color: #3ddc84; background: rgba(61, 220, 132, 0.1);"><i class="fas fa-circle" style="font-size:5px;"></i> v1.0.12 · APK Oficial</div>
+                <div class="app-version-badge" style="color: #3ddc84; background: rgba(61, 220, 132, 0.1);"><i class="fas fa-circle" style="font-size:5px;"></i> v1.0.15 · APK Oficial</div>
               </div>
             </div>
             <p class="app-description">La aplicación móvil oficial para teléfonos Android. Incluye punto de venta POS con escáner de códigos de barras mediante cámara, facturación electrónica SAR, inventario y sincronización con la plataforma central.</p>
@@ -2795,7 +3621,7 @@
             <div class="app-details">
               <div class="app-detail">
                 <div class="label">Versión</div>
-                <div class="value">1.0.12</div>
+                <div class="value">1.0.15</div>
               </div>
               <div class="app-detail">
                 <div class="label">Tamaño</div>
@@ -2807,7 +3633,7 @@
               </div>
               <div class="app-detail">
                 <div class="label">Lanzamiento</div>
-                <div class="value">1 Oct 2026</div>
+                <div class="value">5 Oct 2026</div>
               </div>
             </div>
 
@@ -2816,17 +3642,22 @@
               <div class="app-feature-item"><i class="fas fa-check"></i> POS rápido para cobranza móvil</div>
               <div class="app-feature-item"><i class="fas fa-check"></i> Facturación electrónica SAR (Honduras)</div>
               <div class="app-feature-item"><i class="fas fa-check"></i> Cliente conectado a la API central (login seguro)</div>
+              <div class="app-feature-item"><i class="fas fa-check"></i> Se actualiza sola desde la app, sin pasar por esta web</div>
             </div>
 
-            <a href="https://github.com/sarch-codelab/portalpilot-app/releases/download/v1.0.12/PortalPilot-Android-v1.0.12.apk"
+            <a href="https://github.com/sarch-codelab/portalpilot-app/releases/download/v1.0.15/PortalPilot-Android-v1.0.15.apk"
               class="app-download-btn" style="background: #3ddc84; color: #000; font-weight: 700;">
               <i class="fas fa-download"></i> Descargar APK Directo (.apk)
             </a>
 
             <div class="app-sha">
               <i class="fas fa-fingerprint"></i>
-              <code>SHA256: E626F10C5FE6F991CAB5DFD43C7E2FB235B61CE15A062B390CD791E772566490</code>
+              <code>SHA256: D2171BFC50D1FC499810C5EB7422DF8E07B2148BCC4CAAB9BB5FB65DBE7A5A56</code>
             </div>
+          </div>
+<!-- Phone mockup a la derecha -->
+          <div class="app-phone-mockup">
+            <img src="img/telefonos.png" alt="Portal Pilot en Android" style="width: 100%; height: auto; display: block;">
           </div>
         </div>
       </div>
@@ -3482,7 +4313,7 @@
           <p>Cloud services</p>
         </div>
         <div class="integration-card">
-          <div class="integration-icon" style="color:#0078d4;"><i class="fab fa-azure"></i></div>
+          <div class="integration-icon" style="color:#0078d4;"><i class="fab fa-microsoft"></i></div>
           <h4>Azure</h4>
           <p>Microsoft cloud</p>
         </div>
@@ -3702,7 +4533,7 @@
     </div>
   </section>
 
-  <!-- CHANGELOG -->
+<!-- CHANGELOG -->
   <section class="changelog" id="changelog">
     <div class="container">
       <div class="section-header">
@@ -3712,45 +4543,64 @@
         </p>
       </div>
 
-      <div class="changelog-list">
+      <!-- Header con versión principal y hint de scroll -->
+      <div class="changelog-header-row">
+        <div class="changelog-main-version">
+          <div class="changelog-version-badge">v1.0.15</div>
+          <span class="changelog-tag latest">Más reciente</span>
+          <span class="changelog-tag stable">Estable</span>
+        </div>
+        <div class="changelog-scroll-hint">
+          Arrastra o usa la rueda del ratón <i class="fas fa-chevron-right"></i>
+        </div>
+      </div>
+
+      <!-- Carousel horizontal -->
+      <div class="changelog-carousel">
+        <!-- v1.0.15 - Autoactualización -->
         <div class="changelog-item">
           <div class="changelog-header">
-            <div class="changelog-version">v1.0.12</div>
+            <div class="changelog-version">v1.0.15</div>
             <span class="changelog-tag latest">Más reciente</span>
             <span class="changelog-tag stable">Estable</span>
-            <div class="changelog-date">1 de octubre, 2026</div>
+            <div class="changelog-date">5 de octubre, 2026</div>
           </div>
           <div class="changelog-body">
-            <div class="changelog-entry new">
-              <i class="fas fa-plus-circle"></i>
-              <span>Fiado desde el POS: apunte al cliente desde la barra de cobro con selector, saldo actual y validación de límite de crédito.</span>
-            </div>
-            <div class="changelog-entry new">
-              <i class="fas fa-plus-circle"></i>
-              <span>Corte de caja completo: apertura con fondo inicial, efectivo en gaveta en vivo y cierre con conteo físico (cuadrada / sobrante / faltante).</span>
-            </div>
-            <div class="changelog-entry new">
-              <i class="fas fa-plus-circle"></i>
-              <span>Precio de socio en el POS: aplica precios preferenciales del club validando la membresía vigente.</span>
-            </div>
-            <div class="changelog-entry new">
-              <i class="fas fa-plus-circle"></i>
-              <span>Kardex automático: compras, ventas y anulaciones registran movimientos sin pasos extra.</span>
-            </div>
-            <div class="changelog-entry new">
-              <i class="fas fa-plus-circle"></i>
-              <span>Login con 2FA (TOTP y códigos de respaldo) e inscripción guiada cuando la cuenta exige segundo factor.</span>
-            </div>
-            <div class="changelog-entry new">
-              <i class="fas fa-plus-circle"></i>
-              <span>Bodegas con existencias independientes por SKU y configuración fiscal compartida entre dispositivos.</span>
-            </div>
-            <div class="changelog-entry improve">
-              <i class="fas fa-arrow-up"></i>
-              <span>Escáner más tolerante en teléfonos lentos (ventana de 400ms); suite de 190 pruebas al verde.</span>
+            <div class="changelog-entry new"><i class="fas fa-plus-circle"></i><span>La app se actualiza sola: al abrirla comprueba si hay una versión nueva, te avisa y descarga e instala el APK. Sin pasar por esta web y sin Google Play.</span></div>
+            <div class="changelog-entry new"><i class="fas fa-plus-circle"></i><span>Aviso de versión nueva por notificación push (Firebase Cloud Messaging).</span></div>
+            <div class="changelog-entry improve"><i class="fas fa-arrow-up"></i><span>Puedes aplazar la actualización si no es el mejor momento ("Después"); nunca se te impone.</span></div>
+            <div class="changelog-entry improve"><i class="fas fa-arrow-up"></i><span>El splash ahora muestra la versión real instalada en lugar de un texto fijo.</span></div>
+            <div class="changelog-entry fix"><i class="fas fa-bug"></i><span>Correcciones de compilación en el lector NFC de tarjetas y en el registro de operaciones.</span></div>
+
+            <a href="https://github.com/sarch-codelab/portalpilot-app/releases/download/v1.0.15/PortalPilot-Android-v1.0.15.apk"
+               class="changelog-dl-btn">
+              <i class="fas fa-download"></i> Descargar v1.0.15 (.apk)
+            </a>
+
+            <div class="changelog-dl-sha">
+              Android 7.0+ &middot; 112.6 MB &middot; <code>SHA256: D2171BFC50D1FC499810C5EB7422DF8E07B2148BCC4CAAB9BB5FB65DBE7A5A56</code>
             </div>
           </div>
         </div>
+
+        <!-- v1.0.12 - Anterior -->
+        <div class="changelog-item">
+          <div class="changelog-header">
+            <div class="changelog-version">v1.0.12</div>
+            <div class="changelog-date">1 de octubre, 2026</div>
+          </div>
+          <div class="changelog-body">
+            <div class="changelog-entry new"><i class="fas fa-plus-circle"></i><span>Fiado desde el POS: apunte al cliente desde la barra de cobro con selector, saldo actual y validación de límite de crédito.</span></div>
+            <div class="changelog-entry new"><i class="fas fa-plus-circle"></i><span>Corte de caja completo: apertura con fondo inicial, efectivo en gaveta en vivo y cierre con conteo físico (cuadrada / sobrante / faltante).</span></div>
+            <div class="changelog-entry new"><i class="fas fa-plus-circle"></i><span>Precio de socio en el POS: aplica precios preferenciales del club validando la membresía vigente.</span></div>
+            <div class="changelog-entry new"><i class="fas fa-plus-circle"></i><span>Kardex automático: compras, ventas y anulaciones registran movimientos sin pasos extra.</span></div>
+            <div class="changelog-entry new"><i class="fas fa-plus-circle"></i><span>Login con 2FA (TOTP y códigos de respaldo) e inscripción guiada cuando la cuenta exige segundo factor.</span></div>
+            <div class="changelog-entry new"><i class="fas fa-plus-circle"></i><span>Bodegas con existencias independientes por SKU y configuración fiscal compartida entre dispositivos.</span></div>
+            <div class="changelog-entry improve"><i class="fas fa-arrow-up"></i><span>Escáner más tolerante en teléfonos lentos (ventana de 400ms); suite de 190 pruebas al verde.</span></div>
+          </div>
+        </div>
+
+        <!-- v1.0.11 -->
         <div class="changelog-item">
           <div class="changelog-header">
             <div class="changelog-version">v1.0.11</div>
@@ -3758,25 +4608,14 @@
             <div class="changelog-date">24 de septiembre, 2026</div>
           </div>
           <div class="changelog-body">
-            <div class="changelog-entry new">
-              <i class="fas fa-plus-circle"></i>
-              <span>Sistema universal de reportes: 11 herramientas desde el Chat IA (gastos, ventas, stock, compras, clientes, facturación, cuentas por cobrar, caja, resumen financiero y empleados) con visor, PDF y historial.</span>
-            </div>
-            <div class="changelog-entry new">
-              <i class="fas fa-plus-circle"></i>
-              <span>Onboarding rediseñado con 6 pasos e imágenes por tipo de negocio, y login con fondos renovados.</span>
-            </div>
-            <div class="changelog-entry improve">
-              <i class="fas fa-arrow-up"></i>
-              <span>Roles de usuario, tipo de cambio y trazabilidad alineados con el tema claro/oscuro; notificaciones estilo Sileo pulidas.</span>
-            </div>
-            <div class="changelog-entry fix">
-              <i class="fas fa-bug"></i>
-              <span>Calidad: suite de 121 pruebas (incluye reportes y QA anti-ataques) y 0 issues de análisis estático.</span>
-            </div>
+            <div class="changelog-entry new"><i class="fas fa-plus-circle"></i><span>Sistema universal de reportes: 11 herramientas desde el Chat IA (gastos, ventas, stock, compras, clientes, facturación, cuentas por cobrar, caja, resumen financiero y empleados) con visor, PDF e historial.</span></div>
+            <div class="changelog-entry new"><i class="fas fa-plus-circle"></i><span>Onboarding rediseñado con 6 pasos e imágenes por tipo de negocio, y login con fondos renovados.</span></div>
+            <div class="changelog-entry improve"><i class="fas fa-arrow-up"></i><span>Roles de usuario, tipo de cambio y trazabilidad alineados con el tema claro/oscuro; notificaciones estilo Sileo pulidas.</span></div>
+            <div class="changelog-entry fix"><i class="fas fa-bug"></i><span>Calidad: suite de 121 pruebas (incluye reportes y QA anti-ataques) y 0 issues de análisis estático.</span></div>
           </div>
         </div>
 
+        <!-- v1.0.7 -->
         <div class="changelog-item">
           <div class="changelog-header">
             <div class="changelog-version">v1.0.7</div>
@@ -3784,29 +4623,15 @@
             <div class="changelog-date">15 de septiembre, 2026</div>
           </div>
           <div class="changelog-body">
-            <div class="changelog-entry new">
-              <i class="fas fa-plus-circle"></i>
-              <span>La APP (Android y Windows) ahora es cliente conectado a la plataforma central: inicia sesión con la cuenta de tu empresa (token seguro).</span>
-            </div>
-            <div class="changelog-entry new">
-              <i class="fas fa-plus-circle"></i>
-              <span>Sincronización de productos y facturas entre la app y tu empresa en la nube.</span>
-            </div>
-            <div class="changelog-entry new">
-              <i class="fas fa-plus-circle"></i>
-              <span>Ventas CRM conectado a la API central (oportunidades y resumen).</span>
-            </div>
-            <div class="changelog-entry improve">
-              <i class="fas fa-arrow-up"></i>
-              <span>Versionado unificado 1.0.7+5 e instalador de Windows con Inno Setup.</span>
-            </div>
-            <div class="changelog-entry fix">
-              <i class="fas fa-bug"></i>
-              <span>Corrección de empresa por código normalizado y método de pago en transacciones (baseline v1.0.6).</span>
-            </div>
+            <div class="changelog-entry new"><i class="fas fa-plus-circle"></i><span>La APP (Android y Windows) ahora es cliente conectado a la plataforma central: inicia sesión con la cuenta de tu empresa (token seguro).</span></div>
+            <div class="changelog-entry new"><i class="fas fa-plus-circle"></i><span>Sincronización de productos y facturas entre la app y tu empresa en la nube.</span></div>
+            <div class="changelog-entry new"><i class="fas fa-plus-circle"></i><span>Ventas CRM conectado a la API central (oportunidades y resumen).</span></div>
+            <div class="changelog-entry improve"><i class="fas fa-arrow-up"></i><span>Versionado unificado 1.0.7+5 e instalador de Windows con Inno Setup.</span></div>
+            <div class="changelog-entry fix"><i class="fas fa-bug"></i><span>Corrección de empresa por código normalizado y método de pago en transacciones (baseline v1.0.6).</span></div>
           </div>
         </div>
 
+        <!-- v0.1.5 -->
         <div class="changelog-item">
           <div class="changelog-header">
             <div class="changelog-version">v0.1.5</div>
@@ -3814,21 +4639,13 @@
             <div class="changelog-date">4 de septiembre, 2026</div>
           </div>
           <div class="changelog-body">
-            <div class="changelog-entry fix">
-              <i class="fas fa-bug"></i>
-              <span>Fix login en web: Vercel routing corregido - /api/login y todos los endpoints API ahora funcionan.</span>
-            </div>
-            <div class="changelog-entry fix">
-              <i class="fas fa-bug"></i>
-              <span>Fix crash en móvil: App ya no cierra sesión accidentalmente (dispose de singletons + SQLite compartido).</span>
-            </div>
-            <div class="changelog-entry improve">
-              <i class="fas fa-arrow-up"></i>
-              <span>Error handling global: Errores async ya no matan la app.</span>
-            </div>
+            <div class="changelog-entry fix"><i class="fas fa-bug"></i><span>Fix login en web: Vercel routing corregido - /api/login y todos los endpoints API ahora funcionan.</span></div>
+            <div class="changelog-entry fix"><i class="fas fa-bug"></i><span>Fix crash en móvil: App ya no cierra sesión accidentalmente (dispose de singletons + SQLite compartido).</span></div>
+            <div class="changelog-entry improve"><i class="fas fa-arrow-up"></i><span>Error handling global: Errores async ya no matan la app.</span></div>
           </div>
         </div>
 
+        <!-- v1.0.0 -->
         <div class="changelog-item">
           <div class="changelog-header">
             <div class="changelog-version">v1.0.0</div>
@@ -3836,25 +4653,14 @@
             <div class="changelog-date">4 de julio, 2026</div>
           </div>
           <div class="changelog-body">
-            <div class="changelog-entry new">
-              <i class="fas fa-plus-circle"></i>
-              <span>Nuevo módulo de analytics avanzado con gráficos interactivos y exportación a PDF/Excel.</span>
-            </div>
-            <div class="changelog-entry new">
-              <i class="fas fa-plus-circle"></i>
-              <span>Soporte nativo para Apple Silicon M3 con optimización de rendimiento del 40%.</span>
-            </div>
-            <div class="changelog-entry improve">
-              <i class="fas fa-arrow-up"></i>
-              <span>Mejora del 60% en velocidad de carga del dashboard principal.</span>
-            </div>
-            <div class="changelog-entry fix">
-              <i class="fas fa-bug"></i>
-              <span>Mejoras de estabilidad y sincronización de datos en la app.</span>
-            </div>
+            <div class="changelog-entry new"><i class="fas fa-plus-circle"></i><span>Nuevo módulo de analytics avanzado con gráficos interactivos y exportación a PDF/Excel.</span></div>
+            <div class="changelog-entry new"><i class="fas fa-plus-circle"></i><span>Soporte nativo para Apple Silicon M3 con optimización de rendimiento del 40%.</span></div>
+            <div class="changelog-entry improve"><i class="fas fa-arrow-up"></i><span>Mejora del 60% en velocidad de carga del dashboard principal.</span></div>
+            <div class="changelog-entry fix"><i class="fas fa-bug"></i><span>Mejoras de estabilidad y sincronización de datos en la app.</span></div>
           </div>
         </div>
 
+        <!-- v0.9.5 -->
         <div class="changelog-item">
           <div class="changelog-header">
             <div class="changelog-version">v0.9.5</div>
@@ -3862,21 +4668,13 @@
             <div class="changelog-date">15 de junio, 2026</div>
           </div>
           <div class="changelog-body">
-            <div class="changelog-entry improve">
-              <i class="fas fa-arrow-up"></i>
-              <span>Optimización del consumo de memoria RAM en un 25%.</span>
-            </div>
-            <div class="changelog-entry new">
-              <i class="fas fa-plus-circle"></i>
-              <span>Nuevos atajos de teclado personalizables para control de bots.</span>
-            </div>
-            <div class="changelog-entry fix">
-              <i class="fas fa-bug"></i>
-              <span>Corregido error de autenticación biométrica en Windows Hello.</span>
-            </div>
+            <div class="changelog-entry improve"><i class="fas fa-arrow-up"></i><span>Optimización del consumo de memoria RAM en un 25%.</span></div>
+            <div class="changelog-entry new"><i class="fas fa-plus-circle"></i><span>Nuevos atajos de teclado personalizables para control de bots.</span></div>
+            <div class="changelog-entry fix"><i class="fas fa-bug"></i><span>Corregido error de autenticación biométrica en Windows Hello.</span></div>
           </div>
         </div>
 
+        <!-- v0.9.0 -->
         <div class="changelog-item">
           <div class="changelog-header">
             <div class="changelog-version">v0.9.0</div>
@@ -3884,18 +4682,9 @@
             <div class="changelog-date">28 de mayo, 2026</div>
           </div>
           <div class="changelog-body">
-            <div class="changelog-entry new">
-              <i class="fas fa-plus-circle"></i>
-              <span>Integración nativa con Oracle Database 23ai.</span>
-            </div>
-            <div class="changelog-entry new">
-              <i class="fas fa-plus-circle"></i>
-              <span>Terminal integrado para usuarios avanzados y administradores.</span>
-            </div>
-            <div class="changelog-entry improve">
-              <i class="fas fa-arrow-up"></i>
-              <span>Rediseño completo de la interfaz de gestión de bots RPA.</span>
-            </div>
+            <div class="changelog-entry new"><i class="fas fa-plus-circle"></i><span>Integración nativa con Oracle Database 23ai.</span></div>
+            <div class="changelog-entry new"><i class="fas fa-plus-circle"></i><span>Terminal integrado para usuarios avanzados y administradores.</span></div>
+            <div class="changelog-entry improve"><i class="fas fa-arrow-up"></i><span>Rediseño completo de la interfaz de gestión de bots RPA.</span></div>
           </div>
         </div>
       </div>
@@ -4089,16 +4878,59 @@
 
   <!-- FOOTER -->
   <footer>
-    <div class="container">
-      <p>© 2026 Portal Pilot + Cyberyx Vantage · Made in Honduras 🇭🇳</p>
-      <p style="margin-top:8px;">
-        <a href="index.html">Inicio</a>·
-        <a href="#">Privacidad</a>·
-        <a href="#">Términos</a>·
-        <a href="#">Soporte</a>·
-        <a href="#changelog">Changelog</a>
-      </p>
-    </div>
+      <div class="container">
+          <div class="footer-top">
+              <div>
+                  <div class="footer-logo">
+                      <img src="img/iconos/logo_completo.png" alt="Portal Pilot" style="width:280px;height:auto;object-fit:contain;display:block;margin-left:10px;">
+                  </div>
+                  <p class="footer-desc">La plataforma SaaS multi-empresa que combina IA en la nube, módulos de negocio y control de acceso con 2FA para automatizar la gestión corporativa.</p>
+                  <div class="footer-social">
+                  <a href="https://instagram.com/portalpilot.hn" class="fs-btn"><i class="fab fa-instagram"></i></a>
+                  <a href="#" class="fs-btn"><i class="fab fa-linkedin-in"></i></a>
+                  <a href="#" class="fs-btn"><i class="fab fa-youtube"></i></a>
+                  <a href="#" class="fs-btn"><i class="fab fa-github"></i></a>
+              </div>
+              </div>
+              <div class="footer-col">
+                  <h5>Producto</h5>
+                  <ul>
+                      <li><a href="#features">Características</a></li>
+                      <li><a href="planes.html#planes-fijos">Planes y Precios</a></li>
+                      <li><a href="planes.html#cotizador">Cotizador 21 Módulos</a></li>
+                      <li><a href="documentacion.html">Documentación</a></li>
+                      <li><a href="download.html">Descargar App</a></li>
+                  </ul>
+              </div>
+              <div class="footer-col">
+                  <h5>Empresa</h5>
+                  <ul>
+                      <li><a href="planes.html#por-que-honduras">Sobre Nosotros</a></li>
+                      <li><a href="support.html">Soporte</a></li>
+                      <li><a href="#faq">Preguntas Frecuentes</a></li>
+                      <li><a href="#cta-final">Contacto</a></li>
+                  </ul>
+              </div>
+              <div class="footer-col">
+                  <h5>Legal</h5>
+                  <ul>
+                      <li><a href="privacidad.html">Política de Privacidad</a></li>
+                      <li><a href="terminos.html">Términos de Servicio</a></li>
+                      <li><a href="cookies.html">Política de Cookies</a></li>
+                      <li><a href="sla.html">SLA</a></li>
+                  </ul>
+              </div>
+          </div>
+          <div class="footer-bottom">
+              <p>© 2026 Portal Pilot. Todos los derechos reservados.</p>
+              <p>Made in Honduras 🇭🇳 con ❤️ por el equipo de Portal Pilot.</p>
+              <div class="footer-links">
+                  <a href="privacidad.html">Privacidad</a>
+                  <a href="terminos.html">Términos</a>
+                  <a href="support.html">Soporte</a>
+              </div>
+          </div>
+      </div>
   </footer>
 
   <script>
@@ -4107,7 +4939,18 @@
       document.querySelectorAll('.platform-tab').forEach(t => t.classList.remove('active'));
       btn.classList.add('active');
       document.querySelectorAll('.platform-content').forEach(c => c.classList.remove('active'));
-      document.getElementById('platform-' + platform).classList.add('active');
+      const target = document.getElementById('platform-' + platform);
+      target.classList.add('active');
+      // Revelar las tarjetas del panel activo sin depender de la transicion,
+      // que puede quedar pendiente (startTime null) y dejar el contenido invisible.
+      target.querySelectorAll('.app-card').forEach(card => {
+        const prevTransition = card.style.transition;
+        card.style.transition = 'none';
+        card.style.opacity = '1';
+        card.style.transform = 'none';
+        void card.offsetWidth;
+        card.style.transition = prevTransition;
+      });
     }
 
     // FAQ toggle
@@ -4117,6 +4960,18 @@
       document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('open'));
       if (!isOpen) { item.classList.add('open'); }
     }
+
+// Horizontal mouse wheel scroll for changelog carousel
+    (function () {
+      const carousel = document.querySelector('.changelog-carousel');
+      if (carousel) {
+        carousel.addEventListener('wheel', function (e) {
+          if (e.deltaY === 0) return;
+          e.preventDefault();
+          carousel.scrollBy({ left: e.deltaY, behavior: 'auto' });
+        }, { passive: false });
+      }
+    })();
 
     // Smooth reveal on scroll
     const observer = new IntersectionObserver((entries) => {
@@ -4155,14 +5010,69 @@
           }
         });
 
-        const platformTab = document.querySelector(`.platform-tab:nth-child(${detectedOS === 'windows' ? 1 : detectedOS === 'macos' ? 2 : 3})`);
+        const platformTab = document.querySelector(`.platform-tab:nth-child(${detectedOS === 'windows' ? 2 : detectedOS === 'macos' ? 3 : 4})`);
         if (platformTab) {
           switchPlatform(detectedOS, platformTab);
         }
       }
-    })();
+})();
   </script>
 
-</body>
+  <script>
+    /* ==== VIDEO DE FONDO (cubre todo debajo del navbar): loop invertido ping-pong ==== */
+    (function () {
+        var vbgDesktop = document.querySelector('.video-desktop');
+        var videoDesktop = vbgDesktop ? vbgDesktop.querySelector('video') : null;
+        var FWD_DESKTOP = 'vid/fondo1.mp4';
+        var REV_DESKTOP = 'vid/fondo1_rev.mp4';
+        var playingRevDesktop = false;
+        var lastSwitchDesktop = 0;
 
+        var vbgMobile = document.querySelector('.video-mobile');
+        var videoMobile = vbgMobile ? vbgMobile.querySelector('video') : null;
+        var FWD_MOBILE = 'vid/fondo2.mp4';
+        var REV_MOBILE = 'vid/fondo2_rev.mp4';
+        var playingRevMobile = false;
+        var lastSwitchMobile = 0;
+
+        // Precargar copias invertidas
+        if (videoDesktop) {
+            var preDesktop = document.createElement('video');
+            preDesktop.preload = 'auto';
+            preDesktop.muted = true;
+            preDesktop.src = REV_DESKTOP;
+        }
+        if (videoMobile) {
+            var preMobile = document.createElement('video');
+            preMobile.preload = 'auto';
+            preMobile.muted = true;
+            preMobile.src = REV_MOBILE;
+        }
+
+        // Loop invertido Desktop
+        if (videoDesktop) {
+            videoDesktop.addEventListener('ended', function () {
+                var now = performance.now();
+                if (now - lastSwitchDesktop < 600) return;
+                lastSwitchDesktop = now;
+                playingRevDesktop = !playingRevDesktop;
+                videoDesktop.src = playingRevDesktop ? REV_DESKTOP : FWD_DESKTOP;
+                videoDesktop.play().catch(function () {});
+            });
+        }
+
+        // Loop invertido Móvil
+        if (videoMobile) {
+            videoMobile.addEventListener('ended', function () {
+                var now = performance.now();
+                if (now - lastSwitchMobile < 600) return;
+                lastSwitchMobile = now;
+                playingRevMobile = !playingRevMobile;
+                videoMobile.src = playingRevMobile ? REV_MOBILE : FWD_MOBILE;
+                videoMobile.play().catch(function () {});
+            });
+        }
+    })();
+  </script>
+</body>
 </html>

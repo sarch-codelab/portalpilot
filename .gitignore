@@ -27,3 +27,6 @@ img/img-index/*.txt
 .vercel
 .env*
 .ping-secret.local
+
+# Scripts de diagnostico local (contienen rutas absolutas de la maquina)
+*.tmp.js

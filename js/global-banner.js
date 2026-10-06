@@ -4,6 +4,8 @@
   var bannerUrl = '/api/public/banner';
   var bannerEl = null;
   var dismissedKey = 'globalBannerDismissed';
+  var pollTimer = null;
+  var POLL_INTERVAL = 30000; // 30 segundos
 
   function createBanner(data) {
     if (bannerEl) return;
@@ -53,19 +55,42 @@
       var res = await fetch(bannerUrl, { credentials: 'omit' });
       if (!res.ok) return;
       var data = await res.json();
-      if (!data.active || !data.message) return;
+      if (!data.active || !data.message) {
+        // No hay banner activo - remover si existe
+        if (bannerEl) dismissBanner();
+        return;
+      }
       if (isDismissed(data.message)) return;
+      // Si ya hay banner con mismo mensaje, no recrear
+      if (bannerEl && bannerEl.textContent.indexOf(data.message) !== -1) return;
+      dismissBanner(); // Remover anterior si es diferente
       createBanner(data);
     } catch (e) {
       console.warn('[GlobalBanner] No se pudo cargar el banner:', e);
     }
   }
 
+  function startPolling() {
+    if (pollTimer) clearInterval(pollTimer);
+    pollTimer = setInterval(loadBanner, POLL_INTERVAL);
+  }
+
+  function stopPolling() {
+    if (pollTimer) {
+      clearInterval(pollTimer);
+      pollTimer = null;
+    }
+  }
+
   function init() {
     if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', loadBanner);
+      document.addEventListener('DOMContentLoaded', function() {
+        loadBanner();
+        startPolling();
+      });
     } else {
       loadBanner();
+      startPolling();
     }
   }
 
@@ -75,6 +100,8 @@
   window.GlobalBanner = {
     load: loadBanner,
     dismiss: dismissBanner,
-    isDismissed: isDismissed
+    isDismissed: isDismissed,
+    startPolling: startPolling,
+    stopPolling: stopPolling
   };
 })();

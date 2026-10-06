@@ -16,7 +16,7 @@
 
     <!-- SEO Meta Tags -->
     <title>Planes y Cotizador Modular para PyMEs de Honduras — Portal Pilot</title>
-    <meta name="description" content="Planes comerciales reales para Honduras: Pulpería, Tienda y Club con precios fijos accesibles en Lempiras (HNL), o cotiza tus módulos personalizados de los 21 disponibles. Facturación SAR incluida.">
+    <meta name="description" content="Planes comerciales reales para Honduras: Pulpería, Tienda y Club con precios fijos accesibles en Lempiras (HNL), o cotiza tus módulos personalizados de los 23 disponibles. Facturación SAR incluida.">
     <meta name="keywords" content="Portal Pilot precios, ERP Honduras barato, software pulperias Honduras, POS tiendas Tegucigalpa San Pedro Sula, facturacion SAR Lempiras, cotizador modulos ERP">
 
     <!-- Open Graph / Facebook -->
@@ -604,7 +604,7 @@
 
         .plan-card {
             border-radius: 16px;
-            padding: 18px 14px 16px;
+            padding: 26px 14px 16px;
             border: 1px solid rgba(255, 255, 255, 0.08);
             position: relative;
             display: flex;
@@ -612,6 +612,34 @@
             overflow: hidden;
             background: linear-gradient(135deg, #1e1e24 0%, #16161a 50%, #0f0f12 100%);
             transition: var(--transition);
+        }
+
+        /* Barra de acento superior (color del plan) */
+        .plan-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.35), transparent);
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .plan-card.featured::before {
+            background: linear-gradient(90deg, transparent, var(--accent), var(--accent-soft), var(--accent), transparent);
+            box-shadow: 0 0 14px rgba(139, 92, 246, 0.55);
+        }
+
+        .plan-card:nth-child(1)::before {
+            background: linear-gradient(90deg, transparent, var(--gold), transparent);
+            box-shadow: 0 0 14px rgba(245, 158, 11, 0.4);
+        }
+
+        .plan-card:nth-child(3)::before {
+            background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+            box-shadow: 0 0 14px rgba(56, 189, 248, 0.4);
         }
 
         .plan-card:hover {
@@ -662,19 +690,19 @@
 
         .featured-pill {
             position: absolute;
-            top: -14px;
-            left: 50%;
-            transform: translateX(-50%);
+            top: 10px;
+            right: 10px;
             background: var(--accent);
             color: #ffffff;
             font-size: 8px;
             font-weight: 800;
-            letter-spacing: 0.3px;
+            letter-spacing: 0.4px;
             text-transform: uppercase;
-            padding: 2px 8px;
-            border-radius: 6px;
-            box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4);
+            padding: 3px 10px;
+            border-radius: var(--radius-pill);
+            box-shadow: 0 4px 16px rgba(139, 92, 246, 0.55);
             white-space: nowrap;
+            z-index: 20;
         }
 
         .plan-top {
@@ -778,7 +806,12 @@
             border: 1px solid var(--border);
             border-radius: 8px;
             padding: 10px;
-            margin-bottom: 14px;
+            margin-bottom: 12px;
+            min-height: 126px;
+        }
+
+        .plan-offer p:last-of-type {
+            margin-bottom: 0;
         }
 
         .plan-offer-title {
@@ -818,12 +851,12 @@
             padding: 10px 0;
             border-top: 1px solid var(--border);
             border-bottom: 1px solid var(--border);
-            margin-bottom: 14px;
+            margin-bottom: 12px;
         }
 
         .price-val {
             font-family: 'Syne', sans-serif;
-            font-size: 26px;
+            font-size: 30px;
             font-weight: 900;
             letter-spacing: -0.5px;
             color: var(--white);
@@ -854,12 +887,6 @@
             display: flex;
             align-items: center;
             gap: 4px;
-        }
-
-        .price-annual-note {
-            font-size: 8px;
-            color: var(--text-muted);
-            margin-top: 4px;
         }
 
         .plan-features-list {
@@ -921,6 +948,35 @@
             opacity: 0.9;
         }
 
+        /* STRIP DE LÍMITES DEL PLAN (usuarios / terminales) */
+        .plan-limits-strip {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin: 0 0 12px;
+            padding: 8px 6px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+        }
+
+        .plan-limits-strip .limit-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 8px;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .plan-limits-strip .limit-item i {
+            font-size: 8px;
+            color: var(--accent-soft);
+        }
+
         .under-note {
             text-align: center;
             font-size: 8px;
@@ -941,7 +997,8 @@
             border: 1px solid var(--border);
             border-radius: 8px;
             padding: 10px;
-            margin-bottom: 12px;
+            margin-bottom: 0;
+            flex-grow: 1;
         }
 
         .features-title {
@@ -988,6 +1045,10 @@
             padding: 6px 0;
             border-bottom: 1px solid var(--border);
             font-size: 9px;
+        }
+
+        .feature-row:last-child {
+            border-bottom: none;
         }
 
         .feature-row .label {
@@ -1783,6 +1844,13 @@
         }
 
         @media (max-width: 480px) {
+            .nav-actions .btn-ghost {
+                display: none;
+            }
+            .nav-actions .btn {
+                padding: 8px 14px;
+                font-size: 12px;
+            }
             footer {
                 padding: 44px 0 24px;
             }
@@ -1811,6 +1879,10 @@
                 max-width: 500px;
                 margin: 0 auto;
             }
+            /* En móvil el plan destacado va primero para maximizar conversión */
+            .plan-card.featured {
+                order: -1;
+            }
             .why-grid {
                 grid-template-columns: 1fr;
             }
@@ -1827,6 +1899,11 @@
             }
             .dock-breakdown {
                 justify-content: space-around;
+                flex-wrap: wrap;
+                row-gap: 10px;
+            }
+            .dock-pricing {
+                flex-wrap: wrap;
             }
             .total-amount-box {
                 text-align: center;
@@ -1861,7 +1938,7 @@
             <ul class="nav-links">
                 <li><a href="index.html#features"><i class="fas fa-layer-group"></i> Características</a></li>
                 <li><a href="#planes-fijos"><i class="fas fa-shop"></i> Negocios</a></li>
-                <li><a href="#cotizador"><i class="fas fa-calculator"></i> Cotizador 21 Módulos</a></li>
+                <li><a href="#cotizador"><i class="fas fa-calculator"></i> Cotizador de Módulos</a></li>
                 <li><a href="#por-que-honduras"><i class="fas fa-lightbulb"></i> ¿Por qué estos precios?</a></li>
                 <li><a href="support.html"><i class="fas fa-headset"></i> Soporte</a></li>
             </ul>
@@ -1952,7 +2029,7 @@
                     </div>
 
                     <h3 class="plan-name">PULPERÍA</h3>
-                    <p class="plan-desc">Diseñado para abarroterías y glorietas de colonia</p>
+                    <p class="plan-desc">Diseñado para abarroterías y glorietas de colonia que necesitan velocidad, control de fiado y arqueo diario.</p>
 
                     <div class="plan-offer">
                         <div class="plan-offer-title">
@@ -1970,16 +2047,20 @@
                             <span id="pricePulperia">299</span>
                             <span class="price-period">/mes</span>
                         </div>
-                        <div class="price-daily">
+                        <div class="price-daily" id="dailyPulperia">
                             <i class="fas fa-check-circle"></i> Solo L. 10 HNL al día
                         </div>
-                        <div class="price-annual-note" id="notePulperia">Se paga solo recuperando 1 fiado al mes</div>
                     </div>
 
                     <a id="linkPulperia" href="registrov2.html?business_type=Pulper%C3%ADa%20%2F%20Mercadito&plan=pulperia&billing=monthly&modulos=pos,canal_tradicional,inventario,facturacion,contabilidad" class="plan-btn">
                         <i class="fas fa-arrow-right"></i> Elegir Plan Pulpería
                     </a>
-                    <div class="under-note">Sin diferencia respecto al mensual</div>
+                    <div class="under-note" id="notePulperia">Se paga solo recuperando 1 fiado al mes</div>
+
+                    <div class="plan-limits-strip">
+                        <span class="limit-item"><i class="fas fa-user-group"></i> Hasta 3 usuarios</span>
+                        <span class="limit-item"><i class="fas fa-shop"></i> 1 Local</span>
+                    </div>
 
                     <div class="plan-features-box">
                         <div class="features-title">
@@ -1998,16 +2079,16 @@
                             <span class="value"><span class="feature-pill dark">Deudas</span></span>
                         </div>
                         <div class="feature-row">
-                            <span class="label dark"><span class="mk yes">✓</span>Control Caja</span>
-                            <span class="value"><span class="feature-pill dark">Arqueo</span></span>
-                        </div>
-                        <div class="feature-row">
                             <span class="label dark"><span class="mk yes">✓</span>Inventario</span>
                             <span class="value"><span class="feature-pill dark">Alertas</span></span>
                         </div>
                         <div class="feature-row">
                             <span class="label dark"><span class="mk yes">✓</span>Facturación SAR</span>
                             <span class="value"><span class="feature-pill dark">Fiscal</span></span>
+                        </div>
+                        <div class="feature-row">
+                            <span class="label dark"><span class="mk yes">✓</span>Contabilidad</span>
+                            <span class="value"><span class="feature-pill dark">Finanzas</span></span>
                         </div>
                     </div>
                 </div>
@@ -2025,7 +2106,7 @@
                     </div>
 
                     <h3 class="plan-name">TIENDA</h3>
-                    <p class="plan-desc">Para supermercados y comercios minoristas</p>
+                    <p class="plan-desc">Para supermercados, tiendas de ropa, calzado, ferreterias y comercio minorista con multiples cajas e inventario activo.</p>
 
                     <div class="plan-offer">
                         <div class="plan-offer-title">
@@ -2043,16 +2124,20 @@
                             <span id="priceTienda">799</span>
                             <span class="price-period">/mes</span>
                         </div>
-                        <div class="price-daily">
+                        <div class="price-daily" id="dailyTienda">
                             <i class="fas fa-check-circle"></i> L. 26.60 al día
                         </div>
-                        <div class="price-annual-note" id="noteTienda">Ahorra L. 1,598 pagando el año completo</div>
                     </div>
 
                     <a id="linkTienda" href="registrov2.html?business_type=Tienda%20%2F%20Supermercado&plan=tienda&billing=monthly&modulos=pos,canal_moderno,inventario,facturacion,compras_proveedores,cotizaciones,reportes,analytics" class="plan-btn">
                         <i class="fas fa-rocket"></i> Elegir Plan Tienda
                     </a>
-                    <div class="under-note"><b>Ahorra L. 1,598</b> comparado con el plan mensual</div>
+                    <div class="under-note" id="noteTienda">Menos del 0.8% de tu facturación mensual</div>
+
+                    <div class="plan-limits-strip">
+                        <span class="limit-item"><i class="fas fa-user-group"></i> Hasta 15 usuarios</span>
+                        <span class="limit-item"><i class="fas fa-building"></i> Multi-Sucursal</span>
+                    </div>
 
                     <div class="plan-features-box">
                         <div class="features-title">
@@ -2065,6 +2150,10 @@
                         <div class="feature-row">
                             <span class="label green"><span class="mk">✓</span>POS Retail</span>
                             <span class="value"><span class="feature-pill">Código Barras</span></span>
+                        </div>
+                        <div class="feature-row">
+                            <span class="label dark"><span class="mk yes">✓</span>Canal Moderno</span>
+                            <span class="value"><span class="feature-pill dark">Multi-Sucursal</span></span>
                         </div>
                         <div class="feature-row">
                             <span class="label dark"><span class="mk yes">✓</span>Facturación SAR</span>
@@ -2083,8 +2172,8 @@
                             <span class="value"><span class="feature-pill dark">PDF</span></span>
                         </div>
                         <div class="feature-row">
-                            <span class="label dark"><span class="mk yes">✓</span>CRM Clientes</span>
-                            <span class="value"><span class="feature-pill dark">Historial</span></span>
+                            <span class="label dark"><span class="mk yes">✓</span>Analytics BI</span>
+                            <span class="value"><span class="feature-pill dark">Horas Pico</span></span>
                         </div>
                         <div class="feature-row">
                             <span class="label dark"><span class="mk yes">✓</span>Reportes</span>
@@ -2104,7 +2193,7 @@
                     </div>
 
                     <h3 class="plan-name">CLUB</h3>
-                    <p class="plan-desc">Para bares, discotecas y negocios de membresía</p>
+                    <p class="plan-desc">Para bares, discotecas, clubes deportivos, billares, lounges o negocios de venta por membresia tipo mayoreo.</p>
 
                     <div class="plan-offer">
                         <div class="plan-offer-title">
@@ -2122,16 +2211,20 @@
                             <span id="priceClub">1,399</span>
                             <span class="price-period">/mes</span>
                         </div>
-                        <div class="price-daily">
-                            <i class="fas fa-check-circle"></i> Se cubre con 2 socios al mes
+                        <div class="price-daily" id="dailyClub">
+                            <i class="fas fa-check-circle"></i> L. 46.60 al día
                         </div>
-                        <div class="price-annual-note" id="noteClub">Ahorra L. 2,798 pagando el año completo</div>
                     </div>
 
                     <a id="linkClub" href="registrov2.html?business_type=Club%20%2F%20Membres%C3%ADa&plan=club&billing=monthly&modulos=pos,membresias,inventario,facturacion,crm,seguridad,chat_ia" class="plan-btn">
                         <i class="fas fa-arrow-right"></i> Elegir Plan Club
                     </a>
-                    <div class="under-note"><b>Ahorra L. 2,798</b> comparado con el plan mensual</div>
+                    <div class="under-note" id="noteClub">Se cubre con la entrada de 2 socios al mes</div>
+
+                    <div class="plan-limits-strip">
+                        <span class="limit-item"><i class="fas fa-user-group"></i> Hasta 35 usuarios</span>
+                        <span class="limit-item"><i class="fas fa-shop"></i> 1 Local</span>
+                    </div>
 
 <div class="plan-features-box">
                         <div class="features-title">
@@ -2199,7 +2292,7 @@
                 <button class="preset-chip reset" onclick="applyPreset('none')"><i class="fas fa-trash-can"></i> Limpiar selección</button>
             </div>
 
-            <!-- GRID INTERACTIVO DE LOS 21 MÓDULOS -->
+            <!-- GRID INTERACTIVO DE LOS 23 MÓDULOS -->
             <div class="modules-grid" id="modulesGrid">
                 <!-- Se renderiza dinámicamente con JavaScript para cálculo reactivo instantáneo -->
             </div>
@@ -2209,7 +2302,7 @@
                 <div class="dock-breakdown">
                     <div class="dock-stat">
                         <span class="dock-stat-label">Módulos Elegidos</span>
-                        <div class="dock-stat-val" id="dockCount">0 / 21</div>
+                        <div class="dock-stat-val" id="dockCount">0 / 23</div>
                     </div>
 
                     <div class="dock-stat">
@@ -2621,6 +2714,33 @@
         const CLOUD_BASE_PRICE = 150; // L. 150 HNL mensuales fijos de plataforma
         const HNL_TO_USD = 0.040; // Aprox L. 24.80 por $1 USD
 
+        // Nota bajo el botón y equivalente diario, según ciclo de facturación
+        const PLAN_NOTES = {
+            monthly: {
+                pulperia: 'Se paga solo recuperando 1 fiado al mes',
+                tienda: 'Menos del 0.8% de tu facturación mensual',
+                club: 'Se cubre con la entrada de 2 socios al mes'
+            },
+            annual: {
+                pulperia: '<b>Ahorra L. 598</b> — 2 meses gratis al pagar el año',
+                tienda: '<b>Ahorra L. 1,598</b> — 2 meses gratis al pagar el año',
+                club: '<b>Ahorra L. 2,798</b> — 2 meses gratis al pagar el año'
+            }
+        };
+
+        const PLAN_DAILY = {
+            monthly: {
+                pulperia: 'Solo L. 10 HNL al día',
+                tienda: 'L. 26.60 al día',
+                club: 'L. 46.60 al día'
+            },
+            annual: {
+                pulperia: 'Equivale a L. 8.19 al día',
+                tienda: 'Equivale a L. 21.89 al día',
+                club: 'Equivale a L. 38.33 al día'
+            }
+        };
+
         // Renderizar los 23 módulos
         function renderModules() {
             const grid = document.getElementById('modulesGrid');
@@ -2786,6 +2906,14 @@
 
                 document.querySelectorAll('.price-period').forEach(el => el.textContent = '/mes');
             }
+
+            // Nota bajo el botón y equivalente diario según el ciclo
+            ['Pulperia', 'Tienda', 'Club'].forEach(key => {
+                const noteEl = document.getElementById('note' + key);
+                const dailyEl = document.getElementById('daily' + key);
+                if (noteEl) noteEl.innerHTML = PLAN_NOTES[cycle][key.toLowerCase()];
+                if (dailyEl) dailyEl.innerHTML = PLAN_DAILY[cycle][key.toLowerCase()];
+            });
 
             updateQuotationSummary();
         }

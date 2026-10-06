@@ -1,0 +1,79 @@
+.global-banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 9999;
+  padding: 12px 20px;
+  text-align: center;
+  color: #fff;
+  font-weight: 500;
+  font-size: 14px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  animation: slideDown 0.3s ease;
+  font-family: 'DM Sans', sans-serif;
+}
+
+.global-banner.info {
+  background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+}
+
+.global-banner.warning {
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  color: #000;
+}
+
+.global-banner.danger {
+  background: linear-gradient(135deg, #f87171, #dc2626);
+}
+
+.global-banner .close {
+  margin-left: 16px;
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: #fff;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.global-banner.warning .close {
+  color: #000;
+}
+
+.global-banner .close:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Ajuste para que el contenido no quede tapado por el banner fijo */
+body.has-global-banner {
+  padding-top: 56px;
+}
+
+@media (max-width: 600px) {
+  .global-banner {
+    font-size: 13px;
+    padding: 10px 16px;
+  }
+  body.has-global-banner {
+    padding-top: 64px;
+  }
+}

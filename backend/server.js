@@ -23,6 +23,10 @@ console.log(`[STARTUP] Supabase client: ${supabase ? 'ACTIVO' : 'INACTIVO'}`);
 // nuevas páginas de supervisión (tickets, bots, renovaciones, KYC, etc.).
 const adminPortal = require('./adminPortalEndpoints');
 
+// Módulos avanzados (contabilidad, rrhh, fiscal, crm avanzado, multi empresa).
+// Se registra más abajo, después de que existan authenticate/requirePlanFeature.
+const modulosAvanzados = require('./modulosAvanzadosEndpoints');
+
 // Integridad transaccional del ERP: precios autoritativos en servidor y
 // movimientos de inventario todo-o-nada (ver erpIntegrity.js).
 const {
@@ -613,13 +617,7 @@ function normalizeTenantCode(code) {
   return (code || '').toString().trim().toUpperCase();
 }
 
-function normalizeRole(role) {
-  return String(role || '').trim().toLowerCase().replace(/[_-]+/g, ' ').replace(/\s+/g, ' ');
-}
-
-function isGlobalAdminRole(role) {
-  return ['root', 'root pp', 'superadmin', 'super admin'].includes(normalizeRole(role));
-}
+const { normalizeRole, isGlobalAdminRole, resolveDisplayRole } = require('./auth-roles');
 
 function slugifyDominio(value) {
   const slug = (value || '').toString()
@@ -652,7 +650,16 @@ const ALL_PLAN_FEATURES = Object.freeze([
   // 'gestion_membresias' las mesas y cuentas abiertas. Sin declararlos aquí,
   // requirePlanFeature los rechazaba para todos los planes (ver test-plan-features).
   'retail_pasillos',
-  'gestion_membresias'
+  'gestion_membresias',
+  // Features dedicadas de los 5 módulos avanzados. Antes rrhh_planillas
+  // compartía 'operacion_completa' con contabilidad_pyme (dos módulos de
+  // L.85 con una sola feature), así que RRHH salía gratis para Pulpería y
+  // Tienda y era imposible cobrarlo aparte. fiscal_advanced y crm_advanced
+  // no existían como feature: sus endpoints no se podían gatear.
+  // Ref: supabase/migracion_modulos_avanzados_v1.sql + plan_features.
+  'rrhh_planillas',
+  'fiscal_avanzado',
+  'crm_avanzado'
 ]);
 
 // Catálogo canónico del cotizador (23 módulos reales de la app Flutter).
@@ -1689,6 +1696,49 @@ async function enviarCorreoPortalPilot(emailDestinatario, asunto, titulo, subtit
 // stream y respaldos.
 if (adminPortal) app.use('/api/admin', authenticate, adminPortal);
 
+// ── Módulos avanzados: contabilidad · rrhh · fiscal_advanced ·
+// ── crm_advanced · multi_empresa ──
+// Estos 5 módulos se vendían en el cotizador (L.75–110/mes) pero sus
+// pantallas Flutter eran listas de ejemplo en memoria: no persistían y sus
+// endpoints no existían, así que no había nada que gatear por plan. Este
+// router añade la API real y el gate (requirePlanFeature) por módulo.
+// Depende de authenticate/requirePlanFeature, por eso va después de definirse.
+// OJO: se monta en la raíz, NO en '/api'. Las rutas de este router ya
+// empiezan con '/api/...' (ver cfg.ruta y los handlers dedicados). Si se
+// montara en '/api', quedaría '/api/api/contabilidad/cuentas' y la app
+// recibiría 404 en todos los módulos avanzados.
+//
+// `app.use(authenticate, router)` sin ruta NO es lo mismo que 'montar el
+// router en la raíz': Express ejecuta `authenticate` para TODA petición que
+// llega a esta línea, incluso las que este router no maneja. Con ~11k líneas
+// de rutas registradas después, eso dejaba '/api/health' (el health check de
+// Vercel) con 401 y obligaba a autenticar dos veces las rutas que ya
+// autentican por su cuenta. Por eso se acota a los prefijos que este router
+// sirve de verdad.
+const PREFIJOS_MODULOS_AVANZADOS = [
+  '/api/contabilidad', '/api/rrhh', '/api/fiscal',
+  '/api/crm-avanzado', '/api/multi-empresa',
+];
+
+if (modulosAvanzados && typeof modulosAvanzados.createRouter === 'function') {
+  const routerModulosAvanzados = modulosAvanzados.createRouter({
+    supabase,
+    requirePlanFeature,
+    requireTenantAdmin,
+    requireSupabase,
+    getTenantCode,
+    normalizeTenantCode,
+    resolverEmpresaSupabase,
+    handleServerError,
+  });
+  app.use((req, res, next) => {
+    if (!PREFIJOS_MODULOS_AVANZADOS.some(p => req.path === p || req.path.startsWith(`${p}/`))) {
+      return next();
+    }
+    return authenticate(req, res, next);
+  }, routerModulosAvanzados);
+}
+
 // 🔧 FIX VERCEL: Health check endpoint
 // No revelar configuración interna (Supabase/JWT/entorno) a clientes anónimos.
 app.get('/api/health', async (req, res) => {
@@ -1795,6 +1845,26 @@ app.post('/api/upload-image', authenticate, async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: err.message || 'Error al subir imagen a Supabase Storage' });
   }
+});
+
+// Public endpoint: global banner (no auth required)
+app.get('/api/public/banner', async (req, res) => {
+  try {
+    if (!requireSupabase(res)) return;
+    const { data, error } = await supabase
+      .from('configuraciones_globales')
+      .select('clave, valor')
+      .in('clave', ['BANNER_ACTIVE', 'BANNER_TYPE', 'BANNER_MESSAGE', 'BANNER_START', 'BANNER_END']);
+    if (error) return res.status(500).json({ error: error.message });
+    const map = Object.fromEntries((data || []).map(c => [c.clave, c.valor]));
+    const now = new Date();
+    const start = map.BANNER_START ? new Date(map.BANNER_START) : null;
+    const end = map.BANNER_END ? new Date(map.BANNER_END) : null;
+    const active = map.BANNER_ACTIVE === 'true'
+      && (!start || start <= now)
+      && (!end || end >= now);
+    res.json({ active, type: map.BANNER_TYPE || 'info', message: map.BANNER_MESSAGE || '' });
+  } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 app.get('/api/config', (req, res) => {
@@ -4970,18 +5040,10 @@ function normalizeDisplayName(nombre, apellido) {
   return out.join(' ') || full;
 }
 
-// Si el correo del usuario coincide con el correo registrado del tenant, es el Owner/dueño de la empresa
-function resolveDisplayRole(userRow, tenantRow) {
-  const userEmail = String(userRow && (userRow.email || '')).toLowerCase().trim();
-  const tenEmail = String(tenantRow && (tenantRow.email || tenantRow.correo || tenantRow.email_representante || tenantRow.correo_representante || '')).toLowerCase().trim();
-  const globalRole = normalizeRole(userRow && userRow.rol_global);
-  const tenantCode = normalizeTenantCode(userRow && userRow.empresa_codigo);
-  if (isGlobalAdminRole(globalRole) || tenantCode === 'ROOT') {
-    return globalRole === 'super admin' ? 'superadmin' : (isGlobalAdminRole(globalRole) ? globalRole : 'root');
-  }
-  if (userEmail && tenEmail && userEmail === tenEmail) return 'Owner';
-  return userRow.rol || userRow.rol_global || 'admin';
-}
+// Si el correo del usuario coincide con el correo registrado del tenant, es el Owner/dueño de la empresa.
+// La función vive en auth-roles.js para poder probarla sin levantar el servidor:
+// ver el comentario de ese archivo sobre por qué el ROOT sale del rol global y
+// no del empresa_codigo.
 
 // Estadísticas reales calculadas a partir de tablas del backend (nunca inventadas)
 async function computeUserStats(userId, codigo, nombreCompleto, usuario) {
@@ -10461,7 +10523,11 @@ app.post('/api/empresa/integrations/sheets/sync', authenticate, requireTenantAdm
 // notas y sincronización. La app (Flutter) usa estos mismos endpoints.
 // ═══════════════════════════════════════════════════════════════════════════
 
-app.get('/api/transacciones', authenticate, async (req, res) => {
+// Gate de plan: 'operacion_completa' es la feature de contabilidad_pyme y sí
+// pertenece a Pulpería y Tienda (ver modulos_cotizador), así que gatear aquí
+// no le quita nada a un plan que lo compró, pero cierra el endpoint a quien
+// no lo tiene. Antes era un endpoint abierto para cualquier tenant.
+app.get('/api/transacciones', authenticate, requirePlanFeature('operacion_completa'), async (req, res) => {
   if (!requireSupabase(res)) return;
   try {
     const tenant = normalizeTenantCode(getTenantCode(req));
@@ -10479,7 +10545,7 @@ app.get('/api/transacciones', authenticate, async (req, res) => {
   } catch (err) { return handleServerError(res, err); }
 });
 
-app.post('/api/transacciones', authenticate, async (req, res) => {
+app.post('/api/transacciones', authenticate, requirePlanFeature('operacion_completa'), async (req, res) => {
   if (!requireSupabase(res)) return;
   try {
     const tenant = normalizeTenantCode(getTenantCode(req));

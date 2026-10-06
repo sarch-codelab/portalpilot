@@ -27,11 +27,11 @@ En Honduras, más del **70% del tejido empresarial** está compuesto por microem
 
 Portal Pilot sustituye los planes genéricos por soluciones adaptadas directamente a la pregunta inicial de incorporación: **¿Cómo funciona tu negocio?**
 
-| Modelo de Negocio | Precio Mensual (HNL) | Equivalente USD | Facturación Anual (2 meses gratis) | Módulos Clave Incluidos |
-| :--- | :---: | :---: | :---: | :--- |
-| **1. Pulpería / Mercadito** | **L. 299 / mes** | ~$12 USD | **L. 2,990 / año** | POS de mostrador ultrarrápido, Libreta de Fiado (deudas y abonos), Control de Caja y Arqueo, Inventario Básico, Facturación SAR simplificada. |
-| **2. Tienda / Supermercado** | **L. 799 / mes** | ~$32 USD | **L. 7,990 / año** | POS Retail con lector de barras, Facturación SAR formal completa (CAI/RTN), Inventario categorizado, Compras y Proveedores, Cotizaciones, CRM, Reportes comerciales. |
-| **3. Club / Membresía** | **L. 1,399 / mes** | ~$56 USD | **L. 13,990 / año** | Control de Membresías y Carnet QR, POS con control de consumos/mesas, Facturación SAR, Inventario de licores y stock crítico, Seguridad con 2FA, Analytics BI, Chat IA. |
+| Modelo de Negocio | Precio Mensual (HNL) | Equivalente USD | Facturación Anual (2 meses gratis) | Usuarios Incluidos | Módulos Clave Incluidos |
+| :--- | :---: | :---: | :---: | :---: | :--- |
+| **1. Pulpería / Mercadito** | **L. 299 / mes** | ~$12 USD | **L. 2,990 / año** | 3 | POS de mostrador ultrarrápido, Libreta de Fiado (deudas y abonos), Inventario con alertas, Facturación SAR simplificada, Contabilidad básica (5 módulos). |
+| **2. Tienda / Supermercado** | **L. 799 / mes** | ~$32 USD | **L. 7,990 / año** | 15 | POS Retail con lector de barras, Canal Moderno multi-sucursal, Facturación SAR formal completa (CAI/RTN), Inventario categorizado, Compras y Proveedores, Cotizaciones, Analytics BI, Reportes comerciales (8 módulos). |
+| **3. Club / Membresía** | **L. 1,399 / mes** | ~$56 USD | **L. 13,990 / año** | 35 | Membresías y Carnet QR, POS de barra y mostrador, Facturación SAR, Inventario de licores y stock crítico, CRM de socios, Seguridad con 2FA, Asistente IA (7 módulos). |
 
 ---
 
@@ -87,7 +87,7 @@ Ofrecer **2 meses de regalo** (descuento del 16.67% equivalente a pagar únicame
 
 ---
 
-## 3. Plan Personalizado: Cotizador de 21 Módulos a la Carta
+## 3. Plan Personalizado: Cotizador de 23 Módulos a la Carta
 
 Para negocios que no encajan en una sola etiqueta o que desean empezar con lo mínimo e ir escalando, se habilita el **Cotizador Modular Interactivo**.
 
@@ -96,38 +96,42 @@ Para negocios que no encajan en una sola etiqueta o que desean empezar con lo m�
 - **Cuota Base de Plataforma Cloud:** **L. 150 HNL / mes**  
   *(Cubre hosting en la nube, base de datos aislada multi-tenant, respaldos automáticos diarios, actualizaciones y seguridad SSL/TLS).*
 
-- **Módulos Básicos / Operativos (L. 35 a L. 45 HNL/mes cada uno):**
-  1. `POS Rápido de Mostrador` — **L. 45/mes**
+- **Módulos de Venta y Operación Diaria (L. 35 a L. 50 HNL/mes cada uno):**
+  1. `Punto de Venta (POS)` — **L. 45/mes**
   2. `Canal Tradicional / Libreta de Fiado` — **L. 35/mes**
-  3. `Control de Caja y Arqueo Diario` — **L. 40/mes**
-  4. `Cotizaciones y Proformas PDF` — **L. 35/mes**
-  5. `Directorio de Clientes CRM Básico` — **L. 40/mes**
-  6. `Soporte Técnico y Mesa de Ayuda` — **L. 35/mes**
+  3. `Cotizaciones & Proformas PDF` — **L. 35/mes**
+  4. `CRM Clientes & Ventas` — **L. 40/mes**
+  5. `Seguridad, Roles Granulares & 2FA` — **L. 50/mes**
 
-- **Módulos Comerciales y de Gestión (L. 55 a L. 75 HNL/mes cada uno):**
-  7. `Facturación Electrónica SAR (Honduras)` — **L. 70/mes**
-  8. `Inventario y Control de Stock con Alertas` — **L. 65/mes**
-  9. `Canal Moderno / Sector Retail & Pasillos` — **L. 60/mes**
-  10. `Compras y Cuentas por Pagar a Proveedores` — **L. 60/mes**
-  11. `Fidelización, Puntos y Cupones` — **L. 55/mes**
-  12. `Reportes Comerciales y Ventas del Día` — **L. 55/mes**
-  13. `Seguridad, Roles de Usuario y 2FA` — **L. 50/mes**
-  14. `Automatizaciones y Alertas (WhatsApp / Email)` — **L. 65/mes**
+- **Módulos Comerciales, Tributarios y de Gestión (L. 55 a L. 95 HNL/mes cada uno):**
+  6. `Reportes Comerciales & Financieros` — **L. 55/mes**
+  7. `Comercial: Compras, Cotizaciones, OC` — **L. 60/mes**
+  8. `Compras & Proveedores Mayoristas` — **L. 60/mes**
+  9. `Inventario & Stock` — **L. 65/mes**
+  10. `Facturación Fiscal SAR (Honduras)` — **L. 70/mes**
+  11. `Sector Retail: Pasillos, Marcas, Promos` — **L. 70/mes**
+  12. `CRM Avanzado: Leads, Campañas, Segmentación` — **L. 75/mes**
+  13. `Fiscal Avanzado: Retenciones, Libros, SAR` — **L. 80/mes**
+  14. `Contabilidad & Finanzas` — **L. 85/mes**
+  15. `RRHH, Planilla & Asistencias` — **L. 85/mes**
+  16. `Cadena de Suministro & Logística` — **L. 90/mes**
+  17. `Membresías & Socios QR` — **L. 95/mes**
+  18. `Canal Moderno / Multi-Sucursal Retail` — **L. 95/mes**
+  19. `Analytics & BI` — **L. 95/mes**
 
-- **Módulos Avanzados y Especializados (L. 80 a L. 120 HNL/mes cada uno):**
-  15. `Club de Membresías, Socios y Accesos QR` — **L. 95/mes**
-  16. `Contabilidad y Finanzas PyME` — **L. 85/mes**
-  17. `RRHH, Planilla y Control de Asistencias` — **L. 85/mes**
-  18. `Rutas de Reparto, Delivery y Flota` — **L. 90/mes**
-  19. `Multi-Bodega y Transferencias entre Locales` — **L. 85/mes**
-  20. `Multi-Sucursal / Multi-Empresa Centralizada` — **L. 110/mes**
-  21. `Asistente Inteligente IA Portal Pilot (Groq Cloud)` — **L. 120/mes**
+- **Módulos de Expansión y Especializados (L. 110 a L. 120 HNL/mes cada uno):**
+  20. `Multi-Empresa / Holding` — **L. 110/mes**
+  21. `Asistente IA (Groq + Local)` — **L. 120/mes**
+
+- **Incluidos en la Cuota Base (L. 0):**
+  22. `Configuración del Sistema` — **L. 0** (series CAI, respaldos, parámetros)
+  23. `Soporte & Mesa de Ayuda` — **L. 0** (tickets y chat en horario hábil)
 
 ### Escala de Descuentos por Volumen:
 - **De 1 a 4 módulos:** Precio regular sumado.
-- **De 5 a 9 módulos:** **10% de descuento** sobre el total.
-- **De 10 a 15 módulos:** **15% de descuento** sobre el total.
-- **De 16 a 21 módulos (Suite Completa):** **25% de descuento** (tope aproximado de L. 1,299 HNL/mes).
+- **De 5 a 9 módulos:** **10% de descuento** sobre los módulos.
+- **De 10 a 15 módulos:** **15% de descuento** sobre los módulos.
+- **De 16 a 23 módulos (Suite Completa):** **25% de descuento** (tope aproximado de L. 1,290 HNL/mes con base incluida).
 
 ---
 

@@ -237,7 +237,12 @@ function confirmDeleteAdmin(id, name) {
   var dlg = document.getElementById('confirmDialog');
   if (btn) {
     btn.onclick = function () {
+      var orig = btn.innerHTML;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Eliminando...';
+      btn.disabled = true;
       gsApi('/api/global/admins/' + encodeURIComponent(id), { method: 'DELETE' }).then(function (r) {
+        btn.innerHTML = orig;
+        btn.disabled = false;
         if (dlg) dlg.classList.remove('active');
         if (r.ok) {
           showToast('"' + name + '" removido del panel global', 'success');
@@ -245,6 +250,9 @@ function confirmDeleteAdmin(id, name) {
         } else {
           showToast((r.json && r.json.error) || 'No se pudo eliminar', 'error');
         }
+      }).catch(function () {
+        btn.innerHTML = orig;
+        btn.disabled = false;
       });
     };
   }
@@ -274,6 +282,21 @@ function gsDescargarJSON(nombre, datos) {
 
 function viewAuditLog() {
   window.location.href = 'auditoria.html';
+}
+
+function closeModal(id) {
+  var modal = document.getElementById(id);
+  if (modal) modal.classList.remove('active');
+}
+
+function closeConfirm() {
+  var dlg = document.getElementById('confirmDialog');
+  if (dlg) dlg.classList.remove('active');
+}
+
+function openModal(id) {
+  var modal = document.getElementById(id);
+  if (modal) modal.classList.add('active');
 }
 
 // ===== ENV VARIABLES (Almacenadas en configuraciones_globales con prefijo ENV_) =====
@@ -435,7 +458,33 @@ function editAdmin(id) {
   });
 }
 
+function setLoadingState(selector, isLoading) {
+  var el = document.querySelector(selector);
+  if (!el) return;
+  if (isLoading) {
+    el.dataset.originalHtml = el.innerHTML;
+    if (el.tagName === 'TBODY') {
+      el.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:24px;color:var(--gray)"><i class="fas fa-spinner fa-spin"></i> Cargando...</td></tr>';
+    } else {
+      el.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Cargando...';
+      el.disabled = true;
+    }
+  } else if (el.dataset.originalHtml) {
+    el.innerHTML = el.dataset.originalHtml;
+    if (el.tagName !== 'TBODY') el.disabled = false;
+  }
+}
+
+function showInlineError(containerId, message) {
+  var box = document.getElementById(containerId);
+  if (box) box.innerHTML = '<div style="color:var(--red);font-size:12px;padding:12px">' + gsEsc(message) + '</div>';
+}
+
 function loadGlobalSettings() {
+  setLoadingState('#adminsList', true);
+  setLoadingState('#ultimosCambios', true);
+  setLoadingState('#envTableBody', true);
+
   gsApi('/api/global/config').then(function (r) {
     if (r.ok && r.json && Array.isArray(r.json.configuraciones)) {
       var mapa = {};
@@ -446,16 +495,27 @@ function loadGlobalSettings() {
       cargarUltimosCambios(r.json.configuraciones);
       renderEnvVars();
     } else {
-      var box = document.getElementById('ultimosCambios');
-      if (box) box.innerHTML = '<div style="color:var(--gray);font-size:12px">No se pudo cargar la configuracion global.</div>';
+      showInlineError('ultimosCambios', 'No se pudo cargar la configuración global: ' + (r.json && r.json.error || 'Error desconocido'));
     }
-  }).catch(function () {});
+  }).catch(function (e) {
+    showInlineError('ultimosCambios', 'Error de red al cargar configuración: ' + e.message);
+  }).finally(function () {
+    setLoadingState('#ultimosCambios', false);
+    setLoadingState('#envTableBody', false);
+  });
+
   gsApi('/api/global/admins').then(function (r) {
     if (r.ok && r.json && Array.isArray(r.json.admins)) {
       GS_ADMINS = r.json.admins;
       renderAdmins();
+    } else {
+      showInlineError('adminsList', 'No se pudieron cargar administradores: ' + (r.json && r.json.error || 'Error desconocido'));
     }
-  }).catch(function () {});
+  }).catch(function (e) {
+    showInlineError('adminsList', 'Error de red al cargar administradores: ' + e.message);
+  }).finally(function () {
+    setLoadingState('#adminsList', false);
+  });
 }
 
 function gsInit() { loadGlobalSettings(); }

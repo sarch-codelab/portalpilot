@@ -1554,6 +1554,7 @@
     }
   </style>
   <link rel="stylesheet" href="../css/notifications.css">
+  <link rel="stylesheet" href="../css/global-banner.css">
     <style>
     body {
         background-color: var(--bg, #04040a);
@@ -2029,13 +2030,13 @@
           <div class="settings-card-header">
             <div class="settings-card-title"><i class="fas fa-toggle-on"></i> Feature Flags</div>
           </div>
-          <div style="display:flex;flex-direction:column;gap:14px">
-            <div class="flag-row"><span>🧪 Modo Beta para nuevos features</span><label class="form-switch"><input type="checkbox" id="flag-beta" checked><span class="form-switch-slider"></span></label></div>
-            <div class="flag-row"><span>🔐 Requiere 2FA para todos los admins</span><label class="form-switch"><input type="checkbox" id="flag-2fa-admins"><span class="form-switch-slider"></span></label></div>
-            <div class="flag-row"><span>📊 Analytics detallados en dashboard</span><label class="form-switch"><input type="checkbox" id="flag-dash-analytics"><span class="form-switch-slider"></span></label></div>
-            <div class="flag-row"><span>🌍 Multi-región (CDN global)</span><label class="form-switch"><input type="checkbox" id="flag-multiregion"><span class="form-switch-slider"></span></label></div>
-            <div class="flag-row"><span>🤖 Auto-scaling de bots RPA</span><label class="form-switch"><input type="checkbox" id="flag-autoscaling-bots" checked><span class="form-switch-slider"></span></label></div>
-          </div>
+<div style="display:flex;flex-direction:column;gap:14px">
+              <div class="flag-row"><span>🧪 Modo Beta para nuevos features</span><label class="form-switch"><input type="checkbox" id="flag-beta"><span class="form-switch-slider"></span></label></div>
+              <div class="flag-row"><span>🔐 Requiere 2FA para todos los admins</span><label class="form-switch"><input type="checkbox" id="flag-2fa-admins"><span class="form-switch-slider"></span></label></div>
+              <div class="flag-row"><span>📊 Analytics detallados en dashboard</span><label class="form-switch"><input type="checkbox" id="flag-dash-analytics"><span class="form-switch-slider"></span></label></div>
+              <div class="flag-row"><span>🌍 Multi-región (CDN global)</span><label class="form-switch"><input type="checkbox" id="flag-multiregion"><span class="form-switch-slider"></span></label></div>
+              <div class="flag-row"><span>🤖 Auto-scaling de bots RPA</span><label class="form-switch"><input type="checkbox" id="flag-autoscaling-bots"><span class="form-switch-slider"></span></label></div>
+            </div>
           <div class="settings-actions">
             <button class="btn btn-outline btn-sm" onclick="resetFlags()"><i class="fas fa-undo"></i> Resetear</button>
             <button class="btn btn-acc btn-sm" onclick="saveFlags()"><i class="fas fa-save"></i> Guardar</button>
@@ -2129,97 +2130,8 @@
       showToast('🚀 Banner publicado globalmente', 'success');
     }
 
-    // ===== ENV VARIABLES =====
-    const envVars = [];
-    function renderEnvVars() {
-      const tbody = document.getElementById('envTableBody'); tbody.innerHTML = '';
-      if (!envVars.length) {
-        tbody.innerHTML = '<tr><td colspan="4" style="color:var(--gray);text-align:center;padding:24px">Las variables se administran directamente en Vercel.</td></tr>';
-        return;
-      }
-      envVars.forEach(v => {
-        const row = document.createElement('tr');
-        const masked = v.sensitive ? 'masked' : '';
-        const onclickAttr = v.sensitive ? "this.classList.toggle('masked')" : '';
-        row.innerHTML = '<td><span class="env-key">' + v.key + '</span></td>' +
-          '<td><span class="env-value ' + masked + '" onclick="' + onclickAttr + '">' + v.value + '</span></td>' +
-          '<td><span style="padding:2px 8px;border-radius:4px;background:rgba(139,92,246,0.15);color:var(--cyan);font-size:11px;font-weight:600">' + v.env + '</span></td>' +
-          '<td class="env-actions"><button class="env-btn" title="Editar" onclick="editEnvVar(\'' + v.key + '\')"><i class="fas fa-edit"></i></button><button class="env-btn danger" title="Eliminar" onclick="confirmDeleteEnv(\'' + v.key + '\')"><i class="fas fa-trash"></i></button></td>';
-        tbody.appendChild(row);
-      });
-    }
-    function addEnvVar() { showToast('Las variables de entorno se administran en Vercel, no desde esta pantalla.', 'warning'); }
-    function editEnvVar(key) { showToast('La variable ' + key + ' se administra en Vercel.', 'warning'); }
-    function confirmDeleteEnv(key) {
-      document.getElementById('confirmMessage').textContent = '¿Eliminar la variable de entorno "' + key + '"? Esta acción puede afectar el funcionamiento de la plataforma.';
-      document.getElementById('confirmBtn').onclick = function () {
-        const i = envVars.findIndex(v => v.key === key); if (i !== -1) { envVars.splice(i, 1); renderEnvVars(); showToast('"' + key + '" eliminada', 'success'); } closeConfirm();
-      };
-      document.getElementById('confirmDialog').classList.add('active');
-    }
-    function syncEnvVars() { showToast('La sincronización de variables no está disponible desde el panel.', 'warning'); }
-
-    // ===== ADMIN MANAGEMENT =====
-    const admins = [];
-    function renderAdmins() {
-      const list = document.getElementById('adminsList'); list.innerHTML = '';
-      if (!admins.length) {
-        list.innerHTML = '<div style="color:var(--gray);font-size:12px;padding:20px 0">Los administradores se consultarán desde el backend cuando esta sección esté habilitada.</div>';
-        return;
-      }
-      admins.forEach(a => {
-        const initials = a.name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase();
-        const role = a.role.charAt(0).toUpperCase() + a.role.slice(1);
-        const statusColor = a.status === 'active' ? 'var(--green)' : 'var(--gray)';
-        const statusText = a.status === 'active' ? 'Activo' : 'Inactivo';
-        const item = document.createElement('div'); item.className = 'admin-item';
-        item.innerHTML = '<div class="admin-avatar">' + initials + '</div>' +
-          '<div class="admin-info"><div class="admin-name">' + a.name + '</div><div class="admin-email">' + a.email + '</div><span class="admin-role">' + role + '</span></div>' +
-          '<div class="admin-meta"><span><i class="fas fa-clock"></i> ' + a.lastLogin + '</span><span style="color:' + statusColor + '"><i class="fas fa-circle" style="font-size:6px"></i> ' + statusText + '</span></div>' +
-          '<div class="admin-actions"><button class="action-icon-btn" title="Editar" onclick="editAdmin(' + a.id + ')"><i class="fas fa-edit"></i></button><button class="action-icon-btn danger" title="Eliminar" onclick="confirmDeleteAdmin(' + a.id + ', \'' + a.name + '\')"><i class="fas fa-user-minus"></i></button></div>';
-        list.appendChild(item);
-      });
-    }
-    function openModal(id) { document.getElementById(id).classList.add('active'); }
-    function closeModal(id) { document.getElementById(id).classList.remove('active'); }
-    function createAdmin() {
-      const form = document.getElementById('addAdminForm');
-      if (form.checkValidity()) {
-        const name = document.getElementById('adminName').value, email = document.getElementById('adminEmail').value;
-        const btn = form.closest('.modal').querySelector('.btn-acc'), orig = btn.innerHTML;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creando...'; btn.disabled = true;
-        btn.innerHTML = orig; btn.disabled = false;
-        showToast('La gestión de administradores aún no está conectada al backend.', 'warning');
-      } else form.reportValidity();
-    }
-    function editAdmin(id) { showToast('La edición de administradores aún no está conectada al backend.', 'warning'); }
-    function confirmDeleteAdmin(id, name) {
-      document.getElementById('confirmMessage').textContent = '¿Eliminar al administrador "' + name + '"? Perderá todo acceso a la plataforma. Esta acción no se puede deshacer.';
-      document.getElementById('confirmBtn').onclick = function () {
-        const i = admins.findIndex(a => a.id === id); if (i !== -1) { admins.splice(i, 1); renderAdmins(); showToast('"' + name + '" eliminado', 'success'); } closeConfirm();
-      };
-      document.getElementById('confirmDialog').classList.add('active');
-    }
-    function closeConfirm() { document.getElementById('confirmDialog').classList.remove('active'); }
-
-    // ===== UTILITIES =====
-    function saveFlags() { showToast('Los feature flags se administran en el backend.', 'warning'); }
-    function resetFlags() { if (confirm('¿Resetear todos los feature flags a valores por defecto?')) { showToast('✓ Flags reseteados', 'info'); } }
-
-    function saveAllSettings() { showToast('Estos ajustes aún no están conectados al backend.', 'warning'); }
-    function exportSettings() { showToast('✓ Exportando configuración a JSON...', 'info'); setTimeout(() => showToast('✓ "portalpilot_config_2026.json" descargado', 'success'), 1500); }
-    function backupSettings() { showToast('🔄 Creando backup de configuración...', 'info'); setTimeout(() => showToast('✓ Backup creado: backup_2026-11-14_1432.enc', 'success'), 2000); }
-    function viewAuditLog() { showToast('📋 Redirigiendo al log de auditoría completo...', 'info'); }
-
-    // Watch for changes
-    let hasChanges = false;
-    document.querySelectorAll('.form-input,.form-select,.form-textarea,.form-switch input').forEach(el => {
-      el.addEventListener('change', () => { if (!hasChanges) { hasChanges = true; document.getElementById('saveAllBtn').style.display = 'inline-flex'; showToast('✏️ Hay cambios sin guardar. Haz clic en "Guardar Todo" para aplicar.', 'warning'); } });
-    });
-
     // ===== INIT =====
     window.addEventListener('load', () => {
-      renderEnvVars(); renderAdmins();
       setTimeout(() => { document.querySelectorAll('.reveal').forEach((el, i) => { setTimeout(() => el.classList.add('in'), i * 50); }); }, 100);
     });
     document.querySelectorAll('.modal-overlay,.confirm-dialog').forEach(o => {
@@ -2228,7 +2140,7 @@
     document.addEventListener('keydown', e => {
       if (e.key === 'Escape') { document.querySelectorAll('.modal-overlay.active,.confirm-dialog.active').forEach(m => m.classList.remove('active')); }
       if (e.key === '/' && document.activeElement.tagName !== 'INPUT') { e.preventDefault(); document.querySelector('.topbar-search input')?.focus(); }
-      if (e.key === 's' && e.ctrlKey) { e.preventDefault(); if (hasChanges) saveAllSettings(); }
+      if (e.key === 's' && e.ctrlKey) { e.preventDefault(); saveAllSettings(); }
     });
   </script>
 <script src="js/global_settings.js"></script>
@@ -2236,6 +2148,7 @@
   <script src="../js/notifications.js"></script>
   <script src="../js/sidebar-loader.js"></script>
   <script src="js/pp-sidebar.js"></script>
+  <script src="../js/global-banner.js"></script>
     <script>
     (function () {
         var preloader = document.getElementById('preloader');

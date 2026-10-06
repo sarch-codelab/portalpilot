@@ -485,7 +485,10 @@ function loadGlobalSettings() {
   setLoadingState('#ultimosCambios', true);
   setLoadingState('#envTableBody', true);
 
+  console.log('[GlobalSettings] Cargando config y admins...');
+
   gsApi('/api/global/config').then(function (r) {
+    console.log('[GlobalSettings] /api/global/config response:', r);
     if (r.ok && r.json && Array.isArray(r.json.configuraciones)) {
       var mapa = {};
       r.json.configuraciones.forEach(function (c) { mapa[c.clave] = c; });
@@ -495,24 +498,27 @@ function loadGlobalSettings() {
       cargarUltimosCambios(r.json.configuraciones);
       renderEnvVars();
     } else {
-      showInlineError('ultimosCambios', 'No se pudo cargar la configuración global: ' + (r.json && r.json.error || 'Error desconocido'));
+      showInlineError('ultimosCambios', 'Config error: ' + (r.json && r.json.error || 'Status ' + r.status));
     }
   }).catch(function (e) {
-    showInlineError('ultimosCambios', 'Error de red al cargar configuración: ' + e.message);
+    console.error('[GlobalSettings] Config fetch error:', e);
+    showInlineError('ultimosCambios', 'Error de red config: ' + e.message);
   }).finally(function () {
     setLoadingState('#ultimosCambios', false);
     setLoadingState('#envTableBody', false);
   });
 
   gsApi('/api/global/admins').then(function (r) {
+    console.log('[GlobalSettings] /api/global/admins response:', r);
     if (r.ok && r.json && Array.isArray(r.json.admins)) {
       GS_ADMINS = r.json.admins;
       renderAdmins();
     } else {
-      showInlineError('adminsList', 'No se pudieron cargar administradores: ' + (r.json && r.json.error || 'Error desconocido'));
+      showInlineError('adminsList', 'Admins error: ' + (r.json && r.json.error || 'Status ' + r.status));
     }
   }).catch(function (e) {
-    showInlineError('adminsList', 'Error de red al cargar administradores: ' + e.message);
+    console.error('[GlobalSettings] Admins fetch error:', e);
+    showInlineError('adminsList', 'Error de red admins: ' + e.message);
   }).finally(function () {
     setLoadingState('#adminsList', false);
   });

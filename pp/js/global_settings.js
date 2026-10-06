@@ -529,6 +529,16 @@ function loadGlobalSettings() {
       aplicarBannerDesdeConfig();
       cargarUltimosCambios(r.json.configuraciones);
       renderEnvVars();
+      // Inject flags into FeatureFlags (avoids 401/404 fallbacks)
+      if (window.FeatureFlags) {
+        var flags = {};
+        var DEFAULTS = { FLAG_BETA: true, FLAG_2FA_ADMINS: false, FLAG_DASH_ANALYTICS: false, FLAG_MULTIREGION: false, FLAG_AUTOSCALING_BOTS: true };
+        r.json.configuraciones.forEach(function(c) {
+          if (c.clave && c.clave.indexOf('FLAG_') === 0) flags[c.clave] = c.valor === 'true';
+        });
+        Object.keys(DEFAULTS).forEach(function(k) { if (flags[k] === undefined) flags[k] = DEFAULTS[k]; });
+        window.FeatureFlags.setFlags(flags);
+      }
     } else {
       showInlineError('ultimosCambios', 'Config error: ' + (r.json && r.json.error || 'Status ' + r.status));
     }

@@ -40,11 +40,14 @@
         FLAGS_CACHE = flags;
         return flags;
       })
-      // Fallback: read from global config endpoint (already loaded by global_settings)
+      // Fallback: try to get from global config (requires auth)
       .catch(function(err) {
         console.warn('[FeatureFlags] Public endpoint failed, trying config fallback:', err);
         return fetch('/api/global/config', { credentials: 'include' })
-          .then(function(res) { return res.ok ? res.json() : Promise.reject(res.status); })
+          .then(function(res) { 
+            if (res.status === 401) throw new Error('401');
+            return res.ok ? res.json() : Promise.reject(res.status); 
+          })
           .then(function(data) {
             var flags = extractFlagsFromConfig(data);
             if (!flags) throw new Error('No flags in config');
@@ -63,6 +66,12 @@
       });
 
     return FLAGS_PROMISE;
+  }
+
+  // Allow direct flag injection (used by global_settings.js which has auth)
+  function setFlags(flags) {
+    FLAGS_CACHE = flags;
+    FLAGS_PROMISE = Promise.resolve(flags);
   }
 
   function isEnabled(flag) {
@@ -97,6 +106,7 @@
     waitForFlag: waitForFlag,
     invalidateCache: invalidateCache,
     onFlagChange: onFlagChange,
+    setFlags: setFlags,
     DEFAULTS: DEFAULTS
   };
 

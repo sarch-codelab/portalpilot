@@ -2021,8 +2021,11 @@
         <div class="settings-card full reveal">
           <div class="settings-card-header">
             <div class="settings-card-title"><i class="fas fa-users-cog"></i> Gestión de Administradores</div>
-            <button class="btn btn-acc btn-sm" onclick="openModal('addAdminModal')"><i class="fas fa-plus"></i> Nuevo
-              Admin</button>
+            <div style="display:flex;gap:8px;align-items:center">
+              <button class="btn btn-outline btn-sm" onclick="loadGlobalSettings()"><i class="fas fa-sync-alt"></i> Actualizar</button>
+              <button class="btn btn-acc btn-sm" onclick="openModal('addAdminModal')"><i class="fas fa-plus"></i> Nuevo
+                Admin</button>
+            </div>
           </div>
           <div class="admins-list" id="adminsList"></div>
         </div>
@@ -2049,8 +2052,11 @@
         <div class="settings-card reveal" style="transition-delay:.1s">
           <div class="settings-card-header">
             <div class="settings-card-title"><i class="fas fa-clipboard-list"></i> Últimos Cambios</div>
-            <button class="btn btn-ghost btn-xs" onclick="viewAuditLog()"><i class="fas fa-external-link-alt"></i> Ver
-              todo</button>
+            <div style="display:flex;gap:8px;align-items:center">
+              <button class="btn btn-outline btn-xs" onclick="loadGlobalSettings()"><i class="fas fa-sync-alt"></i> Actualizar</button>
+              <button class="btn btn-ghost btn-xs" onclick="viewAuditLog()"><i class="fas fa-external-link-alt"></i> Ver
+                todo</button>
+            </div>
           </div>
           <div style="display:flex;flex-direction:column;gap:12px;max-height:240px;overflow-y:auto">
 <div id="ultimosCambios" data-cambios=""><div style="color:var(--gray);font-size:12px">Cargando cambios...</div></div>
@@ -2118,18 +2124,22 @@
       if (!msg.trim()) { container.innerHTML = ''; return; }
       container.innerHTML = '<div class="banner-preview ' + type + '">' + gsEsc(msg) + '<button class="close" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button></div>';
     }
-    function toggleBanner() {
+    function toggleBanner(silent) {
       const active = document.getElementById('bannerActive').checked;
       document.getElementById('bannerStatus').textContent = active ? 'Activo' : 'Inactivo';
       document.getElementById('bannerStatus').className = 'settings-card-badge ' + (active ? 'live' : 'warning');
-      if (active) showToast('✓ Banner activado. Se mostrará a todos los usuarios.', 'success');
+      if (active && !silent) showToast('✓ Banner activado. Se mostrará a todos los usuarios.', 'success');
     }
-    function previewBanner() { updateBannerPreview(); if (document.getElementById('bannerMessage').value) showToast('👁️ Vista previa actualizada', 'info'); }
+    function previewBanner() { 
+      updateBannerPreview(); 
+      const msg = document.getElementById('bannerMessage').value;
+      if (msg.trim()) showToast('👁️ Vista previa actualizada', 'info'); 
+    }
     function publishBanner() {
       const msg = document.getElementById('bannerMessage').value;
       if (!msg.trim()) { showToast('⚠️ Ingresa un mensaje para publicar', 'warning'); return; }
       document.getElementById('bannerActive').checked = true; toggleBanner();
-      showToast('🚀 Banner publicado globalmente', 'success');
+      persistirBanner(true).then(function() { showToast('🚀 Banner publicado globalmente', 'success'); });
     }
     function clearBanner() {
       document.getElementById('bannerActive').checked = false;
@@ -2137,14 +2147,34 @@
       document.getElementById('bannerType').value = 'info';
       document.getElementById('bannerStart').value = '';
       document.getElementById('bannerEnd').value = '';
-      toggleBanner();
+      toggleBanner(true);
       updateBannerPreview();
-      persistirBanner().then(function() { showToast('🗑️ Banner eliminado completamente', 'success'); });
+      persistirBanner(true).then(function() { showToast('🗑️ Banner eliminado completamente', 'success'); });
+    }
+    // Polling para actualizaciones en vivo (cada 30s)
+    function startBannerPolling() {
+      if (window.bannerPollTimer) clearInterval(window.bannerPollTimer);
+      window.bannerPollTimer = setInterval(function() {
+        gsApi('/api/public/banner').then(function(r) {
+          if (r.ok && r.json && r.json.active && r.json.message) {
+            // Solo mostrar si no hay banner visible o es diferente
+            var existing = document.getElementById('global-banner');
+            if (!existing || existing.textContent.indexOf(r.json.message) === -1) {
+              // Recargar banner via global-banner.js
+              if (window.GlobalBanner && window.GlobalBanner.load) window.GlobalBanner.load();
+            }
+          } else if (r.ok && !r.json.active) {
+            var existing = document.getElementById('global-banner');
+            if (existing) existing.remove();
+          }
+        });
+      }, 30000);
     }
 
     // ===== INIT =====
     window.addEventListener('load', () => {
       setTimeout(() => { document.querySelectorAll('.reveal').forEach((el, i) => { setTimeout(() => el.classList.add('in'), i * 50); }); }, 100);
+      startBannerPolling();
     });
     document.querySelectorAll('.modal-overlay,.confirm-dialog').forEach(o => {
       o.addEventListener('click', e => { if (e.target === o) { o.classList.remove('active'); if (o.id === 'confirmDialog') closeConfirm(); } });

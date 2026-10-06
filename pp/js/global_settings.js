@@ -133,7 +133,7 @@ function renderAdmins() {
 function guardarCambiosConfigs(configs, okMsg) {
   return gsApi('/api/global/config', { method: 'PUT', body: { configuraciones: configs } }).then(function (r) {
     if (r.ok) {
-      showToast(okMsg || 'Configuracion guardada', 'success');
+      if (okMsg) showToast(okMsg, 'success');
       return loadGlobalSettings();
     }
     showToast((r.json && r.json.error) || 'No se pudo guardar la configuracion', 'error');
@@ -141,7 +141,7 @@ function guardarCambiosConfigs(configs, okMsg) {
   });
 }
 
-function persistirBanner() {
+function persistirBanner(silent) {
   var configs = [
     { clave: 'BANNER_ACTIVE', valor: String(document.getElementById('bannerActive') ? document.getElementById('bannerActive').checked : false) },
     { clave: 'BANNER_TYPE', valor: document.getElementById('bannerType') ? document.getElementById('bannerType').value : 'info' },
@@ -149,7 +149,7 @@ function persistirBanner() {
     { clave: 'BANNER_START', valor: document.getElementById('bannerStart') ? document.getElementById('bannerStart').value : '' },
     { clave: 'BANNER_END', valor: document.getElementById('bannerEnd') ? document.getElementById('bannerEnd').value : '' }
   ];
-  return guardarCambiosConfigs(configs, 'Banner guardado globalmente');
+  return guardarCambiosConfigs(configs, silent ? null : 'Banner guardado globalmente');
 }
 
 function bannerKeysActuales() {
@@ -518,10 +518,22 @@ function loadGlobalSettings() {
   });
 }
 
-function gsInit() { loadGlobalSettings(); }
+// Polling para admins y cambios (cada 60s)
+function startSettingsPolling() {
+  if (window.settingsPollTimer) clearInterval(window.settingsPollTimer);
+  window.settingsPollTimer = setInterval(loadGlobalSettings, 60000);
+}
+
+function gsInit() { 
+  loadGlobalSettings(); 
+  startSettingsPolling();
+}
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', gsInit);
 } else {
   gsInit();
 }
 window.addEventListener('load', function () { setTimeout(loadGlobalSettings, 50); });
+
+// Exponer para botón de refresh manual
+window.refreshGlobalSettings = loadGlobalSettings;

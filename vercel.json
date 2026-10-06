@@ -161,6 +161,10 @@
       "dest": "/api/support-ticket.js"
     },
     {
+      "src": "/api/bots/(.*)",
+      "dest": "/backend/server.js"
+    },
+    {
       "src": "/api/(.*)",
       "dest": "/backend/server.js"
     },

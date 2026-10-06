@@ -1985,6 +1985,8 @@
               Previa</button>
             <button class="btn btn-acc btn-sm" onclick="publishBanner()"><i class="fas fa-paper-plane"></i>
               Publicar</button>
+            <button class="btn btn-danger btn-sm" onclick="clearBanner()"><i class="fas fa-trash"></i>
+              Eliminar Banner</button>
           </div>
         </div>
 
@@ -2128,6 +2130,16 @@
       if (!msg.trim()) { showToast('⚠️ Ingresa un mensaje para publicar', 'warning'); return; }
       document.getElementById('bannerActive').checked = true; toggleBanner();
       showToast('🚀 Banner publicado globalmente', 'success');
+    }
+    function clearBanner() {
+      document.getElementById('bannerActive').checked = false;
+      document.getElementById('bannerMessage').value = '';
+      document.getElementById('bannerType').value = 'info';
+      document.getElementById('bannerStart').value = '';
+      document.getElementById('bannerEnd').value = '';
+      toggleBanner();
+      updateBannerPreview();
+      persistirBanner().then(function() { showToast('🗑️ Banner eliminado completamente', 'success'); });
     }
 
     // ===== INIT =====

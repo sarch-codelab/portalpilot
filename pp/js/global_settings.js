@@ -219,6 +219,8 @@ async function resetFlags() {
     if (el) el.checked = GS_DEFAULTS[clave];
   });
 }
+
+function saveAllSettings() {
   var keys = bannerKeysActuales();
   var configs = Object.keys(GS_FLAG_IDS).map(function (clave) {
     return { clave: clave, valor: String(!!(document.getElementById(GS_FLAG_IDS[clave]) && document.getElementById(GS_FLAG_IDS[clave]).checked)), descripcion: GS_FLAG_DESC[clave] };

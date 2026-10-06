@@ -602,11 +602,27 @@ function isRootUser(req) {
   return isGlobalAdminRole(role);
 }
 
-function requireRoot(req, res, next) {
-  if (!isRootUser(req)) {
-    return res.status(403).json({ error: 'Esta acción requiere un usuario ROOT.' });
+async function requireRoot(req, res, next) {
+  // 1) Check JWT claim first (fast path)
+  if (isRootUser(req)) return next();
+  // 2) Fallback: revalidate from DB (handles role promotion without re-login)
+  if (req.user?.sub && supabase) {
+    try {
+      const { data: u } = await supabase
+        .from('usuarios')
+        .select('rol, rol_global')
+        .eq('id', req.user.sub)
+        .maybeSingle();
+      if (u && isGlobalAdminRole(u.rol_global || u.rol)) {
+        // Patch req.user for downstream handlers
+        req.user.rol = u.rol_global || u.rol;
+        return next();
+      }
+    } catch (e) {
+      console.warn('[requireRoot] DB revalidate failed:', e.message);
+    }
   }
-  next();
+  return res.status(403).json({ error: 'Esta acción requiere un usuario ROOT.' });
 }
 
 function getTenantCode(req) {

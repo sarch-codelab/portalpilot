@@ -462,7 +462,10 @@ function setLoadingState(selector, isLoading) {
   var el = document.querySelector(selector);
   if (!el) return;
   if (isLoading) {
-    el.dataset.originalHtml = el.innerHTML;
+    // Solo guardar originalHtml si no existe ya (primera vez)
+    if (!el.dataset.originalHtml) {
+      el.dataset.originalHtml = el.innerHTML;
+    }
     if (el.tagName === 'TBODY') {
       el.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:24px;color:var(--gray)"><i class="fas fa-spinner fa-spin"></i> Cargando...</td></tr>';
     } else {
@@ -470,8 +473,13 @@ function setLoadingState(selector, isLoading) {
       el.disabled = true;
     }
   } else if (el.dataset.originalHtml) {
-    el.innerHTML = el.dataset.originalHtml;
-    if (el.tagName !== 'TBODY') el.disabled = false;
+    // NO restaurar para contenedores de lista (adminsList, ultimosCambios)
+    // Solo para botones/inputs donde disabled importa
+    if (el.tagName === 'BUTTON' || el.tagName === 'INPUT' || el.tagName === 'SELECT' || el.tagName === 'TEXTAREA' || el.tagName === 'TBODY') {
+      el.innerHTML = el.dataset.originalHtml;
+      el.disabled = false;
+    }
+    // Para DIVs contenedores, dejar el contenido renderizado
   }
 }
 

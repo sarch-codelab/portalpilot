@@ -14,11 +14,11 @@ var GS_FLAG_DESC = {
   'FLAG_AUTOSCALING_BOTS': 'Auto-scaling de bots RPA'
 };
 var GS_DEFAULTS = {
-  'FLAG_BETA': 'true',
-  'FLAG_2FA_ADMINS': 'false',
-  'FLAG_DASH_ANALYTICS': 'false',
-  'FLAG_MULTIREGION': 'false',
-  'FLAG_AUTOSCALING_BOTS': 'true'
+  'FLAG_BETA': true,
+  'FLAG_2FA_ADMINS': false,
+  'FLAG_DASH_ANALYTICS': false,
+  'FLAG_MULTIREGION': false,
+  'FLAG_AUTOSCALING_BOTS': true
 };
 var GS_ADMINS = [];
 var GS_CONFIG = {};
@@ -70,6 +70,17 @@ function aplicarFlagsDesdeConfig() {
       el.checked = String(cfg.valor).toLowerCase() === 'true';
     }
   });
+  // Sincronizar con FeatureFlags global
+  if (window.FeatureFlags) {
+    window.FeatureFlags.load().then(function(flags) {
+      Object.keys(GS_FLAG_IDS).forEach(function(clave) {
+        var el = document.getElementById(GS_FLAG_IDS[clave]);
+        if (el && flags[clave] !== undefined) {
+          el.checked = flags[clave];
+        }
+      });
+    });
+  }
 }
 
 function aplicarBannerDesdeConfig() {
@@ -169,34 +180,25 @@ function flagsConfigsActuales() {
   });
 }
 
-// ===== OVERRIDES =====
-function toggleBanner() {
-  setBannerStatusUI();
-  persistirBanner();
-}
-function previewBanner() {
-  updateBannerPreview();
-  if (document.getElementById('bannerMessage') && document.getElementById('bannerMessage').value) showToast('Vista previa actualizada', 'info');
-}
-function publishBanner() {
-  var msg = document.getElementById('bannerMessage') ? document.getElementById('bannerMessage').value : '';
-  if (!msg.trim()) { showToast('Ingresa un mensaje para publicar', 'warning'); return; }
-  var active = document.getElementById('bannerActive');
-  if (active) { active.checked = true; setBannerStatusUI(); }
-  persistirBanner().then(function () { showToast('Banner publicado globalmente', 'success'); }).catch(function () {});
+async function saveFlags() {
+  var configs = flagsConfigsActuales();
+  await guardarCambiosConfigs(configs, 'Feature flags guardados');
+  // Actualizar cache global
+  if (window.FeatureFlags) window.FeatureFlags.invalidateCache();
 }
 
-function saveFlags() {
-  guardarCambiosConfigs(flagsConfigsActuales(), 'Feature flags guardados');
-}
-function resetFlags() {
+async function resetFlags() {
   if (!window.confirm('Resetear todos los feature flags a valores por defecto?')) return;
   var configs = Object.keys(GS_DEFAULTS).map(function (clave) {
     return { clave: clave, valor: GS_DEFAULTS[clave], descripcion: GS_FLAG_DESC[clave] };
   });
-  guardarCambiosConfigs(configs, 'Flags reseteados a valores por defecto');
+  await guardarCambiosConfigs(configs, 'Flags reseteados a valores por defecto');
+  if (window.FeatureFlags) window.FeatureFlags.invalidateCache();
+  Object.keys(GS_FLAG_IDS).forEach(function(clave) {
+    var el = document.getElementById(GS_FLAG_IDS[clave]);
+    if (el) el.checked = GS_DEFAULTS[clave];
+  });
 }
-function saveAllSettings() {
   var keys = bannerKeysActuales();
   var configs = Object.keys(GS_FLAG_IDS).map(function (clave) {
     return { clave: clave, valor: String(!!(document.getElementById(GS_FLAG_IDS[clave]) && document.getElementById(GS_FLAG_IDS[clave]).checked)), descripcion: GS_FLAG_DESC[clave] };

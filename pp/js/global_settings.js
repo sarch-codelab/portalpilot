@@ -488,7 +488,7 @@ function loadGlobalSettings() {
   console.log('[GlobalSettings] Cargando config y admins...');
 
   gsApi('/api/global/config').then(function (r) {
-    console.log('[GlobalSettings] /api/global/config response:', r);
+    console.log('[GlobalSettings] /api/global/config response:', JSON.stringify(r, null, 2));
     if (r.ok && r.json && Array.isArray(r.json.configuraciones)) {
       var mapa = {};
       r.json.configuraciones.forEach(function (c) { mapa[c.clave] = c; });
@@ -509,7 +509,7 @@ function loadGlobalSettings() {
   });
 
   gsApi('/api/global/admins').then(function (r) {
-    console.log('[GlobalSettings] /api/global/admins response:', r);
+    console.log('[GlobalSettings] /api/global/admins response:', JSON.stringify(r, null, 2));
     if (r.ok && r.json && Array.isArray(r.json.admins)) {
       GS_ADMINS = r.json.admins;
       renderAdmins();

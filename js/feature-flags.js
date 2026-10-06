@@ -12,10 +12,24 @@
     FLAG_AUTOSCALING_BOTS: true
   };
 
+  function extractFlagsFromConfig(config) {
+    if (!config || !config.configuraciones) return null;
+    var flags = {};
+    var found = false;
+    config.configuraciones.forEach(function(c) {
+      if (c.clave && c.clave.indexOf('FLAG_') === 0) {
+        flags[c.clave] = c.valor === 'true';
+        found = true;
+      }
+    });
+    return found ? flags : null;
+  }
+
   function loadFlags() {
     if (FLAGS_CACHE) return Promise.resolve(FLAGS_CACHE);
     if (FLAGS_PROMISE) return FLAGS_PROMISE;
 
+    // Try public endpoint first
     FLAGS_PROMISE = fetch('/api/public/flags', { credentials: 'omit' })
       .then(function(res) { return res.ok ? res.json() : Promise.reject(res.status); })
       .then(function(data) {
@@ -26,8 +40,24 @@
         FLAGS_CACHE = flags;
         return flags;
       })
+      // Fallback: read from global config endpoint (already loaded by global_settings)
       .catch(function(err) {
-        console.warn('[FeatureFlags] Error cargando flags, usando defaults:', err);
+        console.warn('[FeatureFlags] Public endpoint failed, trying config fallback:', err);
+        return fetch('/api/global/config', { credentials: 'include' })
+          .then(function(res) { return res.ok ? res.json() : Promise.reject(res.status); })
+          .then(function(data) {
+            var flags = extractFlagsFromConfig(data);
+            if (!flags) throw new Error('No flags in config');
+            Object.keys(DEFAULTS).forEach(function(k) {
+              if (flags[k] === undefined) flags[k] = DEFAULTS[k];
+            });
+            FLAGS_CACHE = flags;
+            return flags;
+          });
+      })
+      // Final fallback: defaults
+      .catch(function(err) {
+        console.warn('[FeatureFlags] All endpoints failed, using defaults:', err);
         FLAGS_CACHE = { ...DEFAULTS };
         return FLAGS_CACHE;
       });

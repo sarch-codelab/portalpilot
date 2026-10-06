@@ -18,7 +18,9 @@
   <link rel="stylesheet" href="css/dashboard.css">
   <link rel="stylesheet" href="../css/notifications.css">
   <link rel="stylesheet" href="../css/global-banner.css">
+  <link rel="stylesheet" href="../css/feature-flags.css">
   <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+  <script src="../js/feature-flags.js"></script>
 <style>
     body {
         background-color: var(--bg, #04040a);
@@ -684,6 +686,52 @@
 
         </div>
       </div>
+
+      <!-- FEATURE FLAGS SECTIONS (conditionally rendered) -->
+      <div class="container">
+        <!-- Beta Features -->
+        <div id="betaFeaturesSection" class="beta-section reveal" style="display:none;transition-delay:.15s;">
+          <div class="beta-label"><i class="fas fa-flask"></i> Funciones Beta (FLAG_BETA)</div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin-top:12px;">
+            <div class="kpi-card">
+              <div class="kpi-header">
+                <div class="kpi-icon" style="background:rgba(251,191,36,0.15);color:#fbbf24"><i class="fas fa-brain"></i></div>
+                <span class="kpi-trend" style="background:rgba(251,191,36,0.15);color:#fbbf24"><i class="fas fa-flask"></i> Beta</span>
+              </div>
+              <div class="kpi-value">IA Avanzada</div>
+              <div class="kpi-label">Modelos experimentales Groq</div>
+              <div class="kpi-footer"><button class="btn btn-warning btn-sm"><i class="fas fa-flask"></i> Probar</button></div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-header">
+                <div class="kpi-icon" style="background:rgba(251,191,36,0.15);color:#fbbf24"><i class="fas fa-cube"></i></div>
+                <span class="kpi-trend" style="background:rgba(251,191,36,0.15);color:#fbbf24"><i class="fas fa-flask"></i> Beta</span>
+              </div>
+              <div class="kpi-value">Nuevos Widgets</div>
+              <div class="kpi-label">Dashboard components beta</div>
+              <div class="kpi-footer"><button class="btn btn-warning btn-sm"><i class="fas fa-flask"></i> Activar</button></div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-header">
+                <div class="kpi-icon" style="background:rgba(251,191,36,0.15);color:#fbbf24"><i class="fas fa-code-branch"></i></div>
+                <span class="kpi-trend" style="background:rgba(251,191,36,0.15);color:#fbbf24"><i class="fas fa-flask"></i> Beta</span>
+              </div>
+              <div class="kpi-value">API v2</div>
+              <div class="kpi-label">Endpoints experimentales</div>
+              <div class="kpi-footer"><button class="btn btn-warning btn-sm"><i class="fas fa-flask"></i> Docs</button></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Detailed Analytics -->
+        <div id="detailedAnalyticsContainer" class="reveal" style="display:none;transition-delay:.2s;"></div>
+
+        <!-- Multi-Region Status -->
+        <div id="multiRegionContainer" class="reveal" style="display:none;transition-delay:.25s;"></div>
+
+        <!-- Auto-Scaling Bots -->
+        <div id="autoScalingContainer" class="reveal" style="display:none;transition-delay:.3s;"></div>
+      </div>
     </main>
   </div>
 
@@ -732,6 +780,170 @@
         }
       });
     });
+  </script>
+
+  <script>
+    // Feature Flags Dashboard Integration
+    (function() {
+      function initFeatureFlags() {
+        if (!window.FeatureFlags) return;
+        
+        window.FeatureFlags.load().then(function(flags) {
+          // FLAG_BETA: Show beta features section
+          var betaSection = document.getElementById('betaFeaturesSection');
+          if (betaSection) {
+            betaSection.style.display = flags.FLAG_BETA ? 'block' : 'none';
+          }
+          
+          // FLAG_DASH_ANALYTICS: Load detailed analytics
+          if (flags.FLAG_DASH_ANALYTICS) {
+            loadDetailedAnalytics();
+          }
+          
+          // FLAG_MULTIREGION: Show multi-region status
+          if (flags.FLAG_MULTIREGION) {
+            loadMultiRegionStatus();
+          }
+          
+          // FLAG_AUTOSCALING_BOTS: Show auto-scaling status
+          if (flags.FLAG_AUTOSCALING_BOTS) {
+            loadAutoScalingStatus();
+          }
+          
+          // Listen for flag changes
+          ['FLAG_BETA', 'FLAG_DASH_ANALYTICS', 'FLAG_MULTIREGION', 'FLAG_AUTOSCALING_BOTS'].forEach(function(flag) {
+            window.FeatureFlags.onFlagChange(flag, function(enabled) {
+              location.reload(); // Simple: reload on flag change
+            });
+          });
+        });
+      }
+      
+      function loadDetailedAnalytics() {
+        var container = document.getElementById('detailedAnalyticsContainer');
+        if (!container) return;
+        container.style.display = 'block';
+        
+        fetch('/api/analytics/detailed', { credentials: 'include' })
+          .then(function(res) { return res.json(); })
+          .then(function(data) {
+            if (data.error) return;
+            renderDetailedAnalytics(data);
+          })
+          .catch(function(err) { console.warn('[Dashboard] Analytics error:', err); });
+      }
+      
+      function renderDetailedAnalytics(data) {
+        var container = document.getElementById('detailedAnalyticsContainer');
+        if (!container) return;
+        
+        var metrics = [
+          { key: 'ingresos_mes', label: 'Ingresos Mes', value: data.ingresos_mes || 0, fmt: 'currency' },
+          { key: 'ordenes_mes', label: 'Órdenes Mes', value: data.ordenes_mes || 0, fmt: 'number' },
+          { key: 'ticket_promedio', label: 'Ticket Promedio', value: data.ticket_promedio || 0, fmt: 'currency' },
+          { key: 'clientes_nuevos', label: 'Clientes Nuevos', value: data.clientes_nuevos || 0, fmt: 'number' },
+          { key: 'productos_vendidos', label: 'Productos Vendidos', value: data.productos_vendidos || 0, fmt: 'number' },
+          { key: 'margen_promedio', label: 'Margen Promedio', value: (data.margen_promedio || 0) + '%', fmt: 'raw' }
+        ];
+        
+        container.innerHTML = '<h3 style="margin-bottom:16px;font-size:16px;font-weight:700">📊 Analytics Detallados</h3>' +
+          '<div class="analytics-detailed-grid">' +
+          metrics.map(function(m) {
+            var val = m.fmt === 'currency' ? 'L ' + Number(m.value).toLocaleString() : 
+                      m.fmt === 'number' ? Number(m.value).toLocaleString() : m.value;
+            return '<div class="analytics-detailed-card">' +
+              '<div class="analytics-detailed-title">' + m.label + '</div>' +
+              '<div class="analytics-detailed-value">' + val + '</div>' +
+            '</div>';
+          }).join('') +
+          '</div>';
+      }
+      
+      function loadMultiRegionStatus() {
+        var container = document.getElementById('multiRegionContainer');
+        if (!container) return;
+        container.style.display = 'block';
+        
+        fetch('/api/system/regions', { credentials: 'include' })
+          .then(function(res) { return res.json(); })
+          .then(function(data) {
+            if (!data.enabled) return;
+            renderMultiRegion(data.regions);
+          })
+          .catch(function(err) { console.warn('[Dashboard] Regions error:', err); });
+      }
+      
+      function renderMultiRegion(regions) {
+        var container = document.getElementById('multiRegionContainer');
+        if (!container) return;
+        
+        container.innerHTML = '<h3 style="margin-bottom:16px;font-size:16px;font-weight:700">🌍 Estado Multi-Región</h3>' +
+          '<div style="display:flex;flex-direction:column;gap:8px">' +
+          regions.map(function(r) {
+            return '<div class="region-card">' +
+              '<div class="region-status ' + (r.status || 'active') + '"></div>' +
+              '<div class="region-info">' +
+                '<div class="region-name">' + (r.name || r.id) + '</div>' +
+                '<div class="region-meta">' +
+                  '<span>Latencia: ' + (r.latency || 0) + 'ms</span>' +
+                  '<span>Tráfico: ' + (r.traffic || 0) + '%</span>' +
+                '</div>' +
+              '</div>' +
+            '</div>';
+          }).join('') +
+          '</div>';
+      }
+      
+      function loadAutoScalingStatus() {
+        var container = document.getElementById('autoScalingContainer');
+        if (!container) return;
+        container.style.display = 'block';
+        
+        fetch('/api/bots/autoscaling/status', { credentials: 'include' })
+          .then(function(res) { return res.json(); })
+          .then(function(data) {
+            if (!data.enabled) return;
+            renderAutoScaling(data.recomendaciones || []);
+          })
+          .catch(function(err) { console.warn('[Dashboard] Autoscaling error:', err); });
+      }
+      
+      function renderAutoScaling(recomendaciones) {
+        var container = document.getElementById('autoScalingContainer');
+        if (!container) return;
+        
+        if (!recomendaciones.length) {
+          container.innerHTML = '<h3 style="margin-bottom:16px;font-size:16px;font-weight:700">🤖 Auto-Scaling Bots</h3>' +
+            '<div style="color:var(--gray);padding:20px;text-align:center">No hay bots activos para escalar</div>';
+          return;
+        }
+        
+        container.innerHTML = '<h3 style="margin-bottom:16px;font-size:16px;font-weight:700">🤖 Auto-Scaling Bots RPA</h3>' +
+          '<div style="display:flex;flex-direction:column;gap:8px">' +
+          recomendaciones.map(function(r) {
+            var accionClass = r.accion || 'none';
+            var accionLabel = { scale_up: '⬆️ Escalar UP', scale_down: '⬇️ Escalar DOWN', none: '➖ Mantener' }[r.accion] || r.accion;
+            return '<div class="bot-scaling-card">' +
+              '<div class="bot-scaling-info">' +
+                '<div class="bot-scaling-name">' + (r.botNombre || r.botId) + '</div>' +
+                '<div class="bot-scaling-meta">' +
+                  '<span>Carga: ' + (r.carga || 0).toFixed(1) + '%</span>' +
+                  '<span>Cola: ' + (r.cola || 0) + '</span>' +
+                '</div>' +
+              '</div>' +
+              '<span class="bot-scaling-action ' + accionClass + '">' + accionLabel + '</span>' +
+            '</div>';
+          }).join('') +
+          '</div>';
+      }
+      
+      // Init
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initFeatureFlags);
+      } else {
+        initFeatureFlags();
+      }
+    })();
   </script>
     <script>
     (function () {

@@ -2031,21 +2031,41 @@
           <div class="admins-list" id="adminsList"></div>
         </div>
 
-        <!-- CARD: FEATURE FLAGS -->
+<!-- CARD: FEATURE FLAGS -->
         <div class="settings-card reveal">
           <div class="settings-card-header">
             <div class="settings-card-title"><i class="fas fa-toggle-on"></i> Feature Flags</div>
           </div>
 <div style="display:flex;flex-direction:column;gap:14px">
-              <div class="flag-row"><span>🧪 Modo Beta para nuevos features</span><label class="form-switch"><input type="checkbox" id="flag-beta"><span class="form-switch-slider"></span></label></div>
-              <div class="flag-row"><span>🔐 Requiere 2FA para todos los admins</span><label class="form-switch"><input type="checkbox" id="flag-2fa-admins"><span class="form-switch-slider"></span></label></div>
-              <div class="flag-row"><span>📊 Analytics detallados en dashboard</span><label class="form-switch"><input type="checkbox" id="flag-dash-analytics"><span class="form-switch-slider"></span></label></div>
-              <div class="flag-row"><span>🌍 Multi-región (CDN global)</span><label class="form-switch"><input type="checkbox" id="flag-multiregion"><span class="form-switch-slider"></span></label></div>
-              <div class="flag-row"><span>🤖 Auto-scaling de bots RPA</span><label class="form-switch"><input type="checkbox" id="flag-autoscaling-bots"><span class="form-switch-slider"></span></label></div>
+              <div class="flag-row">
+                <span>🧪 Modo Beta para nuevos features</span>
+                <span class="flag-status" id="flag-beta-status"></span>
+                <label class="form-switch"><input type="checkbox" id="flag-beta"><span class="form-switch-slider"></span></label>
+              </div>
+              <div class="flag-row">
+                <span>🔐 Requiere 2FA para todos los admins</span>
+                <span class="flag-status" id="flag-2fa-admins-status"></span>
+                <label class="form-switch"><input type="checkbox" id="flag-2fa-admins"><span class="form-switch-slider"></span></label>
+              </div>
+              <div class="flag-row">
+                <span>📊 Analytics detallados en dashboard</span>
+                <span class="flag-status" id="flag-dash-analytics-status"></span>
+                <label class="form-switch"><input type="checkbox" id="flag-dash-analytics"><span class="form-switch-slider"></span></label>
+              </div>
+              <div class="flag-row">
+                <span>🌍 Multi-región (CDN global)</span>
+                <span class="flag-status" id="flag-multiregion-status"></span>
+                <label class="form-switch"><input type="checkbox" id="flag-multiregion"><span class="form-switch-slider"></span></label>
+              </div>
+              <div class="flag-row">
+                <span>🤖 Auto-scaling de bots RPA</span>
+                <span class="flag-status" id="flag-autoscaling-bots-status"></span>
+                <label class="form-switch"><input type="checkbox" id="flag-autoscaling-bots"><span class="form-switch-slider"></span></label>
+              </div>
             </div>
           <div class="settings-actions">
             <button class="btn btn-outline btn-sm" onclick="resetFlags()"><i class="fas fa-undo"></i> Resetear</button>
-            <button class="btn btn-acc btn-sm" onclick="saveFlags()"><i class="fas fa-save"></i> Guardar</button>
+            <button class="btn btn-acc btn-sm" id="saveFlagsBtn" onclick="saveFlags()"><i class="fas fa-save"></i> Guardar</button>
           </div>
         </div>
 

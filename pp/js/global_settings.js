@@ -69,6 +69,15 @@ function aplicarFlagsDesdeConfig() {
     if (cfg && (cfg.valor === 'true' || cfg.valor === 'false')) {
       el.checked = String(cfg.valor).toLowerCase() === 'true';
     }
+    // Update status badge
+    var statusEl = document.getElementById(GS_FLAG_IDS[clave].replace('flag-', 'flag-') + '-status');
+    if (!statusEl) {
+      statusEl = document.getElementById(clave.toLowerCase().replace('_', '-') + '-status');
+    }
+    if (statusEl) {
+      statusEl.textContent = el.checked ? 'ON' : 'OFF';
+      statusEl.className = 'flag-status ' + (el.checked ? 'on' : 'off');
+    }
   });
   // Sincronizar con FeatureFlags global
   if (window.FeatureFlags) {
@@ -77,6 +86,11 @@ function aplicarFlagsDesdeConfig() {
         var el = document.getElementById(GS_FLAG_IDS[clave]);
         if (el && flags[clave] !== undefined) {
           el.checked = flags[clave];
+          var statusEl = document.getElementById(clave.toLowerCase().replace('_', '-') + '-status');
+          if (statusEl) {
+            statusEl.textContent = flags[clave] ? 'ON' : 'OFF';
+            statusEl.className = 'flag-status ' + (flags[clave] ? 'on' : 'off');
+          }
         }
       });
     });
@@ -181,10 +195,16 @@ function flagsConfigsActuales() {
 }
 
 async function saveFlags() {
+  var btn = document.getElementById('saveFlagsBtn');
+  var orig = btn ? btn.innerHTML : '';
+  if (btn) { btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...'; btn.disabled = true; }
   var configs = flagsConfigsActuales();
-  await guardarCambiosConfigs(configs, 'Feature flags guardados');
-  // Actualizar cache global
-  if (window.FeatureFlags) window.FeatureFlags.invalidateCache();
+  try {
+    await guardarCambiosConfigs(configs, 'Feature flags guardados');
+    if (window.FeatureFlags) window.FeatureFlags.invalidateCache();
+  } finally {
+    if (btn) { btn.innerHTML = orig; btn.disabled = false; }
+  }
 }
 
 async function resetFlags() {

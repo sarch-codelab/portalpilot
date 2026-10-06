@@ -159,6 +159,30 @@
 .flag-row-icon { font-size: 16px; }
 .flag-row-text { font-size: 13px; color: var(--text); }
 
+/* Flag status badges */
+.flag-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.flag-status.on {
+  background: rgba(52, 211, 153, 0.15);
+  color: #34d399;
+}
+
+.flag-status.off {
+  background: rgba(139, 92, 246, 0.15);
+  color: #8b5cf6;
+}
+
 /* Hidden by default for disabled flags */
 .flag-dependent { display: none; }
 .flag-dependent.visible { display: block; animation: fadeIn 0.2s ease; }

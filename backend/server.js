@@ -27,6 +27,9 @@ const adminPortal = require('./adminPortalEndpoints');
 // Se registra más abajo, después de que existan authenticate/requirePlanFeature.
 const modulosAvanzados = require('./modulosAvanzadosEndpoints');
 
+// Campañas de email (panel ROOT) + tracking público (pixel/click/baja).
+const campanas = require('./campanasEndpoints');
+
 // Integridad transaccional del ERP: precios autoritativos en servidor y
 // movimientos de inventario todo-o-nada (ver erpIntegrity.js).
 const {
@@ -966,15 +969,22 @@ function requirePlanFeature(feature) {
   return async (req, res, next) => {
     try {
       const entitlements = req.entitlements || await getTenantEntitlements(req);
-      if (entitlements.status && entitlements.status === 'expired') {
+      // Si por alguna razón entitlements llegó incompleto, normalizar para no
+      // romper los gateos de features/limits.
+      if (!entitlements || typeof entitlements !== 'object') {
+        return res.status(503).json({ error: 'No se pudieron cargar los permisos del plan.', code: 'PLAN_ENTITLEMENTS_UNAVAILABLE' });
+      }
+      const status = entitlements.status || (entitlements.trial && entitlements.trial.isTrial ? 'trial' : 'active');
+      if (status === 'expired') {
         return res.status(403).json({ error: 'Tu período de prueba de 15 días ha vencido. La plataforma está en modo solo lectura: puedes consultar y exportar tus datos, pero no registrar movimientos nuevos. Elige un plan para continuar usando Portal Pilot.', code: 'TRIAL_EXPIRED', readOnly: true });
       }
-      if (entitlements.status && entitlements.status !== 'active') {
+      if (status !== 'active' && status !== 'trial') {
         return res.status(403).json({ error: 'La empresa no tiene un plan activo.' });
       }
       // Límite server-side (Blueprint §11): si el plan define un límite para este
       // recurso/feature, se comprueba aquí contra tenant_usage — nunca solo en UI.
-      const featureLimit = Number(entitlements.limits?.[feature]);
+      const limits = entitlements.limits || {};
+      const featureLimit = Number(limits?.[feature]);
       if (Number.isFinite(featureLimit) && featureLimit > 0 && supabase) {
         try {
           const tenantL = normalizeTenantCode(getTenantCode(req));
@@ -986,7 +996,8 @@ function requirePlanFeature(feature) {
           }
         } catch (e) { console.warn('[PLAN_LIMIT] check falló (se permite):', e.message); }
       }
-      if (!entitlements.features.includes(feature)) {
+      const features = Array.isArray(entitlements.features) ? entitlements.features : [];
+      if (!features.includes(feature)) {
         return res.status(403).json({ error: `Esta función requiere un plan superior: ${feature}.`, code: 'PLAN_LIMIT' });
       }
       req.entitlements = entitlements;
@@ -1331,6 +1342,22 @@ async function enviarCorreo(opciones) {
   const mail = { ...opciones };
   if (!mail.from) mail.from = `"Portal Pilot" <${EMAIL_FROM}>`;
   return transporter.sendMail(mail);
+}
+
+// URL pública base para enlaces en correos (pixel, click, baja).
+// Prioriza variables de entorno estables sobre el host de la petición.
+function getPublicBaseUrl(req) {
+  const envUrl = process.env.PUBLIC_BASE_URL
+    || process.env.PRIMARY_DOMAIN
+    || process.env.APP_URL
+    || process.env.FRONTEND_URL;
+  if (envUrl && /^https?:\/\//i.test(envUrl)) return String(envUrl).replace(/\/+$/, '');
+  if (req) {
+    const proto = (req.headers && req.headers['x-forwarded-proto']) || req.protocol || 'https';
+    const host = (req.headers && req.headers['x-forwarded-host']) || (req.get && req.get('host'));
+    if (host) return `${proto}://${host}`.replace(/\/+$/, '');
+  }
+  return 'https://portal-pilot.vercel.app';
 }
 
 // 🔧 FIX VERCEL: Eliminar dispatchEmailAsync (no funciona en serverless)
@@ -1711,6 +1738,22 @@ async function enviarCorreoPortalPilot(emailDestinatario, asunto, titulo, subtit
 // seguridad, consumo_ia, incidentes, kyc, finanzas, comunicados, reglas,
 // stream y respaldos.
 if (adminPortal) app.use('/api/admin', authenticate, adminPortal);
+
+// ── Campañas de email (ROOT) + tracking público ──
+// admin: /api/admin/campanas/* · público: /api/public/campana/*
+if (campanas && typeof campanas.createRouter === 'function') {
+  const routerCampanas = campanas.createRouter({
+    supabase,
+    requireSupabase,
+    handleServerError,
+    normalizeTenantCode,
+    enviarCorreo,
+    registrarAuditoria,
+    getPublicBaseUrl
+  });
+  app.use('/api/admin/campanas', authenticate, requireRoot, routerCampanas.admin);
+  app.use('/api/public/campana', routerCampanas.publico);
+}
 
 // ── Módulos avanzados: contabilidad · rrhh · fiscal_advanced ·
 // ── crm_advanced · multi_empresa ──
@@ -2744,7 +2787,12 @@ async function getTenantModulosRows(empresaCodigo) {
       .eq('empresa_codigo', normalizeTenantCode(empresaCodigo));
     if (error || !Array.isArray(data)) return [];
     return data.filter(r => MODULOS_COTIZADOR.includes(r.modulo_clave));
-  } catch (e) { return []; }
+  } catch (e) {
+    // Si tenant_modulos no existe aún en el proyecto de Supabase,
+    // no romper: devolver []. El flujo usa PLAN_CATALOGO_MODULOS como fallback.
+    console.warn('[TENANT_MODULOS] esquema no publicado aún:', e.message);
+    return [];
+  }
 }
 
 // Módulos efectivos del tenant: paquete del plan + módulos extra del cotizador

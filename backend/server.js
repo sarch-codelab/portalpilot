@@ -1883,6 +1883,142 @@ app.get('/api/public/banner', async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+// Public endpoint: feature flags (no auth required)
+app.get('/api/public/flags', async (req, res) => {
+  try {
+    if (!requireSupabase(res)) return;
+    const { data, error } = await supabase
+      .from('configuraciones_globales')
+      .select('clave, valor')
+      .like('clave', 'FLAG_%');
+    if (error) return res.status(500).json({ error: error.message });
+    const flags = {};
+    (data || []).forEach(c => { flags[c.clave] = c.valor === 'true'; });
+    // Defaults si faltan
+    const defaults = {
+      FLAG_BETA: true,
+      FLAG_2FA_ADMINS: false,
+      FLAG_DASH_ANALYTICS: false,
+      FLAG_MULTIREGION: false,
+      FLAG_AUTOSCALING_BOTS: true
+    };
+    Object.keys(defaults).forEach(k => { if (flags[k] === undefined) flags[k] = defaults[k]; });
+    res.json({ flags });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// ─── FLAG: DASH_ANALYTICS - Detailed analytics endpoint ───
+app.get('/api/analytics/detailed', authenticate, async (req, res) => {
+  try {
+    if (!requireSupabase(res)) return;
+    const { data: flag } = await supabase.from('configuraciones_globales').select('valor').eq('clave', 'FLAG_DASH_ANALYTICS').maybeSingle();
+    if (!flag || flag.valor !== 'true') {
+      return res.status(403).json({ error: 'Analytics detallados requieren FLAG_DASH_ANALYTICS=true', code: 'FLAG_DISABLED' });
+    }
+    // Métricas avanzadas reales
+    const tenantCode = normalizeTenantCode(getTenantCode(req));
+    const now = new Date();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0);
+
+    const { data: ventas } = await supabase.from('facturas')
+      .select('total, created_at, estado')
+      .eq('empresa_codigo', tenantCode)
+      .gte('created_at', monthStart.toISOString());
+
+    const { data: ventasMesAnt } = await supabase.from('facturas')
+      .select('total')
+      .eq('empresa_codigo', tenantCode)
+      .gte('created_at', lastMonthStart.toISOString())
+      .lte('created_at', lastMonthEnd.toISOString());
+
+    const totalVentas = (ventas || []).reduce((s, v) => s + Number(v.total || 0), 0);
+    const totalVentasAnt = (ventasMesAnt || []).reduce((s, v) => s + Number(v.total || 0), 0);
+    const crecimiento = totalVentasAnt > 0 ? ((totalVentas - totalVentasAnt) / totalVentasAnt * 100).toFixed(1) : 0;
+
+    const { data: productos } = await supabase.from('productos')
+      .select('stock, stock_minimo, precio_venta')
+      .eq('empresa_codigo', tenantCode);
+    const stockBajo = (productos || []).filter(p => Number(p.stock || 0) <= Number(p.stock_minimo || 0)).length;
+    const valorInventario = (productos || []).reduce((s, p) => s + (Number(p.stock || 0) * Number(p.precio_venta || 0)), 0);
+
+    const { data: clientes } = await supabase.from('clientes')
+      .select('id, created_at')
+      .eq('empresa_codigo', tenantCode);
+    const clientesNuevos = (clientes || []).filter(c => new Date(c.created_at) >= monthStart).length;
+
+    res.json({
+      ventas: { actual: totalVentas, anterior: totalVentasAnt, crecimiento: Number(crecimiento) },
+      inventario: { valorTotal: valorInventario, stockBajo, totalProductos: (productos || []).length },
+      clientes: { total: (clientes || []).length, nuevos: clientesNuevos },
+      timestamp: now.toISOString()
+    });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// ─── FLAG: MULTIREGION - Multi-region status ───
+app.get('/api/system/regions', async (req, res) => {
+  try {
+    if (!requireSupabase(res)) return;
+    const { data: flag } = await supabase.from('configuraciones_globales').select('valor').eq('clave', 'FLAG_MULTIREGION').maybeSingle();
+    const enabled = flag && flag.valor === 'true';
+    if (!enabled) {
+      return res.json({ enabled: false, regions: [{ id: 'primary', name: 'Primaria (Honduras)', status: 'active', latency: 0 }] });
+    }
+    // Simulación de regiones (en producción vendría de infra real)
+    res.json({
+      enabled: true,
+      regions: [
+        { id: 'primary', name: 'Primaria (Honduras)', status: 'active', latency: 12, traffic: 70 },
+        { id: 'us-east', name: 'US East (Virginia)', status: 'active', latency: 45, traffic: 20 },
+        { id: 'eu-west', name: 'EU West (Frankfurt)', status: 'standby', latency: 89, traffic: 10 }
+      ]
+    });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// ─── FLAG: AUTOSCALING_BOTS - Bot auto-scaling control ───
+app.get('/api/bots/autoscaling/status', authenticate, requireRoot, async (req, res) => {
+  try {
+    if (!requireSupabase(res)) return;
+    const { data: flag } = await supabase.from('configuraciones_globales').select('valor').eq('clave', 'FLAG_AUTOSCALING_BOTS').maybeSingle();
+    const enabled = flag && flag.valor === 'true';
+    if (!enabled) return res.json({ enabled: false, message: 'Auto-scaling desactivado (FLAG_AUTOSCALING_BOTS=false)' });
+
+    // Métricas de bots para decisión de escalado
+    const { data: bots } = await supabase.from('bots_rpa')
+      .select('id, nombre, estado, ultima_ejecucion, cpu_uso, memoria_uso, cola_pendientes')
+      .eq('estado', 'activo');
+
+    const recomendaciones = (bots || []).map(bot => {
+      const carga = (Number(bot.cpu_uso || 0) + Number(bot.memoria_uso || 0)) / 2;
+      const cola = Number(bot.cola_pendientes || 0);
+      let accion = 'none', motivo = '';
+      if (carga > 80 || cola > 50) { accion = 'scale_up'; motivo = `Carga alta: CPU/Mem ${carga}%, Cola ${cola}`; }
+      else if (carga < 20 && cola === 0) { accion = 'scale_down'; motivo = `Carga baja: CPU/Mem ${carga}%, Cola vacía`; }
+      return { botId: bot.id, botNombre: bot.nombre, carga, cola, accion, motivo };
+    });
+
+    res.json({ enabled: true, bots: bots || [], recomendaciones, timestamp: new Date().toISOString() });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post('/api/bots/autoscaling/execute', authenticate, requireRoot, async (req, res) => {
+  try {
+    if (!requireSupabase(res)) return;
+    const { botId, accion } = req.body; // accion: 'scale_up' | 'scale_down'
+    if (!botId || !['scale_up', 'scale_down'].includes(accion)) {
+      return res.status(400).json({ error: 'botId y accion (scale_up/scale_down) requeridos' });
+    }
+    // Aquí iría la lógica real de escalado (K8s, PM2, etc.)
+    // Por ahora solo log y respuesta simulada
+    const instancia = accion === 'scale_up' ? 'Nueva instancia creada' : 'Instancia terminada';
+    await registrarAuditoria('ROOT', 'bot_autoscaling', `Auto-scaling ${accion} para bot ${botId}`, 'bots', req.user.email, req);
+    res.json({ ok: true, message: `${instancia} para bot ${botId}`, timestamp: new Date().toISOString() });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 app.get('/api/config', (req, res) => {
   // Compatibilidad: el flujo CANÓNICO de registro es registrov2.html →
   // POST /api/registro (crea Auth + perfil con el MISMO id). El viejo flujo

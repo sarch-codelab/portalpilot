@@ -486,7 +486,6 @@ function setLoadingState(selector, isLoading) {
   var el = document.querySelector(selector);
   if (!el) return;
   if (isLoading) {
-    // Solo guardar originalHtml si no existe ya (primera vez)
     if (!el.dataset.originalHtml) {
       el.dataset.originalHtml = el.innerHTML;
     }
@@ -497,13 +496,12 @@ function setLoadingState(selector, isLoading) {
       el.disabled = true;
     }
   } else if (el.dataset.originalHtml) {
-    // NO restaurar para contenedores de lista (adminsList, ultimosCambios)
-    // Solo para botones/inputs donde disabled importa
-    if (el.tagName === 'BUTTON' || el.tagName === 'INPUT' || el.tagName === 'SELECT' || el.tagName === 'TEXTAREA' || el.tagName === 'TBODY') {
+    // Restaurar SOLO para botones/inputs (donde disabled importa)
+    // NO restaurar TBODY ni DIVs contenedores (dejan su contenido renderizado)
+    if (el.tagName === 'BUTTON' || el.tagName === 'INPUT' || el.tagName === 'SELECT' || el.tagName === 'TEXTAREA') {
       el.innerHTML = el.dataset.originalHtml;
       el.disabled = false;
     }
-    // Para DIVs contenedores, dejar el contenido renderizado
   }
 }
 

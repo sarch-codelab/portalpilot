@@ -68,7 +68,9 @@
       })
       // Fallback: try config endpoint (requires auth)
       .catch(function(err) {
-        return fetch('/api/global/config', { credentials: 'include' })
+        return fetch('/api/global/config', {
+          headers: { 'Authorization': 'Bearer ' + (localStorage.getItem('token') || '') }
+        })
           .then(function(res) { 
             if (res.status === 401) throw new Error('401');
             return res.ok ? res.json() : Promise.reject(res.status); 

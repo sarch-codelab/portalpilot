@@ -51,7 +51,8 @@ module.exports.createRouter = function createRouter(deps) {
     normalizeTenantCode,
     enviarCorreo,
     registrarAuditoria,
-    getPublicBaseUrl
+    getPublicBaseUrl,
+    defaultFrom: defaultFromDep = ''
   } = deps;
 
   const admin = express.Router();
@@ -101,6 +102,10 @@ module.exports.createRouter = function createRouter(deps) {
     };
 
     const t = String(tipo || 'all').toLowerCase();
+  const fromPorDefecto = function () {
+    if (defaultFromDep) return defaultFromDep;
+    return 'Portal Pilot <portalpilot.hn@gmail.com>';
+  };
     if (t === 'emails') {
       String(valor || '').split(/[\s,;]+/).forEach(e => push({ email: e }));
     } else {
@@ -233,7 +238,7 @@ module.exports.createRouter = function createRouter(deps) {
         asunto: String(b.asunto).slice(0, 300),
         html: String(b.html),
         texto: b.texto ? String(b.texto).slice(0, 20000) : null,
-        remitente: b.remitente ? String(b.remitente).slice(0, 200) : 'Portal Pilot <portalpilot.hn@gmail.com>',
+        remitente: b.remitente ? String(b.remitente).slice(0, 200) : fromPorDefecto(),
         destino_tipo: ['all', 'tenant', 'emails'].includes(b.destino_tipo) ? b.destino_tipo : 'all',
         destino_valor: b.destino_valor ? String(b.destino_valor).slice(0, 1000) : null,
         estado: 'borrador',
@@ -311,9 +316,9 @@ module.exports.createRouter = function createRouter(deps) {
       const token = nuevoToken();
       const base = baseUrl(req);
       const html = renderContenido(campana.html, { nombre: 'Prueba', email, empresa_codigo: 'TEST' }, token, base);
-      await enviarCorreo({
+      const info = await enviarCorreo({
         to: email,
-        from: campana.remitente || 'Portal Pilot <portalpilot.hn@gmail.com>',
+        from: campana.remitente || fromPorDefecto(),
         subject: '[PRUEBA] ' + campana.asunto,
         html,
         text: campana.texto || undefined,
@@ -322,7 +327,14 @@ module.exports.createRouter = function createRouter(deps) {
           'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click'
         }
       });
-      res.json({ success: true, enviado_a: email });
+      res.json({
+        success: true,
+        enviado_a: email,
+        messageId: info && info.messageId || null,
+        accepted: (info && info.accepted) || [],
+        rejected: (info && info.rejected) || [],
+        smtp: (info && info.response) || null
+      });
     } catch (e) {
       if (e && e.code === 'SMTP_NOT_CONFIGURED') return res.status(503).json({ error: e.message });
       handleServerError(res, e);
@@ -397,9 +409,9 @@ module.exports.createRouter = function createRouter(deps) {
         }
         const html = renderContenido(campana.html, d, d.token, base);
         try {
-          await enviarCorreo({
+          const info = await enviarCorreo({
             to: d.email,
-            from: campana.remitente || 'Portal Pilot <portalpilot.hn@gmail.com>',
+            from: campana.remitente || fromPorDefecto(),
             subject: campana.asunto,
             html,
             text: campana.texto || undefined,

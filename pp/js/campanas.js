@@ -100,7 +100,7 @@ function nuevaCampana() {
   document.getElementById('campIdTag').textContent = '';
   ['cNombre', 'cAsunto', 'cTexto', 'cDestinoValor'].forEach(id => { document.getElementById(id).value = ''; });
   document.getElementById('cHtml').value = '<!DOCTYPE html>\n<html>\n<body style="font-family:Arial,sans-serif;margin:0;padding:24px;">\n  <h2>Hola {{nombre}},</h2>\n  <p>Estas son las novedades para {{empresa}}.</p>\n  <a href="https://portalpilot.hn">Ver más</a>\n</body>\n</html>';
-  document.getElementById('cRemitente').value = 'Portal Pilot <portalpilot.hn@gmail.com>';
+  document.getElementById('cRemitente').value = '';
   document.getElementById('cDestinoTipo').value = 'all';
   onDestinoTipoChange();
   document.getElementById('cDestResumen').style.display = 'none';
@@ -219,7 +219,7 @@ async function editarCampana(id) {
     document.getElementById('cAsunto').value = c.asunto || '';
     document.getElementById('cHtml').value = c.html || '';
     document.getElementById('cTexto').value = c.texto || '';
-    document.getElementById('cRemitente').value = c.remitente || 'Portal Pilot <portalpilot.hn@gmail.com>';
+    document.getElementById('cRemitente').value = c.remitente || '';
     document.getElementById('cDestinoTipo').value = c.destino_tipo || 'all';
     document.getElementById('cDestinoValor').value = c.destino_valor || '';
     onDestinoTipoChange();
@@ -265,13 +265,16 @@ async function enviarTest() {
     c = await guardarCampana();
     if (!c) return;
   }
-  if (!c.remitente) c.remitente = 'Portal Pilot <portalpilot.hn@gmail.com>';
-  const email = window.prompt('Correo de prueba:', 'portalpilot.hn@gmail.com');
+  if (!c.remitente) c.remitente = document.getElementById('cRemitente').value.trim();
+  const email = window.prompt('Correo de prueba:', '');
   if (!email) return;
   setEstadoBtn('btnTest', true, '<i class="fas fa-spinner fa-spin"></i> Enviando test…');
   try {
-    await api('/admin/campanas/' + c.id + '/test', { method: 'POST', body: JSON.stringify({ email }) });
-    toast('Test enviado a ' + email, 'ok');
+    const r = await api('/admin/campanas/' + c.id + '/test', { method: 'POST', body: JSON.stringify({ email }) });
+    const ok = r && Array.isArray(r.rejected) && r.rejected.length === 0;
+    toast(ok
+      ? 'Test enviado a ' + email + (r.messageId ? ' (' + String(r.messageId).slice(0, 18) + ')' : '')
+      : 'El SMTP rechazó el envío: ' + ((r && r.smtp) || 'consultar log'), ok ? 'ok' : 'err');
   } catch (e) {
     toast(e.message, 'err');
   } finally {

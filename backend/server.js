@@ -1314,8 +1314,8 @@ async function findTenantByIdentifier(identifier) {
 const SMTP_HOST = process.env.SMTP_HOST || 'smtp.gmail.com';
 const SMTP_PORT = Number(process.env.SMTP_PORT || 465);
 const SMTP_SECURE = process.env.SMTP_SECURE ? process.env.SMTP_SECURE === 'true' : SMTP_PORT === 465;
-const SMTP_USER = process.env.SMTP_USER || process.env.EMAIL_USER || '';
-const SMTP_PASS = process.env.SMTP_PASS || process.env.EMAIL_PASS || '';
+const SMTP_USER = process.env.EMAIL_USER || process.env.SMTP_USER || '';
+const SMTP_PASS = process.env.EMAIL_PASS || process.env.SMTP_PASS || '';
 const SMTP_CONFIGURADO = Boolean(SMTP_USER && SMTP_PASS);
 
 const transporter = nodemailer.createTransport({
@@ -1749,7 +1749,8 @@ if (campanas && typeof campanas.createRouter === 'function') {
     normalizeTenantCode,
     enviarCorreo,
     registrarAuditoria,
-    getPublicBaseUrl
+    getPublicBaseUrl,
+    defaultFrom: process.env.EMAIL_FROM || (SMTP_USER ? `Portal Pilot <${SMTP_USER}>` : '')
   });
   app.use('/api/admin/campanas', authenticate, requireRoot, routerCampanas.admin);
   app.use('/api/public/campana', routerCampanas.publico);

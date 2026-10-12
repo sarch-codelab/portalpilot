@@ -387,20 +387,20 @@ $$ LANGUAGE SQL STABLE;
 
 ## 💰 Planes y Precios (HNL — Lempiras)
 
-| Característica | **Prueba** Gratis 15 días | **Business** L1,499/mes | **Enterprise** L4,999/mes |
-|----------------|--------------------------|-------------------------|---------------------------|
-| Usuarios | Hasta 5 | Hasta 15 | Ilimitados |
-| Empresas | 1 | Hasta 3 | Ilimitadas |
-| Facturación SAR | ✅ | ✅ | ✅ |
-| Inventario Multi-Almacén | ✅ | ✅ | ✅ |
-| Contabilidad | Básica | Completa | Completa + API |
-| Nómina Hondureña | — | ✅ | ✅ |
-| IA Portal Pilot | Uso básico | Uso generoso | Avanzada / personalizada |
-| Bots RPA | — | Automatizaciones estándar | Ilimitados |
-| Auditoría / Logs | ✅ | ✅ | ✅ |
-| Soporte | Email | Email prioritario | Prioritario 24/7 |
+| Plan | Precio | Usuarios | Almacenamiento | Descripción |
+|------|--------|----------|----------------|-------------|
+| **Prueba** | Gratis · 15 días | 5 | 5 GB | Plataforma completa, sin tarjeta |
+| **Pulpería** | L. 299/mes | 3 | **5 GB** | POS de mostrador, fiado, inventario y SAR simplificada |
+| **Tienda** | L. 799/mes | 15 | 25 GB | POS retail, SAR formal (CAI/RTN), compras y CRM |
+| **Club** | L. 1,399/mes | 35 | 100 GB | Membresías, carnet QR, barra y fidelización |
+| **Personalizado** | Desde L. 150/mes | 15 | 25 GB | Cotizador con los 23 módulos (cuota base + mod) |
+| **Business** | L. 1,499/mes | 15 | 100 GB | Todos los módulos + cuentas multi-tenant |
+| **Enterprise** | L. 4,999/mes | Ilimitados | 500 GB | Todos + API, SLA 24/7, soporte dedicado |
 
-> Precios en Lempiras (HNL). Sin tarjeta de crédito para el plan Prueba. El plan Prueba incluye 15 días de acceso completo; al vencerse, se debe elegir Business o Enterprise para continuar usando el sistema.
+> El **almacenamiento se mide de verdad por tenant**: se suman los objetos de Supabase Storage
+> bajo el código de la empresa (`{codigo}/` y `uploads/{codigo}/`) y se reporta en el módulo
+> **Estado del Sistema** (`GET /api/tenant/:id/stats` → `almacenamiento.{gbUsados, bytesUsados, limite, porcentaje}`).
+> Precios en Lempiras (HNL). Sin tarjeta de crédito para el plan Prueba.
 
 ---
 

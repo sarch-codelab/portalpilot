@@ -387,15 +387,16 @@ $$ LANGUAGE SQL STABLE;
 
 ## 💰 Planes y Precios (HNL — Lempiras)
 
-| Plan | Precio | Usuarios | Almacenamiento | Descripción |
-|------|--------|----------|----------------|-------------|
-| **Prueba** | Gratis · 15 días | 5 | 5 GB | Plataforma completa, sin tarjeta |
-| **Pulpería** | L. 299/mes | 3 | **5 GB** | POS de mostrador, fiado, inventario y SAR simplificada |
-| **Tienda** | L. 799/mes | 15 | 25 GB | POS retail, SAR formal (CAI/RTN), compras y CRM |
-| **Club** | L. 1,399/mes | 35 | 100 GB | Membresías, carnet QR, barra y fidelización |
-| **Personalizado** | Desde L. 150/mes | 15 | 25 GB | Cotizador con los 23 módulos (cuota base + mod) |
-| **Business** | L. 1,499/mes | 15 | 100 GB | Todos los módulos + cuentas multi-tenant |
-| **Enterprise** | L. 4,999/mes | Ilimitados | 500 GB | Todos + API, SLA 24/7, soporte dedicado |
+| Plan | Precio | Usuarios | Módulos | Almacenamiento | Descripción |
+|------|--------|----------|---------|----------------|-------------|
+| **Prueba** | Gratis · 15 días | 5 | Todos (23) | 5 GB | Plataforma completa, sin tarjeta |
+| **Pulpería** | L. 299/mes | 3 | 5 | **5 GB** | POS de mostrador, libreta de fiado, inventario y SAR simplificada |
+| **Tienda** | L. 799/mes | 15 | 8 | 25 GB | POS retail con escáner, SAR formal (CAI/RTN), compras y cotizaciones |
+| **Club** | L. 1,399/mes | 35 | Suite completa | 100 GB | Membresías QR, barra/mesas, BI y seguridad 2FA |
+| **Personalizado** | Desde L. 150/mes | 15 | Cotizador | 25 GB | Cuota base + los módulos del catálogo que elijas |
+
+> **Business (L. 1,499), Enterprise (L. 4,999) y Custom son legacy**: ya no se venden; solo operan tenants existentes.
+> El catálogo vigente siempre lo expone `GET /api/plans` (tabla `planes` de la DB).
 
 > El **almacenamiento se mide de verdad por tenant**: se suman los objetos de Supabase Storage
 > bajo el código de la empresa (`{codigo}/` y `uploads/{codigo}/`) y se reporta en el módulo

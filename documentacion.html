@@ -367,12 +367,12 @@
           <li><strong>Facturación con CAI</strong> — correlativos, rangos autorizados, RTN, ISV 15%/18% y notas de crédito</li>
           <li><strong>Inventario multi-bodega</strong> — productos, stock y kardex</li>
           <li><strong>POS</strong> — ventas rápidas de mostrador con descuento de stock</li>
-          <li><strong>CRM</strong> — clientes y cobros (las <strong>ventas fiadas</strong> requieren plan Business o superior)</li>
+          <li><strong>CRM</strong> — clientes y cobros (las <strong>ventas fiadas</strong> están en los planes Prueba, Pulpería, Club y Personalizado)</li>
           <li><strong>Rutas y Cobros</strong> — visitas, cobranza en calle y cartera</li>
-          <li><strong>Flota</strong> — gestión de vehículos de reparto (plan Enterprise)</li>
+          <li><strong>Flota</strong> — gestión de vehículos de reparto (planes Club y Personalizado)</li>
           <li><strong>Asistente IA</strong> — resúmenes, análisis de ventas y soporte (server-side, con límites por plan)</li>
-          <li><strong>Automatizaciones</strong> — reglas automáticas sobre tus operaciones (plan Enterprise)</li>
-          <li><strong>Portal Empresa</strong> — usuarios, roles, suscripción, consumo y seguridad (las <strong>API keys</strong> son del plan Enterprise)</li>
+          <li><strong>Automatizaciones</strong> — reglas automáticas sobre tus operaciones (planes Club y Personalizado)</li>
+          <li><strong>Portal Empresa</strong> — usuarios, roles, suscripción, consumo y seguridad (las <strong>API keys</strong> están en los planes Club y Personalizado)</li>
         </ul>
         <div class="callout warn"><i class="fas fa-triangle-exclamation"></i><p><strong>Transparencia:</strong> el workspace <strong>web</strong> requiere conexión a internet. La <strong>app móvil/desktop</strong> funciona offline-first: guarda los datos localmente (SQLite) y sincroniza cuando haya conexión. La IA se ejecuta del lado del servidor y siempre requiere conexión; su cuota depende de tu plan.</p></div>
       </div>
@@ -383,7 +383,7 @@
         <h1>Crear tu empresa</h1>
         <p>De la landing a tu workspace en pocos minutos. Este es el flujo real:</p>
         <div class="step"><div class="step-num">1</div><div class="step-content"><h4>Regístrate en la web</h4><p>Entra a <a href="registrov2.html" style="color:var(--accent-soft);text-decoration:underline;">Registro</a> con tu nombre, correo y contraseña. Al confirmar se crea <strong>tu empresa</strong> con un código único (por ejemplo <code>PP-XXXXXX</code>) y tu usuario como <strong>Propietario (Owner)</strong>.</p></div></div>
-        <div class="step"><div class="step-num">2</div><div class="step-content"><h4>Recibes 15 días de prueba</h4><p>Tu empresa arranca en el plan <strong>Starter</strong> con un trial de 15 días con acceso completo. Puedes revisar el estado en <strong>Portal Empresa → Suscripción</strong>.</p></div></div>
+        <div class="step"><div class="step-num">2</div><div class="step-content"><h4>Recibes 15 días de prueba</h4><p>Tu empresa arranca en el plan <strong>Prueba</strong> con un trial de 15 días con acceso completo. Puedes revisar el estado en <strong>Portal Empresa → Suscripción</strong>.</p></div></div>
         <div class="step"><div class="step-num">3</div><div class="step-content"><h4>Inicia sesión</h4><p>Entra en <a href="login.html" style="color:var(--accent-soft);text-decoration:underline;">Iniciar Sesión</a>. El sistema te dirige automáticamente al área que corresponde a tu rol.</p></div></div>
         <div class="step"><div class="step-num">4</div><div class="step-content"><h4>Completa el perfil de empresa</h4><p>En <strong>Portal Empresa → Configuración</strong> define nombre comercial, teléfono y dirección. Estos datos aparecen en tus documentos.</p></div></div>
         <div class="step"><div class="step-num">5</div><div class="step-content"><h4>Carga tus productos y clientes</h4><p>Dá de alta productos en <strong>Inventario</strong> y clientes en <strong>CRM</strong>. Con eso ya puedes facturar, vender en POS y cobrar.</p></div></div>
@@ -439,7 +439,7 @@
         <h2>Bodegas y transferencias</h2>
         <ul>
           <li>Crea tantas bodegas como necesites (por ejemplo: principal, vehículo de reparto).</li>
-          <li>Registra <strong>transferencias</strong> entre bodegas; el kardex refleja la salida y la entrada (<em>el módulo de transferencias se incluye en el plan Enterprise</em>).</li>
+          <li>Registra <strong>transferencias</strong> entre bodegas; el kardex refleja la salida y la entrada (<em>el módulo de transferencias entre bodegas se incluye en los planes Club y Personalizado</em>).</li>
           <li>Cada venta POS o factura descuenta stock automáticamente del almacén correspondiente.</li>
         </ul>
         <div class="callout info"><i class="fas fa-lightbulb"></i><p>El <strong>kardex</strong> te da la trazabilidad completa: quién movió qué, cuándo y por qué documento.</p></div>
@@ -468,7 +468,7 @@
           <li>Alta de clientes con nombre, RTN, contacto y dirección.</li>
           <li>Historial de documentos por cliente (facturas, recibos, notas).</li>
         </ul>
-        <h2>Ventas fiadas y abonos</h2>`n        <p>Las ventas a crédito <strong>(fiado)</strong> y los abonos se incluyen en los planes <strong>Business</strong> y <strong>Enterprise</strong>.</p>
+        <h2>Ventas fiadas y abonos</h2>`n        <p>Las ventas a crédito <strong>(fiado)</strong> y los abonos se incluyen en los planes <strong>Prueba, Pulpería, Club y Personalizado</strong>.</p>
         <div class="step"><div class="step-num">1</div><div class="step-content"><h4>Registra la venta fiada</h4><p>Un cliente lleva mercadería a crédito: la venta queda en <strong>fiados</strong> con su saldo pendiente.</p></div></div>
         <div class="step"><div class="step-num">2</div><div class="step-content"><h4>Recibe abonos</h4><p>Los pagos parciales se registran como <strong>abonos</strong> y el saldo se actualiza solo. El resumen te muestra la cartera por cliente.</p></div></div>
         <div class="callout info"><i class="fas fa-lightbulb"></i><p>La IA puede ayudarte a perfilar un cliente para decisión de crédito (según cuota de tu plan).</p></div>
@@ -478,7 +478,7 @@
       <div class="doc-section" id="sec-ws-operacion" style="display:none">
         <div class="eyebrow">WORKSPACE</div>
         <h1>Rutas, Flota y Sucursales</h1>
-        <p>Si tu operación incluye reparto o varios puntos, estos módulos mantienen el control.</p>`n        <div class="callout info"><i class="fas fa-info-circle"></i><p><strong>Por plan:</strong> <strong>Rutas y Cobros</strong> están en todos los planes; <strong>Flota</strong> y <strong>Sucursales</strong> forman parte del plan <strong>Enterprise</strong>.</p></div>
+        <p>Si tu operación incluye reparto o varios puntos, estos módulos mantienen el control.</p>`n        <div class="callout info"><i class="fas fa-info-circle"></i><p><strong>Por plan:</strong> <strong>Rutas y Cobros</strong> están en los planes Prueba, Pulpería, Club y Personalizado; <strong>Flota</strong> y <strong>Sucursales</strong> forman parte de los planes <strong>Club y Personalizado</strong>.</p></div>
         <h2>Rutas y Cobros</h2>
         <ul>
           <li>Define <strong>rutas</strong> con sus clientes y frecuencia.</li>
@@ -548,7 +548,7 @@
       <div class="doc-section" id="sec-auto-intro" style="display:none">
         <div class="eyebrow">AUTOMATIZACIONES</div>
         <h1>Reglas automáticas</h1>
-        <p>El módulo de <strong>Automatizaciones</strong> te permite definir reglas sobre tus operaciones (por ejemplo, acciones al registrar una venta o al cambiar el stock) y ejecutarlas sin intervención manual. Es parte del plan <strong>Enterprise</strong>; en otros planes la sección indica cómo desbloquearlo.</p>
+        <p>El módulo de <strong>Automatizaciones</strong> te permite definir reglas sobre tus operaciones (por ejemplo, acciones al registrar una venta o al cambiar el stock) y ejecutarlas sin intervención manual. Es parte de los planes <strong>Club y Personalizado</strong>; en otros planes la sección indica cómo desbloquearlo.</p>
         <h3>Cómo funciona</h3>
         <ul>
           <li><strong>Reglas</strong> — defines la condición y la acción desde <strong>Portal Empresa → Automatización</strong>.</li>
@@ -585,7 +585,7 @@
         <p>En <strong>Portal Empresa → Suscripción</strong> ves tu plan actual, el estado (prueba, activo, vencido), las fechas del periodo y el <strong>consumo del mes</strong> por recurso (usuarios, documentos, API, IA).</p>
         <h3>Trial de 15 días</h3>
         <ul>
-          <li>Tu empresa arranca con <strong>15 días de prueba</strong> del plan Starter.</li>
+          <li>Tu empresa arranca con <strong>15 días de prueba</strong> del plan Prueba.</li>
           <li>Al vencer sin pago, la empresa entra en <strong>modo solo lectura</strong>: puedes consultar y exportar, pero no registrar operaciones nuevas.</li>
           <li>Al <strong>pagar un plan</strong> (ver <a href="pay_plan.html" style="color:var(--accent-soft);text-decoration:underline;">Planes y Pago</a>), el acceso se reactiva <strong>de inmediato</strong>.</li>
         </ul>
@@ -720,32 +720,35 @@
         <h1>Comparar Planes</h1>
         <p>Portal Pilot ofrece planes por empresa. Los valores oficiales vigentes los publica siempre la plataforma (<a href="index.html#pricing" style="color:var(--accent-soft);text-decoration:underline;">ver planes</a>); esta tabla refleja la configuración actual:</p>
         <table>
-          <tr><th>Característica</th><th>Starter (Prueba)</th><th>Business</th><th>Enterprise</th></tr>
-          <tr><td>Precio mensual (HNL — Lempiras)</td><td>L.0 — prueba 15 días</td><td>L.1,499</td><td>L.4,999</td></tr>
-          <tr><td>Usuarios</td><td>5</td><td>50</td><td>200</td></tr>
-          <tr><td>Empresas</td><td>1</td><td>3</td><td>5</td></tr>
-          <tr><td>Facturación con CAI</td><td>✅</td><td>✅</td><td>✅</td></tr>
-          <tr><td>Inventario multi-bodega</td><td>✅</td><td>✅</td><td>✅</td></tr>
-          <tr><td>POS</td><td>✅</td><td>✅</td><td>✅</td></tr>
-          <tr><td>CRM y clientes</td><td>✅</td><td>✅</td><td>✅</td></tr>
-          <tr><td>Ventas fiadas y abonos</td><td>—</td><td>✅</td><td>✅</td></tr>
-          <tr><td>Rutas y cobros</td><td>✅</td><td>✅</td><td>✅</td></tr>
-          <tr><td>Flota y sucursales</td><td>—</td><td>—</td><td>✅</td></tr>
-          <tr><td>Asistente IA — tokens al mes</td><td>100,000</td><td>2,000,000</td><td>10,000,000</td></tr>
-          <tr><td>Automatizaciones</td><td>—</td><td>—</td><td>✅ (hasta 50)</td></tr>
-          <tr><td>API / Integraciones</td><td>—</td><td>—</td><td>✅</td></tr>
-          <tr><td>Almacenamiento</td><td>5 GB</td><td>100 GB</td><td>500 GB</td></tr>
-          <tr><td>Seguridad avanzada, club de compras y puntos</td><td>—</td><td>—</td><td>✅</td></tr>
-          <tr><td>Al vencer la prueba</td><td>Modo solo lectura</td><td>—</td><td>—</td></tr>
+          <tr><th>Característica</th><th>Prueba</th><th>Pulpería</th><th>Tienda</th><th>Club</th><th>Personalizado</th></tr>
+          <tr><td>Precio mensual (HNL — Lempiras)</td><td>L.0 — prueba 15 días</td><td>L.299</td><td>L.799</td><td>L.1,399</td><td>Desde L.150 + módulos</td></tr>
+          <tr><td>Usuarios</td><td>5</td><td>3</td><td>15</td><td>35</td><td>15</td></tr>
+          <tr><td>Módulos incluidos</td><td>Todos (23)</td><td>5</td><td>8</td><td>Suite completa</td><td>Cotizador a la carta</td></tr>
+          <tr><td>Almacenamiento</td><td>5 GB</td><td>5 GB</td><td>25 GB</td><td>100 GB</td><td>25 GB</td></tr>
+          <tr><td>Facturación SAR / CAI</td><td>✅</td><td>✅ Simplificada</td><td>✅ Formal (CAI/RTN)</td><td>✅</td><td>Según módulos</td></tr>
+          <tr><td>Inventario</td><td>✅</td><td>✅ Básico</td><td>✅ Categorizado</td><td>✅</td><td>Según módulos</td></tr>
+          <tr><td>POS</td><td>✅</td><td>✅ Mostrador</td><td>✅ Retail con escáner</td><td>✅ Barra/mesas</td><td>Según módulos</td></tr>
+          <tr><td>Ventas fiadas y abonos</td><td>✅</td><td>✅ Libreta de fiado</td><td>—</td><td>✅</td><td>Según módulos</td></tr>
+          <tr><td>Compras, proveedores y cotizaciones</td><td>✅</td><td>—</td><td>✅</td><td>✅</td><td>Según módulos</td></tr>
+          <tr><td>CRM / clientes</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>Según módulos</td></tr>
+          <tr><td>Membresías QR, socios y puntos</td><td>✅</td><td>—</td><td>—</td><td>✅</td><td>Según módulos</td></tr>
+          <tr><td>Rutas y cobros</td><td>✅</td><td>✅</td><td>—</td><td>✅</td><td>Según módulos</td></tr>
+          <tr><td>Flota, sucursales y transferencias</td><td>✅</td><td>—</td><td>—</td><td>✅</td><td>Según módulos</td></tr>
+          <tr><td>Automatizaciones</td><td>✅</td><td>—</td><td>—</td><td>✅</td><td>Según módulos</td></tr>
+          <tr><td>API / Integraciones</td><td>✅</td><td>—</td><td>—</td><td>✅</td><td>Según módulos</td></tr>
+          <tr><td>Asistente IA — tokens al mes</td><td>100,000</td><td>100,000</td><td>500,000</td><td>2,000,000</td><td>500,000</td></tr>
+          <tr><td>Seguridad avanzada (2FA, roles)</td><td>✅</td><td>—</td><td>✅ Roles</td><td>✅</td><td>Según módulos</td></tr>
+          <tr><td>Soporte</td><td>Email</td><td>WhatsApp horario hábil</td><td>Prioridad WhatsApp</td><td>Priority 24/7</td><td>Email</td></tr>
+          <tr><td>Al vencer la prueba</td><td>Modo solo lectura</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
         </table>
         <h3>Cómo funcionan los límites</h3>
         <ul>
-          <li>Los límites (usuarios, documentos, IA, automatizaciones) se aplican <strong>en el servidor</strong>; la interfaz los refleja pero no los decide.</li>
+          <li>Los límites (usuarios, módulos, almacenamiento, IA) se aplican <strong>en el servidor</strong>; la interfaz los refleja pero no los decide.</li>
           <li>Cada operación exitosa incrementa el consumo del periodo; las fallidas no consumen.</li>
           <li>Al alcanzar un límite, la plataforma responde con un mensaje claro y la opción de mejorar de plan.</li>
         </ul>
-        <div class="callout warn"><i class="fas fa-triangle-exclamation"></i><p>La moneda operativa de Portal Pilot es el <strong>Lempira hondureño (HNL)</strong>. La facturación es <strong>mensual</strong>: Starter gratis (15 días de prueba, luego modo solo lectura hasta pagar), Business L.1,499/mes y Enterprise L.4,999/mes. No existe facturación anual en el flujo actual; cualquier descuento ofrecido se muestra siempre al momento del pago.</p></div>
-        <div class="callout info"><i class="fas fa-info-circle"></i><p>Existe además un plan <strong>Custom</strong> para corporativos con necesidades a medida (más empresas, usuarios y cuotas). Contacta a <a href="support.html" style="color:var(--accent-soft);text-decoration:underline;">soporte</a>.</p></div>
+        <div class="callout warn"><i class="fas fa-triangle-exclamation"></i><p>La moneda operativa de Portal Pilot es el <strong>Lempira hondureño (HNL)</strong> y la facturación es <strong>mensual</strong>. Los valores vigentes los publica siempre <code>GET /api/plans</code>; esta tabla es referencia.</p></div>
+        <div class="callout info"><i class="fas fa-info-circle"></i><p><strong>Business, Enterprise y Custom</strong> ya no se venden (quedaron como <em>legacy</em> para tenants existentes). Toda venta nueva es por <strong>Prueba, Pulpería, Tienda, Club o Personalizado</strong>.</p></div>
         <div class="callout success"><i class="fas fa-circle-check"></i><p>La activación por pago reactiva tu empresa <strong>de inmediato</strong>, sin esperas ni tickets.</p></div>
       </div>
 

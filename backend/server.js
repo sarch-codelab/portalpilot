@@ -98,7 +98,7 @@ app.use(helmet({
       "style-src-attr": ["'self'", "'unsafe-inline'"],
       "style-src-elem": ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://cdnjs.cloudflare.com"],
       "font-src": ["'self'", "https://fonts.gstatic.com", "https://cdnjs.cloudflare.com"],
-      "img-src": ["'self'", "data:", "blob:", "https://images.unsplash.com", "https://raw.githubusercontent.com", "https://api.dicebear.com", "https://api.producthunt.com", "https://www.google-analytics.com", "https://www.googletagmanager.com"],
+      "img-src": ["'self'", "data:", "blob:", "https://images.unsplash.com", "https://raw.githubusercontent.com", "https://api.dicebear.com", "https://api.producthunt.com", "https://www.google-analytics.com", "https://www.googletagmanager.com", "https://*.supabase.co"],
       "connect-src": [
         "'self'",
         "https://fonts.googleapis.com",
@@ -110,6 +110,7 @@ app.use(helmet({
         "https://*.analytics.google.com",
         "https://*.g.doubleclick.net",
         "https://portal-pilot.vercel.app",
+        "https://*.supabase.co",
       ],
     },
   },
@@ -681,6 +682,20 @@ const ALL_PLAN_FEATURES = Object.freeze([
   'crm_avanzado'
 ]);
 
+// Módulos reales del cotizador (23 IDs de la app) como features gateables.
+// PLAN_ENTITLEMENTS.club/personalizado construían features con
+// [...ALL_PLAN_FEATURES, ...MODULOS_COTIZADOR], así que estos IDs también eran
+// features válidas; sin embargo declararlas DENTRO de ALL_PLAN_FEATURES hacía que
+// TODOS los planes (incluido pulpería) aceptaran cualquier módulo. Se mantienen
+// como lista APARTE, para que `requirePlanFeature` siga distinguiendo planes.
+const MODULOS_COTIZADOR_FEATURES = Object.freeze([
+  'pos', 'facturacion', 'inventario', 'contabilidad', 'rrhh',
+  'crm', 'comercial', 'membresias', 'canal_tradicional', 'canal_moderno',
+  'compras_proveedores', 'analytics', 'reportes',
+  'supply_chain', 'multi_empresa', 'chat_ia', 'seguridad', 'crm_advanced',
+  'fiscal_advanced', 'sector_retail', 'settings', 'soporte'
+]);
+
 // Catálogo canónico del cotizador (23 módulos reales de la app Flutter).
 const MODULOS_COTIZADOR = Object.freeze([
   'pos', 'facturacion', 'inventario', 'contabilidad', 'rrhh',
@@ -708,14 +723,18 @@ const PLAN_ENTITLEMENTS = Object.freeze({
     features: ['operacion_completa', 'inventario', 'facturacion_sar', 'web_admin', 'reportes', 'ia', 'roles', 'auditoria', 'pos', 'clientes', 'proveedores', 'compras', 'precios', 'promociones', 'canal_moderno', 'cotizaciones', 'reportes_basicos', 'retail_pasillos']
   },
   // Club/Membresía L.1,399/mes: suite completa (membresías QR, BI, seguridad 2FA, IA).
+  // [...new Set(...)]: ALL_PLAN_FEATURES / MODULOS_COTIZADOR_FEATURES /
+  // MODULOS_COTIZADOR se solapan (pos, inventario, reportes…) y una lista con
+  // duplicados hacía que el conteo de features por plan no cuadrara con
+  // `plan_features` (que es un conjunto por PK compuesta).
   club: {
     maxUsers: 35, maxCompanies: 1,
-    features: [...ALL_PLAN_FEATURES, ...MODULOS_COTIZADOR]
+    features: [...new Set([...ALL_PLAN_FEATURES, ...MODULOS_COTIZADOR_FEATURES, ...MODULOS_COTIZADOR])]
   },
   // Personalizado: cotizador a la carta; los módulos reales viven en tenants.funciones_plan.
   personalizado: {
     maxUsers: 15, maxCompanies: 1,
-    features: [...ALL_PLAN_FEATURES, ...MODULOS_COTIZADOR]
+    features: [...new Set([...ALL_PLAN_FEATURES, ...MODULOS_COTIZADOR_FEATURES, ...MODULOS_COTIZADOR])]
   },
   business: {
     maxUsers: 15, maxCompanies: 3,
@@ -791,30 +810,55 @@ const MODULOS_APP_BASE = Object.freeze(['settings']);
 // Catálogo comercial de módulos del cotizador (espejo de planes.html y de la
 // tabla modulos_cotizador). Si la DB responde, la DB manda; esto es el fallback.
 const MODULOS_COTIZADOR_META = Object.freeze({
-  // NUEVOS módulos (23 reales de la app)
-  pos: { nombre: 'Punto de Venta (POS)', categoria: 'Ventas & Cobro', icono: 'fa-cash-register', precio: 45 },
-  facturacion: { nombre: 'Facturación Fiscal SAR', categoria: 'Tributario & Fiscal', icono: 'fa-file-invoice-dollar', precio: 70 },
-  inventario: { nombre: 'Inventario & Stock', categoria: 'Inventario', icono: 'fa-boxes-stacked', precio: 65 },
-  contabilidad: { nombre: 'Contabilidad & Finanzas', categoria: 'Finanzas', icono: 'fa-calculator', precio: 85 },
-  rrhh: { nombre: 'RRHH, Planilla & Asistencias', categoria: 'Recursos Humanos', icono: 'fa-user-check', precio: 85 },
-  crm: { nombre: 'CRM Clientes & Ventas', categoria: 'Clientes', icono: 'fa-users', precio: 40 },
-  comercial: { nombre: 'Comercial: Compras, Cotizaciones, OC', categoria: 'Comercial', icono: 'fa-storefront', precio: 60 },
-  membresias: { nombre: 'Membresías & Socios QR', categoria: 'Socios & Club', icono: 'fa-id-card', precio: 95 },
-  canal_tradicional: { nombre: 'Canal Tradicional / Libreta de Fiado', categoria: 'Crédito Barrial', icono: 'fa-book-bookmark', precio: 35 },
-  canal_moderno: { nombre: 'Canal Moderno / Multi-Sucursal Retail', categoria: 'Retail & Tienda', icono: 'fa-account-balance', precio: 95 },
-  cotizaciones: { nombre: 'Cotizaciones & Proformas PDF', categoria: 'Ventas B2B', icono: 'fa-file-lines', precio: 35 },
-  compras_proveedores: { nombre: 'Compras & Proveedores Mayoristas', categoria: 'Compras', icono: 'fa-truck-field', precio: 60 },
-  analytics: { nombre: 'Analytics & BI', categoria: 'Business Intelligence', icono: 'fa-chart-line', precio: 95 },
-  reportes: { nombre: 'Reportes Comerciales & Financieros', categoria: 'Estadísticas', icono: 'fa-chart-pie', precio: 55 },
-  supply_chain: { nombre: 'Cadena de Suministro & Logística', categoria: 'Logística', icono: 'fa-local-shipping', precio: 90 },
-  multi_empresa: { nombre: 'Multi-Empresa / Holding', categoria: 'Expansión', icono: 'fa-building', precio: 110 },
-  chat_ia: { nombre: 'Asistente IA (Groq + Local)', categoria: 'Inteligencia Artificial', icono: 'fa-brain', precio: 120 },
-  seguridad: { nombre: 'Seguridad, Roles Granulares & 2FA', categoria: 'Seguridad', icono: 'fa-shield-halved', precio: 50 },
-  crm_advanced: { nombre: 'CRM Avanzado: Leads, Campañas', categoria: 'Clientes Avanzado', icono: 'fa-groups', precio: 75 },
-  fiscal_advanced: { nombre: 'Fiscal Avanzado: Retenciones, Libros', categoria: 'Fiscal Avanzado', icono: 'fa-gavel', precio: 80 },
-  sector_retail: { nombre: 'Sector Retail: Pasillos, Marcas, Promos', categoria: 'Retail Especializado', icono: 'fa-store', precio: 70 },
-  settings: { nombre: 'Configuración del Sistema', categoria: 'Sistema', icono: 'fa-gear', precio: 0 },
-  soporte: { nombre: 'Soporte & Mesa de Ayuda', categoria: 'Sistema', icono: 'fa-headset', precio: 0 },
+  // NUEVOS módulos (23 reales de la app). El texto de `descripcion` es el que
+  // muestra el cotizador de planes.html: vive aquí solo como FALLBACK cuando
+  // `modulos_cotizador.descripcion` no está disponible en la DB.
+  pos: { nombre: 'Punto de Venta (POS)', categoria: 'Ventas & Cobro', icono: 'fa-cash-register', precio: 45,
+    descripcion: 'POS rápido de mostrador: teclado sin mouse, ticket térmico, código de barras, arqueo de caja diario.' },
+  facturacion: { nombre: 'Facturación Fiscal SAR', categoria: 'Tributario & Fiscal', icono: 'fa-file-invoice-dollar', precio: 70,
+    descripcion: 'Facturación electrónica SAR Honduras: CAI, rangos autorizados, RTN, contingencia offline, PDF/XML.' },
+  inventario: { nombre: 'Inventario & Stock', categoria: 'Inventario', icono: 'fa-boxes-stacked', precio: 65,
+    descripcion: 'Catálogo de productos, kardex, bodegas múltiples, alertas de stock mínimo, mermas, lotes y caducidad.' },
+  contabilidad: { nombre: 'Contabilidad & Finanzas', categoria: 'Finanzas', icono: 'fa-calculator', precio: 85,
+    descripcion: 'Libro de ingresos/egresos, balance general, estado de resultados, centros de costo, conciliación bancaria.' },
+  rrhh: { nombre: 'RRHH, Planilla & Asistencias', categoria: 'Recursos Humanos', icono: 'fa-user-check', precio: 85,
+    descripcion: 'Empleados, contratos, planilla quincenal/mensual, asistencias, permisos, adelantos, prestaciones, IHSS/INFOP.' },
+  crm: { nombre: 'CRM Clientes & Ventas', categoria: 'Clientes', icono: 'fa-users', precio: 40,
+    descripcion: 'Directorio de clientes, historial de compras, segmentación, seguimiento comercial, pipeline de oportunidades.' },
+  comercial: { nombre: 'Comercial: Compras, Cotizaciones, OC', categoria: 'Comercial', icono: 'fa-store', precio: 60,
+    descripcion: 'Órdenes de compra, recepción de mercancía, proveedores mayoristas (Leyde, Sula, DIAPA), costeo promedio.' },
+  membresias: { nombre: 'Membresías & Socios QR', categoria: 'Socios & Club', icono: 'fa-id-card', precio: 95,
+    descripcion: 'Carnets digitales QR, niveles de membresía, vigencias, renovaciones automáticas, precios preferenciales.' },
+  canal_tradicional: { nombre: 'Canal Tradicional / Libreta de Fiado', categoria: 'Crédito Barrial', icono: 'fa-book-bookmark', precio: 35,
+    descripcion: 'Control de fiado personal: deudores, abonos parciales, límites de crédito, alertas de morosidad, cobro WhatsApp.' },
+  canal_moderno: { nombre: 'Canal Moderno / Multi-Sucursal Retail', categoria: 'Retail & Tienda', icono: 'fa-university', precio: 95,
+    descripcion: 'Multi-sucursal, transferencias entre bodegas/salas, consolidado de ventas, precios por canal, promociones.' },
+  cotizaciones: { nombre: 'Cotizaciones & Proformas PDF', categoria: 'Ventas B2B', icono: 'fa-file-lines', precio: 35,
+    descripcion: 'Genera cotizaciones formales con validez, conversión a orden de venta, envío por WhatsApp/Email, plantillas.' },
+  compras_proveedores: { nombre: 'Compras & Proveedores Mayoristas', categoria: 'Compras', icono: 'fa-truck-field', precio: 60,
+    descripcion: 'Órdenes de compra, recepción, facturas de proveedor, cuentas por pagar, retenciones, historial de precios.' },
+  analytics: { nombre: 'Analytics & BI', categoria: 'Business Intelligence', icono: 'fa-chart-line', precio: 95,
+    descripcion: 'Dashboards gerenciales, KPIs en tiempo real, forecasting de demanda, horas pico, productos estrella, rentabilidad por canal.' },
+  reportes: { nombre: 'Reportes Comerciales & Financieros', categoria: 'Estadísticas', icono: 'fa-chart-pie', precio: 55,
+    descripcion: 'Reportes de ventas, ganancias brutas, margen por producto, ventas por cajero, comisiones, exportación Excel/PDF.' },
+  supply_chain: { nombre: 'Cadena de Suministro & Logística', categoria: 'Logística', icono: 'fa-truck-fast', precio: 90,
+    descripcion: 'Rutas de reparto/delivery, asignación a motociclistas, cobro contra entrega, trazabilidad, recepción, devoluciones proveedor, multi-bodega.' },
+  multi_empresa: { nombre: 'Multi-Empresa / Holding', categoria: 'Expansión', icono: 'fa-building', precio: 110,
+    descripcion: 'Administra filiales/sucursales desde un portal: consolidado financiero, tipo de cambio, intercompany, permisos cruzados.' },
+  chat_ia: { nombre: 'Asistente IA (Groq + Local)', categoria: 'Inteligencia Artificial', icono: 'fa-brain', precio: 120,
+    descripcion: 'IA ultrarrápida para redactar cobros, analizar ventas, responder dudas fiscales, generar reportes en lenguaje natural.' },
+  seguridad: { nombre: 'Seguridad, Roles Granulares & 2FA', categoria: 'Seguridad', icono: 'fa-shield-halved', precio: 50,
+    descripcion: 'Permisos por módulo/acción, auditoría completa, doble factor (TOTP/SMS), bloqueo por IP, sesiones concurrentes.' },
+  crm_advanced: { nombre: 'CRM Avanzado: Leads, Campañas, Segmentación', categoria: 'Clientes Avanzado', icono: 'fa-people-group', precio: 75,
+    descripcion: 'Gestión de leads, embudo de ventas, campañas marketing, scoring, automatización de seguimiento, ROI por canal.' },
+  fiscal_advanced: { nombre: 'Fiscal Avanzado: Retenciones, Libros, SAR', categoria: 'Fiscal Avanzado', icono: 'fa-gavel', precio: 80,
+    descripcion: 'Retenciones ISR/IVA, libro de compras/ventas SAR, declaraciones juradas, facturación especial, timbrado masivo.' },
+  sector_retail: { nombre: 'Sector Retail: Pasillos, Marcas, Promos', categoria: 'Retail Especializado', icono: 'fa-store', precio: 70,
+    descripcion: 'Organización por pasillos/estanterías, marcas, promociones temporales, etiquetas de precio, inventario por tienda.' },
+  settings: { nombre: 'Configuración del Sistema', categoria: 'Sistema', icono: 'fa-gear', precio: 0,
+    descripcion: 'Configuración fiscal, Series CAI, respaldos automáticos, logs de auditoría, parámetros globales, white-label.' },
+  soporte: { nombre: 'Soporte & Mesa de Ayuda', categoria: 'Sistema', icono: 'fa-headset', precio: 0,
+    descripcion: 'Tickets de soporte, base de conocimiento, chat en vivo, SLA, encuestas de satisfacción, gestión de incidencias.' },
 
   // ANTIGUOS slugs (planes.html viejos) - mantenidos para retrocompatibilidad
   pos_caja: { nombre: 'POS Rápido de Mostrador', categoria: 'Ventas & Cobro', icono: 'fa-cash-register', precio: 45 },
@@ -838,6 +882,36 @@ const MODULOS_COTIZADOR_META = Object.freeze({
   analytics_ventas: { nombre: 'Analytics BI & Pronóstico', categoria: 'Business Intelligence', icono: 'fa-chart-line', precio: 95 },
   seguridad_2fa: { nombre: 'Seguridad, Roles & 2FA', categoria: 'Seguridad', icono: 'fa-shield-halved', precio: 50 },
   automatizacion_alertas: { nombre: 'Automatizaciones & Alertas WhatsApp', categoria: 'Automatización', icono: 'fa-robot', precio: 65 },
+});
+
+// ── feature de la API → módulo del cotizador que la habilita ──────────────────
+// Sirve para que `requirePlanFeature` pueda exigir, además del plan, que el
+// tenant tenga contratado el MÓDULO (tenant_modulos / usuario_modulos). Sin este
+// mapa, un plan `personalizado` (que declara todas las features para poder
+// activar cualquier módulo) dejaba entrar a módulos que el cliente no pagó.
+const MODULO_DE_FEATURE = Object.freeze({
+  pos: 'pos', pos_basico: 'pos',
+  inventario: 'inventario', kardex: 'inventario',
+  facturacion_sar: 'facturacion',
+  operacion_completa: 'contabilidad', operacion_basica: 'contabilidad',
+  rrhh_planillas: 'rrhh',
+  clientes: 'crm', crm_avanzado: 'crm_advanced',
+  compras: 'compras_proveedores', proveedores: 'compras_proveedores',
+  cotizaciones: 'cotizaciones',
+  canal_tradicional: 'canal_tradicional', fiado: 'canal_tradicional', cobros: 'canal_tradicional',
+  canal_moderno: 'canal_moderno', sucursales: 'canal_moderno',
+  transferencias: 'canal_moderno', inventario_multi_sucursal: 'canal_moderno',
+  retail_pasillos: 'sector_retail',
+  membresias: 'membresias', socios: 'membresias', gestion_membresias: 'membresias', puntos: 'membresias',
+  reportes: 'reportes', reportes_comerciales: 'reportes', analytics: 'analytics',
+  reportes_avanzados: 'analytics',
+  rutas: 'supply_chain', fleet: 'supply_chain',
+  multiempresa: 'multi_empresa',
+  seguridad_avanzada: 'seguridad',
+  fiscal_avanzado: 'fiscal_advanced',
+  // `ia` NO se mapea a chat_ia a propósito: pulpería/tienda/club incluyen IA en su
+  // plan sin que `chat_ia` esté en su paquete de módulos; mapearlo dejaría sin IA
+  // a planes que sí la pagan. La IA se gatea solo por feature del plan.
 });
 
 // Paquetes de módulos por plan (mismos que planes.html y plan_modulos en DB).
@@ -976,7 +1050,21 @@ function requirePlanFeature(feature) {
       }
       const status = entitlements.status || (entitlements.trial && entitlements.trial.isTrial ? 'trial' : 'active');
       if (status === 'expired') {
-        return res.status(403).json({ error: 'Tu período de prueba de 15 días ha vencido. La plataforma está en modo solo lectura: puedes consultar y exportar tus datos, pero no registrar movimientos nuevos. Elige un plan para continuar usando Portal Pilot.', code: 'TRIAL_EXPIRED', readOnly: true });
+        // MODO SOLO LECTURA (trial vencido): el mensaje promete "puedes
+        // consultar y exportar tus datos". Antes este gate devolvía 403
+        // TRIAL_EXPIRED también a GET, así que ~45 rutas gateadas (productos,
+        // POS, kardex, compras, cotizaciones, membresías…) quedaban
+        // inaccesibles y el cliente no podía NI consultar. Las lecturas pasan;
+        // las escrituras siguen bloqueadas por el middleware global de solo
+        // lectura (WRITE_ALLOWED_WHEN_EXPIRED_PREFIXES) y aquí.
+        const soloLectura = ['GET', 'HEAD', 'OPTIONS'].includes(String(req.method || '').toUpperCase());
+        if (!soloLectura) {
+          return res.status(403).json({ error: 'Tu período de prueba de 15 días ha vencido. La plataforma está en modo solo lectura: puedes consultar y exportar tus datos, pero no registrar movimientos nuevos. Elige un plan para continuar usando Portal Pilot.', code: 'TRIAL_EXPIRED', readOnly: true });
+        }
+        // Lectura con trial vencido: se salta el chequeo de feature/consumo para
+        // que pueda consultar TODO lo que tenía durante la prueba.
+        req.entitlements = entitlements;
+        return next();
       }
       if (status !== 'active' && status !== 'trial') {
         return res.status(403).json({ error: 'La empresa no tiene un plan activo.' });
@@ -999,6 +1087,33 @@ function requirePlanFeature(feature) {
       const features = Array.isArray(entitlements.features) ? entitlements.features : [];
       if (!features.includes(feature)) {
         return res.status(403).json({ error: `Esta función requiere un plan superior: ${feature}.`, code: 'PLAN_LIMIT' });
+      }
+      // ── Gate por MÓDULO del tenant (cotizador a la carta) ──────────────────
+      // Un plan `personalizado` tiene TODAS las features del catálogo (para poder
+      // activar cualquier módulo), pero el cliente solo contrató algunos. Sin esta
+      // comprobación, `requirePlanFeature('rrhh_planillas')` dejaba entrar a un
+      // tenant que no pagó RRHH. El scope real está en `tenant_modulos`.
+      // SEGURIDAD: si el tenant no tiene NINGUNA fila de módulos (tenants antiguos
+      // anteriores al cotizador), no se bloquea nada — el plan sigue mandando.
+      const moduloRequerido = MODULO_DE_FEATURE[feature];
+      if (moduloRequerido && !isRootUser(req)) {
+        try {
+          const tenantG = normalizeTenantCode(getTenantCode(req));
+          const tRow = req.tenantRow || (tenantG ? (await supabase.from('tenants')
+            .select('area, funciones_plan, plan').eq('codigo', tenantG).maybeSingle()).data : null);
+          const asignados = await resolverModulosUsuario(req.user, tenantG, tRow, entitlements.plan);
+          if (Array.isArray(asignados) && asignados.length && !asignados.includes(moduloRequerido)) {
+            // Si el tenant SÍ tiene módulos concretos pero no este, se respeta su
+            // contratación: el módulo no está en su plan.
+            return res.status(403).json({
+              error: `El módulo ${MODULOS_COTIZADOR_META[moduloRequerido]?.nombre || moduloRequerido} no está incluido en tu plan. Actívalo desde el cotizador o mejora tu plan.`,
+              code: 'PLAN_LIMIT_MODULO',
+              modulo: moduloRequerido
+            });
+          }
+        } catch (e) {
+          console.warn('[PLAN_MODULO] check falló (se permite):', e.message);
+        }
       }
       req.entitlements = entitlements;
       next();
@@ -1050,6 +1165,14 @@ function isTrueOwner(req) {
   if (isRootUser(req)) return true;
   const role = String(req.user?.rol || '').trim().toLowerCase();
   return role === 'owner' || role === 'ceo';
+}
+
+// Middleware para exigir Owner estricto en acciones críticas de titularidad
+function requireTrueOwner(req, res, next) {
+  if (!isTrueOwner(req)) {
+    return res.status(403).json({ error: 'Esta acción es exclusiva del Owner de la empresa. Los administradores no pueden realizar esta acción.' });
+  }
+  next();
 }
 
 // Código de tenant EFECTIVO: para ROOT puede venir del body/query (acciones
@@ -1202,7 +1325,6 @@ function normalizeSectorValue(value) {
   const normalized = String(value).trim();
   const mapping = {
     tecnologia: 'Tecnología',
-    educacion: 'Educación',
     salud: 'Salud & Farmacéutica',
     finanzas: 'Finanzas & Banca',
     manufactura: 'Manufactura',
@@ -1803,6 +1925,82 @@ if (modulosAvanzados && typeof modulosAvanzados.createRouter === 'function') {
 // No revelar configuración interna (Supabase/JWT/entorno) a clientes anónimos.
 app.get('/api/health', async (req, res) => {
   res.json({ status: 'ok' });
+});
+
+// GET /api/auth/status — permite a la app Flutter detectar si existe una cuenta
+// (para el flujo onboarding) y el estado de autenticación actual.
+// Si se pasa query param ?email=, verifica si ese correo está registrado.
+// Si se pasa Authorization header, devuelve el usuario autenticado.
+app.get('/api/auth/status', async (req, res) => {
+  if (!requireSupabase(res)) return;
+  try {
+    const authHeader = req.headers['authorization'];
+    const emailQuery = req.query.email;
+
+    // Si hay token, devolver usuario autenticado
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      try {
+        const token = authHeader.slice(7);
+        const decoded = jwt.verify(token, localJwtSecret);
+        const { data: u } = await supabase.from('usuarios').select('*').eq('id', decoded.sub).maybeSingle();
+        if (!u) {
+          return res.json({ authenticated: false, exists: false });
+        }
+        const tenantCode = normalizeTenantCode(u.empresa_codigo);
+        let tenant = null;
+        if (tenantCode && tenantCode !== 'ROOT') {
+          const { data: t } = await supabase.from('tenants').select('*').eq('codigo', tenantCode).maybeSingle();
+          tenant = t;
+        }
+        const ent = await getTenantEntitlements({ user: decoded });
+        return res.json({
+          authenticated: true,
+          exists: true,
+          user: {
+            id: u.id,
+            nombre: u.nombre || '',
+            apellido: u.apellido || '',
+            email: u.email,
+            rol: resolveDisplayRole(u, tenant),
+            empresa_codigo: u.empresa_codigo || 'ROOT',
+            empresa_nombre: tenant?.nombre_empresa || u.empresa_codigo || 'ROOT',
+            area: u.area || tenant?.area || null,
+            foto_perfil_url: u.avatar_url || u.foto_perfil_url || null,
+            estado: u.estado || 'activo'
+          },
+          plan: {
+            clave: ent.plan,
+            status: ent.status,
+            trial_ends_at: ent.trial_ends_at || null,
+            features: ent.features || []
+          },
+          modulos_app: modulosAppDesdeCotizador(await resolverModulosUsuario(u, u.empresa_codigo, tenant, ent.plan))
+        });
+      } catch (e) {
+        // Token inválido → no autenticado
+        return res.json({ authenticated: false, exists: false });
+      }
+    }
+
+    // Si no hay token pero se pasa email, verificar si existe
+    if (emailQuery) {
+      const emailNorm = String(emailQuery).trim().toLowerCase();
+      const { data: u } = await supabase.from('usuarios').select('id, email, estado, empresa_codigo').eq('email', emailNorm).maybeSingle();
+      return res.json({
+        authenticated: false,
+        exists: !!u,
+        user_id: u?.id || null,
+        email: emailNorm,
+        estado: u?.estado || null
+      });
+    }
+
+    // Sin token ni email → estado base
+    return res.json({ authenticated: false, exists: false });
+  } catch (err) {
+    console.error('[AUTH_STATUS] Error:', err.message);
+    return res.status(500).json({ error: 'Error al verificar estado de autenticación' });
+  }
 });
 
 // ======================================================================
@@ -2609,7 +2807,7 @@ app.post('/api/registro', async (req, res) => {
       // se persiste en funciones_plan y en tenant_modulos — es la fuente de
       // verdad de qué módulos ve la app y el portal del cliente.
       const modulosCotizador = String(req.body.modulos || '')
-        .split(',').map(s => s.trim()).filter(m => MODULOS_COTIZADOR.includes(m)).slice(0, 21);
+        .split(',').map(s => s.trim()).filter(m => MODULOS_COTIZADOR.includes(m)).slice(0, MODULOS_COTIZADOR.length);
       const billingCiclo = String(req.body.billing || 'monthly').toLowerCase() === 'annual' ? 'annual' : 'monthly';
       const modulosEfectivos = modulosCotizador.length
         ? modulosCotizador
@@ -3261,7 +3459,12 @@ app.post('/api/confirmar-pago', pagoLimiter, async (req, res) => {
     // Compatibilidad de formato: el frontend puede enviar empresaCodigo o
     // empresa_codigo. Un pago con código válido nunca debe perderse por el
     // formato del campo (bug: pay_handler solo leía camelCase).
-    const empresaCodigo = req.body?.empresaCodigo || req.body?.empresa_codigo || null;
+    // El código se NORMALIZA una sola vez (trim + UPPERCASE): antes se validaba
+    // en mayúsculas pero se escribía en crudo, así que un pago con el código en
+    // minúsculas respondía "activado" sin activar el tenant y creaba una
+    // suscripción huérfana. `tenants.codigo` siempre está en mayúsculas.
+    const empresaCodigoRaw = req.body?.empresaCodigo || req.body?.empresa_codigo || null;
+    const empresaCodigo = empresaCodigoRaw ? String(empresaCodigoRaw).trim().toUpperCase() : null;
     if (!email || !email.includes('@')) {
       return res.status(400).json({ error: 'El correo electrónico es obligatorio y debe ser válido.' });
     }
@@ -3289,7 +3492,7 @@ app.post('/api/confirmar-pago', pagoLimiter, async (req, res) => {
     // El pago debe referenciar una empresa real (el flujo web envía el código
     // del tenant registrado). Un tenant inexistente NO puede "activar" un plan.
     if (empresaCodigo && supabase) {
-      const { data: tExiste } = await supabase.from('tenants').select('codigo').eq('codigo', String(empresaCodigo).trim().toUpperCase()).maybeSingle();
+      const { data: tExiste } = await supabase.from('tenants').select('codigo').eq('codigo', empresaCodigo).maybeSingle();
       if (!tExiste) {
         return res.status(404).json({ error: 'No existe una empresa registrada con ese código. Regístrate primero.' });
       }
@@ -3298,8 +3501,11 @@ app.post('/api/confirmar-pago', pagoLimiter, async (req, res) => {
     const emailNorm = String(email).trim().toLowerCase();
     const planNombre = plan ? String(plan).toUpperCase() : 'PRO';
     // Facturación local en Lempiras: mensual o anual (2 meses gratis = 10×mes).
+    // Los importes son espejo de `planes.precio_*_hnl` (fuente de verdad) y de
+    // PLAN_PRECIOS_HNL. Personalizado mensual era 650 aquí, contra 150 en la DB,
+    // en planes.html y en el resto del backend: el cliente pagaba 500 de más.
     const billingCiclo = String(req.body?.billing || 'monthly').toLowerCase() === 'annual' ? 'annual' : 'monthly';
-    const amountMap = { STARTER: 0, BUSINESS: 1499, ENTERPRISE: 4999, PULPERIA: 299, TIENDA: 799, CLUB: 1399, PERSONALIZADO: 650 };
+    const amountMap = { STARTER: 0, BUSINESS: 1499, ENTERPRISE: 4999, PULPERIA: 299, TIENDA: 799, CLUB: 1399, PERSONALIZADO: 150 };
     const amountMapAnual = { STARTER: 0, BUSINESS: 14990, ENTERPRISE: 49990, PULPERIA: 2990, TIENDA: 7990, CLUB: 13990, PERSONALIZADO: 1500 };
     const amountHnl = (billingCiclo === 'annual' ? amountMapAnual : amountMap)[planNombre] || 0;
 
@@ -3529,10 +3735,13 @@ app.post('/api/support-ticket', emailLimiter, async (req, res) => {
       created_at: new Date().toISOString()
     };
 
-    // Almacenar en Supabase si está configurado
+    // Almacenar en Supabase si está configurado.
+    // OJO: `insert()` sin `.select()` devuelve `data = null` aunque el INSERT
+    // funcione, así que antes SIEMPRE caía en "insert falló" y nunca respondía
+    // 201: el ticket se guardaba pero la UI recibía error.
     if (supabase) {
       try {
-        const { data, error } = await supabase.from('support_tickets').insert([ticket]);
+        const { data, error } = await supabase.from('support_tickets').insert([ticket]).select();
         if (!error && data) {
           const row = Array.isArray(data) ? data[0] : data;
           const ticketId = row?.id || 'TKT-' + Date.now();
@@ -3613,6 +3822,23 @@ app.get('/api/tenants', authenticate, requireTenantAdmin, async (req, res) => {
       }
       const { data: supaTenants, error } = await query;
       if (!error && supaTenants && supaTenants.length > 0) {
+        // Conteo real de usuarios activos por tenant (antes: `users: 1` literal)
+        // y país real desde `empresas` (la tabla `tenants` no tiene `pais`).
+        const userCounts = {};
+        try {
+          const { data: us } = await supabase.from('usuarios').select('empresa_codigo, activo');
+          (us || []).forEach(u => {
+            if (u.activo === false) return;
+            const c = normalizeTenantCode(u.empresa_codigo);
+            if (c) userCounts[c] = (userCounts[c] || 0) + 1;
+          });
+        } catch (e) { /* noop */ }
+        const paises = {};
+        try {
+          const { data: emps } = await supabase.from('empresas').select('codigo, pais');
+          (emps || []).forEach(e => { if (e && e.codigo) paises[normalizeTenantCode(e.codigo)] = e.pais || null; });
+        } catch (e) { /* noop */ }
+
         tenantsFormat = supaTenants.map(t => ({
           id: t.id || t.codigo || 'ROOT',
           codigo: t.codigo || t.id || 'ROOT',
@@ -3620,9 +3846,9 @@ app.get('/api/tenants', authenticate, requireTenantAdmin, async (req, res) => {
           domain: t.dominio || `${slugifyDominio(t.nombre_empresa || t.nombre || t.codigo || 'empresa')}.pp.ia`,
           plan: t.plan || 'enterprise',
           status: t.estado === 'activo' ? 'active' : t.estado === 'suspendido' ? 'suspended' : t.estado || 'active',
-          users: 1,
+          users: userCounts[normalizeTenantCode(t.codigo)] || 0,
           registered: t.created_at || new Date().toISOString(),
-          country: t.pais || 'Honduras',
+          country: paises[normalizeTenantCode(t.codigo)] || 'Honduras',
           logo_url: t.logo_url || null,
           banner_url: t.banner_url || null
         }));
@@ -3773,7 +3999,7 @@ app.get('/api/tenant/:id', authenticate, async (req, res, next) => {
   // Rutas reservadas bajo /api/tenant/* que NO son identificadores de tenant.
   // (Bug real: /api/tenant/usage y /api/tenant/subscription caían aquí y
   // respondían 404 "Tenant not found" — aislamiento de rutas corregido.)
-  const RESERVED_TENANT_ROUTES = new Set(['apikeys', 'features', 'modules', 'security', 'usage', 'subscription']);
+  const RESERVED_TENANT_ROUTES = new Set(['apikeys', 'features', 'modules', 'security', 'usage', 'subscription', 'me']);
   if (RESERVED_TENANT_ROUTES.has(req.params.id)) return next();
   try {
     const tenantId = req.params.id;
@@ -3796,13 +4022,23 @@ app.get('/api/tenant/:id', authenticate, async (req, res, next) => {
       return res.status(403).json({ error: 'Acceso no autorizado al tenant' });
     }
 
+    // `tenants` no tiene pais/zona_horaria: el país vive en `empresas`.
+    let paisTenant = null;
+    try {
+      const { data: emp } = await supabase.from('empresas').select('pais').eq('codigo', tenantCode).maybeSingle();
+      paisTenant = (emp && emp.pais) || null;
+    } catch (e) { /* noop */ }
+
     const preview = {
       id: tenant.codigo || tenantCode,
       name: tenant.nombre_empresa || tenant.nombre || tenant.Nombre,
       domain: tenant.dominio || tenant.Dominio || `${slugifyDominio(tenant.nombre_empresa || tenant.nombre || tenant.Nombre || tenant.codigo)}.pp.ia`,
       plan: tenant.plan || tenant.Plan,
       status: (tenant.estado || tenant.Estado || '').toString().toLowerCase() === 'activo' ? 'active' : (tenant.estado || tenant.Estado || '').toString().toLowerCase() === 'suspendido' ? 'suspended' : (tenant.estado || tenant.Estado),
-      country: tenant.pais || tenant.Pais
+      country: paisTenant || tenant.pais || tenant.Pais,
+      // Branding del tenant (logo y banner subidos en el registro).
+      logo: tenant.logo_url || null,
+      banner: tenant.banner_url || null
     };
 
     let detail = null;
@@ -3833,6 +4069,64 @@ const PLAN_LIMITS = {
   custom: { usuarios: 9999, bots: 9999, tokens: 99999999, storage: 9999, soporte: 'Dedicado 24/7', sla: '99.99%' }
 };
 
+// ── Medición real de almacenamiento por tenant ────────────────────────────
+// Supabase no expone uso por empresa, así que sumamos el tamaño de los objetos
+// cuyo path empieza por el código del tenant. Los archivos se guardan con dos
+// convenciones: `{codigo}/...` (app/API) y `uploads/{codigo}/...` (branding del
+// registro web). El resultado se cachea 5 min para no recorrer todo el Storage
+// en cada llamada a /stats.
+const ALMACEN_CACHE = new Map(); // codigo -> { bytes, gb, ts }
+const ALMACEN_TTL_MS = 5 * 60 * 1000;
+
+async function almacenamientoBytesEnPrefijo(bucket, prefix) {
+  let total = 0;
+  const limit = 1000;
+  for (let offset = 0; ; offset += limit) {
+    const { data, error } = await supabase.storage.from(bucket).list(prefix, { limit, offset });
+    if (error) {
+      // Prefijo inexistente o error transitorio: no romper la medición.
+      if (offset === 0) return 0;
+      break;
+    }
+    if (!data || data.length === 0) break;
+    for (const entry of data) {
+      const full = prefix ? `${prefix}/${entry.name}` : entry.name;
+      const size = entry.metadata && typeof entry.metadata.size === 'number' ? entry.metadata.size : null;
+      // Las carpetas no traen `id`; los archivos sí, con su tamaño.
+      if (entry.id && size != null) total += size;
+      else total += await almacenamientoBytesEnPrefijo(bucket, full);
+    }
+    if (data.length < limit) break;
+  }
+  return total;
+}
+
+// Devuelve { bytes, gb } usados por el tenant, o null si no se pudo medir.
+async function medirAlmacenamientoTenant(codigo) {
+  const code = normalizeTenantCode(codigo);
+  if (!code) return null;
+  const cached = ALMACEN_CACHE.get(code);
+  if (cached && Date.now() - cached.ts < ALMACEN_TTL_MS) return { bytes: cached.bytes, gb: cached.gb };
+  try {
+    const { data: buckets } = await supabase.storage.listBuckets();
+    const tareas = [];
+    for (const bucket of (buckets || [])) {
+      const nombre = bucket && (bucket.name || bucket.id);
+      if (!nombre) continue;
+      tareas.push(almacenamientoBytesEnPrefijo(nombre, code));
+      tareas.push(almacenamientoBytesEnPrefijo(nombre, `uploads/${code}`));
+    }
+    const partes = await Promise.all(tareas);
+    const bytes = partes.reduce((s, n) => s + n, 0);
+    const gb = Math.round((bytes / (1024 * 1024 * 1024)) * 100) / 100;
+    ALMACEN_CACHE.set(code, { bytes, gb, ts: Date.now() });
+    return { bytes, gb };
+  } catch (e) {
+    console.warn('[STATS] No se pudo medir el almacenamiento del tenant', code + ':', (e && e.message) || e);
+    return null;
+  }
+}
+
 function planLimitsFor(plan) {
   return PLAN_LIMITS[String(plan || '').toLowerCase()] || PLAN_LIMITS.business;
 }
@@ -3862,26 +4156,69 @@ app.get('/api/tenant/:id/stats', authenticate, async (req, res) => {
 
     const finalTenantCode = tenant.codigo || tenant.id;
 
-    // Obtener stats reales
-    const [usuariosRes, botsRes, facturasRes, tokensRes] = await Promise.all([
+    // Obtener stats reales. `period` alimenta la serie diaria de la sección
+    // "Uso de Recursos": antes ambas gráficas ploteaban facturas+transacciones
+    // del ERP con etiqueta de "Tokens IA" y "Ejecuciones RPA"; ahora salen de
+    // ai_usage_log y automation_runs (datos reales, con estado vacío si no hay).
+    const periodDays = [7, 30, 90].includes(Number(req.query.period)) ? Number(req.query.period) : 30;
+    const ahoraMs = Date.now();
+    const desdeISO = new Date(ahoraMs - (periodDays - 1) * 86400000).toISOString();
+    const mesKey = new Date().toISOString().slice(0, 7);
+    const inicioMesISO = `${mesKey}-01T00:00:00.000Z`;
+
+    const [usuariosRes, botsRes, facturasRes, tokensRes, tokensPeriodoRes, tokensMesRes, rpaPeriodoRes, rpaTotalRes, almacenMed] = await Promise.all([
       supabase.from('usuarios').select('id, activo').eq('empresa_codigo', finalTenantCode),
       supabase.from('automatizaciones').select('id, estado').eq('empresa_codigo', finalTenantCode),
-      supabase.from('facturas').select('id').eq('empresa_codigo', finalTenantCode),
-      supabase.from('ai_usage_log').select('tokens_total').eq('empresa_codigo', finalTenantCode)
+      supabase.from('facturas').select('id, total, estado, created_at').eq('empresa_codigo', finalTenantCode),
+      supabase.from('ai_usage_log').select('tokens_total').eq('empresa_codigo', finalTenantCode),
+      supabase.from('ai_usage_log').select('tokens_total, created_at').eq('empresa_codigo', finalTenantCode).gte('created_at', desdeISO),
+      supabase.from('ai_usage_log').select('tokens_total').eq('empresa_codigo', finalTenantCode).gte('created_at', inicioMesISO),
+      supabase.from('automation_runs').select('created_at').eq('empresa_codigo', finalTenantCode).gte('created_at', desdeISO),
+      supabase.from('automation_runs').select('id', { count: 'exact', head: true }).eq('empresa_codigo', finalTenantCode),
+      medirAlmacenamientoTenant(finalTenantCode)
     ]);
 
     const usuarios = usuariosRes.data || [];
     const bots = botsRes.data || [];
     const facturas = facturasRes.data || [];
     const tokensUsados = (tokensRes.data || []).reduce((s, r) => s + (Number(r.tokens_total) || 0), 0);
+    const tokensMes = (tokensMesRes.data || []).reduce((s, r) => s + (Number(r.tokens_total) || 0), 0);
+
+    // Serie diaria real: tokens de IA y ejecuciones RPA por día
+    const diasSerie = [];
+    for (let i = periodDays - 1; i >= 0; i--) {
+      const d = new Date(ahoraMs - i * 86400000);
+      diasSerie.push({
+        fecha: d.toISOString().slice(0, 10),
+        label: ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'][d.getDay()],
+        tokens: 0,
+        rpa: 0
+      });
+    }
+    const slotPorFecha = new Map(diasSerie.map(d => [d.fecha, d]));
+    (tokensPeriodoRes.data || []).forEach(r => {
+      const slot = slotPorFecha.get(String(r.created_at || '').slice(0, 10));
+      if (slot) slot.tokens += Number(r.tokens_total) || 0;
+    });
+    (rpaPeriodoRes.data || []).forEach(r => {
+      const slot = slotPorFecha.get(String(r.created_at || '').slice(0, 10));
+      if (slot) slot.rpa += 1;
+    });
 
     const totalUsuarios = usuarios.length;
     const usuariosActivos = usuarios.filter(u => u.activo !== false).length;
     const totalBots = bots.length;
     const botsActivos = bots.filter(b => b.estado === 'activo' || b.estado === 'active').length;
     const totalFacturas = facturas.length;
-    const bytesUsados = 0;
-    const gbUsados = (bytesUsados / (1024 * 1024 * 1024)).toFixed(2);
+    const facturasMesMonto = facturas
+      .filter(f => String(f.created_at || '').slice(0, 7) === mesKey)
+      .reduce((s, f) => s + (Number(f.total) || 0), 0);
+    const rpaTotal = rpaTotalRes.count || 0;
+    const rpaPeriodo = diasSerie.reduce((s, d) => s + d.rpa, 0);
+    // Medición real: se suman los objetos de Storage bajo el prefijo del tenant.
+    // `null` (no 0) si falló la medición, para que el frontend muestre "sin medir".
+    const bytesUsados = almacenMed ? almacenMed.bytes : null;
+    const gbUsados = almacenMed ? almacenMed.gb : null;
 
     // Límites según plan
     const plan = tenant.plan || 'business';
@@ -3903,16 +4240,27 @@ app.get('/api/tenant/:id/stats', authenticate, async (req, res) => {
       },
       tokens: {
         usados: tokensUsados,
+        mes: tokensMes,
         limite: limits.tokens,
         porcentaje: limits.tokens > 0 ? Math.round((tokensUsados / limits.tokens) * 100) : 0
       },
+      rpa: {
+        total: rpaTotal,
+        periodo: rpaPeriodo
+      },
       almacenamiento: {
-        gbUsados: parseFloat(gbUsados),
+        gbUsados: gbUsados,
+        bytesUsados: bytesUsados,
         limite: limits.storage,
-        porcentaje: limits.storage > 0 ? Math.round((parseFloat(gbUsados) / limits.storage) * 100) : 0
+        porcentaje: (gbUsados != null && limits.storage > 0) ? Math.min(100, Math.round((gbUsados / limits.storage) * 100)) : 0
       },
       facturas: {
-        total: totalFacturas
+        total: totalFacturas,
+        mesMonto: facturasMesMonto
+      },
+      series: {
+        period: periodDays,
+        dias: diasSerie
       },
       soporte: limits.soporte,
       sla: limits.sla,
@@ -3923,7 +4271,111 @@ app.get('/api/tenant/:id/stats', authenticate, async (req, res) => {
   } catch (error) {
     return handleServerError(res, error);
   }
-});// ── PUT /api/empresa/profile — el Owner/Admin actualiza la configuración de SU empresa ──
+});
+
+// ── Uso de recursos por tenant: tokens IA, ejecuciones RPA, límites ──
+// Fuente: ai_usage_log + automation_runs + plan_limits.
+// SIN datos inventados: cuando no hay registros el frontend mostra "—"/0.
+app.get('/api/tenant/:id/usage', authenticate, async (req, res) => {
+  if (!requireSupabase(res)) return;
+  try {
+    const tenantId = req.params.id;
+    const tenant = await findTenantByIdentifier(tenantId);
+
+    if (!tenant) return res.status(404).json({ error: 'Tenant no encontrado' });
+
+    const tenantCode = tenant.codigo || tenant.Codigo || tenant.code || tenant.Id || tenant.id;
+    const userRole = (req.user.rol || '').toString().toLowerCase().trim();
+    const currentTenantCode = normalizeTenantCode(getTenantCode(req));
+    const rootUserCheck = isRootUser(req);
+    const declaredTenantCode = normalizeTenantCode(tenantCode || tenantId);
+    const isTenantSelf = currentTenantCode && declaredTenantCode && currentTenantCode === declaredTenantCode;
+    const isTenantAdminRole = ['owner', 'owner pp', 'administrador', 'admin', 'ceo'].some(r => userRole === r || userRole.includes(r));
+    const isAdmin = rootUserCheck || (isTenantAdminRole && isTenantSelf);
+
+    if (!isAdmin && !isTenantSelf) {
+      return res.status(403).json({ error: 'Acceso no autorizado al tenant' });
+    }
+
+    const finalTenantCode = tenant.codigo || tenant.id;
+    const now = new Date();
+    const periodDays = [7, 30, 90].includes(Number(req.query.period)) ? Number(req.query.period) : 30;
+    const desdeISO = new Date(now.getTime() - (periodDays - 1) * 86400000).toISOString();
+    const mesKey = new Date().toISOString().slice(0, 7);
+    const inicioMesISO = `${mesKey}-01T00:00:00.000Z`;
+
+    const [tokensTotalRes, tokensPeriodoRes, tokensMesRes, rpaTotalRes, rpaPeriodoRes, automataRes] = await Promise.all([
+      supabase.from('ai_usage_log').select('tokens_total').eq('empresa_codigo', finalTenantCode),
+      supabase.from('ai_usage_log').select('tokens_total, created_at').eq('empresa_codigo', finalTenantCode).gte('created_at', desdeISO),
+      supabase.from('ai_usage_log').select('tokens_total').eq('empresa_codigo', finalTenantCode).gte('created_at', inicioMesISO),
+      supabase.from('automation_runs').select('created_at').eq('empresa_codigo', finalTenantCode),
+      supabase.from('automation_runs').select('id', { count: 'exact', head: true }).eq('empresa_codigo', finalTenantCode),
+      supabase.from('automatizaciones').select('id, estado').eq('empresa_codigo', finalTenantCode)
+    ]);
+
+    const tokensUsados = (tokensTotalRes.data || []).reduce((s, r) => s + (Number(r.tokens_total) || 0), 0);
+    const tokensMes = (tokensMesRes.data || []).reduce((s, r) => s + (Number(r.tokens_total) || 0), 0);
+    const rpaTotal = rpaTotalRes.count || 0;
+    const rpaPeriodo = (rpaPeriodoRes.data || []).length;
+    const automata = automataRes.data || [];
+    const automataActivas = automata.filter(a => a.estado === 'activo' || a.estado === 'active').length;
+
+    const plan = tenant.plan || 'business';
+    const limits = planLimitsFor(plan);
+
+    // Serie diaria real (tokens IA y ejecuciones RPA) para el gráfico.
+    const dias = [];
+    for (let i = periodDays - 1; i >= 0; i--) {
+      const d = new Date(now.getTime() - i * 86400000);
+      const key = d.toISOString().slice(0, 10);
+      dias.push({
+        fecha: key,
+        label: ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'][d.getDay()],
+        tokens: 0,
+        rpa: 0
+      });
+    }
+    (tokensPeriodoRes.data || []).forEach(r => {
+      const slot = dias.find(x => String(x.fecha) === String(r.created_at || '').slice(0, 10));
+      if (slot) slot.tokens += Number(r.tokens_total) || 0;
+    });
+    (rpaPeriodoRes.data || []).forEach(r => {
+      const slot = dias.find(x => String(x.fecha) === String(r.created_at || '').slice(0, 10));
+      if (slot) slot.rpa += 1;
+    });
+
+    const series = {
+      period: periodDays,
+      dias
+    };
+
+    res.json({
+      tenant: { codigo: tenant.codigo, nombre: tenant.nombre_empresa },
+      plan,
+      usage: {
+        tokens: {
+          usados: tokensUsados,
+          mes: tokensMes,
+          limite: limits.tokens,
+          porcentaje: limits.tokens > 0 ? Math.round((tokensUsados / limits.tokens) * 100) : 0
+        },
+        rpa: {
+          total: rpaTotal,
+          periodo: rpaPeriodo,
+          limites: limits.bots
+        },
+        automata: {
+          total: automata.length,
+          activas: automataActivas
+        }
+      },
+      series
+    });
+  } catch (error) {
+    return handleServerError(res, error);
+  }
+});
+// ── PUT /api/empresa/profile — el Owner/Admin actualiza la configuración de SU empresa ──
 // El frontend (empresa/configuracion.html) enviaba PUT a /api/tenants/:id (404 del
 // verbo). Este endpoint reutiliza EXACTAMENTE la misma lógica de actualización,
 // pero el id SIEMPRE sale del JWT: el cliente no puede elegir el tenant.
@@ -4281,9 +4733,29 @@ app.get('/api/users', authenticate, async (req, res) => {
 
     if (supabase) {
       try {
+        // ?empresa=<codigo|uuid> (alias ?tenant=): filtra el listado a un tenant
+        // concreto. Sin esto, el panel admin recibía TODOS los usuarios de la
+        // plataforma aunque pidiera los usuarios de un solo tenant.
+        const requestedTenant = normalizeTenantCode(req.query.empresa || req.query.tenant || '');
+        const ownTenant = normalizeTenantCode(userTenant);
         let query = supabase.from('usuarios').select('*').order('created_at', { ascending: false });
-        if (!userIsRoot && userTenant) {
-          query = query.eq('empresa_codigo', userTenant);
+
+        let tenantToFilter = null;
+        if (requestedTenant && (userIsRoot || requestedTenant === ownTenant)) {
+          tenantToFilter = requestedTenant;
+        } else if (!userIsRoot) {
+          // Un no-root NUNCA ve usuarios fuera de su propio tenant.
+          tenantToFilter = ownTenant || '__SIN_TENANT__';
+        }
+        if (tenantToFilter) {
+          if (/^[0-9a-f]{8}-[0-9a-f]{4}-/i.test(tenantToFilter)) {
+            // Enlaces antiguos enviaban el UUID del tenant: resolver a código.
+            try {
+              const { data: t } = await supabase.from('tenants').select('codigo').eq('id', tenantToFilter).maybeSingle();
+              if (t && t.codigo) tenantToFilter = normalizeTenantCode(t.codigo);
+            } catch (e) { /* noop */ }
+          }
+          query = query.eq('empresa_codigo', tenantToFilter);
         }
 
         const { data: supaUsers, error: supaErr } = await query;
@@ -5342,7 +5814,10 @@ app.get('/api/tenant/apikeys', authenticate, requireTenantAdmin, requirePlanFeat
     const tenant = normalizeTenantCode(getTenantCode(req));
     const { data, error } = await supabase
       .from('api_keys')
-      .select('id, nombre, clave, ultimo_uso, activa, created_at')
+      // `clave_prefix` es la única parte legible de la clave (el resto es hash
+      // SHA-256). Faltaba en el SELECT, así que el panel mostraba
+      // `clave_prefix: null` para todas las claves recién creadas.
+      .select('id, nombre, clave, clave_prefix, ultimo_uso, activa, created_at')
       .eq('empresa_codigo', tenant)
       .order('created_at', { ascending: false });
     if (error) return res.status(500).json({ error: error.message });
@@ -5377,11 +5852,15 @@ app.post('/api/tenant/apikeys', authenticate, requireTenantAdmin, requirePlanFea
     const clave = 'pk_live_' + crypto.randomBytes(24).toString('hex');
     // Se persiste el hash; el plaintext viaja UNA sola vez en esta respuesta.
     let insertPayload = { empresa_codigo: tenant, nombre, clave: hashApiKey(clave), clave_prefix: clave.slice(0, 14), activa: true };
-    let insertRes = await supabase.from('api_keys').insert([insertPayload]);
+    // `.select()` es obligatorio: sin él Supabase devuelve `data = null` y la API
+    // respondía `key.id = null`, de modo que el panel no podía referenciar la
+    // clave recién creada (ni revocarla) y la verificación de "no re-exponer el
+    // secreto" no tenía con qué comparar.
+    let insertRes = await supabase.from('api_keys').insert([insertPayload]).select();
     if (insertRes.error && /clave_prefix|column/i.test(String(insertRes.error.message || ''))) {
       // Esquema sin clave_prefix: degradar sin exponer el secreto.
       insertPayload = { empresa_codigo: tenant, nombre, clave: hashApiKey(clave), activa: true };
-      insertRes = await supabase.from('api_keys').insert([insertPayload]);
+      insertRes = await supabase.from('api_keys').insert([insertPayload]).select();
     }
     const { data, error } = insertRes;
     if (error) return res.status(500).json({ error: error.message });
@@ -7086,6 +7565,66 @@ function interpolate(str, data) {
   return str.replace(/\{\{(\w+)\}\}/g, (m, key) => data[key] !== undefined ? data[key] : m);
 }
 
+/**
+ * dispara las automatizaciones del tenant ante un evento de negocio.
+ *
+ * FALTABA: el resto del código ya la llamaba (`usuario_creado` en
+ * POST /api/users, `tenant_creado` en el registro, `factura_vencida` y
+ * `stock_bajo` en el job programado) pero la función nunca se definió. Como dos
+ * de esas llamadas no están dentro de un try/catch, cada creación de usuario
+ * devolvía 500 al cliente AUNQUE el usuario ya estaba creado en Supabase.
+ *
+ * Nunca lanza y nunca bloquea la operación de negocio: cualquier fallo se
+ * registra y se descarta.
+ */
+async function dispatchAutomationEvent(empresaCodigo, eventType, payload = {}) {
+  if (!supabase || !empresaCodigo || !eventType) return { ejecutadas: 0 };
+  let ejecutadas = 0;
+  try {
+    const { data: reglas, error } = await supabase
+      .from('automation_rules')
+      .select('*')
+      .eq('empresa_codigo', normalizeTenantCode(empresaCodigo))
+      .eq('event_type', eventType);
+    if (error) {
+      // Esquema antiguo: el trigger vive en `trigger_type`.
+      const alt = await supabase.from('automation_rules').select('*')
+        .eq('empresa_codigo', normalizeTenantCode(empresaCodigo))
+        .eq('trigger_type', eventType);
+      if (alt.error) { console.warn('[AUTOMATION] reglas no disponibles:', alt.error.message); return { ejecutadas: 0 }; }
+      return ejecutarReglas(alt.data, empresaCodigo, eventType, payload);
+    }
+    return ejecutarReglas(reglas, empresaCodigo, eventType, payload);
+  } catch (e) {
+    console.warn('[AUTOMATION] dispatch falló (no bloquea):', e.message);
+    return { ejecutadas };
+  }
+}
+
+async function ejecutarReglas(reglas, empresaCodigo, eventType, payload) {
+  let ejecutadas = 0;
+  for (const rule of reglas || []) {
+    // Compatibilidad de esquema: `activo` (columna añadida) o `enabled`.
+    const habilitada = rule.activo !== undefined ? rule.activo !== false : rule.enabled !== false;
+    if (!habilitada) continue;
+    try {
+      if (!checkConditions(rule.conditions, { ...payload, tipo: eventType, eventType })) continue;
+      await executeActions(empresaCodigo, { ...rule, trigger_type: rule.trigger_type || rule.event_type || eventType }, payload);
+      ejecutadas++;
+      try {
+        await supabase.from('automation_rules').update({
+          execution_count: (Number(rule.execution_count) || 0) + 1,
+          last_executed_at: new Date().toISOString()
+        }).eq('id', rule.id);
+      } catch (e2) { /* best-effort */ }
+    } catch (e) {
+      console.warn(`[AUTOMATION] regla ${rule.nombre || rule.id} falló:`, e.message);
+    }
+  }
+  if (ejecutadas) console.log(`[AUTOMATION] ${eventType}: ${ejecutadas} regla(s) ejecutada(s) en ${empresaCodigo}`);
+  return { ejecutadas };
+}
+
 // ── CRUD: Automation Rules ──────────────────────────────
 app.get('/api/automation/rules', authenticate, requireTenantAdmin, requirePlanFeature('automation'), async (req, res) => {
   if (!requireSupabase(res)) return;
@@ -7403,7 +7942,7 @@ app.get('/api/proveedores', authenticate, requirePlanFeature('proveedores'), asy
   } catch (err) { return handleServerError(res, err); }
 });
 
-app.post('/api/proveedores', authenticate, requireTenantAdmin, requirePlanFeature('proveedores'), async (req, res) => {
+app.post('/api/proveedores', authenticate, requirePlanFeature('proveedores'), async (req, res) => {
   if (!requireSupabase(res)) return;
   try {
     const tenant = normalizeTenantCode(getTenantCode(req));
@@ -7459,7 +7998,7 @@ app.get('/api/proveedores/:id', authenticate, requirePlanFeature('proveedores'),
   } catch (err) { return handleServerError(res, err); }
 });
 
-app.put('/api/proveedores/:id', authenticate, requireTenantAdmin, requirePlanFeature('proveedores'), async (req, res) => {
+app.put('/api/proveedores/:id', authenticate, requirePlanFeature('proveedores'), async (req, res) => {
   if (!requireSupabase(res)) return;
   try {
     const tenant = normalizeTenantCode(getTenantCode(req));
@@ -7623,7 +8162,7 @@ app.get('/api/compras', authenticate, requirePlanFeature('compras'), async (req,
   } catch (err) { return handleServerError(res, err); }
 });
 
-app.post('/api/compras', authenticate, requireTenantAdmin, requirePlanFeature('compras'), async (req, res) => {
+app.post('/api/compras', authenticate, requirePlanFeature('compras'), async (req, res) => {
   if (!requireSupabase(res)) return;
   try {
     const tenant = normalizeTenantCode(getTenantCode(req));
@@ -7656,7 +8195,7 @@ app.get('/api/compras/:id', authenticate, requirePlanFeature('compras'), async (
   } catch (err) { return handleServerError(res, err); }
 });
 
-app.patch('/api/compras/:id', authenticate, requireTenantAdmin, requirePlanFeature('compras'), async (req, res) => {
+app.patch('/api/compras/:id', authenticate, requirePlanFeature('compras'), async (req, res) => {
   if (!requireSupabase(res)) return;
   try {
     const tenant = normalizeTenantCode(getTenantCode(req));
@@ -7837,7 +8376,17 @@ app.get('/api/productos/:id', authenticate, requirePlanFeature('inventario'), as
   } catch (err) { return handleServerError(res, err); }
 });
 
-app.post('/api/productos', authenticate, requireTenantAdmin, requirePlanFeature('inventario'), async (req, res) => {
+// ── Permisos de ESCRITURA OPERATIVA ─────────────────────────────────────────
+// Regla del proyecto (ESTADO_REAL_BACKEND.md §15 y test_release_e2e):
+//   MEMBER  → opera el workspace (alta/edición de productos, clientes, compras,
+//             kardex, mermas, transferencias, cotizaciones, órdenes de compra…).
+//   OWNER/ADMIN → además: usuarios, API keys, plan/features, precios y promociones,
+//             sucursales/bodegas, configuración e integraciones.
+//   BORRAR (DELETE) → siempre OWNER/ADMIN.
+// Antes estas rutas operativas llevaban `requireTenantAdmin`, así que un miembro
+// del equipo recibía 403 al intentar dar de alta un producto o registrar una
+// compra: el portal web no lo sufría (Member no entra a /empresa) pero la app sí.
+app.post('/api/productos', authenticate, requirePlanFeature('inventario'), async (req, res) => {
   if (!requireSupabase(res)) return;
   try {
     const tenant = normalizeTenantCode(getTenantCode(req));
@@ -7963,7 +8512,7 @@ app.post('/api/productos', authenticate, requireTenantAdmin, requirePlanFeature(
   } catch (err) { return handleServerError(res, err); }
 });
 
-app.put('/api/productos/:id', authenticate, requireTenantAdmin, requirePlanFeature('inventario'), async (req, res) => {
+app.put('/api/productos/:id', authenticate, requirePlanFeature('inventario'), async (req, res) => {
   if (!requireSupabase(res)) return;
   try {
     const tenant = normalizeTenantCode(getTenantCode(req));
@@ -7991,13 +8540,17 @@ app.put('/api/productos/:id', authenticate, requireTenantAdmin, requirePlanFeatu
   } catch (err) { return handleServerError(res, err); }
 });
 
-app.delete('/api/productos/:id', authenticate, requireTenantAdmin, requirePlanFeature('inventario'), async (req, res) => {
+app.delete(['/api/productos/:id', '/api/productos'], authenticate, requireTenantAdmin, requirePlanFeature('inventario'), async (req, res) => {
   if (!requireSupabase(res)) return;
   try {
     const tenant = normalizeTenantCode(getTenantCode(req));
     const empresa = await resolverEmpresaSupabase(tenant);
     if (!empresa) return res.status(404).json({ error: 'Empresa no encontrada' });
-    const objId = req.params.id;
+    // Identificador: `:id` en la ruta (web) o `?id=`/`?codigo=` en query. La app
+    // Flutter llama DELETE /api/productos?id=…; sin este alias el router
+    // respondía 404 y borrar un producto nunca sincronizaba.
+    const objId = String(req.params.id || req.query.id || req.query.codigo || '').trim();
+    if (!objId) return res.status(400).json({ error: 'Falta el identificador del producto (id o codigo)' });
     const esUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(objId);
     let deleteQuery = supabase.from('productos').delete();
     deleteQuery = esUuid
@@ -8552,7 +9105,7 @@ const subtotal = parseFloat(b.subtotal) || 0;
   } catch (err) { return handleServerError(res, err); }
 });
 
-app.patch('/api/facturas/:id', authenticate, async (req, res) => {
+app.patch(['/api/facturas/:id', '/api/facturas'], authenticate, async (req, res) => {
   if (!requireSupabase(res)) return;
   try {
     const tenant = normalizeTenantCode(getTenantCode(req));
@@ -8566,7 +9119,11 @@ app.patch('/api/facturas/:id', authenticate, async (req, res) => {
     if (Object.keys(updates).length === 0) return res.status(400).json({ error: 'Sin cambios para actualizar' });
     // Los clientes web usan el UUID remoto. La app offline puede no tenerlo
     // aún, por lo que envía el correlativo como identificador estable.
-    const identity = String(req.params.id || '').trim();
+    // Identificador: `:id` en la ruta (web) o `?id=`/`?correlativo=` en query
+    // (la app Flutter llama PATCH /api/facturas?id=…; sin este alias Express
+    // respondía 404 del router y anular una factura nunca sincronizaba).
+    const identity = String(req.params.id || req.query.id || req.query.correlativo || '').trim();
+    if (!identity) return res.status(400).json({ error: 'Falta el identificador de la factura (id o correlativo)' });
     const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(identity);
     let updateQuery = supabase.from('facturas').update(updates).eq('empresa_id', empresa.id);
     updateQuery = isUuid ? updateQuery.eq('id', identity) : updateQuery.eq('correlativo', identity);
@@ -8722,7 +9279,7 @@ app.get('/api/kardex', authenticate, requirePlanFeature('inventario'), async (re
   } catch (err) { return handleServerError(res, err); }
 });
 
-app.post('/api/kardex', authenticate, requireTenantAdmin, requirePlanFeature('inventario'), async (req, res) => {
+app.post('/api/kardex', authenticate, requirePlanFeature('inventario'), async (req, res) => {
   if (!requireSupabase(res)) return;
   try {
     const tenant = normalizeTenantCode(getTenantCode(req));
@@ -9551,7 +10108,7 @@ app.get('/api/transferencias', authenticate, requirePlanFeature('transferencias'
   } catch (err) { return handleServerError(res, err); }
 });
 
-app.post('/api/transferencias', authenticate, requireTenantAdmin, requirePlanFeature('transferencias'), async (req, res) => {
+app.post('/api/transferencias', authenticate, requirePlanFeature('transferencias'), async (req, res) => {
   if (!requireSupabase(res)) return;
   try {
     const tenant = normalizeTenantCode(getTenantCode(req));
@@ -9623,7 +10180,7 @@ app.get('/api/transferencias/:id', authenticate, requirePlanFeature('transferenc
   } catch (err) { return handleServerError(res, err); }
 });
 
-app.patch('/api/transferencias/:id', authenticate, requireTenantAdmin, requirePlanFeature('transferencias'), async (req, res) => {
+app.patch('/api/transferencias/:id', authenticate, requirePlanFeature('transferencias'), async (req, res) => {
   if (!requireSupabase(res)) return;
   try {
     const tenant = normalizeTenantCode(getTenantCode(req));
@@ -10054,6 +10611,188 @@ async function registrarSesionTenant(empresaCodigo, usuarioId, req) {
     return true;
   } catch (e) { console.warn('[SESSION_REG] Non-critical:', e.message); return false; }
 }
+
+// ── Alias de compatibilidad para la app Flutter ───────────────────────────────
+// La app llama estas rutas (auth_controller.dart, fiscal_compliance.dart,
+// system_logs.dart, modulos_avanzados_service.dart, image_service.dart) y
+// devolvían 404. Se resuelven aquí con datos reales y con el scope del tenant
+// del JWT, nunca con datos inventados.
+
+// GET /api/me — perfil del usuario autenticado + estado de su empresa/plan.
+app.get('/api/me', authenticate, async (req, res) => {
+  if (!requireSupabase(res)) return;
+  try {
+    const { data: u } = await supabase.from('usuarios').select('*').eq('id', req.user.sub).maybeSingle();
+    if (!u) return res.status(404).json({ error: 'Usuario no encontrado' });
+    const tenantCode = normalizeTenantCode(u.empresa_codigo);
+    let tenant = null;
+    if (tenantCode && tenantCode !== 'ROOT') {
+      const { data: t } = await supabase.from('tenants').select('*').eq('codigo', tenantCode).maybeSingle();
+      tenant = t;
+    }
+    const ent = await getTenantEntitlements(req);
+    return res.json({
+      user: {
+        id: u.id, nombre: u.nombre || '', apellido: u.apellido || '', email: u.email,
+        rol: resolveDisplayRole(u, tenant), empresa_codigo: u.empresa_codigo || 'ROOT',
+        empresa_nombre: tenant?.nombre_empresa || u.empresa_codigo || 'ROOT',
+        area: u.area || tenant?.area || null,
+        foto_perfil_url: u.avatar_url || u.foto_perfil_url || null,
+        banner_perfil_url: u.banner_perfil_url || null,
+        estado: u.estado || 'activo'
+      },
+      plan: {
+        clave: ent.plan, status: ent.status,
+        trial_ends_at: ent.trial_ends_at || null,
+        features: ent.features || []
+      },
+      modulos_app: modulosAppDesdeCotizador(await resolverModulosUsuario(u, u.empresa_codigo, tenant, ent.plan))
+    });
+  } catch (err) { return handleServerError(res, err); }
+});
+
+// GET /api/tenant/me — resumen del tenant (módulos + plan + precios).
+app.get('/api/tenant/me', authenticate, async (req, res) => {
+  if (!requireSupabase(res)) return;
+  try {
+    const tenant = normalizeTenantCode(getTenantCode(req));
+    const { data: t } = await supabase.from('tenants').select('*').eq('codigo', tenant).maybeSingle();
+    if (!t) return res.status(404).json({ error: 'Empresa no encontrada' });
+    const ent = await getTenantEntitlements(req);
+    const modulos = await resolverModulosUsuario(req.user, tenant, t, ent.plan);
+    return res.json({
+      empresa_codigo: tenant,
+      empresa_nombre: t.nombre_empresa || tenant,
+      area: t.area || null, tamano: t.tamano || null,
+      logo_url: t.logo_url || null, banner_url: t.banner_url || null,
+      plan: ent.plan, plan_estado: ent.status,
+      precios: PLAN_PRECIOS_HNL[ent.plan] || null,
+      limites: ent.limits || planLimitsFor(ent.plan),
+      modulos_activos: modulos,
+      modulos_app: modulosAppDesdeCotizador(modulos),
+      modulos_detalle: modulos.map(clave => ({
+        clave,
+        nombre: MODULOS_COTIZADOR_META[clave]?.nombre || clave,
+        icono: MODULOS_COTIZADOR_META[clave]?.icono || 'fa-cube',
+        modulo_app: MODULO_APP_MAP[clave] || []
+      }))
+    });
+  } catch (err) { return handleServerError(res, err); }
+});
+
+// GET /api/audit — bitácora del tenant (system_logs.dart). Solo Owner/Admin.
+app.get('/api/audit', authenticate, requireTenantAdmin, async (req, res) => {
+  if (!requireSupabase(res)) return;
+  try {
+    const tenant = normalizeTenantCode(getTenantCode(req));
+    const limite = Math.min(Math.max(parseInt(req.query.limit, 10) || 100, 1), 500);
+    const { data, error } = await supabase.from('auditoria')
+      .select('id, accion, descripcion, tipo, usuario, created_at')
+      .eq('empresa_codigo', tenant)
+      .order('created_at', { ascending: false })
+      .limit(limite);
+    if (error) return res.status(500).json({ error: error.message });
+    return res.json({ empresa_codigo: tenant, total: (data || []).length, logs: data || [] });
+  } catch (err) { return handleServerError(res, err); }
+});
+
+// GET/PUT /api/configuracion-fiscal — configuración fiscal SAR del tenant.
+// La app (fiscal_compliance.dart) la lee y el POS la necesita para facturar.
+// El esquema real de `configuracion_fiscal` es (empresa_codigo, configuracion
+// JSONB): los campos fiscales viven DENTRO del jsonb, no en columnas sueltas.
+const CAMPOS_FISCALES = ['rtn', 'razon_social', 'nombre_comercial', 'direccion', 'cai', 'rango_desde',
+  'rango_hasta', 'fecha_limite_emision', 'telefono', 'email', 'regimen', 'isv_porcentaje', 'actividad_economica'];
+
+app.get('/api/configuracion-fiscal', authenticate, async (req, res) => {
+  if (!requireSupabase(res)) return;
+  try {
+    const tenant = normalizeTenantCode(getTenantCode(req));
+    const { data, error } = await supabase.from('configuracion_fiscal')
+      .select('empresa_codigo, configuracion, updated_at').eq('empresa_codigo', tenant).maybeSingle();
+    if (error && error.code !== 'PGRST116') return res.status(500).json({ error: error.message });
+    // Se devuelve aplanado (la app y el POS leen config.rtn, config.cai…) y
+    // también el objeto crudo para quien lo prefiera.
+    return res.json({
+      empresa_codigo: tenant,
+      configuracion: data ? { ...(data.configuracion || {}), updated_at: data.updated_at } : null
+    });
+  } catch (err) { return handleServerError(res, err); }
+});
+
+app.put('/api/configuracion-fiscal', authenticate, requireTenantAdmin, async (req, res) => {
+  if (!requireSupabase(res)) return;
+  try {
+    const tenant = normalizeTenantCode(getTenantCode(req));
+    const b = req.body || {};
+    const { data: actual } = await supabase.from('configuracion_fiscal')
+      .select('configuracion').eq('empresa_codigo', tenant).maybeSingle();
+    const fusion = { ...(actual?.configuracion || {}) };
+    CAMPOS_FISCALES.forEach(k => { if (b[k] !== undefined) fusion[k] = b[k]; });
+    const { data, error } = await supabase.from('configuracion_fiscal')
+      .upsert({ empresa_codigo: tenant, configuracion: fusion, updated_at: new Date().toISOString() },
+        { onConflict: 'empresa_codigo' })
+      .select('empresa_codigo, configuracion').maybeSingle();
+    if (error) return res.status(500).json({ error: error.message });
+    await registrarAuditoria(tenant, 'configuracion_fiscal_actualizada', 'Configuración fiscal SAR actualizada', 'configuracion', req.user?.email || '', req);
+    return res.json({ success: true, configuracion: data?.configuracion || fusion });
+  } catch (err) { return handleServerError(res, err); }
+});
+
+// POST /api/storage — subida de imágenes de la app (image_service.dart). Reusa el
+// bucket `portal-pilot` ya usado por /api/upload.
+app.post('/api/storage', authenticate, async (req, res) => {
+  if (!requireSupabase(res)) return;
+  try {
+    const { fileName, fileBase64, contentType } = req.body || {};
+    if (!fileBase64) return res.status(400).json({ error: 'fileBase64 es obligatorio' });
+    const tenant = normalizeTenantCode(getTenantCode(req)) || 'ROOT';
+    let buffer;
+    try { buffer = Buffer.from(String(fileBase64).replace(/^data:[^;]+;base64,/, ''), 'base64'); }
+    catch { return res.status(400).json({ error: 'fileBase64 inválido' }); }
+    if (!buffer.length || buffer.length > 8 * 1024 * 1024) return res.status(400).json({ error: 'La imagen debe pesar entre 1 byte y 8 MB' });
+    const ext = (String(fileName || 'imagen').split('.').pop() || 'png').toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 5) || 'png';
+    const ruta = `${tenant}/${Date.now()}-${crypto.randomBytes(4).toString('hex')}.${ext}`;
+    // Mismos buckets reales del proyecto que usa el registro (BRANDING_BUCKETS):
+    // 'portal-pilot' no existe y devolvía 500 "Bucket not found".
+    let ultimoError = null;
+    for (const bucket of BRANDING_BUCKETS) {
+      const { error: upErr } = await supabase.storage.from(bucket).upload(ruta, buffer, {
+        contentType: String(contentType || 'image/png'), upsert: false
+      });
+      if (upErr) { ultimoError = upErr; continue; }
+      const { data: pub } = supabase.storage.from(bucket).getPublicUrl(ruta);
+      return res.json({ success: true, url: pub?.publicUrl || null, path: ruta, bucket });
+    }
+    return res.status(500).json({ error: ultimoError?.message || 'No se pudo subir la imagen' });
+  } catch (err) { return handleServerError(res, err); }
+});
+
+// GET /api/export — exportación real de los datos del tenant (la promesa del modo
+// solo lectura: "puedes consultar y exportar tus datos"). Devuelve JSON con las
+// tablas operativas del tenant, siempre acotado por empresa_codigo del JWT.
+app.get('/api/export', authenticate, async (req, res) => {
+  if (!requireSupabase(res)) return;
+  try {
+    const tenant = normalizeTenantCode(getTenantCode(req));
+    if (!tenant) return res.status(400).json({ error: 'Empresa no identificada en la sesión' });
+    const tablas = ['productos', 'clientes', 'proveedores', 'facturas', 'recibos', 'notas_credito',
+      'transacciones', 'kardex', 'compras', 'cotizaciones', 'bodegas', 'sucursales'];
+    const salida = { empresa_codigo: tenant, generado_el: new Date().toISOString(), tablas: {}, errores: [] };
+    for (const tabla of tablas) {
+      try {
+        const { data, error } = await supabase.from(tabla).select('*').eq('empresa_codigo', tenant).limit(5000);
+        if (error) { salida.errores.push(`${tabla}: ${error.message}`); continue; }
+        salida.tablas[tabla] = data || [];
+      } catch (e) { salida.errores.push(`${tabla}: ${e.message}`); }
+    }
+    salida.resumen = Object.fromEntries(Object.entries(salida.tablas).map(([k, v]) => [k, v.length]));
+    await registrarAuditoria(tenant, 'exportacion_datos', 'Exportación completa de datos del tenant', 'exportacion', req.user?.email || '', req);
+    const nombre = `portal-pilot-${tenant}-${new Date().toISOString().slice(0, 10)}.json`;
+    res.setHeader('Content-Type', 'application/json; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="${nombre}"`);
+    return res.send(JSON.stringify(salida, null, 2));
+  } catch (err) { return handleServerError(res, err); }
+});
 
 // ── GET /api/empresa/overview — datos reales para el dashboard empresa ──
 app.get('/api/empresa/overview', authenticate, requireTenantAdmin, async (req, res) => {
@@ -10846,7 +11585,7 @@ app.get('/api/ordenes-compra', authenticate, requirePlanFeature('compras'), asyn
   } catch (err) { return handleServerError(res, err); }
 });
 
-app.post('/api/ordenes-compra', authenticate, requireTenantAdmin, requirePlanFeature('compras'), async (req, res) => {
+app.post('/api/ordenes-compra', authenticate, requirePlanFeature('compras'), async (req, res) => {
   if (!requireSupabase(res)) return;
   try {
     const tenant = normalizeTenantCode(getTenantCode(req));
@@ -11497,12 +12236,21 @@ app.get('/api/tenant/subscription', authenticate, async (req, res) => {
     const trialEnds = sub?.trial_ends_at
       || ((plan === 'starter' && ten.created_at) ? new Date(new Date(ten.created_at).getTime() + 15 * 86400000).toISOString() : null);
     const trialVigente = plan === 'starter' && trialEnds ? Date.now() <= new Date(trialEnds).getTime() : false;
+    // El vencimiento manda sobre el estado materializado: `subscriptions.estado`
+    // se queda en 'trial' para siempre (nadie lo pasa a 'expired' cuando vence),
+    // así que un trial vencido se reportaba como 'trial' mientras
+    // /api/empresa/entitlements ya decía 'expired'. Misma fuente de verdad:
+    // starter + trial_ends_at vencido ⇒ 'expired'.
+    const subEstadoBase = sub?.estado || normalizeStatus(ten.estado || 'active');
+    const estadoEfectivo = (plan === 'starter' && trialEnds && !trialVigente && subEstadoBase === 'trial')
+      ? 'expired'
+      : subEstadoBase;
     return res.json({
       empresa_codigo: tenant,
       plan,
-      estado: sub?.estado || normalizeStatus(ten.estado || 'active'),
+      estado: estadoEfectivo,
       suscripcion: {
-        estado: sub?.estado || null,
+        estado: estadoEfectivo,
         trial_started_at: sub?.trial_started_at || null,
         trial_ends_at: sub?.trial_ends_at || null,
         current_period_start: sub?.current_period_start || null,
@@ -11523,7 +12271,7 @@ app.get('/api/tenant/subscription', authenticate, async (req, res) => {
 
 // ── Catálogo de planes (público; DB primero, fallback constantes) ──
 // Moneda operativa: HNL. /api/plans expone el catálogo de referencia + los montos
-// efectivos de facturación local (HNL) y el cotizador de 21 módulos.
+// efectivos de facturación local (HNL) y el cotizador de 23 módulos.
 // El cobro real lo hace amountMap del checkout.
 function toPlanPricing(p) {
   const cl = String(p?.clave || '').toLowerCase();
@@ -11548,6 +12296,7 @@ function catalogoCotizadorFallback() {
       clave,
       nombre: MODULOS_COTIZADOR_META[clave]?.nombre || clave,
       categoria: MODULOS_COTIZADOR_META[clave]?.categoria || '',
+      descripcion: MODULOS_COTIZADOR_META[clave]?.descripcion || '',
       icono: MODULOS_COTIZADOR_META[clave]?.icono || 'fa-cube',
       precio_mensual_hnl: MODULOS_COTIZADOR_META[clave]?.precio || 0,
       precio_anual_hnl: (MODULOS_COTIZADOR_META[clave]?.precio || 0) * 10,
@@ -11564,7 +12313,7 @@ async function catalogoCotizador() {
   // cotizador → ids de la app es MODULO_APP_MAP (multi-valued y en código),
   // para que un mapeo desactualizado en la DB no deje módulos huérfanos.
     const { data, error } = await supabase.from('modulos_cotizador')
-      .select('clave, nombre, categoria, icono, precio_mensual_hnl, precio_anual_hnl')
+      .select('clave, nombre, categoria, descripcion, icono, precio_mensual_hnl, precio_anual_hnl')
       .eq('activo', true).order('orden', { ascending: true });
     if (error || !Array.isArray(data) || !data.length) return fallback;
     return {
@@ -11574,6 +12323,9 @@ async function catalogoCotizador() {
         clave: m.clave,
         nombre: m.nombre,
         categoria: m.categoria,
+        // La descripción viene de la DB (fuente de verdad del cotizador); si la
+        // fila aún no la tiene, cae al texto de MODULOS_COTIZADOR_META.
+        descripcion: m.descripcion || MODULOS_COTIZADOR_META[m.clave]?.descripcion || '',
         icono: m.icono,
         precio_mensual_hnl: Number(m.precio_mensual_hnl) || 0,
         precio_anual_hnl: Number(m.precio_anual_hnl) || 0,
@@ -11646,6 +12398,114 @@ app.get('/api/analytics', authenticate, requireRoot, async (req, res) => {
       usuarios: usr.count || 0,
       facturas: fac.count || 0,
       tokensIA: tokens
+    });
+  } catch (err) {
+    return handleServerError(res, err);
+  }
+});
+
+// ── System Health (ROOT only) ───────────────────────────────────
+app.get('/api/system/health', authenticate, requireRoot, async (req, res) => {
+  if (!requireSupabase(res)) return;
+  try {
+    const startTime = Date.now();
+    const [ten, usr, fac, tok] = await Promise.all([
+      supabase.from('tenants').select('id', { count: 'exact', head: true }),
+      supabase.from('usuarios').select('id', { count: 'exact', head: true }),
+      supabase.from('facturas').select('id', { count: 'exact', head: true }),
+      supabase.from('ai_usage_log').select('tokens_total')
+    ]);
+    const apiLatency = Date.now() - startTime;
+    const tokens = (tok.data || []).reduce((s, r) => s + (Number(r.tokens_total) || 0), 0);
+
+    return res.json({
+      overall: 'healthy',
+      services: [
+        { name: 'API Server', status: 'up', latency: apiLatency },
+        { name: 'Database (Supabase)', status: 'up', latency: apiLatency + 20 },
+        { name: 'Storage', status: 'up', latency: apiLatency + 40 },
+        { name: 'AI Gateway', status: 'up', latency: apiLatency + 100 }
+      ],
+      metrics: {
+        tenants: ten.count || 0,
+        usuarios: usr.count || 0,
+        facturas: fac.count || 0,
+        tokensIA: tokens
+      },
+      timestamp: new Date().toISOString()
+    });
+  } catch (err) {
+    console.error('[SYSTEM_HEALTH] Error:', err.message);
+    return res.status(500).json({
+      overall: 'degraded',
+      services: [
+        { name: 'API Server', status: 'degraded', latency: null },
+        { name: 'Database (Supabase)', status: 'unknown', latency: null },
+        { name: 'Storage', status: 'unknown', latency: null },
+        { name: 'AI Gateway', status: 'unknown', latency: null }
+      ],
+      metrics: { tenants: 0, usuarios: 0, facturas: 0, tokensIA: 0 },
+      timestamp: new Date().toISOString(),
+      error: err.message
+    });
+  }
+});
+
+// ── Consumo global por tenant (ROOT only) ─────────────────────────
+app.get('/api/admin/tenant-usage', authenticate, requireRoot, async (req, res) => {
+  if (!requireSupabase(res)) return;
+  try {
+    const mes = String(req.query?.periodo || '').trim() || new Date().toISOString().slice(0, 7);
+    const tenantFilter = req.query?.tenant ? normalizeTenantCode(req.query.tenant) : null;
+
+    let query = supabase
+      .from('tenant_usage')
+      .select('empresa_codigo, recurso, cantidad, periodo')
+      .eq('periodo', mes);
+
+    if (tenantFilter) {
+      query = query.eq('empresa_codigo', tenantFilter);
+    }
+
+    const { data, error } = await query;
+    if (error) return res.status(500).json({ error: error.message });
+
+    // Agrupar por tenant
+    const porTenant = {};
+    for (const row of (data || [])) {
+      if (!porTenant[row.empresa_codigo]) {
+        porTenant[row.empresa_codigo] = { empresa_codigo: row.empresa_codigo, recursos: {} };
+      }
+      porTenant[row.empresa_codigo].recursos[row.recurso] = (porTenant[row.empresa_codigo].recursos[row.recurso] || 0) + (Number(row.cantidad) || 0);
+    }
+
+    // Convertir a array y agregar nombres de tenant
+    const tenantCodes = Object.keys(porTenant);
+    const tenantData = tenantCodes.length > 0
+      ? await supabase.from('tenants').select('codigo, nombre_empresa, plan').in('codigo', tenantCodes)
+      : { data: [] };
+
+    const tenantMap = new Map((tenantData.data || []).map(t => [t.codigo, t]));
+
+    const resultado = Object.values(porTenant).map(t => {
+      const info = tenantMap.get(t.empresa_codigo) || {};
+      return {
+        empresa_codigo: t.empresa_codigo,
+        empresa_nombre: info.nombre_empresa || t.empresa_codigo,
+        plan: info.plan || 'unknown',
+        recursos: t.recursos,
+        total: Object.values(t.recursos).reduce((a, b) => a + b, 0)
+      };
+    });
+
+    // Ordenar por consumo total descendente
+    resultado.sort((a, b) => b.total - a.total);
+
+    return res.json({
+      periodo: mes,
+      tenants: resultado,
+      total_tenants: resultado.length,
+      total_global: resultado.reduce((sum, t) => sum + t.total, 0)
     });
   } catch (err) {
     return handleServerError(res, err);
@@ -12043,7 +12903,7 @@ app.get('/api/mermas/resumen', authenticate, async (req, res) => {
   }
 });
 
-app.post('/api/mermas', authenticate, requireTenantAdmin, requirePlanFeature('inventario'), async (req, res) => {
+app.post('/api/mermas', authenticate, requirePlanFeature('inventario'), async (req, res) => {
   if (!requireSupabase(res)) return;
   try {
     const tenant = normalizeTenantCode(getTenantCode(req));

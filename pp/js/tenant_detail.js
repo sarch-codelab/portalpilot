@@ -180,7 +180,8 @@ function updateOverviewStatCards() {
 
     const tokensValue = document.getElementById('tokensStatValue');
     if (tokensValue && s.tokens) {
-        const t = s.tokens.usados || 0;
+        // Tarjeta dice "Tokens IA este mes" → usa tokens.mes (histórico en usados)
+        const t = (s.tokens.mes != null ? s.tokens.mes : s.tokens.usados) || 0;
         tokensValue.textContent = t >= 1000 ? `${(t / 1000).toFixed(1).replace('.', ',')}K` : t;
     }
     const tokensTrendEl = document.getElementById('tokensStatTrend');
@@ -194,12 +195,16 @@ function updateOverviewStatCards() {
 
     const invoiceValue = document.getElementById('invoiceStatValue');
     if (invoiceValue && s.facturas) {
-        invoiceValue.textContent = s.facturas.total != null ? String(s.facturas.total) : '—';
+        // "Facturación Mensual" → monto en Lempiras del mes, no conteo de facturas
+        invoiceValue.textContent = s.facturas.mesMonto != null
+            ? `L ${Number(s.facturas.mesMonto).toLocaleString('es-ES', { maximumFractionDigits: 2 })}`
+            : '—';
     }
 
     const rpaValue = document.getElementById('rpaExecStatValue');
-    if (rpaValue && s.bots) {
-        rpaValue.textContent = s.bots.total != null ? s.bots.total : '—';
+    if (rpaValue) {
+        // Ejecuciones reales de RPA (automation_runs), no nº de automatizaciones
+        rpaValue.textContent = s.rpa && s.rpa.total != null ? String(s.rpa.total) : '—';
     }
 }
 
@@ -500,7 +505,6 @@ setInterval(toggleUsersStat, 12000);
 // ── Charts (Chart.js OPTIMIZADO) ───────────────────
 let tokensChart = null;
 let rpaChart = null;
-let chartUsageData = [];
 
 async function loadChartsData() {
     const token = localStorage.getItem('token');
@@ -508,21 +512,23 @@ async function loadChartsData() {
     const params = new URLSearchParams(window.location.search);
     const tenantId = params.get('id') || params.get('tenant');
     if (!tenantId) return;
+    // Serie real (tokens de IA + ejecuciones RPA) desde /stats con el periodo elegido.
+    // Antes se usaba /api/dashboard/summary (facturas+transacciones del ERP).
+    const periodo = document.getElementById('chartPeriodSelect');
+    const rawPeriod = periodo ? periodo.value : '30';
+    const period = /7/.test(rawPeriod) ? 7 : /90/.test(rawPeriod) ? 90 : 30;
     try {
-        const res = await fetch(`${API_ROOT}/api/dashboard/summary?tenant=${encodeURIComponent(tenantId)}`, {
+        const res = await fetch(`${API_ROOT}/api/tenant/${encodeURIComponent(tenantId)}/stats?period=${period}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
-        if (!res.ok) return;
-        const data = await res.json();
-        chartUsageData = data.usage7d || [];
-        const stats = tenantRealStats.usuarios ? tenantRealStats : (await (async () => {
-            try {
-                const r = await fetch(`${API_ROOT}/api/tenant/${encodeURIComponent(tenantId)}/stats`, { headers: { 'Authorization': `Bearer ${token}` } });
-                if (r.ok) return (await r.json()).stats || {};
-                return {};
-            } catch { return {}; }
-        })());
-        if (stats.usuarios) tenantRealStats = stats;
+        if (res.ok) {
+            const data = await res.json();
+            if (data.stats) {
+                tenantRealStats = data.stats;
+                updateOverviewStatCards();
+                updateUsersStatCard();
+            }
+        }
         renderCharts();
     } catch (e) {
         console.warn('[TENANT] No se pudieron cargar datos de charts:', e.message);
@@ -589,28 +595,45 @@ function renderCharts() {
         }
     };
 
-    // Datos reales: agregar por día de la semana y por periodo
-    const usage = chartUsageData.length ? chartUsageData : [];
+    // Datos reales: serie diaria de tokens de IA (ai_usage_log) y ejecuciones
+    // RPA (automation_runs) servida por /api/tenant/:id/stats (stats.series).
+    const serie = (tenantRealStats && tenantRealStats.series && tenantRealStats.series.dias) || [];
     const semana = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
     const porDia = [0, 0, 0, 0, 0, 0, 0];
-    usage.forEach(d => { if (d.fecha) porDia[new Date(d.fecha).getDay()] += (d.transacciones || 0) + (d.facturas || 0); });
-    const totalUso = usage.reduce((s, d) => s + (d.transacciones || 0) + (d.facturas || 0), 0);
+    serie.forEach(d => {
+        let idx = semana.indexOf(d.label);
+        if (idx < 0) idx = new Date(`${d.fecha}T00:00:00Z`).getUTCDay();
+        porDia[idx] += Number(d.rpa) || 0;
+    });
+    const totalTokens = serie.reduce((s, d) => s + (Number(d.tokens) || 0), 0);
+    const totalRpa = serie.reduce((s, d) => s + (Number(d.rpa) || 0), 0);
+    const hayDatos = totalTokens > 0 || totalRpa > 0;
 
-    // Período (7D/30D/90D) según selector
-    const periodo = document.getElementById('chartPeriodSelect');
-    const rawPeriod = periodo ? periodo.value : '30';
-    const periodLabel = /7/.test(rawPeriod) ? '7D' : /90/.test(rawPeriod) ? '90D' : '30D';
-    const datosTokens = usage.slice(Math.max(0, usage.length - (periodLabel === '7D' ? 7 : periodLabel === '90D' ? 90 : 30)))
-        .map(d => (d.transacciones || 0) + (d.facturas || 0));
+    // Estado vacío honesto cuando el tenant no tiene uso registrado
+    const emptyStatePlugin = {
+        id: 'emptyState',
+        afterDraw(chart) {
+            const area = chart.chartArea;
+            if (!area) return;
+            const ctx = chart.ctx;
+            ctx.save();
+            ctx.fillStyle = textColor;
+            ctx.font = '600 12px Inter, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('Sin uso registrado en este periodo', (area.left + area.right) / 2, (area.top + area.bottom) / 2);
+            ctx.restore();
+        }
+    };
 
     // Tokens IA Chart (línea)
     tokensChart = new Chart(tokensCtx, {
         type: 'line',
         data: {
-            labels: usage.length ? usage.slice(-datosTokens.length).map(d => d.label || d.fecha.slice(5)) : ['Sin datos'],
+            labels: serie.length ? serie.map(d => (d.fecha || '').slice(5) || d.label) : ['—'],
             datasets: [{
-                label: 'Actividad',
-                data: datosTokens.length ? datosTokens : [0],
+                label: 'Tokens IA',
+                data: serie.length ? serie.map(d => Number(d.tokens) || 0) : [0],
                 borderColor: '#8b5cf6',
                 backgroundColor: 'rgba(139, 92, 246, 0.15)',
                 borderWidth: 2,
@@ -619,21 +642,33 @@ function renderCharts() {
                 pointBackgroundColor: '#8b5cf6',
                 pointBorderColor: '#fff',
                 pointBorderWidth: 2,
-                pointRadius: datosTokens.length > 20 ? 0 : 4,
+                pointRadius: serie.length > 20 ? 0 : 4,
                 pointHoverRadius: 6
             }]
         },
-        options: commonOptions
+        options: {
+            ...commonOptions,
+            plugins: {
+                ...commonOptions.plugins,
+                tooltip: {
+                    ...commonOptions.plugins.tooltip,
+                    callbacks: {
+                        label: context => `${context.parsed.y.toLocaleString('es-ES')} tokens`
+                    }
+                }
+            }
+        },
+        plugins: hayDatos ? [] : [emptyStatePlugin]
     });
 
-    // RPA Chart (barras) con actividad real por día de la semana
+    // RPA Chart (barras): ejecuciones reales por día de la semana
     rpaChart = new Chart(rpaCtx, {
         type: 'bar',
         data: {
             labels: semana,
             datasets: [{
                 label: 'Ejecuciones',
-                data: totalUso > 0 ? porDia : [0],
+                data: porDia,
                 backgroundColor: 'rgba(167, 139, 250, 0.7)',
                 borderColor: '#a78bfa',
                 borderWidth: 1,
@@ -654,7 +689,8 @@ function renderCharts() {
                     }
                 }
             }
-        }
+        },
+        plugins: hayDatos ? [] : [emptyStatePlugin]
     });
 }
 
@@ -1258,10 +1294,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
             document.getElementById('tenant-name').textContent = preview.name || 'Sin nombre';
             document.getElementById('tenantNameDisplay').textContent = preview.name || 'Sin nombre';
-            document.getElementById('tenant-domain').textContent = preview.domain || 'sin dominio';
+            document.getElementById('tenant-domain').textContent = preview.domain || '—';
             document.getElementById('tenant-id').textContent = preview.id || tenantId;
-            document.getElementById('tenant-country').textContent = preview.country || 'N/A';
-            document.getElementById('tenant-timezone').textContent = detail.timezone || 'N/A';
+            document.getElementById('tenant-country').textContent = preview.country || '—';
+            document.getElementById('tenant-timezone').textContent = detail.timezone || '—';
 
             const statusEl = document.getElementById('tenant-status');
             if (statusEl) {
@@ -1282,8 +1318,15 @@ document.addEventListener('DOMContentLoaded', () => {
             if (preview.logo) {
                 const logoEl = document.querySelector('.tenant-logo');
                 if (logoEl) {
-                    logoEl.innerHTML = `<img src="${preview.logo}" alt="Logo">`;
+                    logoEl.innerHTML = `<img src="${preview.logo}" alt="Logo" onerror="this.style.display='none';this.parentElement.innerHTML='Logo'">`;
                 }
+            }
+
+            // Banner del tenant (mismo patrón que /pp/perfil): si existe, tapa el
+            // fondo decorativo; si no, se conserva el CSS (.tenant-header-bg).
+            const bannerBg = document.querySelector('.tenant-header-bg');
+            if (bannerBg && preview.banner) {
+                bannerBg.style.backgroundImage = `url('${preview.banner}')`;
             }
         })
         .catch(err => {
@@ -1335,7 +1378,24 @@ document.addEventListener('DOMContentLoaded', () => {
             const storageLimitEl = document.getElementById('storage-limit');
             const storageUsedEl = document.getElementById('storage-used');
             if (storageLimitEl && stats.almacenamiento) storageLimitEl.textContent = `${stats.almacenamiento.limite} GB`;
-            if (storageUsedEl && stats.almacenamiento) storageUsedEl.textContent = `${stats.almacenamiento.gbUsados} GB usados`;
+            if (storageUsedEl && stats.almacenamiento) {
+                // Medición real por tenant → tamaño legible en MB/GB
+                if (stats.almacenamiento.gbUsados == null) {
+                    storageUsedEl.textContent = '(sin medir)';
+                } else {
+                    const bytes = Number(stats.almacenamiento.bytesUsados || 0);
+                    const gb = Number(stats.almacenamiento.gbUsados);
+                    if (bytes >= 1024 * 1024 * 1024) {
+                        storageUsedEl.textContent = `${gb} GB usados`;
+                    } else if (bytes >= 1024 * 1024) {
+                        storageUsedEl.textContent = `${(bytes / 1048576).toFixed(1)} MB usados`;
+                    } else if (bytes > 0) {
+                        storageUsedEl.textContent = `${(bytes / 1024).toFixed(0)} KB usados`;
+                    } else {
+                        storageUsedEl.textContent = '0 MB usados';
+                    }
+                }
+            }
 
             // Soporte
             const supportEl = document.getElementById('support-level');

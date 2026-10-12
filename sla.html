@@ -146,8 +146,10 @@
     <table>
       <tr><th>Plan</th><th>Disponibilidad Mensual</th><th>Máx. Downtime/Mes</th></tr>
       <tr><td>Prueba</td><td><span class="sla-badge yellow">99.0%</span></td><td>~7.3 horas</td></tr>
-      <tr><td>Business</td><td><span class="sla-badge green">99.5%</span></td><td>~3.6 horas</td></tr>
-      <tr><td>Enterprise</td><td><span class="sla-badge green">99.9%</span></td><td>~43 minutos</td></tr>
+      <tr><td>Pulpería</td><td><span class="sla-badge yellow">99.0%</span></td><td>~7.3 horas</td></tr>
+      <tr><td>Tienda</td><td><span class="sla-badge green">99.5%</span></td><td>~3.6 horas</td></tr>
+      <tr><td>Club</td><td><span class="sla-badge green">99.9%</span></td><td>~43 minutos</td></tr>
+      <tr><td>Personalizado</td><td><span class="sla-badge green">99.5%</span></td><td>~3.6 horas</td></tr>
     </table>
     <p>La disponibilidad se mide como el porcentaje de tiempo mensual en que la API principal de Portal Pilot responde correctamente.</p>
 
@@ -173,18 +175,18 @@
 
     <h2>4. Tiempo de Respuesta de Soporte</h2>
     <table>
-      <tr><th>Prioridad</th><th>Prueba</th><th>Business</th><th>Enterprise</th></tr>
-      <tr><td><span class="sla-badge red">Urgente</span> — Sistema caído</td><td>24 horas</td><td>8 horas</td><td>1 hora</td></tr>
-      <tr><td><span class="sla-badge yellow">Alta</span> — Funcionalidad bloqueada</td><td>48 horas</td><td>12 horas</td><td>4 horas</td></tr>
-      <tr><td>Normal — Consulta técnica</td><td>72 horas</td><td>24 horas</td><td>8 horas</td></tr>
-      <tr><td>Baja — Consulta general</td><td>96 horas</td><td>48 horas</td><td>24 horas</td></tr>
+      <tr><th>Prioridad</th><th>Prueba</th><th>Pulpería</th><th>Tienda</th><th>Club</th><th>Personalizado</th></tr>
+      <tr><td><span class="sla-badge red">Urgente</span> — Sistema caído</td><td>24 horas</td><td>12 horas</td><td>8 horas</td><td>1 hora</td><td>24 horas</td></tr>
+      <tr><td><span class="sla-badge yellow">Alta</span> — Funcionalidad bloqueada</td><td>48 horas</td><td>24 horas</td><td>12 horas</td><td>4 horas</td><td>48 horas</td></tr>
+      <tr><td>Normal — Consulta técnica</td><td>72 horas</td><td>48 horas</td><td>24 horas</td><td>8 horas</td><td>48 horas</td></tr>
+      <tr><td>Baja — Consulta general</td><td>96 horas</td><td>72 horas</td><td>48 horas</td><td>24 horas</td><td>72 horas</td></tr>
     </table>
 
     <h2>5. Backups y Recuperación</h2>
     <ul>
       <li><strong>Backups automáticos:</strong> Diarios a las 03:00 Hora Central Hondureña.</li>
       <li><strong>Retención:</strong> 30 días de backups históricos.</li>
-      <li><strong>Recuperación:</strong> Punto de restauración en menos de 4 horas para planes Business y Enterprise.</li>
+      <li><strong>Recuperación:</strong> Punto de restauración en menos de 4 horas para los planes Tienda, Club y Personalizado.</li>
       <li><strong>Granularidad:</strong> Backup completo de base de datos + archivos storage.</li>
     </ul>
 
@@ -192,8 +194,10 @@
     <div class="callout info"><i class="fas fa-info-circle"></i><p><strong>Canales de soporte:</strong> Email (<a href="mailto:portalpilot.hn@gmail.com">portalpilot.hn@gmail.com</a>), WhatsApp, y formulario de tickets en <a href="support.html">portalpilot.hn/support</a>.</p></div>
     <ul>
       <li><strong>Prueba:</strong> Soporte por email en horario laboral (8am-5pm L-V).</li>
-      <li><strong>Business:</strong> Soporte por email y WhatsApp en horario extendido (7am-7pm L-S).</li>
-      <li><strong>Enterprise:</strong> Soporte prioritario 24/7 con línea directa y onboarding dedicado.</li>
+      <li><strong>Pulpería:</strong> Soporte por WhatsApp en horario hábil.</li>
+      <li><strong>Tienda:</strong> Soporte por email y WhatsApp con prioridad.</li>
+      <li><strong>Club:</strong> Soporte prioritario 24/7 con línea directa y onboarding dedicado.</li>
+      <li><strong>Personalizado:</strong> Soporte por email en horario laboral.</li>
     </ul>
 
     <h2>7. Comunicación de Incidentes</h2>

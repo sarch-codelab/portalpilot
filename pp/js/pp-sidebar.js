@@ -199,6 +199,7 @@
         { href: 'auditoria.html', icon: 'fa-link', label: 'Auditoría' },
         { href: 'analytics.html', icon: 'fa-chart-simple', label: 'Analytics' },
         { href: 'comunicados.html', icon: 'fa-bullhorn', label: 'Comunicados' },
+        { href: 'campanas.html', icon: 'fa-envelope-open-text', label: 'Campañas email' },
         { href: 'system_health.html', icon: 'fa-heartbeat', label: 'System Health' },
         { href: 'usuarios.html', icon: 'fa-users', label: 'Usuarios' },
         { href: 'global_settings.html', icon: 'fa-cog', label: 'Configuración Global' },

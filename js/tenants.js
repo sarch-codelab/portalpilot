@@ -360,11 +360,11 @@ function renderTenants(data = filteredTenants) {
       <td>${new Date(t.registered).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
       <td>
         <div class="tenant-actions">
-          <button class="action-icon-btn" title="Ver detalle" onclick="event.stopPropagation();window.location.href='tenant_detail.html?id=' + encodeURIComponent('${t.id}')"><i class="fas fa-eye"></i></button>
+          <button class="action-icon-btn" title="Ver detalle" onclick="event.stopPropagation();window.location.href='tenant_detail.html?id=' + encodeURIComponent('${t.codigo || t.id}')"><i class="fas fa-eye"></i></button>
           <button class="action-icon-btn" title="Cambiar plan" onclick="event.stopPropagation();showChangePlan('${t.id}')"><i class="fas fa-exchange-alt"></i></button>
           <button class="action-icon-btn" title="Gestionar acceso" onclick="event.stopPropagation();manageAccess('${t.id}')"><i class="fas fa-user-cog"></i></button>
           <button class="action-icon-btn danger" title="Eliminar Tenant" onclick="event.stopPropagation();confirmAction('Eliminar Tenant','¿Eliminar ${t.name} y todos los usuarios relacionados? Esta acción no se puede deshacer.',()=>deleteTenant('${t.id}','${t.name}'))"><i class="fas fa-trash-alt"></i></button>
-          <button class="action-icon-btn" title="Ver Detalle Completo" onclick="event.stopPropagation();window.location.href='tenant_detail.html?id=' + encodeURIComponent('${t.id}')"><i class="fas fa-external-link-alt"></i></button>
+          <button class="action-icon-btn" title="Ver Detalle Completo" onclick="event.stopPropagation();window.location.href='tenant_detail.html?id=' + encodeURIComponent('${t.codigo || t.id}')"><i class="fas fa-external-link-alt"></i></button>
         </div>
       </td>`;
     tbody.appendChild(row);
@@ -585,16 +585,23 @@ async function openDetailPanel(tenant) {
   if (!tenant) return;
 
   let tenantUsers = [];
+  // El id del listado es el UUID del tenant; el código (empresa_codigo) es lo
+  // que se puede comparar con los usuarios.
+  const tenantKey = tenant.codigo || tenant.id;
   try {
     const token = localStorage.getItem('token');
     if (token) {
-      const response = await fetch(`${API_ROOT}/api/users?empresa=${encodeURIComponent(tenant.id)}`, {
+      const response = await fetch(`${API_ROOT}/api/users?empresa=${encodeURIComponent(tenantKey)}`, {
         headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
       });
       if (response.ok) {
-        tenantUsers = await response.json();
+        const all = await response.json();
+        // Defensa: nunca mostrar usuarios de otros tenants en el detalle
+        tenantUsers = (Array.isArray(all) ? all : []).filter(u =>
+          String(u.tenant_code || u.empresa_codigo || '').toUpperCase() === String(tenantKey).toUpperCase()
+        );
       } else {
-        console.warn(`[TENANTS] No se pudo cargar usuarios del tenant ${tenant.id}: ${response.status}`);
+        console.warn(`[TENANTS] No se pudo cargar usuarios del tenant ${tenantKey}: ${response.status}`);
       }
     }
   } catch (err) {
@@ -650,7 +657,7 @@ async function openDetailPanel(tenant) {
     <div style="display:flex;gap:12px;margin-top:24px;">
       <button class="btn btn-ghost btn-sm" style="flex:1;justify-content:center;" onclick="alert('Reporte generado')"><i class="fas fa-file-export"></i> Exportar Logs</button>
       <button class="btn btn-outline btn-sm" style="flex:1;justify-content:center;" onclick="alert('Soporte notificado')"><i class="fas fa-headset"></i> Contactar Soporte</button>
-      <button class="btn btn-acc btn-sm" style="flex:1;justify-content:center;" onclick="window.location.href='tenant_detail.html?id=${tenant.id}'"><i class="fas fa-arrow-right"></i> Ver Detalle Completo</button>
+      <button class="btn btn-acc btn-sm" style="flex:1;justify-content:center;" onclick="window.location.href='tenant_detail.html?id=${encodeURIComponent(tenantKey)}'"><i class="fas fa-arrow-right"></i> Ver Detalle Completo</button>
     </div>`;
 
   document.getElementById('detailPanel').classList.add('active');

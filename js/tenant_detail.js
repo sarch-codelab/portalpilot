@@ -252,46 +252,78 @@ document.addEventListener('keydown', e => {
 
 // ── User Stats Toggle (cada 12 segundos) ───────────
 let usersStatActive = true;
-const usersStatData = {
-    activos: { value: 24, trend: '+12% este mes', trendClass: 'up', icon: 'fa-arrow-up' },
-    inactivos: { value: 8, trend: '-5% este mes', trendClass: 'down', icon: 'fa-arrow-down' }
-};
+// Stats reales del tenant. Los puebla loadUsersStats() con
+// GET /api/tenant/:id/stats. NO hay cifras de ejemplo: hasta que el servidor
+// responda, la tarjeta conserva su valor vacío ("—"). Antes este bloque tenía
+// un objeto `usersStatData` con 24 activos / 8 inactivos / "+12% este mes"
+// inventados que se escribían en el DOM cada 12 segundos.
+let tenantRealStats = { usuarios: { total: null, activos: null } };
 
-function toggleUsersStat() {
+function updateUsersStatCard() {
     const valueEl = document.getElementById('usersStatValue');
     const labelEl = document.getElementById('usersStatLabel');
     const trendEl = document.getElementById('usersStatTrend');
     const iconEl = document.querySelector('#usersStatCard .stat-card-icon');
+    if (!valueEl) return;
 
+    const u = tenantRealStats.usuarios || {};
+    if (u.total === null || u.total === undefined || u.activos === null || u.activos === undefined) return;
+
+    const total = Number(u.total) || 0;
+    const activos = Number(u.activos) || 0;
+    const inactivos = Math.max(0, total - activos);
+
+    const data = usersStatActive
+        ? { value: activos, label: 'Usuarios Activos', icon: 'fa-users', color: 'var(--green)', bg: 'rgba(52, 211, 153, 0.15)', trend: total + ' registrados', trendClass: 'up', trendIcon: 'fa-arrow-up' }
+        : { value: inactivos, label: 'Usuarios Inactivos', icon: 'fa-user-clock', color: 'var(--yellow)', bg: 'rgba(251, 191, 36, 0.15)', trend: total + ' registrados', trendClass: 'down', trendIcon: 'fa-arrow-down' };
+
+    valueEl.textContent = data.value;
+    labelEl.textContent = data.label;
+    trendEl.className = `stat-card-trend ${data.trendClass}`;
+    trendEl.innerHTML = `<i class="fas ${data.trendIcon}"></i> ${data.trend}`;
+
+    if (iconEl) {
+        iconEl.style.background = data.bg;
+        iconEl.style.color = data.color;
+        iconEl.innerHTML = `<i class="fas ${data.icon}"></i>`;
+    }
+}
+
+function toggleUsersStat() {
+    const valueEl = document.getElementById('usersStatValue');
     if (!valueEl) return;
 
     usersStatActive = !usersStatActive;
-    const data = usersStatActive ? usersStatData.activos : usersStatData.inactivos;
-
     valueEl.classList.add('changing');
 
     setTimeout(() => {
-        valueEl.textContent = data.value;
-        labelEl.textContent = usersStatActive ? 'Usuarios Activos' : 'Usuarios Inactivos';
-        trendEl.className = `stat-card-trend ${data.trendClass}`;
-        trendEl.innerHTML = `<i class="fas ${data.icon}"></i> ${data.trend}`;
-
-        if (iconEl) {
-            if (usersStatActive) {
-                iconEl.style.background = 'rgba(52, 211, 153, 0.15)';
-                iconEl.style.color = 'var(--green)';
-                iconEl.innerHTML = '<i class="fas fa-users"></i>';
-            } else {
-                iconEl.style.background = 'rgba(251, 191, 36, 0.15)';
-                iconEl.style.color = 'var(--yellow)';
-                iconEl.innerHTML = '<i class="fas fa-user-clock"></i>';
-            }
-        }
-
+        updateUsersStatCard();
         valueEl.classList.remove('changing');
     }, 250);
 }
 
+// Fuente de los conteos: el endpoint real del tenant.
+async function loadUsersStats() {
+    const params = new URLSearchParams(window.location.search);
+    const tenantId = params.get('id') || params.get('tenant');
+    const token = localStorage.getItem('token');
+    if (!tenantId || !token) return;
+    try {
+        const res = await fetch(`${API_ROOT}/api/tenant/${encodeURIComponent(tenantId)}/stats`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        const u = data && data.stats && data.stats.usuarios;
+        if (!u) return;
+        tenantRealStats.usuarios = { total: u.total, activos: u.activos };
+        updateUsersStatCard();
+    } catch (e) {
+        // Sin datos del servidor: la tarjeta se queda en "—", nunca con cifras inventadas.
+    }
+}
+
+loadUsersStats();
 setInterval(toggleUsersStat, 12000);
 
 // ── Charts (Chart.js OPTIMIZADO) ───────────────────

@@ -107,64 +107,11 @@ function toggleFaq(btn) {
   }
 }
 
-// ── Pricing Toggle ───────────────────────────────────
-// Modelo de precios Honduras: Pulpería L.299 · Tienda L.799 · Club L.1,399.
-// Anual = 10 meses (2 meses gratis).
-const prices = {
-  monthly: { p1: '799', p2: '1,399' },
-  yearly: { p1: '7,990', p2: '13,990' }
-};
-
-function setPricingToggle(btn, mode) {
-  try {
-    document.querySelectorAll('.pt-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    const p = prices[mode];
-    const el1 = document.getElementById('p1');
-    const el2 = document.getElementById('p2');
-    if (el1) el1.textContent = p.p1;
-    if (el2) el2.textContent = p.p2;
-    // Actualizar subtítulo para reflejar facturación
-    document.querySelectorAll('.pricing-card-subtitle').forEach(el => {
-      if (mode === 'yearly') {
-        el.innerHTML = el.innerHTML.replace('mensual', 'anual');
-      } else {
-        el.innerHTML = el.innerHTML.replace('anual', 'mensual');
-      }
-    });
-  } catch (e) {
-    console.error('Error en toggle precios:', e);
-  }
-}
-
-// ── Plan select → redirect a registro con plan preseleccionado ──
-function selectPlan(name, e) {
-  const btn = e ? e.currentTarget : null;
-  const orig = btn ? btn.textContent : '';
-  if (btn) {
-    btn.textContent = '✓ Seleccionado!';
-    btn.style.background = '#34d399';
-    btn.style.borderColor = '#34d399';
-    btn.style.color = '#000';
-  }
-  setTimeout(() => {
-    if (btn) {
-      btn.textContent = orig;
-      btn.style.background = '';
-      btn.style.borderColor = '';
-      btn.style.color = '';
-    }
-    // El plan del modelo Honduras ya trae business_type para el registro.
-    const byPlan = {
-      pulperia: 'Pulper%C3%ADa%20%2F%20Mercadito',
-      tienda: 'Tienda%20%2F%20Supermercado',
-      club: 'Club%20%2F%20Membres%C3%ADa',
-      personalizado: 'Personalizado'
-    };
-    const bt = byPlan[name];
-    window.location.href = 'registrov2.html?plan=' + encodeURIComponent(name) + (bt ? '&business_type=' + bt : '');
-  }, 500);
-}
+// ── Pricing Toggle / selección de plan ───────────────
+// Movido a js/index-pricing.js, que es la ÚNICA implementación y toma los
+// importes de GET /api/plans. Aquí no se declaran precios ni se duplican
+// setPricingToggle()/selectPlan(): antes este bloque fijaba 799/1,399 en
+// duro y podía sobrescribir lo que sirve el servidor.
 
 // ── Typing effect for terminal ────────────────────────
 function typeTerminal() {

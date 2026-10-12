@@ -730,22 +730,22 @@
                                 onerror="this.style.display='none';this.parentElement.innerHTML='Logo'">
                         </div>
                         <div class="tenant-badges">
-                            <span id="tenant-status" class="status-badge active">
+                            <span id="tenant-status" class="status-badge pending">
                                 <span class="status-dot"></span>
-                                Activo
+                                —
                             </span>
-                            <span id="tenant-plan" class="plan-badge business"><i class="fas fa-crown"></i> plan</span>
+                            <span id="tenant-plan" class="plan-badge business"><i class="fas fa-crown"></i> —</span>
                         </div>
                     </div>
                     <h1 id="tenant-name" class="tenant-name">Conectando Terminal Dogma...</h1>
-                    <span id="tenant-domain" class="tenant-domain">empresa.portalpilot.ia</span>
+                    <span id="tenant-domain" class="tenant-domain">—</span>
                     <div class="tenant-meta">
                         <div class="tenant-meta-item"><i class="fas fa-calendar"></i> Registrado: <span
-                                id="tenant-registered">29 Marzo 2009</span></div>
+                                id="tenant-registered">—</span></div>
                         <div class="tenant-meta-item"><i class="fas fa-map-marker-alt"></i> <span
-                                id="tenant-country">México</span> (<span id="tenant-timezone">GMT-6</span>)</div>
+                                id="tenant-country">—</span> (<span id="tenant-timezone">—</span>)</div>
                         <div class="tenant-meta-item"><i class="fas fa-id-card"></i> ID: <span
-                                id="tenant-id">PP-123456</span></div>
+                                id="tenant-id">—</span></div>
                     </div>
                     <div class="tenant-actions-bar">
                         <button class="btn btn-acc btn-sm" onclick="openModal('addUserModal')"><i
@@ -764,41 +764,41 @@
             <div class="stats-grid">
                 <div class="stat-card reveal" id="usersStatCard">
                     <div class="stat-card-icon"><i class="fas fa-users"></i></div>
-                    <div class="stat-card-value" id="usersStatValue">24</div>
+                    <div class="stat-card-value" id="usersStatValue">—</div>
                     <div class="stat-card-label" id="usersStatLabel">Usuarios Activos</div>
-                    <div class="stat-card-trend up" id="usersStatTrend"><i class="fas fa-arrow-up"></i> +12% este mes
+                    <div class="stat-card-trend up" id="usersStatTrend"><i class="fas fa-arrow-up"></i> —
                     </div>
                 </div>
                 <div class="stat-card reveal">
                     <div class="stat-card-icon"><i class="fas fa-robot"></i></div>
                     <div class="stat-card-value" id="botsStatValue">—</div>
                     <div class="stat-card-label">Bots RPA Activos</div>
-                    <div class="stat-card-trend up" id="botsStatTrend"><i class="fas fa-arrow-up"></i> En vivo</div>
+                    <div class="stat-card-trend up" id="botsStatTrend">—</div>
                 </div>
                 <div class="stat-card reveal">
                     <div class="stat-card-icon"><i class="fas fa-brain"></i></div>
                     <div class="stat-card-value" id="tokensStatValue">—</div>
                     <div class="stat-card-label">Tokens IA este mes</div>
-                    <div class="stat-card-trend up" id="tokensStatTrend"><i class="fas fa-arrow-up"></i> En vivo</div>
+                    <div class="stat-card-trend up" id="tokensStatTrend">—</div>
                 </div>
                 <div class="stat-card reveal">
                     <div class="stat-card-icon"><i class="fas fa-server"></i></div>
                     <div class="stat-card-value" id="slaStatValue">—</div>
-                    <div class="stat-card-label">Uptime SLA</div>
-                    <div class="stat-card-trend"><i class="fas fa-check" style="color:var(--green)"></i> Dentro de SLA
+                    <div class="stat-card-label">SLA del plan</div>
+                    <div class="stat-card-trend" id="slaStatTrend">—
                     </div>
                 </div>
                 <div class="stat-card reveal">
                     <div class="stat-card-icon"><i class="fas fa-dollar-sign"></i></div>
                     <div class="stat-card-value" id="invoiceStatValue">—</div>
                     <div class="stat-card-label">Facturación Mensual</div>
-                    <div class="stat-card-trend" id="invoiceStatTrend"><i class="fas fa-calendar"></i> En vivo</div>
+                    <div class="stat-card-trend" id="invoiceStatTrend">—</div>
                 </div>
                 <div class="stat-card reveal">
                     <div class="stat-card-icon"><i class="fas fa-bolt"></i></div>
                     <div class="stat-card-value" id="rpaExecStatValue">—</div>
                     <div class="stat-card-label">Ejecuciones RPA</div>
-                    <div class="stat-card-trend up" id="rpaExecStatTrend"><i class="fas fa-arrow-up"></i> En vivo</div>
+                    <div class="stat-card-trend up" id="rpaExecStatTrend">—</div>
                 </div>
             </div>
 
@@ -876,18 +876,17 @@
                             <div class="section-body" style="display:flex;flex-direction:column;gap:16px;">
                                 <div style="display:flex;justify-content:space-between;">
                                     <span style="color:var(--gray);">Plan Actual</span>
-                                    <strong style="color:var(--white);" id="plan-name">Business <i class="fas fa-crown"
-                                            style="color:var(--yellow);margin-left:4px;"></i></strong>
+                                    <strong style="color:var(--white);" id="plan-name">—</strong>
                                 </div>
                                 <div style="display:flex;justify-content:space-between;">
                                     <span style="color:var(--gray);">Límite Usuarios</span>
-                                    <strong style="color:var(--white);" id="users-limit">50 <span
-                                            id="users-used" style="color:var(--gray);font-weight:400;">(24 usados)</span></strong>
+                                    <strong style="color:var(--white);" id="users-limit">— <span
+                                            id="users-used" style="color:var(--gray);font-weight:400;">(— usados)</span></strong>
                                 </div>
                                 <div style="display:flex;justify-content:space-between;">
                                     <span style="color:var(--gray);">Tokens IA / mes</span>
-                                    <strong style="color:var(--white);" id="tokens-limit">2,000,000 <span
-                                            id="tokens-used" style="color:var(--gray);font-weight:400;">(0 usados)</span></strong>
+                                    <strong style="color:var(--white);" id="tokens-limit">— <span
+                                            id="tokens-used" style="color:var(--gray);font-weight:400;">(— usados)</span></strong>
                                 </div>
                                 <div style="display:flex;align-items:center;gap:10px;">
                                     <div style="flex:1;height:8px;background:rgba(255,255,255,0.08);border-radius:999px;overflow:hidden;">
@@ -897,23 +896,22 @@
                                 </div>
                                 <div style="display:flex;justify-content:space-between;">
                                     <span style="color:var(--gray);">Bots RPA</span>
-                                    <strong style="color:var(--white);" id="bots-limit">15 <span
-                                            id="bots-used" style="color:var(--gray);font-weight:400;">(8 activos)</span></strong>
+                                    <strong style="color:var(--white);" id="bots-limit">— <span
+                                            id="bots-used" style="color:var(--gray);font-weight:400;">(— activos)</span></strong>
                                 </div>
                                 <div style="display:flex;justify-content:space-between;">
                                     <span style="color:var(--gray);">Almacenamiento</span>
-                                    <strong style="color:var(--white);" id="storage-limit">100 GB <span
-                                            id="storage-used" style="color:var(--gray);font-weight:400;">(0 GB usados)</span></strong>
+                                    <strong style="color:var(--white);" id="storage-limit">— <span
+                                            id="storage-used" style="color:var(--gray);font-weight:400;">(sin medir)</span></strong>
                                 </div>
                                 <hr style="border-color:var(--border);margin:8px 0;">
                                 <div style="display:flex;justify-content:space-between;">
                                     <span style="color:var(--gray);">Soporte</span>
-                                    <strong style="color:var(--green);" id="support-level"><i class="fas fa-headset"></i> Priority
-                                        24/7</strong>
+                                    <strong style="color:var(--green);" id="support-level">—</strong>
                                 </div>
                                 <div style="display:flex;justify-content:space-between;">
-                                    <span style="color:var(--gray);">SLA Uptime</span>
-                                    <strong style="color:var(--white);" id="sla-uptime">99.9%</strong>
+                                    <span style="color:var(--gray);">SLA Uptime (plan)</span>
+                                    <strong style="color:var(--white);" id="sla-uptime">—</strong>
                                 </div>
                                 <hr style="border-color:var(--border);margin:8px 0;">
                                 <div style="display:flex;justify-content:space-between;">

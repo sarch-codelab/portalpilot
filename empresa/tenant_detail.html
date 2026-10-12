@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 
 <head>
@@ -1628,44 +1628,53 @@
                 </div>
             </header>
 
+            <!-- AVISO DE AUDITORÍA DE DATOS (task-5) -->
+            <div class="pp-info-box" data-mock-notice>
+                <i class="fas fa-triangle-exclamation"></i>
+                <div><b>Aviso de datos:</b> en esta pantalla los datos reales del tenant (nombre, plan,
+                    estado, fechas, miembros, API keys, bots y estadísticas) vienen del servidor. Los bloques
+                    <em>Actividad Reciente</em>, <em>Alertas Activas</em>, <em>Logs &amp; Auditoría</em>,
+                    <em>Integraciones</em> y <em>Facturación</em> todavía no tienen endpoint propio: se
+                    muestran vacíos y no con valores de ejemplo.</div>
+            </div>
+
             <!-- STATS GRID -->
             <div class="stats-grid">
                 <div class="stat-card reveal">
                     <div class="stat-card-icon"><i class="fas fa-users"></i></div>
                     <div class="stat-card-value" id="statUsers">&mdash;</div>
                     <div class="stat-card-label">Usuarios Activos</div>
-                    <div class="stat-card-trend up"><i class="fas fa-arrow-up"></i> +12% este mes</div>
+                    <div class="stat-card-trend"><i class="fas fa-minus"></i> Sin delta del servidor</div>
                 </div>
                 <div class="stat-card reveal">
                     <div class="stat-card-icon"><i class="fas fa-robot"></i></div>
                     <div class="stat-card-value" id="statBots">&mdash;</div>
                     <div class="stat-card-label">Bots RPA Activos</div>
-                    <div class="stat-card-trend up"><i class="fas fa-arrow-up"></i> +2 nuevos</div>
+                    <div class="stat-card-trend"><i class="fas fa-minus"></i> Sin delta del servidor</div>
                 </div>
                 <div class="stat-card reveal">
                     <div class="stat-card-icon"><i class="fas fa-brain"></i></div>
                     <div class="stat-card-value" id="statTokens">â€”</div>
                     <div class="stat-card-label">Tokens IA este mes</div>
-                    <div class="stat-card-trend up"><i class="fas fa-arrow-up"></i> +34% vs anterior</div>
+                    <div class="stat-card-trend"><i class="fas fa-minus"></i> Sin delta del servidor</div>
                 </div>
                 <div class="stat-card reveal">
                     <div class="stat-card-icon"><i class="fas fa-server"></i></div>
                     <div class="stat-card-value" id="statSla">â€”</div>
                     <div class="stat-card-label">Uptime SLA</div>
-                    <div class="stat-card-trend"><i class="fas fa-check" style="color:var(--green)"></i> Dentro de SLA
-                    </div>
+                    <div class="stat-card-trend"><i class="fas fa-minus"></i> Sin dato del servidor</div>
                 </div>
                 <div class="stat-card reveal">
                     <div class="stat-card-icon"><i class="fas fa-dollar-sign"></i></div>
                     <div class="stat-card-value" id="statBilling">â€”</div>
                     <div class="stat-card-label">FacturaciÃ³n Mensual</div>
-                    <div class="stat-card-trend"><i class="fas fa-calendar"></i> Renueva: 15 Abr</div>
+                    <div class="stat-card-trend"><i class="fas fa-minus"></i> Sin fecha del servidor</div>
                 </div>
                 <div class="stat-card reveal">
                     <div class="stat-card-icon"><i class="fas fa-bolt"></i></div>
                     <div class="stat-card-value" id="statEjecuciones">&mdash;</div>
                     <div class="stat-card-label">Ejecuciones RPA</div>
-                    <div class="stat-card-trend up"><i class="fas fa-arrow-up"></i> +18% esta semana</div>
+                    <div class="stat-card-trend"><i class="fas fa-minus"></i> Sin delta del servidor</div>
                 </div>
             </div>
 
@@ -1708,43 +1717,11 @@
                             </div>
                             <div class="section-body">
                                 <div class="timeline">
-                                    <div class="timeline-item">
+                                    <div class="timeline-item" data-empty-from-server>
                                         <div class="timeline-dot"></div>
-                                        <div class="timeline-time">Hace 2 horas</div>
-                                        <div class="timeline-action"><strong>Bot ejecutado:</strong> "Procesar facturas
-                                            proveedor"</div>
-                                        <div class="timeline-details">Completado en 4m 32s Â· 128 documentos procesados
-                                        </div>
-                                    </div>
-                                    <div class="timeline-item">
-                                        <div class="timeline-dot"></div>
-                                        <div class="timeline-time">Hace 5 horas</div>
-                                        <div class="timeline-action"><strong>Nuevo usuario:</strong> carlos@empresa.portalpilot.io
-                                        </div>
-                                        <div class="timeline-details">Rol: Operador Â· Invitado por ana@empresa.portalpilot.io
-                                        </div>
-                                    </div>
-                                    <div class="timeline-item">
-                                        <div class="timeline-dot"></div>
-                                        <div class="timeline-time">Ayer, 14:30</div>
-                                        <div class="timeline-action"><strong>ActualizaciÃ³n de plan:</strong> Business â†’
-                                            Enterprise</div>
-                                        <div class="timeline-details">LÃ­mite de tokens aumentado a 5M/mes</div>
-                                    </div>
-                                    <div class="timeline-item">
-                                        <div class="timeline-dot"></div>
-                                        <div class="timeline-time">Ayer, 09:15</div>
-                                        <div class="timeline-action"><strong>API Key creada:</strong> "ProducciÃ³n -
-                                            Backend"</div>
-                                        <div class="timeline-details">Permisos: Lectura, EjecuciÃ³n RPA</div>
-                                    </div>
-                                    <div class="timeline-item">
-                                        <div class="timeline-dot"></div>
-                                        <div class="timeline-time">12 Mar, 16:45</div>
-                                        <div class="timeline-action"><strong>Alerta de seguridad:</strong> Intento de
-                                            acceso desde IP desconocida</div>
-                                        <div class="timeline-details">Bloqueado automÃ¡ticamente Â· UbicaciÃ³n: SÃ£o Paulo,
-                                            BR</div>
+                                        <div class="timeline-time">&mdash;</div>
+                                        <div class="timeline-action">Sin actividad del servidor</div>
+                                        <div class="timeline-details">Esta secci&oacute;n no tiene endpoint propio todav&iacute;a; no se muestran eventos de ejemplo.</div>
                                     </div>
                                 </div>
                             </div>
@@ -1760,42 +1737,36 @@
                             <div class="section-body" style="display:flex;flex-direction:column;gap:16px;">
                                 <div style="display:flex;justify-content:space-between;">
                                     <span style="color:var(--gray);">Plan Actual</span>
-                                    <strong style="color:var(--white);">Business <i class="fas fa-crown"
-                                            style="color:var(--yellow);margin-left:4px;"></i></strong>
+                                    <strong style="color:var(--white);" id="infoPlanActual">&mdash;</strong>
                                 </div>
                                 <div style="display:flex;justify-content:space-between;">
                                     <span style="color:var(--gray);">LÃ­mite de Usuarios</span>
-                                    <strong style="color:var(--white);">50 <span
-                                            style="color:var(--gray);font-weight:400;">(24 usados)</span></strong>
+                                    <strong style="color:var(--white);">&mdash;</strong>
                                 </div>
                                 <div style="display:flex;justify-content:space-between;">
                                     <span style="color:var(--gray);">Tokens IA / mes</span>
-                                    <strong style="color:var(--white);">2,000,000 <span
-                                            style="color:var(--gray);font-weight:400;">(1.2M usados)</span></strong>
+                                    <strong style="color:var(--white);">&mdash;</strong>
                                 </div>
                                 <div style="display:flex;justify-content:space-between;">
                                     <span style="color:var(--gray);">Bots RPA</span>
-                                    <strong style="color:var(--white);">15 <span
-                                            style="color:var(--gray);font-weight:400;">(8 activos)</span></strong>
+                                    <strong style="color:var(--white);">&mdash;</strong>
                                 </div>
                                 <div style="display:flex;justify-content:space-between;">
                                     <span style="color:var(--gray);">Almacenamiento</span>
-                                    <strong style="color:var(--white);">100 GB <span
-                                            style="color:var(--gray);font-weight:400;">(34 GB usados)</span></strong>
+                                    <strong style="color:var(--white);">&mdash;</strong>
                                 </div>
                                 <hr style="border-color:var(--border);margin:8px 0;">
                                 <div style="display:flex;justify-content:space-between;">
                                     <span style="color:var(--gray);">Soporte</span>
-                                    <strong style="color:var(--green);"><i class="fas fa-headset"></i> Priority
-                                        24/7</strong>
+                                    <strong style="color:var(--white);">&mdash;</strong>
                                 </div>
                                 <div style="display:flex;justify-content:space-between;">
                                     <span style="color:var(--gray);">SLA Uptime</span>
-                                    <strong style="color:var(--white);">99.9%</strong>
+                                    <strong style="color:var(--white);">&mdash;</strong>
                                 </div>
                                 <div style="display:flex;justify-content:space-between;">
                                     <span style="color:var(--gray);">Backup</span>
-                                    <strong style="color:var(--white);">Diario Â· RetenciÃ³n 30 dÃ­as</strong>
+                                    <strong style="color:var(--white);">&mdash;</strong>
                                 </div>
                             </div>
                         </div>
@@ -1805,20 +1776,10 @@
                                 <div class="section-title"><i class="fas fa-bell"></i>Alertas Activas</div>
                             </div>
                             <div class="section-body" style="display:flex;flex-direction:column;gap:12px;">
-                                <div
-                                    style="padding:12px;background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.3);border-radius:8px;font-size:13px;">
-                                    <i class="fas fa-exclamation-triangle"
-                                        style="color:var(--yellow);margin-right:6px;"></i>
-                                    <strong>Uso de tokens al 60%</strong>
-                                    <div style="color:var(--gray);font-size:12px;margin-top:4px;">ProyecciÃ³n: alcanzarÃ¡s
-                                        el lÃ­mite en ~12 dÃ­as</div>
-                                </div>
-                                <div
-                                    style="padding:12px;background:rgba(139,92,246,0.1);border:1px solid var(--border);border-radius:8px;font-size:13px;">
-                                    <i class="fas fa-info-circle" style="color:var(--accent);margin-right:6px;"></i>
-                                    <strong>ActualizaciÃ³n disponible</strong>
-                                    <div style="color:var(--gray);font-size:12px;margin-top:4px;">Nueva versiÃ³n del
-                                        conector SAP v2.4</div>
+                                <div style="padding:12px;background:var(--card2);border:1px dashed var(--border);border-radius:8px;font-size:13px;color:var(--gray);"
+                                    data-empty-from-server>
+                                    <i class="fas fa-circle-info" style="margin-right:6px;"></i>
+                                    Sin alertas registradas en el servidor para este tenant.
                                 </div>
                             </div>
                         </div>
@@ -1886,26 +1847,14 @@
                     </div>
                     <div class="section-body"
                         style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;">
+                        <!-- Estado de integraciones: no hay endpoint por-tenant todavía.
+                             Antes se afirmaba "Conectado" en duro, lo que era falso. -->
                         <div
-                            style="padding:16px;background:var(--card2);border:1px solid var(--border);border-radius:var(--radius);text-align:center;">
-                            <i class="fab fa-salesforce" style="font-size:32px;color:#00A1E0;margin-bottom:8px;"></i>
-                            <div style="font-weight:600;color:var(--white);">Salesforce</div>
-                            <div style="font-size:11px;color:var(--green);margin-top:4px;"><i
-                                    class="fas fa-check-circle"></i> Conectado</div>
-                        </div>
-                        <div
-                            style="padding:16px;background:var(--card2);border:1px solid var(--border);border-radius:var(--radius);text-align:center;">
-                            <i class="fab fa-slack" style="font-size:32px;color:#4A154B;margin-bottom:8px;"></i>
-                            <div style="font-weight:600;color:var(--white);">Slack</div>
-                            <div style="font-size:11px;color:var(--green);margin-top:4px;"><i
-                                    class="fas fa-check-circle"></i> Conectado</div>
-                        </div>
-                        <div
-                            style="padding:16px;background:var(--card2);border:1px solid var(--border);border-radius:var(--radius);text-align:center;">
-                            <i class="fas fa-database" style="font-size:32px;color:var(--cyan);margin-bottom:8px;"></i>
-                            <div style="font-weight:600;color:var(--white);">PostgreSQL</div>
-                            <div style="font-size:11px;color:var(--green);margin-top:4px;"><i
-                                    class="fas fa-check-circle"></i> Conectado</div>
+                            style="padding:16px;background:var(--card2);border:1px dashed var(--border);border-radius:var(--radius);text-align:center;"
+                            data-empty-from-server>
+                            <i class="fas fa-plug" style="font-size:32px;color:var(--gray);margin-bottom:8px;"></i>
+                            <div style="font-weight:600;color:var(--white);">Integraciones</div>
+                            <div style="font-size:11px;color:var(--gray);margin-top:4px;">Sin estado del servidor</div>
                         </div>
                         <div style="padding:16px;background:rgba(251,191,36,0.1);border:1px dashed rgba(251,191,36,0.4);border-radius:var(--radius);text-align:center;cursor:pointer;"
                             onclick="showToast('Marketplace de integraciones disponible prÃ³ximamente.', 'info')">
@@ -1923,33 +1872,36 @@
                         <div class="section-card reveal">
                             <div class="section-header">
                                 <div class="section-title"><i class="fas fa-file-invoice"></i>Factura Actual</div>
-                                <span class="plan-badge business">Business Â· L 1,499/mes</span>
+                                <!-- Importes: sin endpoint de facturación por-tenant todavía.
+                                     Antes mostraba L 1,499.00 en duro (plan Business) para
+                                     cualquier tenant, fuera cual fuera su plan real. -->
+                                <span class="plan-badge business">&mdash;</span>
                             </div>
                             <div class="section-body">
                                 <table class="billing-table">
                                     <tr>
-                                        <td>Plan Business (mensual)</td>
-                                        <td>L 1,499.00</td>
+                                        <td>Plan contratado (mensual)</td>
+                                        <td>&mdash;</td>
                                     </tr>
                                     <tr>
-                                        <td>Usuarios adicionales (4/50)</td>
-                                        <td>L 0.00</td>
+                                        <td>Usuarios adicionales</td>
+                                        <td>&mdash;</td>
                                     </tr>
                                     <tr>
                                         <td>Tokens IA excedentes</td>
-                                        <td>L 0.00</td>
+                                        <td>&mdash;</td>
                                     </tr>
                                     <tr>
                                         <td>Almacenamiento extra</td>
-                                        <td>L 0.00</td>
+                                        <td>&mdash;</td>
                                     </tr>
                                     <tr>
                                         <td>Soporte Priority</td>
-                                        <td>Incluido</td>
+                                        <td>&mdash;</td>
                                     </tr>
                                     <tr class="billing-total">
                                         <td><strong>Total</strong></td>
-                                        <td><strong>L 1,499.00 HNL</strong></td>
+                                        <td><strong>&mdash;</strong></td>
                                     </tr>
                                 </table>
                                 <div style="margin-top:20px;display:flex;gap:12px;flex-wrap:wrap;">
@@ -1999,8 +1951,8 @@
                                     recursos?</div>
                                 <div
                                     style="background:linear-gradient(135deg,var(--accent),var(--cyan));padding:16px;border-radius:var(--radius);margin-bottom:12px;">
-                                    <div style="font-weight:700;color:#fff;font-size:16px;">Plan Enterprise</div>
-                                    <div style="color:rgba(255,255,255,0.9);font-size:13px;">L 4,999/mes</div>
+                                    <div style="font-weight:700;color:#fff;font-size:16px;">Ver planes y precios</div>
+                                    <div style="color:rgba(255,255,255,0.9);font-size:13px;">Precio vigente en /api/plans</div>
                                 </div>
                                 <button class="btn btn-acc btn-sm" style="width:100%;justify-content:center;"
                                     onclick="showToast('ComparaciÃ³n de planes disponible prÃ³ximamente.', 'info')">
@@ -2030,67 +1982,13 @@
                     </div>
                     <div class="section-body" style="max-height:500px;overflow-y:auto;">
                         <div class="timeline" style="padding-left:0;">
-                            <div class="timeline-item" style="padding-left:0;border-left:none;">
-                                <div
-                                    style="display:grid;grid-template-columns:100px 1fr auto;gap:16px;align-items:start;">
-                                    <span style="font-size:11px;color:var(--gray);">24 Mar 09:24</span>
+                            <div class="timeline-item" style="padding-left:0;border-left:none;" data-empty-from-server>
+                                <div style="display:grid;grid-template-columns:100px 1fr auto;gap:16px;align-items:start;">
+                                    <span style="font-size:11px;color:var(--gray);">&mdash;</span>
                                     <div>
-                                        <div style="color:var(--white);font-weight:500;">EjecuciÃ³n de bot: "Procesar
-                                            facturas"</div>
-                                        <div style="font-size:12px;color:var(--gray);">Usuario: ana@empresa.portalpilot.io Â· IP:
-                                            187.141.23.45 Â· Resultado: âœ… Success</div>
+                                        <div style="color:var(--white);font-weight:500;">Sin eventos del servidor</div>
+                                        <div style="font-size:12px;color:var(--gray);">Esta vista no tiene endpoint de auditor&iacute;a propio todav&iacute;a; no se muestran eventos de ejemplo.</div>
                                     </div>
-                                    <button class="btn btn-ghost btn-xs"><i class="fas fa-eye"></i></button>
-                                </div>
-                            </div>
-                            <div class="timeline-item" style="padding-left:0;border-left:none;">
-                                <div
-                                    style="display:grid;grid-template-columns:100px 1fr auto;gap:16px;align-items:start;">
-                                    <span style="font-size:11px;color:var(--gray);">24 Mar 08:15</span>
-                                    <div>
-                                        <div style="color:var(--white);font-weight:500;">API Call: POST /v1/rpa/execute
-                                        </div>
-                                        <div style="font-size:12px;color:var(--gray);">Key: pk_live_8x9kâ€¢â€¢â€¢â€¢ Â· Endpoint:
-                                            /webhooks/sap Â· Status: 200</div>
-                                    </div>
-                                    <button class="btn btn-ghost btn-xs"><i class="fas fa-eye"></i></button>
-                                </div>
-                            </div>
-                            <div class="timeline-item" style="padding-left:0;border-left:none;">
-                                <div
-                                    style="display:grid;grid-template-columns:100px 1fr auto;gap:16px;align-items:start;">
-                                    <span style="font-size:11px;color:var(--gray);">23 Mar 16:45</span>
-                                    <div>
-                                        <div style="color:var(--white);font-weight:500;">Nuevo usuario invitado</div>
-                                        <div style="font-size:12px;color:var(--gray);">carlos@empresa.portalpilot.io Â· Rol:
-                                            Operador Â· Invitado por: ana@empresa.portalpilot.io</div>
-                                    </div>
-                                    <button class="btn btn-ghost btn-xs"><i class="fas fa-eye"></i></button>
-                                </div>
-                            </div>
-                            <div class="timeline-item" style="padding-left:0;border-left:none;">
-                                <div
-                                    style="display:grid;grid-template-columns:100px 1fr auto;gap:16px;align-items:start;">
-                                    <span style="font-size:11px;color:var(--gray);">23 Mar 14:30</span>
-                                    <div>
-                                        <div style="color:var(--white);font-weight:500;">Cambio de configuraciÃ³n</div>
-                                        <div style="font-size:12px;color:var(--gray);">Webhook URL actualizada para
-                                            integraciÃ³n Salesforce</div>
-                                    </div>
-                                    <button class="btn btn-ghost btn-xs"><i class="fas fa-eye"></i></button>
-                                </div>
-                            </div>
-                            <div class="timeline-item" style="padding-left:0;border-left:none;">
-                                <div
-                                    style="display:grid;grid-template-columns:100px 1fr auto;gap:16px;align-items:start;">
-                                    <span style="font-size:11px;color:var(--gray);">23 Mar 11:20</span>
-                                    <div>
-                                        <div style="color:var(--white);font-weight:500;">Intento de acceso bloqueado
-                                        </div>
-                                        <div style="font-size:12px;color:var(--red);">IP: 191.203.45.128 (SÃ£o Paulo, BR)
-                                            Â· Motivo: Geobloqueo activo</div>
-                                    </div>
-                                    <button class="btn btn-ghost btn-xs"><i class="fas fa-eye"></i></button>
                                 </div>
                             </div>
                         </div>

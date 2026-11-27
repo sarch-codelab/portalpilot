@@ -1,7 +1,14 @@
 {
   "name": "portal-pilot-web",
   "version": "1.0.7",
-  "description": "Portal Pilot - Enterprise Management Platform",
+  "private": true,
+  "license": "UNLICENSED",
+  "description": "Portal Pilot — Plataforma SaaS ERP/POS multi-empresa con facturación SAR Honduras, inventario, CRM, membresías e IA en la nube",
+  "homepage": "https://portal-pilot.vercel.app",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sarch-codelab/portalpilot.git"
+  },
   "main": "backend/server.js",
   "scripts": {
     "start": "node backend/server.js",

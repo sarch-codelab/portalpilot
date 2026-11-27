@@ -1373,10 +1373,11 @@ app.use((req, res, next) => {
     p.startsWith('/email portal pilot/') ||
     p.startsWith('/empresa/email enterprise/') ||
     p.startsWith('/.git') ||
+    p.startsWith('/.github') ||
     p.startsWith('/.vercel') ||
     p === '/.env' || p.startsWith('/.env') ||
-    p === '/package.json' || p === '/package-lock.json' || p === '/vercel.json' || p === '/cname' ||
-    /\.sql$/i.test(p) ||
+    p === '/package.json' || p === '/package-lock.json' || p === '/vercel.json' || p === '/cname' || p === '/opencode.json' ||
+    /\.(sql|py|docx|bat)$/i.test(p) ||
     /^\/[^/]+\.md$/i.test(p) ||
     /^\/api\/[^/]+\.(js|jsx|ts|tsx|json|map)$/.test(p);
   if (blocked) return res.status(404).send('Not found');

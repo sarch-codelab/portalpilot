@@ -32,21 +32,21 @@
 ### 🤖 IA en la Nube — Groq API
 Asistentes virtuales integrados en **cada módulo** con latencia ultra-baja. Análisis inteligente, generación de reportes, automatización de tareas y respuestas contextuales en milisegundos. El proxy `/api/ai/chat` protege la API key — **nunca expuesta al cliente**.
 
-### 📦 10 Módulos de Negocio Especializados
+### 📦 Módulos de Negocio Especializados (Catálogo de 23 Módulos)
 | Módulo | Color | Estado | Descripción |
 |--------|-------|--------|-------------|
 | **Facturación SAR** | `#10B981` | ✅ Completo | Facturación electrónica lista para SAR (Honduras), clientes, reportes |
 | **Inventario** | `#F59E0B` | ✅ Completo | Productos, bodegas, kardex, stock tiempo real, conexión POS |
-| **Contabilidad** | `#3B82F6` | 🔄 Frontend | Transacciones, estados financieros, trazabilidad contable |
-| **RRHH / Nómina** | `#EC4899` | 🔄 Frontend | Empleados, planilla, recibos, beneficios, asistencia |
-| **CRM** | `#06B6D4` | ✅ Completo | Clientes, ventas, seguimiento comercial, ciclo unificado |
-| **POS** | `#F97316` | ✅ Completo | Terminal cobro rápida, código barras, historial, cierre caja |
+| **Contabilidad** | `#3B82F6` | ✅ Completo | Plan contable, asientos, cierres, conciliaciones, libros y consolidados |
+| **RRHH / Nómina** | `#EC4899` | ✅ Completo | Empleados, planilla, deducciones RAP/ISSS/IHSS/RPV y recibos |
+| **CRM** | `#06B6D4` | ✅ Completo | Clientes, pipeline de ventas, campañas, segmentos y fidelización |
+| **POS** | `#F97316` | ✅ Completo | Terminal cobro rápida, código barras, arqueo, cierre caja |
 | **Canal Tradicional** | `#F59E0B` | ✅ Completo | Pulperías y mercaditos: fiado, cobros, rutas de reparto |
 | **Canal Moderno** | `#10B981` | ✅ Completo | Supermercados y cadenas: multi-sucursal, transferencias, consolidado |
-| **Sector Retail** | `#06B6D4` | ✅ Completo | Precios por canal, promociones, inventario por tienda |
-| **Membresías** | `#8B5CF6` | ✅ Completo | Modelos club (tipo PriceSmart): socios, puntos, renovaciones |
+| **Sector Retail** | `#06B6D4` | ✅ Completo | Precios por canal, promociones, pasillos e inventario por tienda |
+| **Membresías** | `#8B5CF6` | ✅ Completo | Modelos club (tipo PriceSmart): socios, QR, puntos, renovaciones |
 
-> **Nota**: Contabilidad y RRHH/Nómina tienen interfaz web completa pero sus endpoints backend están en desarrollo. Los demás módulos tienen API REST completa en `backend/server.js`.
+> **Nota**: Los módulos avanzados (Contabilidad, RRHH/Nómina, SAR avanzado, CRM avanzado y Multi-empresa) operan con API REST completa en `backend/modulosAvanzadosEndpoints.js` y `backend/server.js`.
 
 ### 🔐 Control de Acceso Enterprise
 - **3 Roles**: `Owner` (propietario completo), `Administrador` (gestión parcial), `Miembro` (acceso limitado)
@@ -133,40 +133,49 @@ npm install
 ```
 
 ### 2. Configurar Variables de Entorno
-Crear `.env` en la raíz (basado en `.env.example`):
+Crear `.env` en la raíz (basado en [`.env.example`](.env.example)):
 ```env
-# Backend
+# Backend & Seguridad
+PORT=5173
 JWT_SECRET=tu_jwt_secreto_super_seguro_64_chars_minimo
+SESSION_SECRET=tu_secreto_de_sesion_aleatorio
+INTEGRATION_ENCRYPTION_KEY=tu_clave_cifrado_32_bytes_minimo
+BILLING_WEBHOOK_SECRET=tu_secreto_webhook_pagos
 
-# Supabase
+# Supabase (el backend opera con SERVICE_ROLE_KEY)
 SUPABASE_URL=https://tu-proyecto.supabase.co
-SUPABASE_KEY=tu_supabase_anon_key
 SUPABASE_SERVICE_ROLE_KEY=tu_service_role_key
+SUPABASE_ANON_KEY=tu_supabase_anon_key
 
 # Groq AI
 GROQ_API_KEY=gsk_tu_groq_api_key
 
 # Email (Nodemailer)
-SMTP_HOST=smtp.tu-proveedor.com
-SMTP_PORT=587
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=465
+SMTP_SECURE=true
 SMTP_USER=tu_usuario
 SMTP_PASS=tu_password
-SMTP_FROM="Portal Pilot <noreply@tudominio.com>"
+EMAIL_FROM="Portal Pilot <noreply@tudominio.com>"
 
 # Frontend
 FRONTEND_URL=https://portal-pilot.vercel.app
 ```
 
 ### 3. Base de Datos (Supabase)
-Ejecutar en **Supabase SQL Editor** en orden:
+Las **27 migraciones** viven en `supabase/` (idempotentes). En una instancia nueva, ejecutar en **Supabase SQL Editor** siguiendo el historial de migraciones:
 ```sql
--- 1. Migración unificada completa
+-- Base y módulos principales
 \i supabase/migracion_unificada_completa.sql
-
--- 2. Migración enterprise (RLS)
 \i supabase/migracion_enterprise.sql
+\i supabase/migracion_planes_honduras_v2.sql
+\i supabase/migracion_modulos_avanzados_v1.sql
+\i supabase/migracion_modulos_avanzados_v2_seguridad.sql
+-- Hardening RLS, privilegios y Storage
+\i supabase/migracion_hardening_rls_seguridad.sql
+\i supabase/migracion_hardening_supabase_completo.sql
 ```
-Verificar que las políticas **RLS** quedaron activas por `empresa_codigo`.
+Verificar esquema con `node backend/check_schema.js` y confirmar políticas **RLS (`service_role_only`)**.
 
 ### 4. Desarrollo Local
 ```bash
@@ -191,45 +200,50 @@ portalpilot/
 │   └── support-ticket.js        # Tickets de soporte
 │
 ├── backend/                      # Backend Express principal (Vercel)
-│   ├── server.js                # 5690 líneas - API completa (/api/*)
-│   ├── supabaseClient.js        # Cliente Supabase (service role)
-│   └── package.json             # Dependencias backend
+│   ├── server.js                # API principal (/api/*) + guard de portales
+│   ├── adminPortalEndpoints.js  # Endpoints /api/admin/* (panel ROOT)
+│   ├── campanasEndpoints.js     # Campañas de email y supresión
+│   ├── modulosAvanzadosEndpoints.js # Contabilidad, RRHH, SAR, CRM, Multi-empresa
+│   ├── erpIntegrity.js          # Integridad transaccional y stock atómico
+│   ├── supabaseClient.js        # Cliente Supabase (service_role)
+│   ├── check_schema.js          # Verificación de esquema Supabase
+│   └── test-*.js                # Suite de tests de contrato/integridad
 │
-├── pp/                          # Portal Admin (rol ROOT)
+├── pp/                          # Portal Admin ROOT (32 páginas HTML)
 │   ├── dashboard.html           # Dashboard principal
 │   ├── tenants.html             # Gestión tenants
 │   ├── usuarios.html            # Gestión usuarios
 │   ├── billing_plans.html       # Planes y facturación
+│   ├── campanas.html            # Campañas de correo
 │   ├── global_settings.html     # Configuración global
 │   ├── system_health.html       # Salud del sistema
 │   ├── analytics.html           # Analíticas
 │   ├── auditoria.html           # Auditoría del sistema
 │   ├── bots_rpa.html            # Bots RPA
-│   ├── perfil.html              # Perfil admin
-│   ├── tenant_detail.html       # Detalle tenant
-│   ├── usuario_detail.html      # Detalle usuario
-│   └── welcome.html             # Bienvenida
+│   └── ...                      # tickets, kyc, perfil, detail, etc.
 │
-├── empresa/                      # Portal web avanzado por empresa
+├── empresa/                      # Portal web avanzado por empresa (22 páginas HTML)
 │   ├── dashboard.html           # Dashboard por plan
+│   ├── operaciones.html         # Operación comercial en web
 │   ├── fleet.html               # Flotilla (vehículos)
 │   ├── automation.html          # Automatizaciones RPA
 │   ├── team.html                # Equipo (usuarios tenant)
-│   ├── security.html            # Auditoría + API Keys
+│   ├── security.html            # Auditoría + API Keys + 2FA
 │   ├── api_keys.html            # Gestión API Keys
 │   ├── inicio.html              # Inicio empresa
 │   ├── perfil.html              # Perfil empresa
-│   └── tenant_detail.html       # Detalle tenant
+│   └── ...                      # módulo detail, facturación, etc.
 │
-├── index.css                    # Estilos landing (110KB)
+├── index.css                    # Estilos landing
 ├── index.html                   # Landing page principal
-├── css/                         # Estilos por módulo (18 archivos)
+├── planes.html                  # Planes HNL y cotizador de 23 módulos
+├── css/                         # Estilos por módulo (24 archivos)
 │   ├── login.css                # Autenticación
 │   ├── dashboard.css            # Dashboard
 │   ├── styles.css               # Compartidos
 │   └── ...                      # billing, tenants, perfil, etc.
 │
-├── js/                          # JS por módulo (22 archivos)
+├── js/                          # JS por módulo (38 archivos)
 │   ├── login.js                 # Auth landing
 │   ├── plan-gate.js             # Gate por plan/rol
 │   ├── sidebar-loader.js        # Navegación dinámica
@@ -237,30 +251,35 @@ portalpilot/
 │   ├── billing_plans.js         # Lógica planes
 │   └── ...                      # tenants, usuarios, perfil, etc.
 │
-├── supabase/                     # Migraciones SQL (7 archivos)
-│   ├── migracion_enterprise.sql # Tablas portal web (RLS)
+├── supabase/                     # Migraciones SQL (27 archivos)
 │   ├── migracion_unificada_completa.sql
-│   └── ...                      # migraciones comerciales, seguridad, etc.
+│   ├── migracion_planes_honduras_v2.sql
+│   ├── migracion_modulos_avanzados_v1.sql
+│   ├── migracion_modulos_avanzados_v2_seguridad.sql
+│   ├── migracion_hardening_rls_seguridad.sql
+│   └── migracion_hardening_supabase_completo.sql
 │
 ├── scripts/
 │   └── post-deploy-ping.js      # Ping post-despliegue
 │
 ├── EMAIL PORTAL PILOT/          # Plantillas de email transaccional
 ├── img/                         # Imágenes del proyecto
-├── uploads/                     # Directorio de subidas
+├── uploads/                     # Directorio local de subidas (ignorado en Git)
 │
 ├── index.html                   # Landing page
 ├── login.html                   # Login
-├── registrov2.html              # Registro
+├── registrov2.html              # Registro (verificación OTP)
 ├── pay_plan.html                # Selección de plan y pago
 ├── documentacion.html           # Documentación de usuario
 ├── 404.html                     # Página no encontrada
 ├── cookies.html / privacidad.html / terminos.html / sla.html
 ├── support.html / download.html / primer_acceso.html
 │
+├── LICENSE                      # Licencia propietaria
+├── SECURITY.md                  # Política de seguridad y divulgación
+├── .env.example                 # Plantilla de variables de entorno
 ├── vercel.json                  # Configuración despliegue y rutas
-├── package.json                 # Dependencias del proyecto
-├── .env.example                 # Variables de entorno (ejemplo)
+├── package.json                 # Dependencias y scripts del proyecto
 ├── robots.txt / sitemap.xml
 └── DOCUMENTO_TECNICO_PORTAL_PILOT.md
 ```
@@ -344,44 +363,30 @@ Todos los endpoints son manejados por `backend/server.js` vía enrutamiento de `
 
 ## 🔐 Seguridad
 
+Ver política completa y reporte responsable de vulnerabilidades en [`SECURITY.md`](SECURITY.md).
+
 ### Cero Llaves Expuestas
-- **Nunca** se incluyen claves de Supabase ni Groq en el cliente
-- Backend usa `process.env.SUPABASE_KEY`, `process.env.GROQ_API_KEY`
-- Proxy `/api/ai/chat` protege llamadas al LLM desde frontend
-- Verificado en binarios compilados: sin patrones `sk-`, `hf_`, JWT secrets
+- **Nunca** se incluyen claves de Supabase (`service_role`), Groq ni secretos en el cliente.
+- El backend opera exclusivamente con `SUPABASE_SERVICE_ROLE_KEY` y `GROQ_API_KEY` desde variables de entorno.
+- Proxy `/api/ai/chat` protege llamadas al LLM desde frontend.
+- Bloqueo explícito en Express/Vercel para archivos internos (`/backend/`, `/scripts/`, `/supabase/`, `*.sql`, `*.md`, `/.env*`).
 
-### Aislamiento Multi-Tenant (RLS)
-```sql
--- Cada tabla de negocio incluye:
-empresa_codigo TEXT NOT NULL  -- Columna de tenant (sin FK rígida)
+### Aislamiento Multi-Tenant y Hardening en Supabase
+- **RLS estricto (`service_role_only`)**: todas las tablas operativas exigen `service_role`; `PUBLIC`, `anon` y `authenticated` tienen privilegios revocados sobre tablas, vistas, secuencias y RPCs (`ALTER DEFAULT PRIVILEGES` activo).
+- **Catálogo público de solo lectura**: únicamente `planes`, `plan_features`, `plan_limits`, `plan_modulos` y `modulos_cotizador` permiten `SELECT` público.
+- **Vistas seguras**: `empresas_filiales` y `v_fuentes_canonicas` usan `security_invoker = true`.
+- **Storage protegido**: subidas restringidas al backend (`service_role`), con límite de `10 MB` y MIME de imagen en `uploads`, `productos` y `portal-pilot-assets`.
 
--- Políticas RLS comparan claim del JWT:
-CREATE POLICY tabla_all ON tabla FOR ALL USING (
-  empresa_codigo = jwt_empresa_codigo()
-);
-
--- Helper claim JWT:
-CREATE OR REPLACE FUNCTION jwt_empresa_codigo()
-RETURNS TEXT AS $$
-  SELECT NULLIF(auth.jwt() ->> 'empresa_codigo', '');
-$$ LANGUAGE SQL STABLE;
-```
-**Resultado**: Un usuario **jamás** puede leer/escribir datos de otra empresa. `ROOT` administra todos los tenants desde `pp/`.
-
-### Migraciones Idempotentes
-- `CREATE TABLE IF NOT EXISTS`, `ADD COLUMN IF NOT EXISTS`
-- `DROP POLICY IF EXISTS`, `CREATE OR REPLACE FUNCTION`
-- Re-ejecutables sin errores en cualquier entorno (dev/prod)
-- Validación sintaxis SQL (PostgreSQL) pre-despliegue
+**Resultado**: Ningún cliente puede consultar ni modificar datos de otra empresa desde PostgREST ni desde la API. `ROOT` administra la plataforma desde `pp/`.
 
 ### Buenas Prácticas Implementadas
-- ✅ JWT con roles (`Owner`, `Administrador`, `Miembro`)
-- ✅ Auditoría por empresa (`auditoria`): log accesos y operaciones sensibles
-- ✅ Gestión API Keys por tenant con revocación (`api_keys`)
-- ✅ Rate limiting en auth (`loginLimiter`: 5 req/15min)
-- ✅ Helmet CSP configurado, CORS restrictivo
-- ✅ Bcrypt para hash de contraseñas
-- ✅ TLS 1.3 en tránsito (Vercel + Supabase)
+- ✅ JWT con roles (`Owner`, `Administrador`, `Miembro`) y `token_version` revocable
+- ✅ 2FA (TOTP), verificación OTP de correo previo al registro y mínimo 8 caracteres en contraseñas
+- ✅ Integridad transaccional ERP (`backend/erpIntegrity.js`): precios y stock autoritativos en servidor
+- ✅ Cifrado AES-256-GCM en integraciones (`INTEGRATION_ENCRYPTION_KEY`) y secreto `BILLING_WEBHOOK_SECRET` en pagos
+- ✅ Auditoría por empresa (`auditoria`) y gestión de API Keys con revocación (`api_keys`)
+- ✅ Rate limiting en auth (`loginLimiter`: 5 intentos fallidos/15min), correo y pagos
+- ✅ Helmet CSP configurado, CORS restrictivo en producción, `bcryptjs` y TLS 1.3
 
 ---
 
@@ -392,8 +397,8 @@ $$ LANGUAGE SQL STABLE;
 | **Prueba** | Gratis · 15 días | 5 | Todos (23) | 5 GB | Plataforma completa, sin tarjeta |
 | **Pulpería** | L. 299/mes | 3 | 5 | **5 GB** | POS de mostrador, libreta de fiado, inventario y SAR simplificada |
 | **Tienda** | L. 799/mes | 15 | 8 | 25 GB | POS retail con escáner, SAR formal (CAI/RTN), compras y cotizaciones |
-| **Club** | L. 1,399/mes | 35 | Suite completa | 100 GB | Membresías QR, barra/mesas, BI y seguridad 2FA |
-| **Personalizado** | Desde L. 150/mes | 15 | Cotizador | 25 GB | Cuota base + los módulos del catálogo que elijas |
+| **Club** | L. 1,399/mes | 35 | 7 | 100 GB | POS, membresías QR, inventario, facturación, CRM, 2FA/seguridad y Chat IA |
+| **Personalizado** | Desde L. 150/mes | 15 | Hasta 23 (Cotizador) | 25 GB | Cuota base + los módulos del catálogo que elijas |
 
 > **Business (L. 1,499), Enterprise (L. 4,999) y Custom son legacy**: ya no se venden; solo operan tenants existentes.
 > El catálogo vigente siempre lo expone `GET /api/plans` (tabla `planes` de la DB).
@@ -425,23 +430,24 @@ flutter build windows --release
 ## 🧪 Testing y Calidad
 
 ```bash
-# Lint (si configurado)
+# Validación de sintaxis del backend
 npm run lint
 
-# Typecheck (si TypeScript)
-npm run typecheck
-
-# Tests (si configurados)
+# Suite de contratos e integridad ERP (101 tests con node --test)
 npm test
+
+# Verificación de esquema contra Supabase conectado
+node backend/check_schema.js
 ```
 
-> **Nota**: El proyecto usa JavaScript vanilla (ES6+) sin TypeScript ni framework de testing configurado actualmente. Se recomienda añadir ESLint + Prettier + Vitest.
+- **CI automático (`.github/workflows/ci.yml`)**: ejecuta `npm run lint` y `npm test` en cada `push` y `pull_request` a `main`, además de `node backend/check_schema.js` cuando existen credenciales configuradas.
 
 ---
 
 ## 📚 Documentación
 
-- **[Documento Técnico Completo](DOCUMENTO_TECNICO_PORTAL_PILOT.md)** — 332 líneas: arquitectura, módulos, endpoints, seguridad, despliegue
+- **[Política de Seguridad](SECURITY.md)** — Reporte responsable de vulnerabilidades y controles implementados
+- **[Documento Técnico Completo](DOCUMENTO_TECNICO_PORTAL_PILOT.md)** — Arquitectura, módulos, endpoints, seguridad y despliegue
 - **[Documentación Web](documentacion.html)** — Guía de usuario en la landing
 - **[SLA](sla.html)** — Acuerdo de nivel de servicio
 - **[Privacidad](privacidad.html)** / **[Términos](terminos.html)** / **[Cookies](cookies.html)**
@@ -482,9 +488,9 @@ chore:    Mantenimiento
 
 ## 📄 Licencia
 
-**Código propietario** — Todos los derechos reservados © 2026 Portal Pilot.
+**Código propietario** — Todos los derechos reservados © 2026 Portal Pilot. Ver términos completos en [`LICENSE`](LICENSE).
 
-> Prohibida su redistribución, copia o modificación sin autorización escrita del equipo de Portal Pilot.
+> Prohibida su redistribución, copia o modificación sin autorización escrita del equipo de Portal Pilot. Contacto: `legal@portalpilot.hn` · Seguridad: [`SECURITY.md`](SECURITY.md).
 
 ---
 

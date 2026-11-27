@@ -32,7 +32,7 @@ USO PERMITIDO (Solo para clientes activos)
 Los clientes con plan vigente (Prueba, Pulpería, Tienda, Club, Personalizado, Business, Enterprise) tienen derecho a:
 
 ✅ Acceder y usar la plataforma SaaS bajo los términos de su plan
-✅ Usar la app de escritorio (Windows) para su operación empresarial
+✅ Usar las aplicaciones cliente oficiales (Windows, Web y móvil) para su operación empresarial
 ✅ Invitar usuarios dentro de los límites de su plan contratado
 ✅ Exportar sus propios datos en formatos estándar (CSV, PDF, JSON)
 
@@ -49,10 +49,11 @@ El uso no autorizado constituye:
 - Violación de secreto empresarial y know-how
 
 --------------------------------------------------
-CONTACTO PARA AUTORIZACIONES
+CONTACTO PARA AUTORIZACIONES Y SEGURIDAD
 --------------------------------------------------
 Portal Pilot
-Email: legal@portalpilot.hn
+Email legal: legal@portalpilot.hn
+Seguridad (ver SECURITY.md): seguridad@portalpilot.hn
 Web: https://portal-pilot.vercel.app
 GitHub: https://github.com/sarch-codelab/portalpilot
 

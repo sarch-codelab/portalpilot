@@ -1727,7 +1727,7 @@
               <label class="form-label">Tipo de Descuento *</label>
               <select class="form-select" id="promoType" required>
                 <option value="percent">Porcentaje (%)</option>
-                <option value="fixed">Monto Fijo ($)</option>
+                <option value="fixed">Monto Fijo (L)</option>
               </select>
             </div>
             <div class="form-group">
@@ -1744,9 +1744,13 @@
               <label class="form-label">Plan Aplicable</label>
               <select class="form-select" id="promoPlan">
                 <option value="all">Todos los planes</option>
-                <option value="free">Free</option>
-                <option value="pro">Pro</option>
-                <option value="enterprise">Enterprise</option>
+                <option value="starter">Prueba (15 días)</option>
+                <option value="pulperia">Pulpería (L. 299)</option>
+                <option value="tienda">Tienda (L. 799)</option>
+                <option value="club">Club (L. 1,399)</option>
+                <option value="personalizado">Personalizado</option>
+                <option value="business">Business (Legacy)</option>
+                <option value="enterprise">Enterprise (Legacy)</option>
               </select>
             </div>
           </div>
@@ -1781,8 +1785,8 @@
       </div>
       <nav class="sidebar-nav" id="sidebarNav"></nav>
       <div class="sidebar-footer">
-        <a href="#" class="sidebar-link"><i class="fas fa-question-circle"></i> Ayuda</a>
-        <a href="#" class="sidebar-link"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</a>
+        <a href="../support.html" class="sidebar-link"><i class="fas fa-question-circle"></i> Ayuda</a>
+        <a href="/login.html" class="sidebar-link" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</a>
         <div class="sidebar-user">
           <div class="sidebar-avatar" id="sidebarAvatar">AD</div>
           <div>
@@ -1834,25 +1838,25 @@
       <!-- TAB: PLAN EDITOR -->
       <div class="tab-content active" id="tab-plans">
         <div class="plans-grid">
-          <!-- FREE PLAN -->
-          <div class="plan-card reveal" data-plan="free">
+          <!-- FREE / STARTER PLAN -->
+          <div class="plan-card reveal" data-plan="starter">
             <div class="plan-header">
-              <span class="plan-badge free">Free</span>
+              <span class="plan-badge free">Trial</span>
               <div class="plan-name">Prueba</div>
-              <div class="plan-price">L 0 <span>/mes</span></div>
-              <div class="plan-period">Para pruebas y pequeños proyectos</div>
+              <div class="plan-price">L 0 <span>/15 días</span></div>
+              <div class="plan-period">15 días gratis con la plataforma abierta para evaluar</div>
             </div>
             <div class="plan-body">
               <div class="plan-feature"><span class="plan-feature-label">Precio Mensual</span><input type="number"
                   class="plan-feature-input" value="0" data-field="price" disabled></div>
               <div class="plan-feature"><span class="plan-feature-label">Precio Anual</span><input type="number"
                   class="plan-feature-input" value="0" data-field="price_year" disabled></div>
-              <div class="plan-feature"><span class="plan-feature-label">Mensajes IA/mes</span><input type="number"
-                  class="plan-feature-input" value="100" data-field="ai_messages"></div>
-              <div class="plan-feature"><span class="plan-feature-label">Bots RPA simultáneos</span><input type="number"
-                  class="plan-feature-input" value="2" data-field="rpa_bots"></div>
-              <div class="plan-feature"><span class="plan-feature-label">Auditoría Blockchain</span>
-                <div class="plan-feature-toggle" onclick="toggleFeature(this)" data-feature="blockchain"></div>
+              <div class="plan-feature"><span class="plan-feature-label">Usuarios máx.</span><input type="number"
+                  class="plan-feature-input" value="5" data-field="users"></div>
+              <div class="plan-feature"><span class="plan-feature-label">Módulos incluidos</span><input type="number"
+                  class="plan-feature-input" value="23" data-field="modules"></div>
+              <div class="plan-feature"><span class="plan-feature-label">Auditoría Multi-Tenant</span>
+                <div class="plan-feature-toggle active" onclick="toggleFeature(this)" data-feature="audit"></div>
               </div>
               <div class="plan-feature"><span class="plan-feature-label">Soporte Prioritario</span>
                 <div class="plan-feature-toggle" onclick="toggleFeature(this)" data-feature="priority_support"></div>
@@ -1862,9 +1866,9 @@
               </div>
             </div>
             <div class="plan-footer">
-              <button class="btn btn-outline btn-sm" onclick="editPlan('free')"><i class="fas fa-edit"></i>
+              <button class="btn btn-outline btn-sm" onclick="editPlan('starter')"><i class="fas fa-edit"></i>
                 Editar</button>
-              <button class="btn btn-ghost btn-sm" onclick="previewPlan('free')"><i class="fas fa-eye"></i>
+              <button class="btn btn-ghost btn-sm" onclick="previewPlan('starter')"><i class="fas fa-eye"></i>
                 Vista</button>
             </div>
           </div>
@@ -1874,26 +1878,26 @@
               <span class="plan-badge free">Barrio</span>
               <div class="plan-name">Pulpería</div>
               <div class="plan-price">L 299 <span>/mes</span></div>
-              <div class="plan-period">L. 10 al día · POS + fiado + caja</div>
+              <div class="plan-period">L. 10 al día · POS + fiado + caja + SAR simplificado</div>
             </div>
             <div class="plan-body">
-              <div class="plan-feature"><span class="plan-feature-label">Precio Mensual</span><input type="number"
-                  class="plan-feature-input" value="1499" data-field="price"></div>
-              <div class="plan-feature"><span class="plan-feature-label">Precio Anual</span><input type="number"
-                  class="plan-feature-input" value="15288" data-field="price_year"></div>
-              <div class="plan-feature"><span class="plan-feature-label">Mensajes IA/mes</span><input type="number"
-                  class="plan-feature-input" value="5000" data-field="ai_messages"></div>
-              <div class="plan-feature"><span class="plan-feature-label">Bots RPA simultáneos</span><input type="number"
-                  class="plan-feature-input" value="15" data-field="rpa_bots"></div>
-              <div class="plan-feature"><span class="plan-feature-label">Auditoría Blockchain</span>
-                <div class="plan-feature-toggle active" onclick="toggleFeature(this)" data-feature="blockchain"></div>
+              <div class="plan-feature"><span class="plan-feature-label">Precio Mensual (L)</span><input type="number"
+                  class="plan-feature-input" value="299" data-field="price"></div>
+              <div class="plan-feature"><span class="plan-feature-label">Precio Anual (L)</span><input type="number"
+                  class="plan-feature-input" value="2990" data-field="price_year"></div>
+              <div class="plan-feature"><span class="plan-feature-label">Usuarios máx.</span><input type="number"
+                  class="plan-feature-input" value="3" data-field="users"></div>
+              <div class="plan-feature"><span class="plan-feature-label">Módulos incluidos</span><input type="number"
+                  class="plan-feature-input" value="5" data-field="modules"></div>
+              <div class="plan-feature"><span class="plan-feature-label">Facturación SAR</span>
+                <div class="plan-feature-toggle active" onclick="toggleFeature(this)" data-feature="facturacion_sar"></div>
               </div>
-              <div class="plan-feature"><span class="plan-feature-label">Soporte Prioritario</span>
+              <div class="plan-feature"><span class="plan-feature-label">Soporte WhatsApp</span>
                 <div class="plan-feature-toggle active" onclick="toggleFeature(this)" data-feature="priority_support">
                 </div>
               </div>
-              <div class="plan-feature"><span class="plan-feature-label">Multi-empresa (hasta 3)</span>
-                <div class="plan-feature-toggle active" onclick="toggleFeature(this)" data-feature="multi_tenant"></div>
+              <div class="plan-feature"><span class="plan-feature-label">Multi-empresa</span>
+                <div class="plan-feature-toggle" onclick="toggleFeature(this)" data-feature="multi_tenant"></div>
               </div>
             </div>
             <div class="plan-footer">
@@ -1912,11 +1916,11 @@
               <div class="plan-period">L. 26.60 al día · Retail completo con SAR formal</div>
             </div>
             <div class="plan-body">
-              <div class="plan-feature"><span class="plan-feature-label">Precio Mensual</span><input type="number"
+              <div class="plan-feature"><span class="plan-feature-label">Precio Mensual (L)</span><input type="number"
                   class="plan-feature-input" value="799" data-field="price"></div>
-              <div class="plan-feature"><span class="plan-feature-label">Precio Anual</span><input type="number"
+              <div class="plan-feature"><span class="plan-feature-label">Precio Anual (L)</span><input type="number"
                   class="plan-feature-input" value="7990" data-field="price_year"></div>
-              <div class="plan-feature"><span class="plan-feature-label">Usuarios</span><input type="number"
+              <div class="plan-feature"><span class="plan-feature-label">Usuarios máx.</span><input type="number"
                   class="plan-feature-input" value="15" data-field="users"></div>
               <div class="plan-feature"><span class="plan-feature-label">Módulos incluidos</span><input type="number"
                   class="plan-feature-input" value="8" data-field="modules"></div>
@@ -1937,14 +1941,14 @@
               <div class="plan-period">L. 46.60 al día · Membresías QR + BI + 2FA</div>
             </div>
             <div class="plan-body">
-              <div class="plan-feature"><span class="plan-feature-label">Precio Mensual</span><input type="number"
+              <div class="plan-feature"><span class="plan-feature-label">Precio Mensual (L)</span><input type="number"
                   class="plan-feature-input" value="1399" data-field="price"></div>
-              <div class="plan-feature"><span class="plan-feature-label">Precio Anual</span><input type="number"
+              <div class="plan-feature"><span class="plan-feature-label">Precio Anual (L)</span><input type="number"
                   class="plan-feature-input" value="13990" data-field="price_year"></div>
-              <div class="plan-feature"><span class="plan-feature-label">Usuarios</span><input type="number"
+              <div class="plan-feature"><span class="plan-feature-label">Usuarios máx.</span><input type="number"
                   class="plan-feature-input" value="35" data-field="users"></div>
               <div class="plan-feature"><span class="plan-feature-label">Módulos incluidos</span><input type="number"
-                  class="plan-feature-input" value="8" data-field="modules"></div>
+                  class="plan-feature-input" value="23" data-field="modules"></div>
             </div>
             <div class="plan-footer">
               <button class="btn btn-outline btn-sm" onclick="editPlan('club')"><i class="fas fa-edit"></i>
@@ -1953,13 +1957,38 @@
                 Vista</button>
             </div>
           </div>
-          <!-- ENTERPRISE PLAN -->
+          <!-- PERSONALIZADO (COTIZADOR) -->
+          <div class="plan-card reveal" data-plan="personalizado" style="transition-delay:.18s;">
+            <div class="plan-header">
+              <span class="plan-badge pro">Cotizador</span>
+              <div class="plan-name">Personalizado</div>
+              <div class="plan-price">L 150+ <span>/mes</span></div>
+              <div class="plan-period">Cuota base + módulos a la carta (hasta 23)</div>
+            </div>
+            <div class="plan-body">
+              <div class="plan-feature"><span class="plan-feature-label">Base Mensual (L)</span><input type="number"
+                  class="plan-feature-input" value="150" data-field="price"></div>
+              <div class="plan-feature"><span class="plan-feature-label">Base Anual (L)</span><input type="number"
+                  class="plan-feature-input" value="1500" data-field="price_year"></div>
+              <div class="plan-feature"><span class="plan-feature-label">Usuarios máx.</span><input type="number"
+                  class="plan-feature-input" value="15" data-field="users"></div>
+              <div class="plan-feature"><span class="plan-feature-label">Módulos disponibles</span><input type="number"
+                  class="plan-feature-input" value="23" data-field="modules"></div>
+            </div>
+            <div class="plan-footer">
+              <button class="btn btn-outline btn-sm" onclick="editPlan('personalizado')"><i class="fas fa-edit"></i>
+                Editar</button>
+              <button class="btn btn-ghost btn-sm" onclick="previewPlan('personalizado')"><i class="fas fa-eye"></i>
+                Vista</button>
+            </div>
+          </div>
+          <!-- ENTERPRISE PLAN (LEGACY) -->
           <div class="plan-card reveal" data-plan="enterprise" style="transition-delay:.2s;">
             <div class="plan-header">
               <span class="plan-badge enterprise">Enterprise</span>
-              <div class="plan-name">Corporativo</div>
+              <div class="plan-name">Corporativo (Legacy)</div>
               <div class="plan-price">Custom <span></span></div>
-              <div class="plan-period">Para organizaciones grandes</div>
+              <div class="plan-period">Para contratos enterprise existentes</div>
             </div>
             <div class="plan-body">
               <div class="plan-feature"><span class="plan-feature-label">Precio Mensual</span><input type="text"
@@ -1968,14 +1997,14 @@
               <div class="plan-feature"><span class="plan-feature-label">Precio Anual</span><input type="text"
                   class="plan-feature-input" value="Custom" data-field="price_year" style="text-align:center;" disabled>
               </div>
-              <div class="plan-feature"><span class="plan-feature-label">Mensajes IA/mes</span><input type="text"
-                  class="plan-feature-input" value="Ilimitado" data-field="ai_messages" style="text-align:center;"
+              <div class="plan-feature"><span class="plan-feature-label">Usuarios máx.</span><input type="text"
+                  class="plan-feature-input" value="Ilimitado" data-field="users" style="text-align:center;"
                   disabled></div>
-              <div class="plan-feature"><span class="plan-feature-label">Bots RPA simultáneos</span><input type="text"
-                  class="plan-feature-input" value="Ilimitado" data-field="rpa_bots" style="text-align:center;"
+              <div class="plan-feature"><span class="plan-feature-label">Módulos incluidos</span><input type="text"
+                  class="plan-feature-input" value="23" data-field="modules" style="text-align:center;"
                   disabled></div>
-              <div class="plan-feature"><span class="plan-feature-label">Auditoría Blockchain Privada</span>
-                <div class="plan-feature-toggle active" onclick="toggleFeature(this)" data-feature="blockchain"></div>
+              <div class="plan-feature"><span class="plan-feature-label">Auditoría Completa</span>
+                <div class="plan-feature-toggle active" onclick="toggleFeature(this)" data-feature="audit"></div>
               </div>
               <div class="plan-feature"><span class="plan-feature-label">Soporte 24/7 Dedicado</span>
                 <div class="plan-feature-toggle active" onclick="toggleFeature(this)" data-feature="priority_support">
@@ -2014,9 +2043,13 @@
             </select>
             <select class="filter-select" id="filterPlan" onchange="filterPayments()">
               <option value="">Todos los planes</option>
-              <option value="free">Free</option>
-              <option value="pro">Pro</option>
-              <option value="enterprise">Enterprise</option>
+              <option value="starter">Prueba</option>
+              <option value="pulperia">Pulpería</option>
+              <option value="tienda">Tienda</option>
+              <option value="club">Club</option>
+              <option value="personalizado">Personalizado</option>
+              <option value="business">Business (Legacy)</option>
+              <option value="enterprise">Enterprise (Legacy)</option>
             </select>
             <div class="date-range">
               <input type="date" class="date-input" id="dateFrom" placeholder="Desde">
@@ -2042,16 +2075,7 @@
           <tbody id="paymentsBody"></tbody>
         </table>
         <div class="pagination">
-          <div class="pagination-info">Mostrando <strong>1-10</strong> de <strong>1,247</strong> transacciones</div>
-          <div class="pagination-btns">
-            <button class="pagination-btn" disabled><i class="fas fa-chevron-left"></i></button>
-            <button class="pagination-btn active">1</button>
-            <button class="pagination-btn">2</button>
-            <button class="pagination-btn">3</button>
-            <span style="color:var(--gray);">...</span>
-            <button class="pagination-btn">125</button>
-            <button class="pagination-btn"><i class="fas fa-chevron-right"></i></button>
-          </div>
+          <div class="pagination-info">Cargando registros...</div>
         </div>
       </div>
 
@@ -2141,7 +2165,7 @@
       const data = {}; card.querySelectorAll('.plan-feature-input').forEach(i => { data[i.dataset.field] = i.value; });
       const features = []; card.querySelectorAll('.plan-feature-toggle').forEach(t => { if (t.classList.contains('active')) features.push(t.dataset.feature); });
       showToast(`Vista previa del plan ${pid.toUpperCase()}`, 'info');
-      setTimeout(() => { showToast(`Precio ${data.price}/mes · IA: ${data.ai_messages} · Bots: ${data.rpa_bots} · ${features.length} funciones activas`, 'success'); }, 300);
+      setTimeout(() => { showToast(`Precio L ${data.price}/mes · Usuarios: ${data.users ?? '—'} · Módulos: ${data.modules ?? '—'} · ${features.length} funciones activas`, 'success'); }, 300);
     }
     function saveAllChanges() {
       if (editedPlans.size === 0) return;
@@ -2192,7 +2216,7 @@
           date: payment.created_at,
           tenant: payment.empresa_codigo || payment.email,
           empresa: payment.empresa_codigo,
-          plan: payment.plan === 'business' ? 'pro' : payment.plan,
+          plan: payment.plan || 'starter',
           amount: `L ${Number(payment.amount || 0).toLocaleString('es-HN')}`,
           method: payment.payment_method || 'transferencia',
           status: payment.status || 'pending'
@@ -2399,9 +2423,13 @@
                 <label class="form-label">Plan Aplicable</label>
                 <select class="form-select" id="editPromoPlan">
                   <option value="all" ${promo.plan === 'all' ? 'selected' : ''}>Todos</option>
-                  <option value="free" ${promo.plan === 'free' ? 'selected' : ''}>Free</option>
-                  <option value="pro" ${promo.plan === 'pro' ? 'selected' : ''}>Pro</option>
-                  <option value="enterprise" ${promo.plan === 'enterprise' ? 'selected' : ''}>Enterprise</option>
+                  <option value="starter" ${promo.plan === 'starter' ? 'selected' : ''}>Prueba</option>
+                  <option value="pulperia" ${promo.plan === 'pulperia' ? 'selected' : ''}>Pulpería</option>
+                  <option value="tienda" ${promo.plan === 'tienda' ? 'selected' : ''}>Tienda</option>
+                  <option value="club" ${promo.plan === 'club' ? 'selected' : ''}>Club</option>
+                  <option value="personalizado" ${promo.plan === 'personalizado' ? 'selected' : ''}>Personalizado</option>
+                  <option value="business" ${promo.plan === 'business' ? 'selected' : ''}>Business (Legacy)</option>
+                  <option value="enterprise" ${promo.plan === 'enterprise' ? 'selected' : ''}>Enterprise (Legacy)</option>
                 </select>
               </div>
             </div>

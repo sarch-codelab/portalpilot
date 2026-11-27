@@ -171,7 +171,7 @@ if (modalConfirm) {
         localStorage.removeItem('token');
         showToast('Sesión cerrada. Redirigiendo...', 'info');
         setTimeout(() => {
-            window.location.href = 'login.html';
+            window.location.href = '/login.html';
         }, 1000);
     });
 }
@@ -610,17 +610,18 @@ async function inviteUser(event) {
         newRow.dataset.userRole = roleLabel;
         newRow.dataset.userStatus = 'Activo';
 
+        const escU = v => String(v == null ? '' : v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
         newRow.innerHTML = `
             <td>
                 <div class="user-info-cell">
-                    <div class="user-avatar-sm">${initials}</div>
+                    <div class="user-avatar-sm">${escU(initials)}</div>
                     <div>
-                        <div class="user-name-cell">${displayName}</div>
-                        <div class="user-email-cell">${email}</div>
+                        <div class="user-name-cell">${escU(displayName)}</div>
+                        <div class="user-email-cell">${escU(email)}</div>
                     </div>
                 </div>
             </td>
-            <td><span class="role-badge ${roleClass}">${roleLabel}</span></td>
+            <td><span class="role-badge ${roleClass}">${escU(roleLabel)}</span></td>
             <td><span style="color:var(--yellow);font-size:12px;"><span class="status-dot" style="background:var(--yellow);"></span>Pendiente</span></td>
             <td>Justo ahora</td>
             <td>
@@ -847,10 +848,14 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('tenant-country').textContent = preview.country || 'N/A';
             document.getElementById('tenant-timezone').textContent = detail.timezone || 'N/A';
 
-            if (preview.logo) {
+            if (preview.logo && /^(https?:\/\/|\/|\.\.?\/|data:image\/)/i.test(String(preview.logo))) {
                 const logoEl = document.querySelector('.tenant-logo');
                 if (logoEl) {
-                    logoEl.innerHTML = `<img src="${preview.logo}" alt="Logo">`;
+                    logoEl.textContent = '';
+                    const img = document.createElement('img');
+                    img.src = preview.logo;
+                    img.alt = 'Logo';
+                    logoEl.appendChild(img);
                 }
             }
         })

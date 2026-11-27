@@ -602,8 +602,10 @@ function toggleTenantStatus(id) {
 async function showChangePlan(id) {
   const t = tenants.find(x => x.id === id);
   if (!t) return;
-  const newPlan = prompt(`Cambiar plan para ${t.name}:\n(starter/business/enterprise)`, t.plan || 'starter');
-  if (!newPlan || !['starter', 'business', 'enterprise'].includes(newPlan)) return;
+  const planesPermitidos = ['starter', 'pulperia', 'tienda', 'club', 'personalizado', 'business', 'enterprise'];
+  const inputPlan = prompt(`Cambiar plan para ${t.name}:\n(${planesPermitidos.join(' / ')})`, t.plan || 'starter');
+  const newPlan = (inputPlan || '').trim().toLowerCase();
+  if (!newPlan || !planesPermitidos.includes(newPlan)) return;
   try {
     const token = localStorage.getItem('token');
     const res = await fetch(`${API_ROOT}/api/tenants/${encodeURIComponent(id)}`, {

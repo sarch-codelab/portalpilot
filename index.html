@@ -103,7 +103,7 @@
         <span class="pp-announce-dot" style="background:#30d158;"></span>
         <span class="pp-announce-strong">🇭🇳 Planes Adaptados a Honduras</span>
         <span class="pp-announce-sep">·</span>
-        <span class="pp-announce-muted">Pulpería, Tienda, Club o Cotizador Modular de 21 Módulos</span>
+        <span class="pp-announce-muted">Pulpería, Tienda, Club o Cotizador Modular de 23 Módulos</span>
       </div>
       <div class="pp-announce-right">
         <a href="planes.html" class="pp-announce-cta">Ver Planes & Cotizar <i class="fas fa-arrow-right"></i></a>
@@ -473,9 +473,9 @@
             <div class="pstat"><span class="psv">★ 4.9</span><span class="psl">Rating</span></div>
           </div>
           <div class="prof-social">
-            <a href="https://instagram.com/elsanchezok" class="prof-social-btn" title="Instagram"><i class="fab fa-instagram"></i></a>
-            <a href="#" class="prof-social-btn" title="Twitter"><i class="fab fa-twitter"></i></a>
-            <a href="#" class="prof-social-btn" title="Email"><i class="fas fa-envelope"></i></a>
+            <a href="https://instagram.com/elsanchezok" target="_blank" rel="noopener" class="prof-social-btn" title="Instagram"><i class="fab fa-instagram"></i></a>
+            <a href="https://github.com/sarch-codelab" target="_blank" rel="noopener" class="prof-social-btn" title="GitHub"><i class="fab fa-github"></i></a>
+            <a href="mailto:portalpilot.hn@gmail.com" class="prof-social-btn" title="Email"><i class="fas fa-envelope"></i></a>
           </div>
         </div>
 
@@ -497,9 +497,9 @@
             <div class="pstat"><span class="psv">★ 5.0</span><span class="psl">Rating</span></div>
           </div>
           <div class="prof-social">
-            <a href="#" class="prof-social-btn" title="GitHub"><i class="fab fa-github"></i></a>
-            <a href="https://instagram.com/_amyvfajardo" class="prof-social-btn" title="Instagram"><i class="fab fa-instagram"></i></a>
-            <a href="#" class="prof-social-btn" title="Blog"><i class="fas fa-rss"></i></a>
+            <a href="https://instagram.com/_amyvfajardo" target="_blank" rel="noopener" class="prof-social-btn" title="Instagram"><i class="fab fa-instagram"></i></a>
+            <a href="documentacion.html" class="prof-social-btn" title="Documentación"><i class="fas fa-book"></i></a>
+            <a href="mailto:portalpilot.hn@gmail.com" class="prof-social-btn" title="Email"><i class="fas fa-envelope"></i></a>
           </div>
         </div>
 
@@ -521,9 +521,9 @@
             <div class="pstat"><span class="psv">★ 4.8</span><span class="psl">Rating</span></div>
           </div>
           <div class="prof-social">
-            <a href="https://instagram.com/guzmang.sofia" class="prof-social-btn" title="Instagram"><i class="fab fa-instagram"></i></a>
-            <a href="#" class="prof-social-btn" title="Certificaciones"><i class="fas fa-certificate"></i></a>
-            <a href="#" class="prof-social-btn" title="Email"><i class="fas fa-envelope"></i></a>
+            <a href="https://instagram.com/guzmang.sofia" target="_blank" rel="noopener" class="prof-social-btn" title="Instagram"><i class="fab fa-instagram"></i></a>
+            <a href="sla.html" class="prof-social-btn" title="SLA y Seguridad"><i class="fas fa-shield-halved"></i></a>
+            <a href="mailto:portalpilot.hn@gmail.com" class="prof-social-btn" title="Email"><i class="fas fa-envelope"></i></a>
           </div>
         </div>
 
@@ -545,9 +545,9 @@
             <div class="pstat"><span class="psv">★ 4.9</span><span class="psl">Rating</span></div>
           </div>
           <div class="prof-social">
-            <a href="#" class="prof-social-btn" title="GitHub"><i class="fab fa-github"></i></a>
-            <a href="#" class="prof-social-btn" title="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
-            <a href="#" class="prof-social-btn" title="Portfolio"><i class="fas fa-briefcase"></i></a>
+            <a href="https://github.com/sarch-codelab" target="_blank" rel="noopener" class="prof-social-btn" title="GitHub"><i class="fab fa-github"></i></a>
+            <a href="#features" class="prof-social-btn" title="Módulos y Bots"><i class="fas fa-robot"></i></a>
+            <a href="mailto:portalpilot.hn@gmail.com" class="prof-social-btn" title="Email"><i class="fas fa-envelope"></i></a>
           </div>
         </div>
 
@@ -1149,6 +1149,79 @@
         <div class="sec-sub" style="margin:0 auto 24px;">Soluciones escalables para cada nivel de operación. Sin costos ocultos, sin sorpresas.</div>
         <div class="pricing-toggle">
           <button class="pt-btn active" onclick="setPricingToggle(this,'monthly')">Facturación mensual · en Lempiras (HNL)</button>
+          <button class="pt-btn" onclick="setPricingToggle(this,'yearly')">Facturación anual · 2 meses gratis</button>
+        </div>
+      </div>
+
+      <!-- TARJETAS VIGENTES (sincronizadas desde GET /api/plans vía js/index-pricing.js) -->
+      <div class="pricing-cards-container reveal">
+        <!-- PLAN: PULPERÍA -->
+        <div class="pricing-card-wrapper plan-pulperia" data-plan-card="pulperia">
+          <div class="pricing-card-side-tab">Pulpería</div>
+          <div class="pricing-card">
+            <div class="pricing-card-price-section">
+              <div class="pricing-card-price"><span class="pricing-card-price-text"><sup style="font-size:1.4rem;">L</sup><span data-plan-price>299</span></span></div>
+              <div class="pricing-card-subtitle" data-plan-daily>Por mes · L. 10 al día. Se paga solo recuperando 1 fiado al mes.</div>
+            </div>
+            <div class="pricing-card-features">
+              <div class="pricing-card-feature"><i class="fas fa-check" style="margin-right:8px;color:var(--green);font-size:11px;"></i> Hasta <strong data-plan-users>3</strong> usuarios</div>
+              <div class="pricing-card-feature"><i class="fas fa-check" style="margin-right:8px;color:var(--green);font-size:11px;"></i> POS de mostrador rápido</div>
+              <div class="pricing-card-feature"><i class="fas fa-check" style="margin-right:8px;color:var(--green);font-size:11px;"></i> Libreta digital de fiado y abonos</div>
+              <div class="pricing-card-feature"><i class="fas fa-check" style="margin-right:8px;color:var(--green);font-size:11px;"></i> Inventario y alertas de stock</div>
+              <div class="pricing-card-feature"><i class="fas fa-check" style="margin-right:8px;color:var(--green);font-size:11px;"></i> Facturación SAR simplificada</div>
+              <div class="pricing-card-feature"><i class="fas fa-check" style="margin-right:8px;color:var(--green);font-size:11px;"></i> Arqueo de caja y contabilidad base</div>
+            </div>
+            <button class="pricing-card-btn" data-plan-cta onclick="selectPlan('pulperia', this)">
+              <i class="fas fa-store" style="margin-right:6px;"></i> <span data-plan-cta-label>Elegir Pulpería</span>
+            </button>
+          </div>
+          <div class="pricing-card-bottom-tab">Barrio & Mostrador</div>
+        </div>
+
+        <!-- PLAN: TIENDA (Popular) -->
+        <div class="pricing-card-wrapper plan-tienda" data-plan-card="tienda">
+          <div class="pricing-card-side-tab">Tienda</div>
+          <div class="pricing-card">
+            <div class="pricing-card-price-section">
+              <div class="pricing-card-price"><span class="pricing-card-price-text"><sup style="font-size:1.4rem;">L</sup><span data-plan-price>799</span></span></div>
+              <div class="pricing-card-subtitle" data-plan-daily>Por mes · L. 26.60 al día — menos del 0.8% de tus ventas.</div>
+            </div>
+            <div class="pricing-card-features">
+              <div class="pricing-card-feature"><i class="fas fa-check" style="margin-right:8px;color:var(--green);font-size:11px;"></i> Hasta <strong data-plan-users>15</strong> usuarios</div>
+              <div class="pricing-card-feature"><i class="fas fa-check" style="margin-right:8px;color:var(--green);font-size:11px;"></i> POS retail con código de barras</div>
+              <div class="pricing-card-feature"><i class="fas fa-check" style="margin-right:8px;color:var(--green);font-size:11px;"></i> Facturación SAR formal (CAI y RTN)</div>
+              <div class="pricing-card-feature"><i class="fas fa-check" style="margin-right:8px;color:var(--green);font-size:11px;"></i> Pasillos, bodegas y proveedores</div>
+              <div class="pricing-card-feature"><i class="fas fa-check" style="margin-right:8px;color:var(--green);font-size:11px;"></i> Compras, CRM clientes y reportes</div>
+              <div class="pricing-card-feature"><i class="fas fa-check" style="margin-right:8px;color:var(--green);font-size:11px;"></i> Soporte prioritario WhatsApp y email</div>
+            </div>
+            <button class="pricing-card-btn pricing-card-btn-featured" data-plan-cta onclick="selectPlan('tienda', this)">
+              <i class="fas fa-rocket" style="margin-right:6px;"></i> <span data-plan-cta-label>Elegir Tienda</span>
+            </button>
+          </div>
+          <div class="pricing-card-bottom-tab">⭐ Popular</div>
+        </div>
+
+        <!-- PLAN: CLUB -->
+        <div class="pricing-card-wrapper plan-club" data-plan-card="club">
+          <div class="pricing-card-side-tab">Club</div>
+          <div class="pricing-card">
+            <div class="pricing-card-price-section">
+              <div class="pricing-card-price"><span class="pricing-card-price-text"><sup style="font-size:1.4rem;">L</sup><span data-plan-price>1,399</span></span></div>
+              <div class="pricing-card-subtitle" data-plan-daily>Por mes<br>Se cubre con la entrada de 2 socios al mes.</div>
+            </div>
+            <div class="pricing-card-features">
+              <div class="pricing-card-feature"><i class="fas fa-check" style="margin-right:8px;color:var(--green);font-size:11px;"></i> Hasta <strong data-plan-users>35</strong> usuarios</div>
+              <div class="pricing-card-feature"><i class="fas fa-check" style="margin-right:8px;color:var(--green);font-size:11px;"></i> Membresías QR y control de socios</div>
+              <div class="pricing-card-feature"><i class="fas fa-check" style="margin-right:8px;color:var(--green);font-size:11px;"></i> Mesas y cuentas abiertas</div>
+              <div class="pricing-card-feature"><i class="fas fa-check" style="margin-right:8px;color:var(--green);font-size:11px;"></i> Asistente IA + Reportes BI</div>
+              <div class="pricing-card-feature"><i class="fas fa-check" style="margin-right:8px;color:var(--green);font-size:11px;"></i> Roles, auditoría y seguridad 2FA</div>
+              <div class="pricing-card-feature"><i class="fas fa-check" style="margin-right:8px;color:var(--green);font-size:11px;"></i> SLA 99.9% y onboarding dedicado</div>
+            </div>
+            <button class="pricing-card-btn" data-plan-cta onclick="selectPlan('club', this)">
+              <i class="fas fa-crown" style="margin-right:6px;"></i> <span data-plan-cta-label>Elegir Club</span>
+            </button>
+          </div>
+          <div class="pricing-card-bottom-tab">Socios & BI</div>
         </div>
       </div>
 
@@ -1176,6 +1249,11 @@
        los planes vigentes se sirven en las tarjetas visibles desde GET /api/plans.
        Los id duplicados p1/p2 se renombraron a legacy-p1/legacy-p2. -->
   <section id="pricing-legacy" hidden>
+    <div class="container">
+      <div class="pricing-cards-container">
+        <!-- PLAN: STARTER (Legacy) -->
+        <div class="pricing-card-wrapper plan-starter">
+          <div class="pricing-card-side-tab">Starter</div>
           <div class="pricing-card">
             <div class="pricing-card-price-section">
               <div class="pricing-card-price"><span class="pricing-card-price-text">Prueba</span></div>
@@ -1344,10 +1422,9 @@
           </div>
           <p class="footer-desc">La plataforma SaaS multi-empresa que combina IA en la nube, módulos de negocio y control de acceso con 2FA para automatizar la gestión corporativa.</p>
           <div class="footer-social">
-            <a href="https://instagram.com/portalpilot.hn" class="fs-btn"><i class="fab fa-instagram"></i></a>
-            <a href="#" class="fs-btn"><i class="fab fa-linkedin-in"></i></a>
-            <a href="#" class="fs-btn"><i class="fab fa-youtube"></i></a>
-            <a href="#" class="fs-btn"><i class="fab fa-github"></i></a>
+            <a href="https://instagram.com/portalpilot.hn" target="_blank" rel="noopener" class="fs-btn" title="Instagram"><i class="fab fa-instagram"></i></a>
+            <a href="https://github.com/sarch-codelab" target="_blank" rel="noopener" class="fs-btn" title="GitHub"><i class="fab fa-github"></i></a>
+            <a href="mailto:portalpilot.hn@gmail.com" class="fs-btn" title="Email"><i class="fas fa-envelope"></i></a>
           </div>
         </div>
         <div class="footer-col">

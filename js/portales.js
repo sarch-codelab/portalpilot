@@ -117,9 +117,55 @@
     document.querySelectorAll('[data-need-owner]').forEach(el => { if (!esOwnerOrRoot) el.style.display = 'none'; });
   }
 
+  function logout(redirectUrl) {
+    const dest = redirectUrl || '/login.html';
+    if (typeof window.ppLogout === 'function') {
+      window.ppLogout(dest);
+      return;
+    }
+    fetch(API_ROOT + '/api/logout', { method: 'POST' }).catch(() => {}).finally(() => {
+      try { localStorage.clear(); } catch (e) { /* noop */ }
+      try { sessionStorage.clear(); } catch (e) { /* noop */ }
+      window.location.href = dest;
+    });
+  }
+
+  function initPortalMobileDrawer() {
+    const sidebar = document.querySelector('.pp-sidebar');
+    const topbar = document.querySelector('.pp-topbar');
+    if (!sidebar || !topbar) return;
+    if (!document.getElementById('ppMobileToggle')) {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.id = 'ppMobileToggle';
+      btn.className = 'pp-mobile-toggle';
+      btn.setAttribute('aria-label', 'Abrir menú');
+      btn.innerHTML = '<i class="fas fa-bars"></i>';
+      topbar.insertBefore(btn, topbar.firstChild);
+      let backdrop = document.querySelector('.pp-sidebar-backdrop');
+      if (!backdrop) {
+        backdrop = document.createElement('div');
+        backdrop.className = 'pp-sidebar-backdrop';
+        document.body.appendChild(backdrop);
+      }
+      const toggle = (open) => {
+        const next = typeof open === 'boolean' ? open : !sidebar.classList.contains('active');
+        sidebar.classList.toggle('active', next);
+        backdrop.classList.toggle('active', next);
+      };
+      btn.addEventListener('click', () => toggle());
+      backdrop.addEventListener('click', () => toggle(false));
+      sidebar.querySelectorAll('a').forEach(a => a.addEventListener('click', () => toggle(false)));
+    }
+  }
+
   window.PP = {
-    API_ROOT, getToken, authHeaders, apiFetch, requireSession,
+    API_ROOT, getToken, authHeaders, apiFetch, requireSession, logout,
     fmtDate, fmtDateTime, fmtMoney, fmtNum, escapeHtml, usageState, applyNavGuards
   };
-  window.addEventListener('DOMContentLoaded', () => { requireSession(); applyNavGuards(); });
+  window.addEventListener('DOMContentLoaded', () => {
+    requireSession();
+    applyNavGuards();
+    initPortalMobileDrawer();
+  });
 })();

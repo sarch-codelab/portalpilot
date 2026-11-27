@@ -253,8 +253,8 @@
       </div>
 
       <div class="left-footer">
-        <span>© 2026 Portal Pilot</span><span class="sep">·</span><span>Cyberyx Vantage</span><span class="sep">·</span>
-        <a href="#" style="color:var(--accent);text-decoration:none;">Soporte</a>
+        <span>© 2026 Portal Pilot</span><span class="sep">·</span><span>Tegucigalpa, Honduras</span><span class="sep">·</span>
+        <a href="support.html" style="color:var(--accent);text-decoration:none;">Soporte</a>
       </div>
     </div>
 
@@ -636,10 +636,11 @@
           const errorData = await response.json().catch(() => ({}));
           // Si el token es inválido o expirado, redirigimos al login conservando email
           if (response.status === 401 || response.status === 403) {
+            const currentEmail = localStorage.getItem('pendingEmail') || localStorage.getItem('userEmail') || document.getElementById('displayEmail')?.textContent || '';
             showMessage('Sesión inválida o expirada. Redirigiendo al login...', 'error');
             localStorage.removeItem('token');
             localStorage.removeItem('pendingUserId');
-            setTimeout(() => { window.location.href = `login.html?email=${encodeURIComponent(email)}`; }, 1200);
+            setTimeout(() => { window.location.href = `login.html?email=${encodeURIComponent(currentEmail)}`; }, 1200);
             return;
           }
           throw new Error(errorData.error || 'Error al actualizar la contraseña.');
@@ -672,9 +673,12 @@
     }
 
     function redirectToDashboard() {
-      showMessage('Redirigiendo a la bienvenida...', 'success');
+      const empresaCodigo = (localStorage.getItem('empresaCodigo') || '').toUpperCase();
+      const userRole = (localStorage.getItem('userRole') || '').toLowerCase();
+      const isRoot = empresaCodigo === 'ROOT' || ['root', 'root pp', 'superadmin'].includes(userRole);
+      showMessage('Redirigiendo a tu portal...', 'success');
       setTimeout(() => {
-        window.location.href = 'pp/welcome.html';
+        window.location.href = isRoot ? 'pp/welcome.html' : 'empresa/inicio.html';
       }, 500);
     }
 

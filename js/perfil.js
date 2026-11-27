@@ -552,7 +552,7 @@ function deleteAccount() {
         if (confirm('⚠️ ÚLTIMA CONFIRMACIÓN: ¿Estás 100% seguro de eliminar tu cuenta? Esta acción NO se puede deshacer.')) {
             showToast('Cuenta eliminada. Gracias por usar Portal Pilot.', 'info');
             setTimeout(() => {
-                window.location.href = 'login.html';
+                window.location.href = '/login.html';
             }, 2000);
         }
     }
@@ -560,7 +560,42 @@ function deleteAccount() {
 
 // ── ID Card ────────────────────────────────────────
 function openIdCard() {
-    window.open('tarjeta.html', '_blank');
+    const existing = document.getElementById('ppIdCardModal');
+    if (existing) existing.remove();
+    const nombre = (document.getElementById('profileName')?.textContent || localStorage.getItem('userName') || 'Usuario').trim();
+    const email = (document.getElementById('profileEmail')?.textContent || localStorage.getItem('userEmail') || '—').trim();
+    const rol = (localStorage.getItem('userRole') || 'Miembro').trim();
+    const empresa = (localStorage.getItem('empresaNombre') || localStorage.getItem('empresaCodigo') || 'Portal Pilot').trim();
+    const esc = v => String(v || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    const initials = nombre.split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join('') || 'PP';
+    const modal = document.createElement('div');
+    modal.id = 'ppIdCardModal';
+    modal.className = 'modal-overlay active';
+    modal.innerHTML = `
+      <div class="modal" style="max-width:420px;">
+        <div class="modal-header">
+          <div class="modal-title"><i class="fas fa-id-card" style="margin-right:8px;color:var(--accent);"></i>Credencial Digital</div>
+          <button class="modal-close" onclick="this.closest('.modal-overlay').remove()"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+          <div style="background:linear-gradient(135deg,#17112b,#0b0b18);border:1px solid rgba(139,92,246,0.35);border-radius:16px;padding:22px;text-align:center;">
+            <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#a78bfa;margin-bottom:14px;">PORTAL PILOT · IDENTIFICACIÓN</div>
+            <div style="width:68px;height:68px;border-radius:50%;margin:0 auto 12px;background:linear-gradient(135deg,#8b5cf6,#6d28d9);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:#fff;">${esc(initials)}</div>
+            <div style="font-size:18px;font-weight:700;color:#fff;">${esc(nombre)}</div>
+            <div style="font-size:12px;color:#9ca3af;margin-top:2px;">${esc(email)}</div>
+            <div style="margin-top:14px;display:flex;justify-content:center;gap:8px;flex-wrap:wrap;">
+              <span style="padding:4px 10px;border-radius:999px;font-size:11px;background:rgba(139,92,246,0.18);color:#c4b5fd;">${esc(rol)}</span>
+              <span style="padding:4px 10px;border-radius:999px;font-size:11px;background:rgba(52,211,153,0.16);color:#34d399;">${esc(empresa)}</span>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-ghost" onclick="this.closest('.modal-overlay').remove()">Cerrar</button>
+          <button class="btn btn-acc" onclick="window.print()"><i class="fas fa-print"></i> Imprimir</button>
+        </div>
+      </div>`;
+    document.body.appendChild(modal);
+    modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
 }
 
 // ── Utilities ──────────────────────────────────────

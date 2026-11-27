@@ -13,7 +13,7 @@
 'use strict';
 
 const express = require('express');
-const { supabase } = require('./supabaseClient');
+const { supabase, requireSupabase } = require('./supabaseClient');
 
 const router = express.Router();
 router.use(express.json({ limit: '1mb' }));
@@ -33,6 +33,7 @@ router.use((req, res, next) => {
   if (!isRootUser(req)) {
     return res.status(403).json({ error: 'Esta acción requiere un usuario ROOT.' });
   }
+  if (!requireSupabase(res)) return;
   next();
 });
 
@@ -114,23 +115,37 @@ router.get('/bots', async (req, res) => {
 
 router.get('/bots/:id/detail', async (req, res) => {
   try {
-    const { data: bot, error } = await supabase.from('automatizaciones').select('*').eq('id', req.params.id).maybeSingle();
+    const botId = String(req.params.id || '').trim();
+    if (!/^[a-zA-Z0-9_-]{1,64}$/.test(botId)) {
+      return res.status(400).json({ error: 'ID de bot inválido.' });
+    }
+    const { data: bot, error } = await supabase.from('automatizaciones').select('*').eq('id', botId).maybeSingle();
     if (error) return handleError(res, error, 'automatizaciones');
     if (!bot) return res.status(404).json({ error: 'Bot no encontrado' });
 
-    const [runsRes, rulesRes] = await Promise.all([
-      supabase.from('automation_runs').select('*')
-        .or(`automatizacion_id.eq.${req.params.id},agente.eq.${(bot.nombre || '').replace(/,/g, '')}`)
+    const [runsById, runsByName, rulesById, rulesByName] = await Promise.all([
+      supabase.from('automation_runs').select('*').eq('automatizacion_id', botId)
         .order('created_at', { ascending: false }).limit(100).then(r => r, () => ({ data: [] })),
+      bot.nombre
+        ? supabase.from('automation_runs').select('*').eq('agente', bot.nombre)
+            .order('created_at', { ascending: false }).limit(100).then(r => r, () => ({ data: [] }))
+        : Promise.resolve({ data: [] }),
       supabase.from('automation_rules').select('id, empresa_codigo, nombre, descripcion, event_type, activo, created_at')
-        .or(`automatizacion_id.eq.${req.params.id},agente.eq.${(bot.nombre || '').replace(/,/g, '')}`)
-        .order('created_at', { ascending: false }).limit(50).then(r => r, () => ({ data: [] }))
+        .eq('automatizacion_id', botId).order('created_at', { ascending: false }).limit(50).then(r => r, () => ({ data: [] })),
+      bot.nombre
+        ? supabase.from('automation_rules').select('id, empresa_codigo, nombre, descripcion, event_type, activo, created_at')
+            .eq('agente', bot.nombre).order('created_at', { ascending: false }).limit(50).then(r => r, () => ({ data: [] }))
+        : Promise.resolve({ data: [] })
     ]);
-    if (!runsRes.error && (!runsRes.data || !runsRes.data.length) && bot.nombre) {
-      const r2 = await supabase.from('automation_runs').select('*').eq('agente', bot.nombre).order('created_at', { ascending: false }).limit(100);
-      runsRes.data = r2.data || [];
-    }
-    return res.json({ bot, runs: runsRes.data || [], rules: (rulesRes.data || []).filter(r => r.empresa_codigo === bot.empresa_codigo) });
+    const dedupeById = (rows) => {
+      const seen = new Set();
+      return rows.filter(r => { const k = r && r.id != null ? String(r.id) : null; if (k && seen.has(k)) return false; if (k) seen.add(k); return true; });
+    };
+    const runs = dedupeById([...(runsById.data || []), ...(runsByName.data || [])])
+      .filter(r => !r.empresa_codigo || r.empresa_codigo === bot.empresa_codigo);
+    const rules = dedupeById([...(rulesById.data || []), ...(rulesByName.data || [])])
+      .filter(r => r.empresa_codigo === bot.empresa_codigo);
+    return res.json({ bot, runs, rules });
   } catch (e) { return handleError(res, e, 'automatizaciones'); }
 });
 
@@ -597,7 +612,7 @@ router.patch('/kyc/:id', async (req, res) => {
   try {
     const b = req.body || {};
     const update = { updated_at: new Date().toISOString() };
-    if (b.estado) update.estado = ['pendiente', 'aprobado', 'rechazado'].includes(b.estado) ? b.estado : 'pendante';
+    if (b.estado) update.estado = ['pendiente', 'aprobado', 'rechazado'].includes(b.estado) ? b.estado : 'pendiente';
     if (b.notas !== undefined) update.notas = String(b.notas || '').slice(0, 500);
     const { data, error } = await supabase.from('documentos_tenant').update(update).eq('id', req.params.id).select().single();
     if (error) return handleError(res, error, 'documentos_tenant');

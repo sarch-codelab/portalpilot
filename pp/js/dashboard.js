@@ -927,7 +927,7 @@ function showWidgetDetails(widgetType) {
         <div class="detail-card"><div class="detail-icon"><i class="fas fa-plug"></i></div><div class="detail-label">API REST</div><div class="detail-value" style="color:var(--green);font-size:14px;">99.98% uptime</div></div>
         <div class="detail-card"><div class="detail-icon"><i class="fas fa-database"></i></div><div class="detail-label">Supabase</div><div class="detail-value" style="color:var(--green);font-size:14px;">99.99% uptime</div></div>
         <div class="detail-card"><div class="detail-icon"><i class="fas fa-brain"></i></div><div class="detail-label">IA Groq</div><div class="detail-value" style="color:var(--green);font-size:14px;">99.90% uptime</div></div>
-        <div class="detail-card"><div class="detail-icon"><i class="fas fa-link"></i></div><div class="detail-label">Blockchain</div><div class="detail-value" style="color:var(--green);font-size:14px;">99.50% uptime</div></div>`
+        <div class="detail-card"><div class="detail-icon"><i class="fas fa-link"></i></div><div class="detail-label">Auditoría</div><div class="detail-value" style="color:var(--green);font-size:14px;">99.50% uptime</div></div>`
     },
     'calendar': {
       title: 'Todos los Eventos',

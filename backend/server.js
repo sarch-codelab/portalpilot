@@ -1368,9 +1368,16 @@ app.use((req, res, next) => {
     p.startsWith('/scripts/') ||
     p.startsWith('/supabase/') ||
     p.startsWith('/node_modules/') ||
+    p.startsWith('/docs/') ||
+    p.startsWith('/sql/') ||
+    p.startsWith('/email portal pilot/') ||
+    p.startsWith('/empresa/email enterprise/') ||
     p.startsWith('/.git') ||
+    p.startsWith('/.vercel') ||
     p === '/.env' || p.startsWith('/.env') ||
-    p === '/package.json' || p === '/package-lock.json' || p === '/vercel.json' ||
+    p === '/package.json' || p === '/package-lock.json' || p === '/vercel.json' || p === '/cname' ||
+    /\.sql$/i.test(p) ||
+    /^\/[^/]+\.md$/i.test(p) ||
     /^\/api\/[^/]+\.(js|jsx|ts|tsx|json|map)$/.test(p);
   if (blocked) return res.status(404).send('Not found');
   next();
@@ -1551,7 +1558,7 @@ async function enviarEmailTrialVencido({ email, nombre, empresaCodigo, empresaNo
       <div style="font-family:sans-serif;max-width:600px;margin:0 auto;background:#0b0a15;color:#e2e8f0;padding:24px;border-radius:12px;">
         <h2 style="color:#fbbf24;">Tu prueba gratuita ha vencido</h2>
         <p>Hola ${nombre || ''}, tu prueba gratuita de 15 días de <strong>Portal Pilot</strong> ha finalizado.</p>
-        <p>Para seguir usando tus datos, elige tu plan según tu negocio: <strong>Pulpería (L.299/mes)</strong>, <strong>Tienda (L.799/mes)</strong> o <strong>Club (L.1,399/mes)</strong> — o arma un plan personalizado con el cotizador de 21 módulos.</p>
+        <p>Para seguir usando tus datos, elige tu plan según tu negocio: <strong>Pulpería (L.299/mes)</strong>, <strong>Tienda (L.799/mes)</strong> o <strong>Club (L.1,399/mes)</strong> — o arma un plan personalizado con el cotizador de 23 módulos.</p>
         <p style="text-align:center;margin:24px 0;"><a href="https://portal-pilot.vercel.app/planes.html" style="background:#8b5cf6;color:#fff;padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:700;">Ver Planes</a></p>
       </div>
       </body></html>`;
@@ -1611,22 +1618,25 @@ async function enviarAlertaNuevoAcceso(emailDestinatario, req, success = true) {
       : `Se ha detectado un intento de acceso fallido desde ${dispositivo} (${ubicacion}) el ${fechaActual}.`;
 
     const loginUrl = 'https://portal-pilot.vercel.app/login.html';
+    const warningBanner = !success
+      ? `<div style="background-color: #dc2626; color: #ffffff; text-align: center; padding: 12px; font-weight: bold;">⚠️ AVISO: Intento de inicio de sesión BLOQUEADO</div>`
+      : '';
 
     htmlContent = htmlContent
-      .replace('{{TITLE}}', titulo)
-      .replace('{{MAIN_MESSAGE}}', mensajePrincipal)
-      .replace('{{USER_EMAIL}}', emailDestinatario)
-      .replace('{{PASSWORD_BLOCK}}', '---')
-      .replace('{{TENANT_INFO}}', 'Información de tenant no disponible')
-      .replace('{{LOGIN_URL}}', loginUrl)
-      .replace('{{LOGIN_BUTTON_TEXT}}', 'Ir al login de Portal Pilot')
-      .replace('{{SECURITY_FOOTER}}', success ? 'Si reconoces este inicio, no es necesario hacer nada.' : 'Si no fuiste tú, cambia tu contraseña.')
-      .replace('{{BANNER}}', '');
-
-    if (!success) {
-      const warningBanner = `<div style="background-color: #dc2626; color: #ffffff; text-align: center; padding: 12px; font-weight: bold;">⚠️ AVISO: Intento de inicio de sesión BLOQUEADO</div>`;
-      htmlContent = htmlContent.replace('{{BANNER}}', warningBanner);
-    }
+      .replaceAll('{{TITLE}}', titulo)
+      .replaceAll('{{SUBTITLE}}', success ? 'Acceso verificado' : 'Alerta de seguridad')
+      .replaceAll('{{MAIN_MESSAGE}}', mensajePrincipal)
+      .replaceAll('{{USER_EMAIL}}', emailDestinatario)
+      .replaceAll('{{PASSWORD_BLOCK}}', '---')
+      .replaceAll('{{TENANT_INFO}}', 'Información de tenant no disponible')
+      .replaceAll('{{DEVICE}}', dispositivo)
+      .replaceAll('{{IP}}', ip)
+      .replaceAll('{{LOCATION}}', ubicacion)
+      .replaceAll('{{DATE}}', fechaActual)
+      .replaceAll('{{LOGIN_URL}}', loginUrl)
+      .replaceAll('{{LOGIN_BUTTON_TEXT}}', 'Ir al login de Portal Pilot')
+      .replaceAll('{{SECURITY_FOOTER}}', success ? 'Si reconoces este inicio, no es necesario hacer nada.' : 'Si no fuiste tú, cambia tu contraseña.')
+      .replaceAll('{{BANNER}}', warningBanner);
 
     const textContent = `${titulo}\n\n${mensajePrincipal}\n\nUsuario: ${emailDestinatario}`;
     const mailOptions = {
@@ -1671,7 +1681,7 @@ async function enviarAlertaActivacionCuenta(emailDestinatario, passwordTemporal,
     let loginUrl = `https://portal-pilot.vercel.app/primer_acceso.html?email=${encodeURIComponent(emailDestinatario)}`;
     if (tokenForLink) loginUrl += `&token=${encodeURIComponent(tokenForLink)}`;
 
-    htmlContent = htmlContent.replace(/https:\/\/portal-pilot\.vercel\.app(?:\/[^"'\s]*)?/g, loginUrl);
+    htmlContent = htmlContent.replace(/href="https:\/\/portal-pilot\.vercel\.app"/g, `href="${loginUrl}"`);
 
     const displayTenant = tenantName || 'Portal Pilot';
     htmlContent = htmlContent.replace(/\{\{\s*TENANT_NAME\s*\}\}/g, displayTenant);
@@ -1765,38 +1775,34 @@ async function enviarCambioEstadoUsuario(emailDestinatario, action, adminEmail, 
 async function enviarNuevoAccesoUsuario(emailDestinatario, passwordTemporal, tenantName, userName) {
   try {
     const rutasPlantilla = [
-      path.join(__dirname, '../EMAIL PORTAL PILOT/Nuevo Acceso.html'),
-      path.join(__dirname, '../empresa/EMAIL enterprise/Nuevo Acceso.html'),
-      path.join(__dirname, 'templates/Nuevo Acceso.html')
+      path.join(__dirname, '../EMAIL PORTAL PILOT/Activación de Cuenta.html'),
+      path.join(__dirname, '../empresa/EMAIL enterprise/Activación de Cuenta.html'),
+      path.join(__dirname, 'templates/Activación de Cuenta.html')
     ];
 
     const fallbackHtml = `
       <div style="font-family: sans-serif; max-width:600px;margin:0 auto;background:#0b0a15;color:#e2e8f0;padding:20px;border-radius:12px;">
         <h2>Nuevo Acceso a Portal Pilot</h2>
-        <p>Hola ${userName || emailDestinatario}, tu usuario ha sido creado.</p>
-        <p><strong>Contraseña temporal:</strong> <code>${passwordTemporal}</code></p>
+        <p>Hola ${userName || emailDestinatario}, tu usuario ha sido creado${tenantName ? ` en <strong>${tenantName}</strong>` : ''}.</p>
+        <p><strong>Contraseña temporal:</strong> <code style="background:#1e1b4b;padding:4px 8px;border-radius:4px;">${passwordTemporal || 'Generada automáticamente'}</code></p>
+        <p style="margin-top:16px;"><a href="https://portal-pilot.vercel.app/primer_acceso.html" style="background:#7c3aed;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;">Ir a Primer Acceso</a></p>
       </div>
     `;
     let htmlContent = cargarPlantilla(rutasPlantilla, fallbackHtml);
 
-    const loginUrl = 'https://portal-pilot.vercel.app/login.html';
+    const loginUrl = `https://portal-pilot.vercel.app/primer_acceso.html?email=${encodeURIComponent(emailDestinatario)}`;
     const displayName = userName || emailDestinatario;
     const tenantLabel = tenantName ? `Tenant: ${tenantName}` : '';
-    const passwordText = passwordTemporal
-      ? `<strong>Contraseña temporal:</strong> <code>${passwordTemporal}</code>`
-      : '<strong>Contraseña:</strong> Generada automáticamente.';
+    const displayTenant = tenantName || 'Portal Pilot';
 
     htmlContent = htmlContent
-      .replace('{{TITLE}}', 'Nuevo Acceso a Portal Pilot')
-      .replace('{{SUBTITLE}}', `Hola ${displayName}, tu usuario ha sido creado.`)
-      .replace('{{MAIN_MESSAGE}}', 'Puedes iniciar sesión con las credenciales abajo.')
-      .replace('{{USER_EMAIL}}', emailDestinatario)
-      .replace('{{PASSWORD_BLOCK}}', passwordText)
-      .replace('{{TENANT_INFO}}', tenantLabel)
-      .replace('{{LOGIN_URL}}', loginUrl)
-      .replace('{{LOGIN_BUTTON_TEXT}}', 'Ir a login')
-      .replace('{{SECURITY_FOOTER}}', 'Si no solicitaste este acceso, contacta a soporte.')
-      .replace('{{BANNER}}', '');
+      .replaceAll('{{TEMP_PASSWORD}}', passwordTemporal || 'Generada automáticamente')
+      .replaceAll('TEMP_PASSWORD', passwordTemporal || 'Generada automáticamente')
+      .replaceAll('{{USER_NAME}}', displayName)
+      .replaceAll('{{USER_EMAIL}}', emailDestinatario)
+      .replaceAll('{{TENANT_NAME}}', displayTenant)
+      .replaceAll('{{TENANT}}', displayTenant)
+      .replace(/href="https:\/\/portal-pilot\.vercel\.app"/g, `href="${loginUrl}"`);
 
     const mailOptions = {
       from: `"Seguridad Portal Pilot" <${EMAIL_FROM}>`,
@@ -2727,8 +2733,20 @@ app.post('/api/registro', async (req, res) => {
     if (!email || !password || !empresaCodigo || !usuarioNombre || !usuarioApellido) {
       return res.status(400).json({ error: 'Faltan campos obligatorios' });
     }
+    if (String(password).length < 8) {
+      return res.status(400).json({ error: 'La contraseña debe tener al menos 8 caracteres.' });
+    }
 
     const emailNorm = String(email).trim().toLowerCase();
+    // Si el cliente aporta emailVerifiedToken (flujo registrov2), validamos su firma
+    // y correspondencia con el mismo correo.
+    if (req.body.emailVerifiedToken) {
+      let evPayload = null;
+      try { evPayload = jwt.verify(String(req.body.emailVerifiedToken), localJwtSecret); } catch (e) { evPayload = null; }
+      if (!evPayload || evPayload.purpose !== 'email_verified' || evPayload.email !== emailNorm) {
+        return res.status(400).json({ error: 'La verificación de correo expiró o es inválida.' });
+      }
+    }
     // El código de empresa se normaliza a UPPERCASE en origen para que coincida
     // con resolverEmpresaSupabase (normaliza a mayúsculas) y con la comprobación
     // de unicidad que ya usa toUpperCase (release audit §21).
@@ -2790,10 +2808,16 @@ app.post('/api/registro', async (req, res) => {
       // suben a Storage y se guardan las URLs públicas en tenants y usuarios.
       const branding = await subirBrandingRegistro(req.body, codigoNorm);
 
-      // Crear tenant en Supabase. El plan se guarda normalizado a la clave
-      // canónica (pulperia/tienda/club/personalizado/starter/business/enterprise)
-      // para que el Plan Engine lo resuelva siempre.
-      const planNormalizado = normalizePlan(plan || 'starter');
+      // Seguridad: el registro público nunca puede activar un plan pagado sin
+      // confirmación de pago verificada por webhook o por ROOT. Si el usuario
+      // solicitó un plan de pago, el tenant inicia en trial (`starter`) y guarda
+      // el plan/módulos solicitados para activarlos al confirmar el pago en pay_plan.
+      const requestedPlan = normalizePlan(plan || 'starter');
+      const billingWebhookHdr = String(req.headers['x-billing-webhook-secret'] || '');
+      const hasTrustedBillingSecret = !!BILLING_WEBHOOK_SECRET &&
+        billingWebhookHdr.length === BILLING_WEBHOOK_SECRET.length &&
+        crypto.timingSafeEqual(Buffer.from(billingWebhookHdr), Buffer.from(BILLING_WEBHOOK_SECRET));
+      const planNormalizado = (requestedPlan === 'starter' || hasTrustedBillingSecret) ? requestedPlan : 'starter';
       const tenantRow = {
         codigo: codigoNorm,
         nombre_empresa: empresaNombre || 'Portal Pilot',
@@ -2803,18 +2827,22 @@ app.post('/api/registro', async (req, res) => {
         tamano: tamano,
         estado: 'activo'
       };
-      // Cotizador de 21 módulos: la selección (a la carta o preset del plan)
+      // Cotizador de 23 módulos: la selección (a la carta o preset del plan)
       // se persiste en funciones_plan y en tenant_modulos — es la fuente de
       // verdad de qué módulos ve la app y el portal del cliente.
       const modulosCotizador = String(req.body.modulos || '')
         .split(',').map(s => s.trim()).filter(m => MODULOS_COTIZADOR.includes(m)).slice(0, MODULOS_COTIZADOR.length);
       const billingCiclo = String(req.body.billing || 'monthly').toLowerCase() === 'annual' ? 'annual' : 'monthly';
-      const modulosEfectivos = modulosCotizador.length
-        ? modulosCotizador
-        : (PLAN_CATALOGO_MODULOS[planNormalizado] || []);
-      if (modulosEfectivos.length) {
-        tenantRow.funciones_plan = { modulos: modulosEfectivos, billing: billingCiclo, plan: planNormalizado };
-      }
+      const modulosEfectivos = PLAN_CATALOGO_MODULOS[planNormalizado] || [];
+      tenantRow.funciones_plan = {
+        modulos: modulosEfectivos,
+        billing: billingCiclo,
+        plan: planNormalizado,
+        ...(requestedPlan !== planNormalizado ? {
+          requested_plan: requestedPlan,
+          requested_modulos: modulosCotizador.length ? modulosCotizador : (PLAN_CATALOGO_MODULOS[requestedPlan] || [])
+        } : {})
+      };
       if (branding.logo_url) tenantRow.logo_url = branding.logo_url;
       if (branding.banner_url) tenantRow.banner_url = branding.banner_url;
 
@@ -2912,21 +2940,37 @@ app.post('/api/registro', async (req, res) => {
   }
 });
 
-// Endpoint para enviar código de verificación de email durante el registro
+// Endpoint para enviar código de verificación de email durante el registro.
+// Seguridad: el código se genera SIEMPRE en servidor (nunca se confía en un
+// código enviado por el cliente, evitando relay de phishing/HTML arbitrario).
+function hashEmailOtp(emailNorm, code) {
+  return crypto.createHmac('sha256', localJwtSecret).update(`${emailNorm}:${code}`).digest('hex');
+}
+
 app.post('/api/enviar-codigo-verificacion', emailLimiter, async (req, res) => {
   try {
-    const { email, codigo } = req.body;
-    if (!email || !codigo) {
-      return res.status(400).json({ error: 'Faltan parámetros: email y codigo son requeridos' });
+    const emailRaw = String((req.body && req.body.email) || '').trim();
+    if (!emailRaw || /[\r\n]/.test(emailRaw)) {
+      return res.status(400).json({ error: 'Correo electrónico inválido o requerido.' });
     }
+    const emailNorm = emailRaw.toLowerCase();
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
+    if (!emailRegex.test(emailNorm) || emailNorm.length > 254) {
       return res.status(400).json({ error: 'Correo inválido' });
     }
+
+    const serverCode = generateVerificationCode(6);
+    const otpHash = hashEmailOtp(emailNorm, serverCode);
+    const verificationToken = jwt.sign(
+      { purpose: 'email_otp', email: emailNorm, otpHash },
+      localJwtSecret,
+      { expiresIn: '10m' }
+    );
+
     await enviarCorreo({
       from: `"Portal Pilot" <${EMAIL_FROM}>`,
-      to: email,
-      subject: `🔐 Tu código de verificación de Portal Pilot: ${codigo}`,
+      to: emailNorm,
+      subject: `🔐 Tu código de verificación de Portal Pilot`,
       html: `
         <div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;background:#0f0f1a;color:#e0e0f0;border-radius:12px;overflow:hidden;">
           <div style="background:linear-gradient(135deg,#6366f1,#8b5cf6);padding:32px;text-align:center;">
@@ -2935,16 +2979,50 @@ app.post('/api/enviar-codigo-verificacion', emailLimiter, async (req, res) => {
           </div>
           <div style="padding:32px;text-align:center;">
             <p style="margin:0 0 24px;font-size:15px;color:#a0a0c0;">Usa este código para verificar tu cuenta. Expira en 10 minutos.</p>
-            <div style="font-size:42px;font-weight:800;letter-spacing:14px;color:#6366f1;font-family:monospace;background:rgba(99,102,241,0.1);padding:20px;border-radius:10px;display:inline-block;">${codigo}</div>
+            <div style="font-size:42px;font-weight:800;letter-spacing:14px;color:#6366f1;font-family:monospace;background:rgba(99,102,241,0.1);padding:20px;border-radius:10px;display:inline-block;">${escapeHtml(serverCode)}</div>
             <p style="margin:24px 0 0;font-size:13px;color:#666;">¿No solicitaste esto? Ignora este mensaje.</p>
           </div>
         </div>
       `
     });
-    res.json({ success: true, message: 'Código enviado correctamente' });
+    res.json({ success: true, verificationToken, message: 'Código enviado correctamente' });
   } catch (err) {
     console.error('[CODIGO-VERIFICACION] Error:', err);
-    res.status(500).json({ success: false, error: err.message });
+    return handleServerError(res, err);
+  }
+});
+
+app.post('/api/registro/verificar-email', emailLimiter, async (req, res) => {
+  try {
+    const emailNorm = String((req.body && req.body.email) || '').trim().toLowerCase();
+    const code = String((req.body && req.body.code) || '').trim();
+    const verificationToken = String((req.body && req.body.verificationToken) || '').trim();
+    if (!emailNorm || !/^\d{6}$/.test(code) || !verificationToken) {
+      return res.status(400).json({ error: 'Código de verificación inválido.' });
+    }
+    let payload;
+    try {
+      payload = jwt.verify(verificationToken, localJwtSecret);
+    } catch (e) {
+      return res.status(400).json({ error: 'El código expiró. Solicita uno nuevo.' });
+    }
+    if (payload.purpose !== 'email_otp' || payload.email !== emailNorm || !payload.otpHash) {
+      return res.status(400).json({ error: 'Token de verificación inválido.' });
+    }
+    const candidateHash = hashEmailOtp(emailNorm, code);
+    const valid = candidateHash.length === payload.otpHash.length &&
+      crypto.timingSafeEqual(Buffer.from(candidateHash), Buffer.from(payload.otpHash));
+    if (!valid) {
+      return res.status(400).json({ error: 'Código de verificación incorrecto.' });
+    }
+    const emailVerifiedToken = jwt.sign(
+      { purpose: 'email_verified', email: emailNorm },
+      localJwtSecret,
+      { expiresIn: '30m' }
+    );
+    return res.json({ success: true, emailVerifiedToken });
+  } catch (err) {
+    return handleServerError(res, err);
   }
 });
 
@@ -3582,13 +3660,14 @@ app.post('/api/confirmar-pago', pagoLimiter, async (req, res) => {
             </div>
             <p>Hola,</p>
             <p>${trustedWebhook
-              ? `Tu pago para el <strong>Plan ${planNombre}</strong> fue procesado y verificado correctamente.`
-              : `Recibimos tu solicitud para el <strong>Plan ${planNombre}</strong>. El acceso se activará únicamente al verificar el pago.`}</p>
+              ? `Tu pago para el <strong>Plan ${escapeHtml(planNombre)}</strong> fue procesado y verificado correctamente.`
+              : `Recibimos tu solicitud para el <strong>Plan ${escapeHtml(planNombre)}</strong>. El acceso se activará únicamente al verificar el pago.`}</p>
             <div style="background:#16161a;padding:20px;border-radius:12px;margin:20px 0;border:1px solid rgba(255,255,255,0.1);">
                <p style="margin:4px 0;font-size:14px;"><strong>Método de pago:</strong> ${metodoPago === 'tarjeta' ? 'Tarjeta de Crédito/Débito Digital' : metodoPago === 'tigo' ? 'Tigo Money (+504 3315-4594)' : 'Transferencia Bancaria'}</p>
                <p style="margin:4px 0;font-size:14px;"><strong>Estado:</strong> <span style="color:${trustedWebhook ? '#30d158' : '#f59e0b'};font-weight:700;">${trustedWebhook ? 'ACTIVO' : 'PENDIENTE DE VERIFICACIÓN'}</span></p>
-               <p style="margin:4px 0;font-size:14px;"><strong>ID de Empresa:</strong> ${empresaCodigo || 'ROOT'}</p>
-               ${metodoPago === 'tigo' ? `<p style="margin:4px 0;font-size:14px;"><strong>Referencia Tigo Money:</strong> ${req.body.tigoRef || 'N/A'}</p><p style="margin:4px 0;font-size:12px;color:#888;">Tu pago está pendiente de verificación manual. Envía tu comprobante por WhatsApp al +504 3315-4594 para confirmación inmediata.</p>` : ''}
+               <p style="margin:4px 0;font-size:14px;"><strong>ID de Empresa:</strong> ${escapeHtml(empresaCodigo || 'ROOT')}</p>
+               ${metodoPago === 'tigo' ? `<p style="margin:4px 0;font-size:14px;"><strong>Referencia Tigo Money:</strong> ${escapeHtml(req.body.tigoRef || 'N/A')}</p><p style="margin:4px 0;font-size:12px;color:#888;">Tu pago está pendiente de verificación manual. Envía tu comprobante por WhatsApp al +504 3315-4594 para confirmación inmediata.</p>` : ''}
+               ${metodoPago === 'transferencia' && req.body.bankRef ? `<p style="margin:4px 0;font-size:14px;"><strong>Referencia Bancaria:</strong> ${escapeHtml(req.body.bankRef)}</p>` : ''}
             </div>
             <p>${trustedWebhook ? 'Ya puedes acceder a tu panel con los módulos de tu plan habilitados.' : 'Te notificaremos por correo cuando la verificación esté completa.'}</p>
             <div style="text-align:center;margin-top:28px;">
@@ -3623,26 +3702,49 @@ app.post('/api/tigo-money-reference', emailLimiter, async (req, res) => {
       return res.status(400).json({ error: 'El correo electrónico es obligatorio y válido.' });
     }
     const emailNorm = String(email).trim().toLowerCase();
-    const planNombre = String(plan || 'pulperia').toUpperCase();
+    const allowedPlans = ['starter', 'business', 'enterprise', 'pulperia', 'tienda', 'club', 'personalizado'];
+    const planLower = String(plan || 'pulperia').trim().toLowerCase();
+    if (!allowedPlans.includes(planLower)) {
+      return res.status(400).json({ error: 'Plan inválido.' });
+    }
+    const planNombre = planLower.toUpperCase();
     const billingCiclo = String(req.body?.billing || 'monthly').toLowerCase() === 'annual' ? 'annual' : 'monthly';
-    const empresa = empresaCodigo || 'ROOT';
+    const empresa = empresaCodigo ? normalizeTenantCode(empresaCodigo) : null;
+    if (empresa && !/^[A-Z0-9_-]{2,40}$/.test(empresa)) {
+      return res.status(400).json({ error: 'Código de empresa inválido.' });
+    }
 
     const timestamp = Date.now().toString(36).toUpperCase();
     const random = crypto.randomBytes(2).toString('hex').toUpperCase();
-    const referencia = `PP-${planNombre.slice(0, 4)}-${empresa}-${timestamp}-${random}`;
+    const referencia = `PP-${planNombre.slice(0, 4)}-${empresa || 'WEB'}-${timestamp}-${random}`;
 
+    const amountNumMap = { STARTER: 0, PULPERIA: 299, TIENDA: 799, CLUB: 1399, PERSONALIZADO: 150, BUSINESS: 1499, ENTERPRISE: 4999 };
+    const amountNumAnual = { STARTER: 0, PULPERIA: 2990, TIENDA: 7990, CLUB: 13990, PERSONALIZADO: 1500, BUSINESS: 14990, ENTERPRISE: 49990 };
+    const amountNum = (billingCiclo === 'annual' ? amountNumAnual : amountNumMap)[planNombre] || 299;
+
+    // Seguridad: nunca mutar tenants.plan o tenants.estado desde un endpoint
+    // público sin autenticación ni verificación de pago. Solo registrar solicitud
+    // pendiente en billing_payments si el tenant existe.
     if (supabase && empresa && !empresa.includes('XXXX')) {
-      await supabase.from('tenants').update({
-        plan: planNombre.toLowerCase(),
-        estado: 'pendiente_tigo',
-        referencia_pago: referencia,
-        updated_at: new Date().toISOString()
-      }).eq('codigo', empresa);
+      const { data: tExiste } = await supabase.from('tenants').select('codigo').eq('codigo', empresa).maybeSingle();
+      if (!tExiste) {
+        return res.status(404).json({ error: 'No existe una empresa registrada con ese código.' });
+      }
+      await supabase.from('billing_payments').insert({
+        empresa_codigo: empresa,
+        email: emailNorm,
+        plan: planLower,
+        amount: amountNum,
+        currency: 'HNL',
+        payment_method: 'tigo',
+        status: 'pending',
+        reference: referencia
+      }).then(() => {}, () => {});
     }
 
     const amountMap = {
       STARTER: 'L.0.00', PULPERIA: 'L.299.00', TIENDA: 'L.799.00', CLUB: 'L.1,399.00',
-      PERSONALIZADO: 'L.650.00', BUSINESS: 'L.1,499.00', ENTERPRISE: 'L.4,999.00'
+      PERSONALIZADO: 'L.150.00', BUSINESS: 'L.1,499.00', ENTERPRISE: 'L.4,999.00'
     };
     const amountMapAnual = {
       STARTER: 'L.0.00', PULPERIA: 'L.2,990.00', TIENDA: 'L.7,990.00', CLUB: 'L.13,990.00',
@@ -3656,9 +3758,9 @@ app.post('/api/tigo-money-reference', emailLimiter, async (req, res) => {
       amount,
       plan: planNombre,
       email: emailNorm,
-      empresa: empresa,
+      empresa: empresa || 'WEB',
       tigo_number: '33154594',
-      whatsapp: '+504331545494',
+      whatsapp: '+50433154594',
       instructions: `Envía exactamente ${amount} desde tu app Tigo Money al número 33154594 con referencia ${referencia}. Luego envía captura a WhatsApp +504 3315-4594.`
     });
   } catch (error) {
@@ -4636,7 +4738,9 @@ app.post('/api/recuperacion', recoveryLimiter, async (req, res) => {
     let htmlContent = cargarPlantilla(rutasPlantilla, fallbackHtml);
 
     const formattedCode = `${code.slice(0, 3)} ${code.slice(3)}`;
-    htmlContent = htmlContent.replace('842 915', formattedCode);
+    htmlContent = htmlContent
+      .replaceAll('{{VERIFICATION_CODE}}', formattedCode)
+      .replaceAll('842 915', formattedCode);
 
     await enviarCorreo({
       to: emailNorm,
@@ -4657,6 +4761,9 @@ app.post('/api/recuperacion/verificar', recoveryLimiter, async (req, res) => {
     const { email, code, newPassword } = req.body;
     if (!email || !code || !newPassword) {
       return res.status(400).json({ error: 'Faltan campos obligatorios.' });
+    }
+    if (String(newPassword).length < 8) {
+      return res.status(400).json({ error: 'La nueva contraseña debe tener al menos 8 caracteres.' });
     }
 
     const emailNorm = String(email).trim().toLowerCase();
@@ -4702,13 +4809,19 @@ app.post('/api/recuperacion/verificar', recoveryLimiter, async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const passwordHash = await bcrypt.hash(newPassword, salt);
 
-    // Update password in Supabase
+    // Update password in Supabase and increment token_version to revoke prior sessions
     if (supabase) {
       try {
+        const { data: userRow } = await supabase.from('usuarios')
+          .select('id, token_version')
+          .eq('email', emailNorm)
+          .maybeSingle();
+        const nextVersion = (Number(userRow?.token_version) || 0) + 1;
         const { error } = await supabase.from('usuarios')
-          .update({ password_hash: passwordHash, password: passwordHash })
+          .update({ password_hash: passwordHash, password: passwordHash, token_version: nextVersion })
           .eq('email', emailNorm);
         if (!error) {
+          if (userRow?.id) _tokenVersionCache.delete(userRow.id);
           return res.json({ message: 'Contraseña restablecida con éxito.' });
         }
         console.warn('[RECOVERY VERIFY] Supabase update failed:', error.message);
@@ -6545,7 +6658,7 @@ if (!result.success) return res.status(503).json({ error: result.error });
       tokensInput: result.tokensInput, tokensOutput: result.tokensOutput, tokensTotal: result.tokensTotal,
       durationMs: result.durationMs, success: true
     });
-    await registrarAuditoria(tenant, 'Vision IA', 'An�lisis de imagen de producto', 'ai', req.user?.nombre || '', req);
+    await registrarAuditoria(tenant, 'Vision IA', 'Análisis de imagen de producto', 'ai', req.user?.nombre || '', req);
 
     return res.json({ reply, model: result.model, provider: result.provider });
   } catch (err) {
@@ -10934,7 +11047,7 @@ app.get('/api/empresa/roles', authenticate, requireTenantAdmin, async (req, res)
   } catch (err) { return handleServerError(res, err); }
 });
 
-// ── GET /api/empresa/modules — catálogo real de 21 módulos del cotizador ──
+// ── GET /api/empresa/modules — catálogo real de 23 módulos del cotizador ──
 // Cada módulo viaja con su precio en HNL y su mapeo al módulo de la app
 // (`modulo_app`), para que el owner sepa exactamente qué habilita.
 app.get('/api/empresa/modules', authenticate, requireTenantAdmin, async (req, res) => {
@@ -11308,13 +11421,22 @@ function getGoogleOAuth2Client() {
   return new OAuth2Client(clientId, clientSecret, redirectUri);
 }
 
+function getIntegrationAesKey() {
+  const raw = process.env.INTEGRATION_ENCRYPTION_KEY || process.env.JWT_SECRET || localJwtSecret;
+  return crypto.createHash('sha256').update(String(raw)).digest();
+}
+
 // 1. Iniciar flujo OAuth2 → redirige a Google
 app.get('/api/integrations/google/authorize', authenticate, requireTenantAdmin, async (req, res) => {
   try {
     const client = getGoogleOAuth2Client();
     if (!client) return res.status(503).json({ error: 'Google OAuth2 no configurado (GOOGLE_CLIENT_ID/SECRET).' });
     const tenant = normalizeTenantCode(getTenantCode(req));
-    const state = Buffer.from(JSON.stringify({ tenant, user: req.user?.sub })).toString('base64url');
+    const state = jwt.sign(
+      { purpose: 'google_oauth', tenant, user: req.user?.sub, nonce: crypto.randomBytes(12).toString('hex') },
+      localJwtSecret,
+      { expiresIn: '10m' }
+    );
     const url = client.generateAuthUrl({
       access_type: 'offline',
       scope: GOOGLE_SHEETS_SCOPES,
@@ -11333,8 +11455,16 @@ app.get('/api/integrations/google/callback', async (req, res) => {
     if (!code || !state) return res.status(400).send('Faltan code o state');
 
     let payload;
-    try { payload = JSON.parse(Buffer.from(state, 'base64url').toString()); } catch { return res.status(400).send('State inválido'); }
-    const { tenant, user } = payload;
+    try {
+      payload = jwt.verify(String(state), localJwtSecret);
+    } catch {
+      return res.status(400).send('State inválido o expirado');
+    }
+    if (!payload || payload.purpose !== 'google_oauth' || !payload.tenant) {
+      return res.status(400).send('State inválido');
+    }
+    const tenant = normalizeTenantCode(payload.tenant);
+    const user = payload.user;
 
     const client = getGoogleOAuth2Client();
     if (!client) return res.status(503).send('Google OAuth2 no configurado');
@@ -11344,11 +11474,10 @@ app.get('/api/integrations/google/callback', async (req, res) => {
 
     // Guarda tokens encriptados en tenant_integrations
     if (!requireSupabase(res)) return res.status(503).send('Supabase no disponible');
-    const crypto = require('crypto');
-    const ENCRYPTION_KEY = process.env.INTEGRATION_ENCRYPTION_KEY || process.env.JWT_SECRET || 'dev-key-32-chars-minimum-length!!';
     const algorithm = 'aes-256-gcm';
+    const key = getIntegrationAesKey();
     const iv = crypto.randomBytes(12);
-    const cipher = crypto.createCipheriv(algorithm, Buffer.from(ENCRYPTION_KEY).slice(0, 32), iv);
+    const cipher = crypto.createCipheriv(algorithm, key, iv);
     const encrypted = Buffer.concat([cipher.update(JSON.stringify(tokens), 'utf8'), cipher.final()]);
     const authTag = cipher.getAuthTag();
     const storedConfig = Buffer.concat([iv, authTag, encrypted]).toString('base64');
@@ -11396,13 +11525,12 @@ app.post('/api/empresa/integrations/sheets/sync', authenticate, requireTenantAdm
     if (!integracion?.config) return res.status(400).json({ error: 'Google Sheets no conectado' });
 
     // Desencripta tokens
-    const crypto = require('crypto');
-    const ENCRYPTION_KEY = process.env.INTEGRATION_ENCRYPTION_KEY || process.env.JWT_SECRET || 'dev-key-32-chars-minimum-length!!';
+    const aesKey = getIntegrationAesKey();
     const buf = Buffer.from(integracion.config, 'base64');
     const iv = buf.slice(0, 12);
     const authTag = buf.slice(12, 28);
     const encrypted = buf.slice(28);
-    const decipher = crypto.createDecipheriv('aes-256-gcm', Buffer.from(ENCRYPTION_KEY).slice(0, 32), iv);
+    const decipher = crypto.createDecipheriv('aes-256-gcm', aesKey, iv);
     decipher.setAuthTag(authTag);
     const tokens = JSON.parse(Buffer.concat([decipher.update(encrypted), decipher.final()]).toString('utf8'));
 
@@ -11414,11 +11542,12 @@ app.post('/api/empresa/integrations/sheets/sync', authenticate, requireTenantAdm
     if (tokens.expiry_date && Date.now() >= tokens.expiry_date - 60000) {
       const { credentials } = await client.refreshAccessToken();
       Object.assign(tokens, credentials);
-      // Re-encripta y guarda tokens actualizados
-      const cipher = crypto.createCipheriv('aes-256-gcm', Buffer.from(ENCRYPTION_KEY).slice(0, 32), crypto.randomBytes(12));
-      const encrypted = Buffer.concat([cipher.update(JSON.stringify(tokens), 'utf8'), cipher.final()]);
-      const authTag = cipher.getAuthTag();
-      const newConfig = Buffer.concat([iv, authTag, encrypted]).toString('base64');
+      // Re-encripta y guarda tokens actualizados con el MISMO newIv que se almacena
+      const newIv = crypto.randomBytes(12);
+      const cipher = crypto.createCipheriv('aes-256-gcm', aesKey, newIv);
+      const newEncrypted = Buffer.concat([cipher.update(JSON.stringify(tokens), 'utf8'), cipher.final()]);
+      const newAuthTag = cipher.getAuthTag();
+      const newConfig = Buffer.concat([newIv, newAuthTag, newEncrypted]).toString('base64');
       await supabase.from('tenant_integrations').update({ config: newConfig, updated_at: new Date().toISOString() })
         .eq('empresa_codigo', tenant).eq('integration_key', 'sheets');
     }
@@ -12287,7 +12416,7 @@ function catalogoCotizadorFallback() {
   return {
     base_mensual_hnl: 150,
     descuentos: [
-      { minimo: 16, maximo: 21, descuento: 0.25 },
+      { minimo: 16, maximo: 23, descuento: 0.25 },
       { minimo: 10, maximo: 15, descuento: 0.15 },
       { minimo: 5, maximo: 9, descuento: 0.10 },
       { minimo: 1, maximo: 4, descuento: 0 }
@@ -12303,6 +12432,18 @@ function catalogoCotizadorFallback() {
       modulo_app: MODULO_APP_MAP[clave] || []
     }))
   };
+}
+
+function planesCatalogoFallback() {
+  return [
+    { clave: 'starter', nombre: 'Prueba', moneda: 'HNL', precio_mensual_hnl: 0, precio_anual_hnl: 0, max_users: PLAN_ENTITLEMENTS.starter.maxUsers, trial_dias: 15, descripcion_corta: '15 días gratis, sin tarjeta.' },
+    { clave: 'pulperia', nombre: 'Pulpería / Mercadito', moneda: 'HNL', precio_mensual_hnl: 299, precio_anual_hnl: 2990, max_users: PLAN_ENTITLEMENTS.pulperia.maxUsers, descripcion_corta: 'L. 10 al día. Se paga solo recuperando 1 fiado al mes.' },
+    { clave: 'tienda', nombre: 'Tienda / Supermercado', moneda: 'HNL', precio_mensual_hnl: 799, precio_anual_hnl: 7990, max_users: PLAN_ENTITLEMENTS.tienda.maxUsers, descripcion_corta: 'L. 26.60 al día — menos del 0.8% de tus ventas.' },
+    { clave: 'club', nombre: 'Club / Membresía', moneda: 'HNL', precio_mensual_hnl: 1399, precio_anual_hnl: 13990, max_users: PLAN_ENTITLEMENTS.club.maxUsers, descripcion_corta: 'Se cubre con la entrada de 2 socios al mes.' },
+    { clave: 'personalizado', nombre: 'Personalizado (Cotizador)', moneda: 'HNL', precio_mensual_hnl: 150, precio_anual_hnl: 1500, max_users: PLAN_ENTITLEMENTS.personalizado.maxUsers, descripcion_corta: 'Arma tu plan módulo por módulo.' },
+    { clave: 'business', nombre: 'Business (Legacy)', moneda: 'HNL', precio_mensual_hnl: 1499, precio_anual_hnl: 14990, max_users: PLAN_ENTITLEMENTS.business.maxUsers, descripcion_corta: 'Plan legacy para clientes con contrato anterior.' },
+    { clave: 'enterprise', nombre: 'Enterprise (Legacy)', moneda: 'HNL', precio_mensual_hnl: 4999, precio_anual_hnl: 49990, max_users: PLAN_ENTITLEMENTS.enterprise.maxUsers, descripcion_corta: 'Plan legacy para organizaciones grandes.' }
+  ];
 }
 
 async function catalogoCotizador() {
@@ -12337,13 +12478,14 @@ async function catalogoCotizador() {
 
 app.get('/api/plans', async (req, res) => {
   const cotizador = await catalogoCotizador();
-  if (!requireSupabase(res)) return res.json({ moneda: 'HNL', plans: PLAN_LIMITS, cotizador });
+  const fallbackPlans = planesCatalogoFallback();
+  if (!supabase) return res.json({ moneda: 'HNL', plans: fallbackPlans, cotizador });
   try {
     const { data, error } = await supabase.from('planes').select('*').order('orden', { ascending: true });
     if (!error && data && data.length) return res.json({ moneda: 'HNL', plans: data.map(toPlanPricing), cotizador });
-    return res.json({ moneda: 'HNL', plans: PLAN_LIMITS, cotizador });
+    return res.json({ moneda: 'HNL', plans: fallbackPlans, cotizador });
   } catch (err) {
-    return res.json({ moneda: 'HNL', plans: PLAN_LIMITS, cotizador });
+    return res.json({ moneda: 'HNL', plans: fallbackPlans, cotizador });
   }
 });
 

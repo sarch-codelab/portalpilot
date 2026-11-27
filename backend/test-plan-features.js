@@ -69,9 +69,10 @@ function extraerConstante(nombre, deps = {}) {
 
 const ALL_PLAN_FEATURES = extraerConstante('ALL_PLAN_FEATURES');
 const MODULOS_COTIZADOR = extraerConstante('MODULOS_COTIZADOR');
+const MODULOS_COTIZADOR_FEATURES = extraerConstante('MODULOS_COTIZADOR_FEATURES');
 const PLAN_CATALOGO_MODULOS = extraerConstante('PLAN_CATALOGO_MODULOS', { MODULOS_COTIZADOR });
 const MODULO_APP_MAP = extraerConstante('MODULO_APP_MAP');
-const PLAN_ENTITLEMENTS = extraerConstante('PLAN_ENTITLEMENTS', { ALL_PLAN_FEATURES, MODULOS_COTIZADOR });
+const PLAN_ENTITLEMENTS = extraerConstante('PLAN_ENTITLEMENTS', { ALL_PLAN_FEATURES, MODULOS_COTIZADOR, MODULOS_COTIZADOR_FEATURES });
 
 // App module id -> feature de capacidad que exige la app Flutter.
 // Espejo de `moduloFeatureRequerida` en PP APP/lib/Shared/models/modulo.dart.
@@ -207,11 +208,9 @@ test('pulpería incluye exactamente los 5 módulos que vende el plan', () => {
   ].sort());
 });
 
-test('la app Flutter declara feature para cada app module mapeado', () => {
-  const dart = fs.readFileSync(
-    path.join(__dirname, '..', '..', 'PP APP', 'lib', 'Shared', 'models', 'modulo.dart'),
-    'utf8'
-  );
+const DART_MODULO_PATH = path.join(__dirname, '..', '..', 'PP APP', 'lib', 'Shared', 'models', 'modulo.dart');
+test('la app Flutter declara feature para cada app module mapeado', { skip: !fs.existsSync(DART_MODULO_PATH) && 'PP APP no presente en este workspace' }, () => {
+  const dart = fs.readFileSync(DART_MODULO_PATH, 'utf8');
   const bloque = dart.match(/moduloFeatureRequerida\s*=\s*\{([\s\S]*?)\};/);
   assert.ok(bloque, 'no se encontro moduloFeatureRequerida en modulo.dart');
   const declarado = new Map();
@@ -277,7 +276,7 @@ test('las rutas de FASE 2 declaran el plan y el alcance de escritura', () => {
     'PUT /api/pasillos/:id': ["requireTenantAdmin", "requirePlanFeature('retail_pasillos')"],
     'DELETE /api/pasillos/:id': ["requireTenantAdmin", "requirePlanFeature('retail_pasillos')"],
     'GET /api/mermas': ["authenticate"],
-    'POST /api/mermas': ["requireTenantAdmin", "requirePlanFeature('inventario')"],
+    'POST /api/mermas': ["requirePlanFeature('inventario')"],
     'GET /api/mesas': ["requirePlanFeature('gestion_membresias')"],
     'POST /api/mesas': ["requireTenantAdmin", "requirePlanFeature('gestion_membresias')"],
     'PUT /api/mesas/:id': ["requireTenantAdmin", "requirePlanFeature('gestion_membresias')"],

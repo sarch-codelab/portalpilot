@@ -190,7 +190,7 @@ test('la tabla de productos sigue la convencion responsive del proyecto', () => 
 
 test('el modulo Inventario abre la pestana de productos', () => {
   const ini = fs.readFileSync(path.join(__dirname, '..', 'js', 'inicio-modulos.js'), 'utf8');
-  assert.match(ini, /'Inventario':\s*'operaciones\.html\?tab=productos'/);
+  assert.match(ini, /inventario:\s*'operaciones\.html\?tab=productos'/);
 });
 
 test('POST /api/sync acepta las FKs de catalogo del producto', () => {
@@ -224,15 +224,13 @@ test('POST /api/sync valida que las referencias de catalogo pertenezcan al tenan
   );
 });
 
-test('el formulario Flutter de producto usa el catalogo del servidor', () => {
+const DART_PRODUCTO_FORM_PATH = path.join(
+  __dirname, '..', '..', 'PP APP', 'lib', 'Modules', 'Inventario', 'producto_form.dart'
+);
+test('el formulario Flutter de producto usa el catalogo del servidor', { skip: !fs.existsSync(DART_PRODUCTO_FORM_PATH) && 'PP APP no presente en este workspace' }, () => {
   // Flutter no puede mantener una lista fija de categorias: el catalogo es del
   // tenant y cambia. Se conserva la semilla solo como fallback sin conexion.
-  const form = fs.readFileSync(
-    path.join(
-      __dirname, '..', '..', 'PP APP', 'lib', 'Modules', 'Inventario', 'producto_form.dart'
-    ),
-    'utf8'
-  );
+  const form = fs.readFileSync(DART_PRODUCTO_FORM_PATH, 'utf8');
   assert.match(form, /CatalogosService\.instance\.categorias\(\)/);
   assert.match(form, /CatalogosService\.instance\.marcas\(\)/);
   assert.match(form, /CatalogosService\.instance\.pasillos\(\)/);

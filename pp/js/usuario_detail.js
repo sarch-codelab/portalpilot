@@ -253,11 +253,18 @@ function renderProfile(user) {
     const initials = `${(words[0] || '?')[0]}${words.length > 1 ? (words[words.length - 1][0] || '') : (words[0] ? words[0][1] || '' : '')}`.toUpperCase();
     const avatar = document.getElementById('profileAvatar');
 
+    const escPP = v => String(v == null ? '' : v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     if (avatar) {
-        if (user.avatar) {
-            avatar.innerHTML = `<img src="${user.avatar}" alt="${full}" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;" onerror="this.parentElement.innerHTML='${initials}'">`;
+        avatar.textContent = '';
+        if (user.avatar && /^(https?:\/\/|\/|\.\.?\/|data:image\/)/i.test(String(user.avatar))) {
+            const img = document.createElement('img');
+            img.src = user.avatar;
+            img.alt = full;
+            img.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:inherit;';
+            img.onerror = function () { avatar.textContent = initials; avatar.appendChild(statusBadge); };
+            avatar.appendChild(img);
         } else {
-            avatar.innerHTML = initials;
+            avatar.textContent = initials;
         }
         // Add status badge
         const statusBadge = document.createElement('span');
@@ -270,7 +277,7 @@ function renderProfile(user) {
     const nameEl = document.getElementById('profileName');
     if (nameEl) {
         const verifiedIcon = user.verified ? ' <i class="fas fa-check-circle verified" title="Verificado"></i>' : '';
-        nameEl.innerHTML = `${full}${verifiedIcon}`;
+        nameEl.innerHTML = `${escPP(full)}${verifiedIcon}`;
     }
 
     const emailEl = document.getElementById('profileEmail');

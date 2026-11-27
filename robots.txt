@@ -1,17 +1,17 @@
 # Robots.txt for Portal Pilot (https://portal-pilot.vercel.app)
 User-agent: *
 Allow: /
-Allow: /index.html
-Allow: /download.html
-Allow: /login.html
-Allow: /registro.html
-Allow: /documentacion.html
-Allow: /support.html
-Allow: /pay_plan.html
-Allow: /terminos.html
-Allow: /privacidad.html
-Allow: /cookies.html
-Allow: /sla.html
+Allow: /download
+Allow: /login
+Allow: /registro
+Allow: /planes
+Allow: /documentacion
+Allow: /support
+Allow: /pay_plan
+Allow: /terminos
+Allow: /privacidad
+Allow: /cookies
+Allow: /sla
 
 # Block internal admin, company portals & APIs from indexing
 Disallow: /pp/

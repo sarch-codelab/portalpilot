@@ -1112,7 +1112,7 @@
             color: #fff;
         }
 
-        /* SECCIÓN 2: COTIZADOR PERSONALIZADO INTERACTIVO (21 MÓDULOS) */
+        /* SECCIÓN 2: COTIZADOR PERSONALIZADO INTERACTIVO (23 MÓDULOS) */
         .custom-quotator-section {
             position: relative;
             z-index: 1;
@@ -1210,7 +1210,7 @@
             border-color: var(--red);
         }
 
-        /* GRID DE 21 MÓDULOS */
+        /* GRID DE 23 MÓDULOS */
         .modules-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -2271,7 +2271,7 @@
     <!-- FIN VIDEO DE FONDO: HERO + PLANES -->
 
 
-    <!-- SECCIÓN 2: COTIZADOR PERSONALIZADO INTERACTIVO (21 MÓDULOS) -->
+    <!-- SECCIÓN 2: COTIZADOR PERSONALIZADO INTERACTIVO (23 MÓDULOS) -->
     <section class="custom-quotator-section" id="cotizador">
         <div class="container">
             <div class="quotator-header">
@@ -2386,7 +2386,7 @@
     </div>
 
     <!-- PREGUNTAS FRECUENTES -->
-    <section class="faq-section">
+    <section class="faq-section" id="faq">
         <div class="container">
             <div class="section-header">
                 <div class="sec-eyebrow">Preguntas Frecuentes</div>
@@ -2447,18 +2447,17 @@
                         </div>
                         <p class="footer-desc">La plataforma SaaS multi-empresa que combina IA en la nube, módulos de negocio y control de acceso con 2FA para automatizar la gestión corporativa.</p>
                         <div class="footer-social">
-                        <a href="https://instagram.com/portalpilot.hn" class="fs-btn"><i class="fab fa-instagram"></i></a>
-                        <a href="#" class="fs-btn"><i class="fab fa-linkedin-in"></i></a>
-                        <a href="#" class="fs-btn"><i class="fab fa-youtube"></i></a>
-                        <a href="#" class="fs-btn"><i class="fab fa-github"></i></a>
+                        <a href="https://instagram.com/portalpilot.hn" target="_blank" rel="noopener" class="fs-btn" title="Instagram"><i class="fab fa-instagram"></i></a>
+                        <a href="https://github.com/sarch-codelab" target="_blank" rel="noopener" class="fs-btn" title="GitHub"><i class="fab fa-github"></i></a>
+                        <a href="mailto:portalpilot.hn@gmail.com" class="fs-btn" title="Email"><i class="fas fa-envelope"></i></a>
                     </div>
                 </div>
                 <div class="footer-col">
                     <h5>Producto</h5>
                     <ul>
-                        <li><a href="#features">Características</a></li>
+                        <li><a href="index.html#features">Características</a></li>
                         <li><a href="#planes-fijos">Planes y Precios</a></li>
-                        <li><a href="#cotizador">Cotizador 21 Módulos</a></li>
+                        <li><a href="#cotizador">Cotizador 23 Módulos</a></li>
                         <li><a href="documentacion.html">Documentación</a></li>
                         <li><a href="download.html">Descargar App</a></li>
                     </ul>
@@ -2469,7 +2468,7 @@
                         <li><a href="#por-que-honduras">Sobre Nosotros</a></li>
                         <li><a href="support.html">Soporte</a></li>
                         <li><a href="#faq">Preguntas Frecuentes</a></li>
-                        <li><a href="#cta-final">Contacto</a></li>
+                        <li><a href="index.html#cta-final">Contacto</a></li>
                     </ul>
                 </div>
                 <div class="footer-col">
@@ -2730,7 +2729,7 @@
 
         // Escala de descuento por volumen (fallback; /api/plans.cotizador.descuentos manda)
         const ESCALA_DESCUENTOS_FALLBACK = [
-            { minimo: 16, maximo: 21, descuento: 0.25 },
+            { minimo: 16, maximo: 23, descuento: 0.25 },
             { minimo: 10, maximo: 15, descuento: 0.15 },
             { minimo: 5,  maximo: 9,  descuento: 0.10 },
             { minimo: 1,  maximo: 4,  descuento: 0 }

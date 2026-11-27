@@ -5,13 +5,13 @@
     <meta charset="UTF-8">
     <link rel="icon" type="image/png" href="../img/iconos/robot_logo.png">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tenant Detail â€” Portal Pilot</title>
+    <title>Tenant Detail — Portal Pilot</title>
     <link
         href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <style>
-        /* â”€â”€â”€ RESET & TOKENS (MISMOS QUE INDEX) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+        /* ─── RESET & TOKENS (MISMOS QUE INDEX) ───────────────── */
         *,
         *::before,
         *::after {
@@ -85,7 +85,7 @@
             padding: 0 clamp(16px, 4vw, 40px);
         }
 
-        /* â”€â”€â”€ CUSTOM CURSOR â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+        /* ─── CUSTOM CURSOR ──────────────────────────────────── */
         #cursor-dot {
             width: 6px;
             height: 6px;
@@ -120,7 +120,7 @@
             transition: transform 0.08s;
         }
 
-        /* â”€â”€â”€ SCROLLBAR â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+        /* ─── SCROLLBAR ─────────────────────────────────────── */
         ::-webkit-scrollbar {
             width: 4px;
         }
@@ -134,7 +134,7 @@
             border-radius: 2px;
         }
 
-        /* â”€â”€â”€ PROGRESS BAR â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+        /* ─── PROGRESS BAR ──────────────────────────────────── */
         #progress {
             position: fixed;
             top: 0;
@@ -152,7 +152,7 @@
             transition: width .1s linear;
         }
 
-        /* â”€â”€â”€ BUTTONS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+        /* ─── BUTTONS ───────────────────────────────────────── */
         .btn {
             display: inline-flex;
             align-items: center;
@@ -257,14 +257,14 @@
             font-size: 14px;
         }
 
-        /* â”€â”€â”€ DASHBOARD LAYOUT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+        /* ─── DASHBOARD LAYOUT ──────────────────────────────── */
         .dashboard {
             display: grid;
             grid-template-columns: 240px 1fr;
             min-height: 100vh;
         }
 
-        /* â”€â”€â”€ SIDEBAR â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+        /* ─── SIDEBAR ───────────────────────────────────────── */
         .sidebar {
             background: var(--bg2);
             border-right: 1px solid var(--border);
@@ -381,7 +381,7 @@
             color: var(--gray);
         }
 
-        /* â”€â”€â”€ MAIN CONTENT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+        /* ─── MAIN CONTENT ──────────────────────────────────── */
         .main-content {
             display: flex;
             flex-direction: column;
@@ -389,7 +389,7 @@
             overflow-x: hidden;
         }
 
-        /* â”€â”€â”€ TOP BAR â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+        /* ─── TOP BAR ───────────────────────────────────────── */
         .topbar {
             position: sticky;
             top: 0;
@@ -492,7 +492,7 @@
             font-weight: 600;
         }
 
-        /* â”€â”€â”€ TENANT HEADER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+        /* ─── TENANT HEADER ─────────────────────────────────── */
         .tenant-header {
             padding: clamp(24px, 4vw, 40px) clamp(16px, 4vw, 40px) 32px;
             background: linear-gradient(135deg, var(--bg2), var(--bg3));
@@ -614,7 +614,7 @@
             margin-top: 20px;
         }
 
-        /* â”€â”€â”€ STATS GRID â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+        /* ─── STATS GRID ────────────────────────────────────── */
         .stats-grid {
             padding: 0 clamp(16px, 4vw, 40px) 24px;
             display: grid;
@@ -677,7 +677,7 @@
             color: var(--red);
         }
 
-        /* â”€â”€â”€ TABS NAVIGATION â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+        /* ─── TABS NAVIGATION ───────────────────────────────── */
         .tabs-nav {
             padding: 0 clamp(16px, 4vw, 40px);
             display: flex;
@@ -714,7 +714,7 @@
             margin-right: 6px;
         }
 
-        /* â”€â”€â”€ TAB CONTENT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+        /* ─── TAB CONTENT ───────────────────────────────────── */
         .tab-content {
             display: none;
             padding: 24px clamp(16px, 4vw, 40px);
@@ -737,7 +737,7 @@
             }
         }
 
-        /* â”€â”€â”€ CARDS & SECTIONS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+        /* ─── CARDS & SECTIONS ──────────────────────────────── */
         .section-card {
             background: var(--card);
             border: 1px solid var(--border);
@@ -774,7 +774,7 @@
             padding: 24px;
         }
 
-        /* â”€â”€â”€ USER TABLE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+        /* ─── USER TABLE ────────────────────────────────────── */
         .user-table {
             width: 100%;
             border-collapse: separate;
@@ -860,7 +860,7 @@
             color: var(--yellow);
         }
 
-        /* â”€â”€â”€ API KEYS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+        /* ─── API KEYS ──────────────────────────────────────── */
         .api-key-item {
             background: var(--card2);
             border: 1px solid var(--border);
@@ -898,7 +898,7 @@
             gap: 8px;
         }
 
-        /* â”€â”€â”€ BOTS GRID â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+        /* ─── BOTS GRID ─────────────────────────────────────── */
         .bots-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -991,7 +991,7 @@
             color: var(--red);
         }
 
-        /* â”€â”€â”€ ACTIVITY TIMELINE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+        /* ─── ACTIVITY TIMELINE ─────────────────────────────── */
         .timeline {
             position: relative;
             padding-left: 24px;
@@ -1049,7 +1049,7 @@
             color: var(--gray2);
         }
 
-        /* â”€â”€â”€ BILLING TABLE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+        /* ─── BILLING TABLE ─────────────────────────────────── */
         .billing-table {
             width: 100%;
         }
@@ -1090,7 +1090,7 @@
             font-size: 20px;
         }
 
-        /* â”€â”€â”€ SETTINGS FORM â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+        /* ─── SETTINGS FORM ─────────────────────────────────── */
         .settings-form {
             display: flex;
             flex-direction: column;
@@ -1212,7 +1212,7 @@
             background: #fff;
         }
 
-        /* â”€â”€â”€ MODAL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+        /* ─── MODAL ─────────────────────────────────────────── */
         .modal-overlay {
             position: fixed;
             inset: 0;
@@ -1296,7 +1296,7 @@
             gap: 12px;
         }
 
-        /* â”€â”€â”€ REVEAL ANIMATIONS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+        /* ─── REVEAL ANIMATIONS ─────────────────────────────── */
         .reveal {
             opacity: 0;
             transform: translateY(20px);
@@ -1308,7 +1308,7 @@
             transform: translateY(0);
         }
 
-        /* â”€â”€â”€ RESPONSIVE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+        /* ─── RESPONSIVE ────────────────────────────────────── */
         @media(max-width:1200px) {
             .form-row {
                 grid-template-columns: 1fr;
@@ -1374,7 +1374,7 @@
             }
         }
 
-        /* â”€â”€â”€ SIDEBAR TOGGLE (MOBILE) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+        /* ─── SIDEBAR TOGGLE (MOBILE) ───────────────────────── */
         .sidebar-toggle {
             display: none;
             position: fixed;
@@ -1392,7 +1392,7 @@
             font-size: 16px;
         }
 
-        /* â”€â”€â”€ EMPTY STATE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+        /* ─── EMPTY STATE ───────────────────────────────────── */
         .empty-state {
             text-align: center;
             padding: 40px 20px;
@@ -1409,7 +1409,7 @@
             font-size: 13px;
         }
 
-        /* â”€â”€â”€ CHART PLACEHOLDER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+        /* ─── CHART PLACEHOLDER ─────────────────────────────── */
         .chart-placeholder {
             height: 200px;
             background: var(--card2);
@@ -1469,14 +1469,14 @@
                     <div class="form-group">
                         <label class="form-label"><i class="fas fa-comment"></i> Mensaje (opcional)</label>
                         <textarea id="inviteMessage" class="form-textarea"
-                            placeholder="Mensaje personalizado para la invitaciÃ³n..."></textarea>
+                            placeholder="Mensaje personalizado para la invitación..."></textarea>
                     </div>
                 </form>
             </div>
             <div class="modal-footer">
                 <button class="btn btn-ghost" onclick="closeModal('addUserModal')">Cancelar</button>
                 <button class="btn btn-acc" onclick="inviteUser()"><i class="fas fa-paper-plane"></i> Enviar
-                    InvitaciÃ³n</button>
+                    Invitación</button>
             </div>
         </div>
     </div>
@@ -1492,7 +1492,7 @@
             <div class="modal-body">
                 <div class="form-group">
                     <label class="form-label">Nombre de la Key *</label>
-                    <input type="text" id="keyName" class="form-input" placeholder="Ej: ProducciÃ³n - Backend" required>
+                    <input type="text" id="keyName" class="form-input" placeholder="Ej: Producción - Backend" required>
                 </div>
                 <div class="form-group">
                     <label class="form-label">Permisos</label>
@@ -1505,16 +1505,16 @@
                         <label class="form-switch">
                             <input type="checkbox" checked>
                             <span class="switch-slider"></span>
-                            <span style="font-size:13px;">EjecuciÃ³n de bots RPA</span>
+                            <span style="font-size:13px;">Ejecución de bots RPA</span>
                         </label>
                         <label class="form-switch">
                             <input type="checkbox">
                             <span class="switch-slider"></span>
-                            <span style="font-size:13px;">GestiÃ³n de usuarios</span>
+                            <span style="font-size:13px;">Gestión de usuarios</span>
                         </label>
                     </div>
                 </div>
-                <div class="form-hint"><i class="fas fa-shield-alt"></i> Guarda esta key en un lugar seguro. No podrÃ¡
+                <div class="form-hint"><i class="fas fa-shield-alt"></i> Guarda esta key en un lugar seguro. No podrá
                     ser vista nuevamente.</div>
             </div>
             <div class="modal-footer">
@@ -1542,30 +1542,33 @@
                 <a href="dashboard.html" class="sidebar-link">
                     <i class="fas fa-home"></i> <span>Dashboard</span>
                 </a>
-                <a href="../pp/tenants.html" class="sidebar-link">
-                    <i class="fas fa-building"></i> <span>Tenants</span>
+                <a href="team.html" class="sidebar-link">
+                    <i class="fas fa-users"></i> <span>Equipo</span>
                 </a>
-                <a href="../pp/usuarios.html" class="sidebar-link">
-                    <i class="fas fa-users"></i> <span>Usuarios</span>
+                <a href="modules.html" class="sidebar-link">
+                    <i class="fas fa-shapes"></i> <span>Módulos</span>
                 </a>
-                <a href="#" class="sidebar-link">
+                <a href="automation.html" class="sidebar-link">
                     <i class="fas fa-robot"></i> <span>Bots RPA</span>
                 </a>
-                <a href="#" class="sidebar-link">
-                    <i class="fas fa-link"></i> <span>AuditorÃ­a</span>
+                <a href="audit.html" class="sidebar-link">
+                    <i class="fas fa-link"></i> <span>Auditoría</span>
                 </a>
-                <a href="#" class="sidebar-link">
-                    <i class="fas fa-chart-line"></i> <span>Analytics</span>
+                <a href="reports.html" class="sidebar-link">
+                    <i class="fas fa-chart-line"></i> <span>Reportes</span>
                 </a>
-                <a href="../pp/global_settings.html" class="sidebar-link">
-                    <i class="fas fa-cog"></i> <span>ConfiguraciÃ³n Global</span>
+                <a href="configuracion.html" class="sidebar-link">
+                    <i class="fas fa-cog"></i> <span>Configuración</span>
+                </a>
+                <a href="support.html" class="sidebar-link">
+                    <i class="fas fa-headset"></i> <span>Soporte</span>
                 </a>
             </nav>
 
             <!-- Footer -->
             <div class="sidebar-footer">
                 <button class="footer-btn" id="darkModeToggle"><i class="fas fa-moon"></i> <span>Dark Mode</span></button>
-                <button class="footer-btn logout" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> <span>Cerrar SesiÃ³n</span></button>
+                <button class="footer-btn logout" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> <span>Cerrar Sesión</span></button>
             </div>
 
             <!-- Toggle Button -->
@@ -1579,10 +1582,10 @@
             <header class="topbar">
                 <div class="topbar-left">
                     <button class="topbar-btn" style="display:none;" id="backBtn"
-                        onclick="window.location.href='../pp/tenants.html'">
+                        onclick="window.location.href='dashboard.html'">
                         <i class="fas fa-arrow-left"></i>
                     </button>
-                    <div class="topbar-title">Tenant: <span id="tenantNameDisplay">Cargando...</span></div>
+                    <div class="topbar-title">Empresa: <span id="tenantNameDisplay">Cargando...</span></div>
                 </div>
                 <div class="topbar-right">
                     <button class="topbar-btn" title="Notificaciones">
@@ -1605,15 +1608,15 @@
                             <span id="tenant-status" class="status-badge active"><span
                                     style="width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block;"></span>
                                 Activo</span>
-                            <span id="tenant-plan" class="plan-badge business"><i class="fas fa-crown"></i> Business</span>
+                            <span id="tenant-plan" class="plan-badge"><i class="fas fa-crown"></i> —</span>
                         </div>
                     </div>
-                    <!-- Este es el tÃ­tulo que se actualizarÃ¡ automÃ¡ticamente -->
+                    <!-- Este es el título que se actualizará automáticamente -->
                     <h1 id="tenant-name" class="tenant-name">Cargando empresa...</h1>
                     <span id="tenant-domain" class="tenant-domain">cargando...</span>
                     <div class="tenant-meta">
                         <div class="tenant-meta-item"><i class="fas fa-calendar"></i> Registrado: <span id="tenant-registered">15 Mar 2025</span></div>
-                        <div class="tenant-meta-item"><i class="fas fa-map-marker-alt"></i> <span id="tenant-country">MÃ©xico</span> (<span id="tenant-timezone">GMT-6</span>)</div>
+                        <div class="tenant-meta-item"><i class="fas fa-map-marker-alt"></i> <span id="tenant-country">México</span> (<span id="tenant-timezone">GMT-6</span>)</div>
                         <div class="tenant-meta-item"><i class="fas fa-id-card"></i> ID: <span id="tenant-id">tnt_8x9k2m4p</span></div>
                     </div>
                     <div class="tenant-actions-bar">
@@ -1654,20 +1657,20 @@
                 </div>
                 <div class="stat-card reveal">
                     <div class="stat-card-icon"><i class="fas fa-brain"></i></div>
-                    <div class="stat-card-value" id="statTokens">â€”</div>
+                    <div class="stat-card-value" id="statTokens">—</div>
                     <div class="stat-card-label">Tokens IA este mes</div>
                     <div class="stat-card-trend"><i class="fas fa-minus"></i> Sin delta del servidor</div>
                 </div>
                 <div class="stat-card reveal">
                     <div class="stat-card-icon"><i class="fas fa-server"></i></div>
-                    <div class="stat-card-value" id="statSla">â€”</div>
+                    <div class="stat-card-value" id="statSla">—</div>
                     <div class="stat-card-label">Uptime SLA</div>
                     <div class="stat-card-trend"><i class="fas fa-minus"></i> Sin dato del servidor</div>
                 </div>
                 <div class="stat-card reveal">
                     <div class="stat-card-icon"><i class="fas fa-dollar-sign"></i></div>
-                    <div class="stat-card-value" id="statBilling">â€”</div>
-                    <div class="stat-card-label">FacturaciÃ³n Mensual</div>
+                    <div class="stat-card-value" id="statBilling">—</div>
+                    <div class="stat-card-label">Facturación Mensual</div>
                     <div class="stat-card-trend"><i class="fas fa-minus"></i> Sin fecha del servidor</div>
                 </div>
                 <div class="stat-card reveal">
@@ -1685,9 +1688,9 @@
                 <button class="tab-btn" data-tab="bots"><i class="fas fa-robot"></i>Bots RPA</button>
                 <button class="tab-btn" data-tab="api"><i class="fas fa-key"></i>API & Integraciones</button>
                 <button class="tab-btn" data-tab="billing"><i
-                        class="fas fa-file-invoice-dollar"></i>FacturaciÃ³n</button>
-                <button class="tab-btn" data-tab="logs"><i class="fas fa-history"></i>Logs & AuditorÃ­a</button>
-                <button class="tab-btn" data-tab="settings"><i class="fas fa-sliders-h"></i>ConfiguraciÃ³n</button>
+                        class="fas fa-file-invoice-dollar"></i>Facturación</button>
+                <button class="tab-btn" data-tab="logs"><i class="fas fa-history"></i>Logs & Auditoría</button>
+                <button class="tab-btn" data-tab="settings"><i class="fas fa-sliders-h"></i>Configuración</button>
             </nav>
 
             <!-- TAB: OVERVIEW -->
@@ -1698,15 +1701,15 @@
                             <div class="section-header">
                                 <div class="section-title"><i class="fas fa-chart-area"></i>Uso de Recursos</div>
                                 <select class="filter-select" style="width:auto;padding:6px 12px;font-size:12px;">
-                                    <option>Ãšltimos 7 dÃ­as</option>
-                                    <option selected>Ãšltimos 30 dÃ­as</option>
-                                    <option>Ãšltimos 90 dÃ­as</option>
+                                    <option>Últimos 7 días</option>
+                                    <option selected>Últimos 30 días</option>
+                                    <option>Últimos 90 días</option>
                                 </select>
                             </div>
                             <div class="section-body">
                                 <div class="chart-placeholder">
                                     <i class="fas fa-chart-line" style="margin-right:8px;"></i>
-                                    GrÃ¡fico de uso de tokens IA y ejecuciones RPA
+                                    Gráfico de uso de tokens IA y ejecuciones RPA
                                 </div>
                             </div>
                         </div>
@@ -1731,7 +1734,7 @@
                     <div>
                         <div class="section-card reveal">
                             <div class="section-header">
-                                <div class="section-title"><i class="fas fa-info-circle"></i>InformaciÃ³n del Tenant
+                                <div class="section-title"><i class="fas fa-info-circle"></i>Información del Tenant
                                 </div>
                             </div>
                             <div class="section-body" style="display:flex;flex-direction:column;gap:16px;">
@@ -1740,7 +1743,7 @@
                                     <strong style="color:var(--white);" id="infoPlanActual">&mdash;</strong>
                                 </div>
                                 <div style="display:flex;justify-content:space-between;">
-                                    <span style="color:var(--gray);">LÃ­mite de Usuarios</span>
+                                    <span style="color:var(--gray);">Límite de Usuarios</span>
                                     <strong style="color:var(--white);">&mdash;</strong>
                                 </div>
                                 <div style="display:flex;justify-content:space-between;">
@@ -1802,7 +1805,7 @@
                                     <th>Usuario</th>
                                     <th>Rol</th>
                                     <th>Estado</th>
-                                    <th>Ãšltimo Acceso</th>
+                                    <th>Último Acceso</th>
                                     <th>Acciones</th>
                                 </tr>
                             </thead>
@@ -1857,7 +1860,7 @@
                             <div style="font-size:11px;color:var(--gray);margin-top:4px;">Sin estado del servidor</div>
                         </div>
                         <div style="padding:16px;background:rgba(251,191,36,0.1);border:1px dashed rgba(251,191,36,0.4);border-radius:var(--radius);text-align:center;cursor:pointer;"
-                            onclick="showToast('Marketplace de integraciones disponible prÃ³ximamente.', 'info')">
+                            onclick="showToast('Marketplace de integraciones disponible próximamente.', 'info')">
                             <i class="fas fa-plus" style="font-size:24px;color:var(--yellow);margin-bottom:8px;"></i>
                             <div style="font-weight:500;color:var(--gray2);">+ Conectar</div>
                         </div>
@@ -1910,7 +1913,7 @@
                                     <button class="btn btn-ghost btn-sm"><i class="fas fa-history"></i> Historial de
                                         Facturas</button>
                                     <button class="btn btn-acc btn-sm"><i class="fas fa-credit-card"></i> Actualizar
-                                        MÃ©todo de Pago</button>
+                                        Método de Pago</button>
                                 </div>
                             </div>
                         </div>
@@ -1919,25 +1922,25 @@
                     <div>
                         <div class="section-card reveal">
                             <div class="section-header">
-                                <div class="section-title"><i class="fas fa-credit-card"></i>MÃ©todo de Pago</div>
+                                <div class="section-title"><i class="fas fa-credit-card"></i>Método de Pago</div>
                             </div>
                             <div class="section-body" style="display:flex;flex-direction:column;gap:16px;">
                                 <div
                                     style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--card2);border-radius:var(--radius);">
                                     <i class="fas fa-credit-card" style="font-size:32px;color:var(--gray2);"></i>
                                     <div>
-                                        <div style="font-weight:600;color:var(--white);">MÃ©todo no configurado</div>
-                                        <div style="font-size:12px;color:var(--gray);">La integraciÃ³n de cobro aÃºn no estÃ¡ conectada</div>
+                                        <div style="font-weight:600;color:var(--white);">Método no configurado</div>
+                                        <div style="font-size:12px;color:var(--gray);">La integración de cobro aún no está conectada</div>
                                     </div>
                                     <button class="btn btn-ghost btn-xs" style="margin-left:auto;"><i
                                             class="fas fa-edit"></i></button>
                                 </div>
                                 <div style="font-size:12px;color:var(--gray);">
-                                    <i class="fas fa-calendar"></i> PrÃ³ximo cobro: <strong
+                                    <i class="fas fa-calendar"></i> Próximo cobro: <strong
                                         style="color:var(--white);">No configurado</strong>
                                 </div>
                                 <button class="btn btn-outline btn-sm" style="width:100%;justify-content:center;"><i
-                                        class="fas fa-plus"></i> Agregar MÃ©todo de Pago</button>
+                                        class="fas fa-plus"></i> Agregar Método de Pago</button>
                             </div>
                         </div>
 
@@ -1947,7 +1950,7 @@
                                 </div>
                             </div>
                             <div class="section-body" style="text-align:center;">
-                                <div style="font-size:13px;color:var(--gray);margin-bottom:12px;">Â¿Necesitas mÃ¡s
+                                <div style="font-size:13px;color:var(--gray);margin-bottom:12px;">¿Necesitas más
                                     recursos?</div>
                                 <div
                                     style="background:linear-gradient(135deg,var(--accent),var(--cyan));padding:16px;border-radius:var(--radius);margin-bottom:12px;">
@@ -1955,7 +1958,7 @@
                                     <div style="color:rgba(255,255,255,0.9);font-size:13px;">Precio vigente en /api/plans</div>
                                 </div>
                                 <button class="btn btn-acc btn-sm" style="width:100%;justify-content:center;"
-                                    onclick="showToast('ComparaciÃ³n de planes disponible prÃ³ximamente.', 'info')">
+                                    onclick="showToast('Comparación de planes disponible próximamente.', 'info')">
                                     <i class="fas fa-arrow-right"></i> Ver Planes
                                 </button>
                             </div>
@@ -1968,14 +1971,14 @@
             <div class="tab-content" id="logs">
                 <div class="section-card reveal">
                     <div class="section-header">
-                        <div class="section-title"><i class="fas fa-history"></i>Logs de AuditorÃ­a</div>
+                        <div class="section-title"><i class="fas fa-history"></i>Logs de Auditoría</div>
                         <div style="display:flex;gap:8px;">
                             <select class="filter-select" style="width:auto;padding:6px 12px;font-size:12px;">
                                 <option>Todos los eventos</option>
                                 <option>Accesos</option>
                                 <option>Ejecuciones RPA</option>
                                 <option>API Calls</option>
-                                <option>Cambios de configuraciÃ³n</option>
+                                <option>Cambios de configuración</option>
                             </select>
                             <button class="btn btn-outline btn-sm"><i class="fas fa-download"></i> Exportar</button>
                         </div>
@@ -2000,7 +2003,7 @@
             <div class="tab-content" id="settings">
                 <div class="section-card reveal">
                     <div class="section-header">
-                        <div class="section-title"><i class="fas fa-sliders-h"></i>ConfiguraciÃ³n General</div>
+                        <div class="section-title"><i class="fas fa-sliders-h"></i>Configuración General</div>
                         <button class="btn btn-acc btn-sm" onclick="saveSettings()"><i class="fas fa-save"></i> Guardar
                             Cambios</button>
                     </div>
@@ -2014,25 +2017,25 @@
                                 <div class="form-group">
                                     <label class="form-label"><i class="fas fa-globe"></i>Dominio Personalizado</label>
                                     <input type="text" id="settingsDomain" class="form-input" value="">
-                                    <div class="form-hint">Requiere configuraciÃ³n DNS</div>
+                                    <div class="form-hint">Requiere configuración DNS</div>
                                 </div>
                                 <div class="form-group">
                                     <label class="form-label"><i class="fas fa-language"></i>Idioma
                                         Predeterminado</label>
                                     <select class="form-select">
-                                        <option>EspaÃ±ol (MÃ©xico)</option>
-                                        <option selected>InglÃ©s (US)</option>
-                                        <option>PortuguÃ©s (Brasil)</option>
+                                        <option>Español (México)</option>
+                                        <option selected>Inglés (US)</option>
+                                        <option>Portugués (Brasil)</option>
                                     </select>
                                 </div>
                             </div>
                             <div class="form-row">
                                 <div class="form-group">
-                                    <label class="form-label"><i class="fas fa-map-marker-alt"></i>PaÃ­s / RegiÃ³n</label>
+                                    <label class="form-label"><i class="fas fa-map-marker-alt"></i>País / Región</label>
                                     <select class="form-select" id="settingsCountry">
-                                        <option>MÃ©xico</option>
+                                        <option>México</option>
                                         <option>Estados Unidos</option>
-                                        <option>EspaÃ±a</option>
+                                        <option>España</option>
                                         <option>Colombia</option>
                                     </select>
                                 </div>
@@ -2053,22 +2056,22 @@
                                 <label class="form-switch">
                                     <input type="checkbox" checked>
                                     <span class="switch-slider"></span>
-                                    <span>AutenticaciÃ³n de dos factores (2FA) obligatoria</span>
+                                    <span>Autenticación de dos factores (2FA) obligatoria</span>
                                 </label>
                                 <label class="form-switch">
                                     <input type="checkbox" checked>
                                     <span class="switch-slider"></span>
-                                    <span>Bloqueo por geolocalizaciÃ³n (solo MÃ©xico)</span>
+                                    <span>Bloqueo por geolocalización (solo México)</span>
                                 </label>
                                 <label class="form-switch">
                                     <input type="checkbox">
                                     <span class="switch-slider"></span>
-                                    <span>Registro de sesiÃ³n en todas las acciones</span>
+                                    <span>Registro de sesión en todas las acciones</span>
                                 </label>
                                 <label class="form-switch">
                                     <input type="checkbox" checked>
                                     <span class="switch-slider"></span>
-                                    <span>ExpiraciÃ³n de sesiÃ³n: 8 horas</span>
+                                    <span>Expiración de sesión: 8 horas</span>
                                 </label>
                             </div>
 
@@ -2103,7 +2106,7 @@
                     </div>
                     <div class="section-body" style="display:flex;flex-direction:column;gap:16px;">
                         <div style="font-size:13px;color:var(--gray);">
-                            Estas acciones son irreversibles. Por favor, procede con precauciÃ³n.
+                            Estas acciones son irreversibles. Por favor, procede con precaución.
                         </div>
                         <div style="display:flex;gap:12px;flex-wrap:wrap;">
                             <button class="btn btn-outline btn-sm"
@@ -2127,7 +2130,7 @@
     </div>
 
     <script>
-        // â”€â”€ Custom Cursor â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ── Custom Cursor ───────────────────────────────────
         const dot = document.getElementById('cursor-dot');
         const ring = document.getElementById('cursor-ring');
         const glow = document.getElementById('cursor-glow');
@@ -2152,13 +2155,13 @@
             });
         });
 
-        // â”€â”€ Scroll Progress â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ── Scroll Progress ──────────────────────────────────
         window.addEventListener('scroll', () => {
             const p = (window.scrollY / (document.documentElement.scrollHeight - innerHeight)) * 100;
             document.getElementById('progress-fill').style.width = p + '%';
         });
 
-        // â”€â”€ Reveal on Scroll â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ── Reveal on Scroll ─────────────────────────────────
         const obs = new IntersectionObserver(entries => {
             entries.forEach((e, i) => {
                 if (e.isIntersecting) setTimeout(() => e.target.classList.add('in'), i * 50);
@@ -2166,7 +2169,7 @@
         }, { threshold: 0.05 });
         document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
 
-        // â”€â”€ Sidebar Toggle (Mobile) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ── Sidebar Toggle (Mobile) ──────────────────────────
         function toggleSidebar() {
             document.getElementById('sidebar').classList.toggle('open');
         }
@@ -2179,7 +2182,7 @@
             }
         });
 
-        // â”€â”€ Tabs Navigation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ── Tabs Navigation ──────────────────────────────────
         document.querySelectorAll('.tab-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 // Remove active from all
@@ -2199,11 +2202,11 @@
             });
         });
 
-        // â”€â”€ Modal Functions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ── Modal Functions ──────────────────────────────────
         function openModal(id) { document.getElementById(id).classList.add('active'); }
         function closeModal(id) { document.getElementById(id).classList.remove('active'); }
 
-        // â”€â”€ User Invitation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ── User Invitation ──────────────────────────────────
         async function inviteUser() {
             const form = document.getElementById('addUserForm');
             if (!form.checkValidity()) {
@@ -2218,12 +2221,12 @@
             const empresaCodigo = localStorage.getItem('empresaCodigo');
 
             if (!token) {
-                alert('âš ï¸ SesiÃ³n expirada. Por favor inicia sesiÃ³n de nuevo.');
+                alert('⚠️ Sesión expirada. Por favor inicia sesión de nuevo.');
                 return;
             }
 
             if (!email || !rol) {
-                alert('âš ï¸ Por favor completa los campos obligatorios.');
+                alert('⚠️ Por favor completa los campos obligatorios.');
                 return;
             }
 
@@ -2238,7 +2241,7 @@
                     email: email,
                     rol: rol,
                     tenant: empresaCodigo,
-                    notas: mensaje ? `InvitaciÃ³n: ${mensaje}` : ''
+                    notas: mensaje ? `Invitación: ${mensaje}` : ''
                 };
 
                 const res = await fetch('/api/users', {
@@ -2253,13 +2256,13 @@
                 const data = await res.json();
 
                 if (!res.ok) {
-                    alert(`âŒ Error: ${data.error || 'No se pudo enviar la invitaciÃ³n'}`);
+                    alert(`❌ Error: ${data.error || 'No se pudo enviar la invitación'}`);
                     btn.innerHTML = origText;
                     btn.disabled = false;
                     return;
                 }
 
-                alert('âœ“ Usuario invitado exitosamente. Se ha enviado un correo de bienvenida.');
+                alert('✓ Usuario invitado exitosamente. Se ha enviado un correo de bienvenida.');
                 closeModal('addUserModal');
                 form.reset();
                 // Recargar tabla de usuarios si existe
@@ -2268,13 +2271,13 @@
                 }
             } catch (err) {
                 console.error('Error al invitar usuario:', err);
-                alert(`âŒ Error: ${err.message}`);
+                alert(`❌ Error: ${err.message}`);
                 btn.innerHTML = origText;
                 btn.disabled = false;
             }
         }
 
-        // â”€â”€ API Key Generation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ── API Key Generation ───────────────────────────────
         function tdFetch(url, options) {
             const token = localStorage.getItem('token');
             const headers = Object.assign({}, options?.headers || {}, token ? { 'Authorization': 'Bearer ' + token } : {});
@@ -2294,24 +2297,27 @@
                 const data = await res.json();
                 const keys = data.keys || [];
                 if (!keys.length) {
-                    list.innerHTML = '<div style="text-align:center;color:var(--gray);padding:24px;"><i class="fas fa-key" style="font-size:24px;display:block;margin-bottom:8px;opacity:.3"></i>AÃºn no hay claves API. Crea la primera con "Nueva Key".</div>';
+                    list.innerHTML = '<div style="text-align:center;color:var(--gray);padding:24px;"><i class="fas fa-key" style="font-size:24px;display:block;margin-bottom:8px;opacity:.3"></i>Aún no hay claves API. Crea la primera con "Nueva Key".</div>';
                     return;
                 }
+                const escT = v => (window.PP && PP.escapeHtml) ? PP.escapeHtml(v) : String(v == null ? '' : v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
                 list.innerHTML = keys.map(k => `
                     <div class="api-key-item">
                         <div style="flex:1;min-width:0;">
-                            <div class="api-key-name">${k.nombre || '(sin nombre)'}</div>
-                            <div class="api-key-value">${(k.clave || '').slice(0, 14)}â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢${(k.clave || '').slice(-4)}</div>
-                            <div class="api-key-meta">Creada: ${k.created_at ? new Date(k.created_at).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' }) : 'â€”'}${k.ultimo_uso ? ' Â· Ãšltima usada: ' + new Date(k.ultimo_uso).toLocaleString('es-ES', { day: '2-digit', month: 'short' }) : ''}</div>
+                            <div class="api-key-name">${escT(k.nombre || '(sin nombre)')}</div>
+                            <div class="api-key-value">${escT((k.clave || '').slice(0, 14))}••••••••••••••••${escT((k.clave || '').slice(-4))}</div>
+                            <div class="api-key-meta">Creada: ${k.created_at ? escT(new Date(k.created_at).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' })) : '—'}${k.ultimo_uso ? ' · Última usada: ' + escT(new Date(k.ultimo_uso).toLocaleString('es-ES', { day: '2-digit', month: 'short' })) : ''}</div>
                         </div>
                         <div class="api-key-actions">
-                            <button class="btn btn-ghost btn-xs" onclick="copyApiKey('${k.clave.replace(/\\/g, '\\\\').replace(/'/g, '\\\'')}')"><i class="fas fa-copy"></i> Copiar</button>
-                            <button class="btn btn-danger btn-xs" onclick="revokeApiKey('${k.id}')"><i class="fas fa-trash"></i></button>
+                            <button class="btn btn-ghost btn-xs" data-copy-key="${escT(k.clave)}"><i class="fas fa-copy"></i> Copiar</button>
+                            <button class="btn btn-danger btn-xs" data-revoke-key="${escT(k.id)}"><i class="fas fa-trash"></i></button>
                         </div>
                     </div>
                 `).join('');
+                list.querySelectorAll('[data-copy-key]').forEach(b => b.addEventListener('click', () => copyApiKey(b.dataset.copyKey)));
+                list.querySelectorAll('[data-revoke-key]').forEach(b => b.addEventListener('click', () => revokeApiKey(b.dataset.revokeKey)));
             } catch (err) {
-                list.innerHTML = `<div style="text-align:center;color:var(--red);padding:24px;">No se pudieron cargar las claves: ${err.message}</div>`;
+                list.innerHTML = `<div style="text-align:center;color:var(--red);padding:24px;">No se pudieron cargar las claves: ${window.PP ? PP.escapeHtml(err.message) : ''}</div>`;
             }
         }
 
@@ -2320,7 +2326,7 @@
         }
 
         async function revokeApiKey(id) {
-            if (!confirm('Â¿Revocar esta clave API? Las aplicaciones que la usen dejarÃ¡n de funcionar.')) return;
+            if (!confirm('¿Revocar esta clave API? Las aplicaciones que la usen dejarán de funcionar.')) return;
             try {
                 const res = await tdFetch('/api/tenant/apikeys/' + encodeURIComponent(id), { method: 'DELETE' });
                 if (!res.ok) {
@@ -2352,7 +2358,7 @@
                 });
                 const data = await res.json();
                 if (!res.ok) throw new Error(data.error || 'Error');
-                showToast('âœ“ Clave generada correctamente', 'success');
+                showToast('✓ Clave generada correctamente', 'success');
                 closeModal('apiKeyModal');
                 document.getElementById('keyName').value = '';
                 renderApiKeys();
@@ -2363,7 +2369,7 @@
             }
         }
 
-        // â”€â”€ Settings Save â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ── Settings Save ────────────────────────────────────
         async function saveSettings() {
             const tenantId = new URLSearchParams(window.location.search).get('id') || localStorage.getItem('empresaCodigo') || '';
             if (!tenantId) { showToast('No se pudo identificar el tenant', 'error'); return; }
@@ -2387,7 +2393,7 @@
                     const err = await res.json().catch(() => ({}));
                     throw new Error(err.error || 'Error');
                 }
-                showToast('âœ“ ConfiguraciÃ³n guardada', 'success');
+                showToast('✓ Configuración guardada', 'success');
                 setTimeout(() => window.location.reload(), 800);
             } catch (err) {
                 showToast('Error: ' + err.message, 'error');
@@ -2396,11 +2402,11 @@
             }
         }
 
-        // â”€â”€ Confirm Actions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ── Confirm Actions ──────────────────────────────────
         async function confirmSuspend() {
             const tenantId = new URLSearchParams(window.location.search).get('id') || localStorage.getItem('empresaCodigo') || '';
             if (!tenantId) return;
-            if (!confirm('Â¿EstÃ¡s seguro de suspender este tenant?\n\nEl acceso al portal serÃ¡ bloqueado inmediatamente, pero los datos se conservarÃ¡n.')) return;
+            if (!confirm('¿Estás seguro de suspender este tenant?\n\nEl acceso al portal será bloqueado inmediatamente, pero los datos se conservarán.')) return;
             try {
                 const res = await tdFetch('/api/tenants/' + encodeURIComponent(tenantId), {
                     method: 'PUT',
@@ -2411,7 +2417,7 @@
                     const err = await res.json().catch(() => ({}));
                     throw new Error(err.error || 'Error');
                 }
-                showToast('âœ“ Tenant suspendido', 'success');
+                showToast('✓ Tenant suspendido', 'success');
                 setTimeout(() => window.location.reload(), 800);
             } catch (err) {
                 showToast('Error: ' + err.message, 'error');
@@ -2421,8 +2427,8 @@
         async function confirmDelete() {
             const tenantId = new URLSearchParams(window.location.search).get('id') || localStorage.getItem('empresaCodigo') || '';
             if (!tenantId) return;
-            if (prompt('Escribe ELIMINAR para confirmar la eliminaciÃ³n permanente:') !== 'ELIMINAR') {
-                alert('OperaciÃ³n cancelada');
+            if (prompt('Escribe ELIMINAR para confirmar la eliminación permanente:') !== 'ELIMINAR') {
+                alert('Operación cancelada');
                 return;
             }
             try {
@@ -2431,14 +2437,24 @@
                     const err = await res.json().catch(() => ({}));
                     throw new Error(err.error || 'Error');
                 }
-                showToast('âœ“ Tenant eliminado permanentemente', 'success');
-                setTimeout(() => { window.location.href = '../pp/tenants.html'; }, 900);
+                showToast('✓ Tenant eliminado permanentemente', 'success');
+                setTimeout(() => {
+                    const isRoot = (localStorage.getItem('empresaCodigo') || '').toUpperCase() === 'ROOT';
+                    if (isRoot) {
+                        window.location.href = '../pp/tenants.html';
+                    } else if (window.ppLogout) {
+                        window.ppLogout('/login.html');
+                    } else {
+                        localStorage.clear();
+                        window.location.href = '/login.html';
+                    }
+                }, 900);
             } catch (err) {
                 showToast('Error: ' + err.message, 'error');
             }
         }
 
-        // â”€â”€ Tabs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ── Tabs ─────────────────────────────────────────────
         function openTab(name) {
             const btn = document.querySelector('.tab-btn[data-tab="' + name + '"]');
             if (!btn) return;
@@ -2456,7 +2472,7 @@
             }
         }
 
-        // â”€â”€ Stats â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ── Stats ────────────────────────────────────────────
         function fmtCompact(v) {
             const n = Number(v) || 0;
             if (n >= 1e6) return (n / 1e6).toFixed(2).replace(/\.00$/, '') + 'M';
@@ -2473,17 +2489,17 @@
                 set('statUsers', s.usuarios ? s.usuarios.activos + ' / ' + s.usuarios.limite : null);
                 set('statBots', s.bots ? s.bots.activos + ' / ' + s.bots.limite : null);
                 set('statTokens', s.tokens ? fmtCompact(s.tokens.usados) + ' / ' + fmtCompact(s.tokens.limite) : null);
-                set('statSla', s.sla || 'â€”');
+                set('statSla', s.sla || '—');
                 set('statBilling', s.facturas ? Number(s.facturas.total).toLocaleString('es-ES') + ' facturas' : null);
             } catch (err) {
                 console.warn('[tenant-detail] stats:', err.message);
             }
         }
 
-        // â”€â”€ Export Data â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ── Export Data ───────────────────────────────────────
         async function exportTenantData() {
             const tenantId = new URLSearchParams(window.location.search).get('id') || localStorage.getItem('empresaCodigo') || '';
-            showToast('Preparando exportaciÃ³n de datos...', 'info');
+            showToast('Preparando exportación de datos...', 'info');
             try {
                 const tenant = await tdFetch('/api/tenant/' + encodeURIComponent(tenantId)).then(r => r.json()).catch(() => ({}));
                 const users = await tdFetch('/api/users?empresa=' + encodeURIComponent(tenantId)).then(r => r.json()).catch(() => []);
@@ -2494,13 +2510,13 @@
                 a.download = 'tenant_' + (tenantId || 'export').slice(0, 20) + '_datos.json';
                 a.click();
                 URL.revokeObjectURL(a.href);
-                showToast('âœ“ Datos exportados correctamente', 'success');
+                showToast('✓ Datos exportados correctamente', 'success');
             } catch (err) {
                 showToast('Error al exportar: ' + err.message, 'error');
             }
         }
 
-        // â”€â”€ Initialize â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ── Initialize ───────────────────────────────────────
         window.addEventListener('load', () => {
             // Trigger initial reveal
             setTimeout(() => {
@@ -2536,10 +2552,10 @@
             const token = localStorage.getItem('token');
 
             if (!token) {
-                console.warn('âš ï¸ No se encontrÃ³ token. Abre F12 > Consola para ver detalles.');
-                // RedirecciÃ³n comentada para que no te envÃ­e al login sin aviso:
+                console.warn('⚠️ No se encontró token. Abre F12 > Consola para ver detalles.');
+                // Redirección comentada para que no te envíe al login sin aviso:
                 // window.location.href = 'login.html'; 
-                document.getElementById('tenant-name').textContent = 'Inicia sesiÃ³n primero';
+                document.getElementById('tenant-name').textContent = 'Inicia sesión primero';
                 return;
             }
 
@@ -2550,18 +2566,18 @@
 
             if (!tenantId) {
                 document.getElementById('tenant-name').textContent = 'Falta el ?id= en la URL';
-                console.error('âŒ URL incorrecta. Ejemplo: tenant_detail-original.html?id=PP-123456');
+                console.error('❌ URL incorrecta. Ejemplo: tenant_detail-original.html?id=PP-123456');
                 return;
             }
 
-            console.log('ðŸ”„ Cargando tenant:', tenantId);
+            console.log('🔄 Cargando tenant:', tenantId);
 
-            // 3. PeticiÃ³n segura a tu backend
+            // 3. Petición segura a tu backend
             fetch(`/api/tenant/${encodeURIComponent(tenantId)}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             })
                 .then(res => {
-                    if (res.status === 401) throw new Error('SesiÃ³n expirada. Inicia sesiÃ³n de nuevo.');
+                    if (res.status === 401) throw new Error('Sesión expirada. Inicia sesión de nuevo.');
                     if (res.status === 403) throw new Error('No tienes permiso para ver este tenant.');
                     if (res.status === 404) throw new Error('Tenant no encontrado en la base de datos.');
                     if (!res.ok) throw new Error('Error del servidor');
@@ -2605,10 +2621,10 @@
                     setVal('settingsTimezone', detail.timezone);
                     renderApiKeys();
                     loadTenantStats(tenantId);
-                    console.log('âœ… Tenant cargado correctamente:', preview, detail);
+                    console.log('✅ Tenant cargado correctamente:', preview, detail);
                 })
                 .catch(err => {
-                    console.error('âŒ Error:', err.message);
+                    console.error('❌ Error:', err.message);
                     document.getElementById('tenant-name').textContent = 'Error al cargar. Revisa F12';
                 });
         });
@@ -2628,7 +2644,7 @@
 <script src="../js/notif-panel.js"></script>
 <script src="../js/plan-gate.js"></script>
 
-<script src="../js/pp-sidebar-empresa.js"></script>
+<script src="../js/sidebar-empresa.js"></script>
 <script src="../js/printer-loader.js"></script>
 <script src="../auth-check.js"></script>
 

@@ -280,16 +280,17 @@ function renderProfile(user) {
     const initials = `${user.nombre?.[0] || 'U'}${user.apellido?.[0] || 'N'}`.toUpperCase();
     const avatar = document.getElementById('profileAvatar');
 
+    const escUD = v => String(v == null ? '' : v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     if (avatar) {
         const img = avatar.querySelector('img');
         if (!img || img.style.display === 'none') {
-            avatar.innerHTML = `${initials}<span class="status-badge ${user.status === 'active' ? 'online' : user.status === 'pending' ? 'warning' : 'offline'}" id="profileStatusBadge">● ${user.status === 'active' ? 'Online' : user.status === 'pending' ? 'Pendiente' : 'Suspendido'}</span>`;
+            avatar.innerHTML = `${escUD(initials)}<span class="status-badge ${user.status === 'active' ? 'online' : user.status === 'pending' ? 'warning' : 'offline'}" id="profileStatusBadge">● ${user.status === 'active' ? 'Online' : user.status === 'pending' ? 'Pendiente' : 'Suspendido'}</span>`;
         }
     }
 
     const nameEl = document.getElementById('profileName');
     if (nameEl) {
-        nameEl.innerHTML = `${user.nombre} ${user.apellido} ${user.verified ? '<i class="fas fa-check-circle verified" title="Verificado"></i>' : ''}`;
+        nameEl.innerHTML = `${escUD(user.nombre)} ${escUD(user.apellido)} ${user.verified ? '<i class="fas fa-check-circle verified" title="Verificado"></i>' : ''}`;
     }
 
     const emailEl = document.getElementById('profileEmail');

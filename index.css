@@ -705,67 +705,84 @@ header#mainHeader.scrolled .nav-bar{
    PLAN-SPECIFIC GRADIENTS
    ========================================== */
 
-/* Starter — Green / Teal */
-.plan-starter .pricing-card-side-tab{
+/* Starter / Pulpería — Green / Teal */
+.plan-starter .pricing-card-side-tab,
+.plan-pulperia .pricing-card-side-tab{
   background:linear-gradient(180deg,#30d158 0%,#34c759 50%,#00b4d8 100%);
 }
-.plan-starter .pricing-card-price-text{
+.plan-starter .pricing-card-price-text,
+.plan-pulperia .pricing-card-price-text{
   background-image:linear-gradient(135deg,#30d158 0%,#34c759 50%,#00b4d8 100%);
 }
-.plan-starter .pricing-card-btn{
+.plan-starter .pricing-card-btn,
+.plan-pulperia .pricing-card-btn{
   border-color:#30d158;
   color:#34c759;
 }
-.plan-starter .pricing-card-btn:hover{
+.plan-starter .pricing-card-btn:hover,
+.plan-pulperia .pricing-card-btn:hover{
   background:rgba(48,209,88,0.12);
   box-shadow:0 0 20px rgba(48,209,88,0.4);
 }
-.plan-starter .pricing-card-bottom-tab{
+.plan-starter .pricing-card-bottom-tab,
+.plan-pulperia .pricing-card-bottom-tab{
   background:linear-gradient(90deg,#30d158 0%,#34c759 50%,#00b4d8 100%);
 }
 
-/* Business — Purple / Violet (Featured) */
-.plan-business .pricing-card-side-tab{
+/* Business / Tienda — Purple / Violet (Featured) */
+.plan-business .pricing-card-side-tab,
+.plan-tienda .pricing-card-side-tab{
   background:linear-gradient(180deg,#d500f9 0%,#9c27b0 50%,#7c4dff 100%);
 }
-.plan-business .pricing-card-price-text{
+.plan-business .pricing-card-price-text,
+.plan-tienda .pricing-card-price-text{
   background-image:linear-gradient(135deg,#e040fb 0%,#aa00ff 50%,#7c4dff 100%);
 }
-.plan-business .pricing-card-btn{
+.plan-business .pricing-card-btn,
+.plan-tienda .pricing-card-btn{
   border-color:#aa00ff;
   color:#d500f9;
 }
-.plan-business .pricing-card-btn:hover{
+.plan-business .pricing-card-btn:hover,
+.plan-tienda .pricing-card-btn:hover{
   background:rgba(170,0,255,0.12);
   box-shadow:0 0 20px rgba(170,0,255,0.4);
 }
-.plan-business .pricing-card-bottom-tab{
+.plan-business .pricing-card-bottom-tab,
+.plan-tienda .pricing-card-bottom-tab{
   background:linear-gradient(90deg,#e040fb 0%,#9c27b0 50%,#651fff 100%);
 }
-.plan-business .pricing-card{
+.plan-business .pricing-card,
+.plan-tienda .pricing-card{
   border:1px solid rgba(170,0,255,0.3);
   box-shadow:0 20px 40px rgba(170,0,255,0.15),inset 0 1px 1px rgba(255,255,255,0.08);
 }
-.plan-business .pricing-card:hover{
+.plan-business .pricing-card:hover,
+.plan-tienda .pricing-card:hover{
   box-shadow:0 28px 50px rgba(170,0,255,0.25),inset 0 1px 1px rgba(255,255,255,0.15);
 }
 
-/* Enterprise — Cyan / Blue */
-.plan-enterprise .pricing-card-side-tab{
+/* Enterprise / Club — Cyan / Blue */
+.plan-enterprise .pricing-card-side-tab,
+.plan-club .pricing-card-side-tab{
   background:linear-gradient(180deg,#00e5ff 0%,#0091ea 50%,#2979ff 100%);
 }
-.plan-enterprise .pricing-card-price-text{
+.plan-enterprise .pricing-card-price-text,
+.plan-club .pricing-card-price-text{
   background-image:linear-gradient(135deg,#00e5ff 0%,#00b0ff 50%,#2979ff 100%);
 }
-.plan-enterprise .pricing-card-btn{
+.plan-enterprise .pricing-card-btn,
+.plan-club .pricing-card-btn{
   border-color:#00b0ff;
   color:#00e5ff;
 }
-.plan-enterprise .pricing-card-btn:hover{
+.plan-enterprise .pricing-card-btn:hover,
+.plan-club .pricing-card-btn:hover{
   background:rgba(0,229,255,0.12);
   box-shadow:0 0 20px rgba(0,229,255,0.4);
 }
-.plan-enterprise .pricing-card-bottom-tab{
+.plan-enterprise .pricing-card-bottom-tab,
+.plan-club .pricing-card-bottom-tab{
   background:linear-gradient(90deg,#00e5ff 0%,#00b0ff 50%,#2979ff 100%);
 }
 
@@ -1746,7 +1763,7 @@ header#mainHeader.scrolled .nav-bar{
   .areas-card-body{ padding:18px 16px; }
 } 
 /* ==========================================
-   TECH GRID � Modular Web3 adaptado
+   TECH GRID — Modular Web3 adaptado
    ========================================== */
 #tech-grid{ padding:80px 0; background:var(--bg); position:relative; }
 #tech-grid .tech-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:28px; max-width:980px; width:100%; margin:0 auto; }
@@ -1793,7 +1810,7 @@ header#mainHeader.scrolled .nav-bar{
 @media(max-width:768px){ .web3-deco{ width:68px; height:68px; top:10px; right:10px; opacity:0.32; } }
 @media(max-width:480px){ .web3-deco{ width:52px; height:52px; top:10px; right:10px; opacity:0.28; } }
  
-/* E-Invoice 3D � mejora integrada en Multi-Empresa Honduras */
+/* E-Invoice 3D — mejora integrada en Multi-Empresa Honduras */
 .e-invoice-card .e-invoice-embed{ width:100%; height:180px; margin:8px 0 0; background:transparent; border:none; overflow:hidden; display:flex; justify-content:center; align-items:center; position:relative; }
 .e-invoice-embed .scene{ position:relative; width:520px; height:520px; display:flex; justify-content:center; align-items:center; perspective:1000px; transform:scale(0.38); transform-origin:center; flex-shrink:0; }
 .e-invoice-embed .laptop{ position:absolute; bottom:65px; display:flex; flex-direction:column; align-items:center; z-index:1; }

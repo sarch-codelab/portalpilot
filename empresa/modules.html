@@ -1,10 +1,10 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
 <link rel="icon" type="image/png" href="../img/iconos/robot_logo.png">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MÃ³dulos â€” Portal Pilot</title>
+<title>Módulos — Portal Pilot</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <link rel="stylesheet" href="../css/portales.css">
@@ -32,36 +32,37 @@
       <a href="dashboard.html" class="pp-nav-link"><i class="fas fa-home"></i> <span>Dashboard</span></a>
       <a href="team.html" class="pp-nav-link"><i class="fas fa-users"></i> <span>Equipo</span></a>
       <a href="roles.html" class="pp-nav-link"><i class="fas fa-user-shield"></i> <span>Roles</span></a>
-      <a href="modules.html" class="pp-nav-link active"><i class="fas fa-shapes"></i> <span>MÃ³dulos</span></a>
+      <a href="modules.html" class="pp-nav-link active"><i class="fas fa-shapes"></i> <span>Módulos</span></a>
       <a href="consumo.html" class="pp-nav-link"><i class="fas fa-chart-pie"></i> <span>Consumo</span></a>
       <div class="pp-nav-sep">Cuenta</div>
-      <a href="suscripcion.html" class="pp-nav-link"><i class="fas fa-crown"></i> <span>SuscripciÃ³n</span></a>
+      <a href="suscripcion.html" class="pp-nav-link"><i class="fas fa-crown"></i> <span>Suscripción</span></a>
       <a href="security.html" class="pp-nav-link"><i class="fas fa-shield-alt"></i> <span>Seguridad</span></a>
       <a href="perfil.html" class="pp-nav-link"><i class="fas fa-user"></i> <span>Mi Perfil</span></a>
     </nav>
     <div class="pp-sidebar-footer">
-      <button class="pp-btn pp-btn-ghost pp-btn-sm" onclick="window.location.href='/login.html'"><i class="fas fa-sign-out-alt"></i> Cerrar SesiÃ³n</button>
+      <button class="pp-btn pp-btn-ghost pp-btn-sm" onclick="window.PP.logout('/login.html')"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</button>
     </div>
   </aside>
   <main class="main-content">
-    <div class="pp-topbar"><div class="pp-topbar-title">MÃ³dulos de <span>MI EMPRESA</span></div><span class="pp-badge purple" id="planBadge">â€”</span></div>
+    <div class="pp-topbar"><div class="pp-topbar-title">Módulos de <span>MI EMPRESA</span></div><span class="pp-badge purple" id="planBadge">—</span></div>
     <div class="pp-page-header">
       <div>
-        <h1 class="pp-page-title">CatÃ¡logo de <span>mÃ³dulos</span></h1>
-        <p class="pp-page-subtitle">La disponibilidad se deriva de tenant â†’ plan â†’ entitlements del backend. Nada estÃ¡ hardcodeado aquÃ­: activar un mÃ³dulo que tu plan no incluye lo resuelve el servidor.</p>
+        <h1 class="pp-page-title">Catálogo de <span>módulos</span></h1>
+        <p class="pp-page-subtitle">La disponibilidad se deriva de tenant → plan → entitlements del backend. Nada está hardcodeado aquí: activar un módulo que tu plan no incluye lo resuelve el servidor.</p>
       </div>
       <button class="pp-btn pp-btn-ghost pp-btn-sm" onclick="load()"><i class="fas fa-sync-alt"></i> Actualizar</button>
     </div>
     <div class="pp-content">
-      <div id="msg" class="pp-info-box"><i class="fas fa-spinner fa-spin"></i> Cargando catÃ¡logo realâ€¦</div>
+      <div id="msg" class="pp-info-box"><i class="fas fa-spinner fa-spin"></i> Cargando catálogo real…</div>
       <div class="mod-grid" id="modGrid"></div>
       <div class="pp-info-box" id="legend" style="display:none">
         <i class="fas fa-circle-info"></i>
-        <div><b>Activo</b>: incluido en tu plan y habilitado Â· <b>Disponible</b>: incluido, aÃºn sin activar Â· <b>Bloqueado</b>: desactivado por decisiÃ³n del tenant Â· <b>Requiere upgrade</b>: no incluido en el plan actual.</div>
+        <div><b>Activo</b>: incluido en tu plan y habilitado · <b>Disponible</b>: incluido, aún sin activar · <b>Bloqueado</b>: desactivado por decisión del tenant · <b>Requiere upgrade</b>: no incluido en el plan actual.</div>
       </div>
     </div>
   </main>
 </div>
+<script src="../auth-check.js"></script>
 <script src="../js/plan-gate.js"></script>
 <script src="../js/portales.js"></script>
 <script>
@@ -104,7 +105,7 @@
       }).join('');
     } catch (err) {
       msg.className = 'pp-error';
-      msg.innerHTML = `<i class="fas fa-triangle-exclamation"></i><div><b>No se pudo cargar el catÃ¡logo.</b><br>${H(err.message)}</div>`;
+      msg.innerHTML = `<i class="fas fa-triangle-exclamation"></i><div><b>No se pudo cargar el catálogo.</b><br>${H(err.message)}</div>`;
     }
   }
   document.getElementById('modGrid').addEventListener('click', async (e) => {
@@ -115,7 +116,7 @@
     const enabled = !sw.classList.contains('on');
     try {
       await window.PP.apiFetch('/api/empresa/modules/' + encodeURIComponent(key), { method: 'PUT', body: JSON.stringify({ enabled }) });
-      window.ppToast(enabled ? 'MÃ³dulo activado' : 'MÃ³dulo desactivado');
+      window.ppToast(enabled ? 'Módulo activado' : 'Módulo desactivado');
       load();
     } catch (err) {
       window.ppToast(err.message, 'err');
@@ -126,7 +127,6 @@
   load();
 })();
 </script>
-  <script src="../js/pp-sidebar-empresa.js"></script>
 </body>
 </html>
 

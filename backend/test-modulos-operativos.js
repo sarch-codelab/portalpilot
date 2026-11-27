@@ -562,20 +562,20 @@ test('la UI no inventa datos de ejemplo', () => {
 test('inicio-modulos.js enruta los modulos nuevos a la pantalla real', () => {
   // MODULO_URL es el mapa de destino. El nombre del modulo tambien aparece en
   // MODULO_ICONS y en MODULO_NOMBRES, asi que hay que leer el bloque correcto.
-  const bloque = inicio.slice(
-    inicio.indexOf('const MODULO_URL = {'),
-    inicio.indexOf('};', inicio.indexOf('const MODULO_URL = {'))
-  );
+  const idx = inicio.indexOf('var MODULO_URL = {') !== -1
+    ? inicio.indexOf('var MODULO_URL = {')
+    : inicio.indexOf('const MODULO_URL = {');
+  const bloque = idx !== -1 ? inicio.slice(idx, inicio.indexOf('};', idx)) : '';
   assert.ok(bloque.length > 50, 'no se encontro el mapa MODULO_URL');
 
   for (const [modulo, destino] of [
     // Inventario abre el catalogo de productos: es la entrada real del modulo.
     // Mermas y el resto se alcanzan desde la barra de pestanas.
-    ['Inventario', 'operaciones.html?tab=productos'],
-    ['Membresías', 'operaciones.html?tab=mesas'],
-    ['Sector Retail', 'operaciones.html?tab=pasillos']
+    ['inventario', 'operaciones.html?tab=productos'],
+    ['membresias', 'operaciones.html?tab=mesas'],
+    ['sector_retail', 'operaciones.html?tab=pasillos']
   ]) {
-    const linea = bloque.split('\n').find((l) => l.includes(`'${modulo}':`));
+    const linea = bloque.split('\n').find((l) => new RegExp(`['"]?${modulo}['"]?:`).test(l));
     assert.ok(linea, `falta la ruta del modulo ${modulo} en MODULO_URL`);
     assert.ok(
       linea.includes(destino),
@@ -585,7 +585,7 @@ test('inicio-modulos.js enruta los modulos nuevos a la pantalla real', () => {
 
   // Un modulo con destino real no debe seguir apuntando a dashboard.html.
   assert.ok(
-    !/"'Inventario':\s*'dashboard\.html'/.test(bloque),
-    'Inventario ya no debe devolver al dashboard generico'
+    !/inventario:\s*'dashboard\.html'/.test(bloque),
+    'inventario ya no debe devolver al dashboard generico'
   );
 });

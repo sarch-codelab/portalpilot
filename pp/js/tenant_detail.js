@@ -1315,18 +1315,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 regEl.textContent = new Date(detail.createdAt).toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' });
             }
 
-            if (preview.logo) {
+            if (preview.logo && /^(https?:\/\/|\/|\.\.?\/|data:image\/)/i.test(String(preview.logo))) {
                 const logoEl = document.querySelector('.tenant-logo');
                 if (logoEl) {
-                    logoEl.innerHTML = `<img src="${preview.logo}" alt="Logo" onerror="this.style.display='none';this.parentElement.innerHTML='Logo'">`;
+                    logoEl.textContent = '';
+                    const img = document.createElement('img');
+                    img.src = preview.logo;
+                    img.alt = 'Logo';
+                    img.onerror = function () { logoEl.textContent = 'Logo'; };
+                    logoEl.appendChild(img);
                 }
             }
 
             // Banner del tenant (mismo patrón que /pp/perfil): si existe, tapa el
             // fondo decorativo; si no, se conserva el CSS (.tenant-header-bg).
             const bannerBg = document.querySelector('.tenant-header-bg');
-            if (bannerBg && preview.banner) {
-                bannerBg.style.backgroundImage = `url('${preview.banner}')`;
+            if (bannerBg && preview.banner && /^(https?:\/\/|\/|\.\.?\/|data:image\/)/i.test(String(preview.banner))) {
+                bannerBg.style.backgroundImage = `url('${encodeURI(preview.banner).replace(/'/g, '%27')}')`;
             }
         })
         .catch(err => {

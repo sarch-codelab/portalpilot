@@ -201,6 +201,10 @@
     const existing = document.getElementById('account-switch-overlay');
     if (existing) return;
 
+    const esc = (v) => String(v == null ? '' : v)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+
     const overlay = document.createElement('div');
     overlay.id = 'account-switch-overlay';
     overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);backdrop-filter:blur(2px);z-index:10000000;display:flex;align-items:center;justify-content:center;padding:20px;';
@@ -217,10 +221,10 @@
           ${accounts.map(account => `
             <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid rgba(255,255,255,0.05);">
               <div>
-                <div style="font-size:14px;color:#fff;font-weight:600;">${getAccountDisplayName(account)}</div>
-                <div style="font-size:12px;color:#9ca3af;">Rol: ${account.rol || 'Usuario'} • Estado: ${account.status || 'activo'}</div>
+                <div style="font-size:14px;color:#fff;font-weight:600;">${esc(getAccountDisplayName(account))}</div>
+                <div style="font-size:12px;color:#9ca3af;">Rol: ${esc(account.rol || 'Usuario')} • Estado: ${esc(account.status || 'activo')}</div>
               </div>
-              <button data-account-id="${account.id}" class="account-switch-btn" style="border:1px solid rgba(139,92,246,0.4);background:transparent;color:#fff;padding:10px 14px;border-radius:10px;cursor:pointer;">Seleccionar</button>
+              <button data-account-id="${esc(account.id)}" class="account-switch-btn" style="border:1px solid rgba(139,92,246,0.4);background:transparent;color:#fff;padding:10px 14px;border-radius:10px;cursor:pointer;">Seleccionar</button>
             </div>
           `).join('')}
         </div>

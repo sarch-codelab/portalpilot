@@ -154,4 +154,12 @@
 .pp-page-title span{color:var(--accent)}
 .pp-page-subtitle{font-size:14px;color:var(--gray);max-width:560px;margin-top:6px}
 
-@media(max-width:900px){.pp-dashboard{grid-template-columns:1fr}.pp-sidebar{display:none}}
+.pp-mobile-toggle{display:none;background:rgba(255,255,255,0.05);border:1px solid var(--border2);color:var(--white);width:38px;height:38px;border-radius:10px;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.pp-sidebar-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.65);backdrop-filter:blur(4px);z-index:990}
+.pp-sidebar-backdrop.active{display:block}
+@media(max-width:900px){
+  .pp-dashboard{grid-template-columns:1fr}
+  .pp-mobile-toggle{display:inline-flex}
+  .pp-sidebar{position:fixed;top:0;left:-260px;width:260px;height:100vh;z-index:1000;transition:left .3s ease}
+  .pp-sidebar.active{left:0}
+}

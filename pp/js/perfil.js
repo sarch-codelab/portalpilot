@@ -199,16 +199,22 @@ async function loadProfile() {
 
         const avatarLarge = document.querySelector('.user-avatar-large');
         if (avatarLarge) {
-            if (u.avatar) {
-                avatarLarge.innerHTML = `<img src="${u.avatar}" alt="${fullName}" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;" onerror="this.style.display='none';this.parentElement.innerHTML='${getProfileInitials()}'">`;
+            avatarLarge.textContent = '';
+            if (u.avatar && /^(https?:\/\/|\/|\.\.?\/|data:image\/)/i.test(String(u.avatar))) {
+                const img = document.createElement('img');
+                img.src = u.avatar;
+                img.alt = fullName;
+                img.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:inherit;';
+                img.onerror = function () { avatarLarge.textContent = getProfileInitials(); };
+                avatarLarge.appendChild(img);
             } else {
-                avatarLarge.innerHTML = getProfileInitials();
+                avatarLarge.textContent = getProfileInitials();
             }
         }
 
         const banner = document.getElementById('profileBanner');
         if (banner) {
-            if (u.banner) banner.style.backgroundImage = `url('${u.banner}')`;
+            if (u.banner && /^(https?:\/\/|\/|\.\.?\/|data:image\/)/i.test(String(u.banner))) banner.style.backgroundImage = `url('${encodeURI(u.banner).replace(/'/g, '%27')}')`;
             else banner.style.backgroundImage = "url('../img/banner_ud.jpg')";
         }
 
@@ -787,7 +793,7 @@ async function endAllSessions() {
         showToast('✓ Todas las sesiones revocadas. Volverás a iniciar sesión.', 'success');
         
         setTimeout(() => {
-            window.location.href = 'login.html';
+            window.location.href = '/login.html';
         }, 1500);
     } catch (err) {
         showToast(err.message || 'Error al revocar sesiones', 'error');
@@ -810,25 +816,29 @@ async function loadApiKeys() {
             list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--gray);">Aún no tienes claves API.<br>Genera la primera con el botón inferior.</div>';
             return;
         }
+        const escPK = v => String(v == null ? '' : v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
         list.innerHTML = keys.map(k => `
             <div class="api-key-item">
                 <div class="api-key-info">
-                    <div class="api-key-name">${k.nombre}</div>
-                    <div class="api-key-value">${k.clave.slice(0, 14)}...${k.clave.slice(-6)}</div>
-                    <div class="api-key-meta">Creada: ${new Date(k.created_at).toLocaleDateString('es')}${k.ultimo_uso ? ' • Última usada: ' + new Date(k.ultimo_uso).toLocaleDateString('es') : ''}</div>
+                    <div class="api-key-name">${escPK(k.nombre)}</div>
+                    <div class="api-key-value">${escPK(String(k.clave || '').slice(0, 14))}...${escPK(String(k.clave || '').slice(-6))}</div>
+                    <div class="api-key-meta">Creada: ${escPK(new Date(k.created_at).toLocaleDateString('es'))}${k.ultimo_uso ? ' • Última usada: ' + escPK(new Date(k.ultimo_uso).toLocaleDateString('es')) : ''}</div>
                 </div>
                 <div class="api-key-actions">
-                    <button class="btn btn-ghost btn-xs" onclick="copyApiKey('${k.clave}')">
+                    <button class="btn btn-ghost btn-xs" data-copy-key="${escPK(k.clave)}">
                         <i class="fas fa-copy"></i>
                     </button>
-                    <button class="btn btn-danger btn-xs" onclick="revokeApiKey('${k.id}')">
+                    <button class="btn btn-danger btn-xs" data-revoke-key="${escPK(k.id)}">
                         <i class="fas fa-trash"></i>
                     </button>
                 </div>
             </div>
         `).join('');
+        list.querySelectorAll('[data-copy-key]').forEach(b => b.addEventListener('click', () => copyApiKey(b.dataset.copyKey)));
+        list.querySelectorAll('[data-revoke-key]').forEach(b => b.addEventListener('click', () => revokeApiKey(b.dataset.revokeKey)));
     } catch (err) {
-        list.innerHTML = `<div style="text-align:center;padding:20px;color:var(--red);">No se pudieron cargar las claves: ${err.message}</div>`;
+        const msgEsc = String(err?.message || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        list.innerHTML = `<div style="text-align:center;padding:20px;color:var(--red);">No se pudieron cargar las claves: ${msgEsc}</div>`;
     }
 }
 
@@ -916,7 +926,7 @@ async function deleteAccount() {
         showToast('Cuenta eliminada. Gracias por usar Portal Pilot.', 'info');
         
         setTimeout(() => {
-            window.location.href = 'login.html';
+            window.location.href = '/login.html';
         }, 1500);
     } catch (err) {
         showToast(err.message || 'Error al eliminar cuenta', 'error');
@@ -925,7 +935,44 @@ async function deleteAccount() {
 
 // ── ID Card ────────────────────────────────────────
 function openIdCard() {
-    window.open('tarjeta.html', '_blank');
+    const existing = document.getElementById('ppIdCardModal');
+    if (existing) existing.remove();
+    const nombre = (document.getElementById('profileName')?.textContent || localStorage.getItem('userName') || 'Usuario').trim();
+    const email = (document.getElementById('profileEmail')?.textContent || localStorage.getItem('userEmail') || '—').trim();
+    const rol = (document.getElementById('sidebarRole')?.textContent || localStorage.getItem('userRole') || 'Administrador').trim();
+    const empresa = (localStorage.getItem('empresaNombre') || localStorage.getItem('empresaCodigo') || 'Portal Pilot').trim();
+    const userId = localStorage.getItem('currentAccountId') || '—';
+    const esc = v => String(v || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    const initials = nombre.split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join('') || 'PP';
+    const modal = document.createElement('div');
+    modal.id = 'ppIdCardModal';
+    modal.className = 'modal-overlay active';
+    modal.innerHTML = `
+      <div class="modal" style="max-width:420px;">
+        <div class="modal-header">
+          <div class="modal-title"><i class="fas fa-id-card" style="margin-right:8px;color:var(--accent);"></i>Credencial Digital</div>
+          <button class="modal-close" onclick="this.closest('.modal-overlay').remove()"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+          <div style="background:linear-gradient(135deg,#17112b,#0b0b18);border:1px solid rgba(139,92,246,0.35);border-radius:16px;padding:22px;text-align:center;">
+            <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#a78bfa;margin-bottom:14px;">PORTAL PILOT · IDENTIFICACIÓN</div>
+            <div style="width:68px;height:68px;border-radius:50%;margin:0 auto 12px;background:linear-gradient(135deg,#8b5cf6,#6d28d9);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:#fff;">${esc(initials)}</div>
+            <div style="font-size:18px;font-weight:700;color:#fff;">${esc(nombre)}</div>
+            <div style="font-size:12px;color:#9ca3af;margin-top:2px;">${esc(email)}</div>
+            <div style="margin-top:14px;display:flex;justify-content:center;gap:8px;flex-wrap:wrap;">
+              <span style="padding:4px 10px;border-radius:999px;font-size:11px;background:rgba(139,92,246,0.18);color:#c4b5fd;">${esc(rol)}</span>
+              <span style="padding:4px 10px;border-radius:999px;font-size:11px;background:rgba(52,211,153,0.16);color:#34d399;">${esc(empresa)}</span>
+            </div>
+            <div style="margin-top:14px;font-size:11px;color:#6b7280;">ID: <code>${esc(userId)}</code></div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-ghost" onclick="this.closest('.modal-overlay').remove()">Cerrar</button>
+          <button class="btn btn-acc" onclick="window.print()"><i class="fas fa-print"></i> Imprimir</button>
+        </div>
+      </div>`;
+    document.body.appendChild(modal);
+    modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
 }
 
 // ── Utilities ──────────────────────────────────────

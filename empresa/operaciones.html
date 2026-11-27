@@ -48,6 +48,7 @@
         <span class="name" id="sidebarName">Mi empresa</span>
         <span class="role" id="sidebarRole">Cargando…</span>
       </div>
+      <button type="button" class="footer-btn logout" id="logoutBtn" onclick="window.ppLogout ? window.ppLogout('/login.html') : (localStorage.clear(), window.location.href='/login.html')"><i class="fas fa-sign-out-alt"></i> <span>Cerrar Sesión</span></button>
     </div>
   </aside>
 

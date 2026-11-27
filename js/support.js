@@ -41,7 +41,21 @@
         resultsBox.innerHTML = '<div class="search-result-item"><div class="sr-title" style="color:var(--text-muted)">Sin resultados</div><div class="sr-desc">Intenta con otros términos</div></div>';
       } else {
         matches.forEach(m => {
-          resultsBox.innerHTML += `<div class="search-result-item" onclick="document.getElementById('supportSearch').value='${m.title}';document.getElementById('searchResults').classList.remove('active');"><div class="sr-title">${m.title}</div><div class="sr-desc">${m.desc}</div></div>`;
+          const item = document.createElement('div');
+          item.className = 'search-result-item';
+          const tEl = document.createElement('div');
+          tEl.className = 'sr-title';
+          tEl.textContent = m.title;
+          const dEl = document.createElement('div');
+          dEl.className = 'sr-desc';
+          dEl.textContent = m.desc;
+          item.appendChild(tEl);
+          item.appendChild(dEl);
+          item.addEventListener('click', function () {
+            document.getElementById('supportSearch').value = m.title;
+            document.getElementById('searchResults').classList.remove('active');
+          });
+          resultsBox.appendChild(item);
         });
       }
       resultsBox.classList.add('active');

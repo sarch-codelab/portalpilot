@@ -308,29 +308,25 @@
                 <div class="user-header-content">
                     <div class="user-avatar-container">
                         <div class="user-avatar-large" id="profileAvatar">
-                            <img src="../img/asuka.png" alt="Profile"
-                                onerror="this.style.display='none';this.parentElement.innerHTML='AL'">
+                            <img src="../img/iconos/robot_logo.png" alt="Profile"
+                                onerror="this.style.display='none';this.parentElement.innerHTML='PP'">
                         </div>
                         <span class="status-badge online" id="profileStatusBadge"></span>
                     </div>
                     <div class="user-info-large">
-                        <h1 class="user-name" id="profileName">Asuka Langley Soryu <i
-                                class="fas fa-check-circle verified" title="Verificado"></i></h1>
-                        <p class="user-email" id="profileEmail">asuka.langley@nerv.jp</p>
+                        <h1 class="user-name" id="profileName">Cargando usuario...</h1>
+                        <p class="user-email" id="profileEmail">—</p>
                         <div class="user-meta">
                             <div class="user-meta-item"><i class="fas fa-hashtag"></i> <code
-                                    id="profileId">alangley</code></div>
-                            <div class="user-meta-item"><i class="fas fa-building"></i> <span id="profileTenant">NERV
-                                    Organization</span></div>
+                                    id="profileId">—</code></div>
+                            <div class="user-meta-item"><i class="fas fa-building"></i> <span id="profileTenant">—</span></div>
                             <div class="user-meta-item"><i class="fas fa-calendar"></i> <span
-                                    id="profileMemberSince">Miembro desde: 15 Mar 2024</span></div>
+                                    id="profileMemberSince">Miembro desde: —</span></div>
                             <div class="user-meta-item"><i class="fas fa-clock"></i> <span id="profileLastAccess">Último
-                                    acceso: Hoy, 10:32 AM</span></div>
+                                    acceso: —</span></div>
                         </div>
                         <div class="user-badges" id="profileBadges">
-                            <span class="user-badge role"><i class="fas fa-id-badge"></i> Admin de Tenant</span>
-                            <span class="user-badge verified"><i class="fas fa-shield-alt"></i> 2FA Activo</span>
-                            <span class="user-badge premium"><i class="fas fa-crown"></i> Enterprise Plan</span>
+                            <span class="user-badge role"><i class="fas fa-id-badge"></i> Usuario</span>
                         </div>
                     </div>
                 </div>
@@ -459,33 +455,11 @@
                                     <div class="tenant-info">
                                         <div class="tenant-icon"><i class="fas fa-building"></i></div>
                                         <div>
-                                            <div class="tenant-name">NERV Organization</div>
-                                            <div class="tenant-role">Tenant Principal</div>
+                                            <div class="tenant-name">Cargando empresa...</div>
+                                            <div class="tenant-role">Tenant asignado</div>
                                         </div>
                                     </div>
-                                    <span class="tenant-access full"><i class="fas fa-check-circle"></i> Acceso
-                                        Completo</span>
-                                </div>
-                                <div class="tenant-item">
-                                    <div class="tenant-info">
-                                        <div class="tenant-icon"><i class="fas fa-building"></i></div>
-                                        <div>
-                                            <div class="tenant-name">SEELE Core</div>
-                                            <div class="tenant-role">Tenant Secundario</div>
-                                        </div>
-                                    </div>
-                                    <span class="tenant-access read"><i class="fas fa-eye"></i> Solo Lectura</span>
-                                </div>
-                                <div class="tenant-item">
-                                    <div class="tenant-info">
-                                        <div class="tenant-icon"><i class="fas fa-building"></i></div>
-                                        <div>
-                                            <div class="tenant-name">WILLE Logistic</div>
-                                            <div class="tenant-role">Acceso Temporal</div>
-                                        </div>
-                                    </div>
-                                    <span class="tenant-access none"><i class="fas fa-clock"></i> Expira: 30 Jun
-                                        2026</span>
+                                    <span class="tenant-access full"><i class="fas fa-spinner fa-spin"></i> Verificando</span>
                                 </div>
                             </div>
                         </div>
@@ -664,13 +638,13 @@
             </div>
             <div class="modal-body">
                 <p style="font-size:13px;color:var(--gray);margin-bottom:20px;">
-                    Al resetear la contraseña de <strong id="resetUserName">Asuka Langley Soryu</strong>, se generará
+                    Al resetear la contraseña de <strong id="resetUserName">el usuario</strong>, se generará
                     una contraseña temporal y se enviará un email con instrucciones.
                 </p>
                 <div class="field">
                     <label>Método de entrega</label>
                     <select id="resetMethod">
-                        <option>Email corporativo (asuka.langley@nerv.jp)</option>
+                        <option>Email corporativo registrado</option>
                         <option>SMS al teléfono registrado</option>
                         <option>Generar y mostrar aquí (solo para admin)</option>
                     </select>
@@ -696,7 +670,7 @@
             </div>
             <div class="modal-body" style="text-align:center;">
                 <p style="font-size:14px;color:var(--gray);margin-bottom:20px;">
-                    ¿Estás seguro de suspender la cuenta de <strong id="suspendUserName">Asuka Langley Soryu</strong>?
+                    ¿Estás seguro de suspender la cuenta de <strong id="suspendUserName">este usuario</strong>?
                     El usuario no podrá acceder al sistema.
                 </p>
                 <div class="field" style="text-align:left;">

@@ -90,18 +90,62 @@ async function notificarEquipo(ticket) {
   console.log(`[SOPORTE] Correo de nuevo ticket enviado a ${SMTP_USER}`);
 }
 
+const ALLOWED_SUPPORT_ORIGINS = new Set([
+  'https://portal-pilot.vercel.app',
+  'https://www.portal-pilot.vercel.app',
+  'https://portalpilot-app.vercel.app',
+  'https://www.portalpilot-app.vercel.app',
+  'https://portalpilot.hn',
+  'https://www.portalpilot.hn',
+  'https://portalpilot.js.org',
+  ...(process.env.FRONTEND_URL ? process.env.FRONTEND_URL.split(',').map(s => s.trim()).filter(Boolean) : []),
+]);
+const _supportRateMap = new Map();
+function isSupportRateLimited(ip) {
+  const now = Date.now();
+  const windowMs = 15 * 60 * 1000;
+  const maxReqs = 5;
+  const arr = (_supportRateMap.get(ip) || []).filter(t => now - t < windowMs);
+  if (arr.length >= maxReqs) { _supportRateMap.set(ip, arr); return true; }
+  arr.push(now);
+  _supportRateMap.set(ip, arr);
+  if (_supportRateMap.size > 500) {
+    for (const [k, times] of _supportRateMap) {
+      if (!times.some(t => now - t < windowMs)) _supportRateMap.delete(k);
+    }
+  }
+  return false;
+}
+
 module.exports = async function handler(req, res) {
-  /* CORS */
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  /* CORS estricto */
+  const origin = req.headers.origin || '';
+  const isLocalOrigin = process.env.NODE_ENV !== 'production' && /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(origin);
+  if (origin && (ALLOWED_SUPPORT_ORIGINS.has(origin) || isLocalOrigin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Vary', 'Origin');
+  }
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
   if (req.method === 'OPTIONS') {
+    if (origin && !ALLOWED_SUPPORT_ORIGINS.has(origin) && !isLocalOrigin) {
+      return res.status(403).end();
+    }
     return res.status(200).end();
   }
 
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  if (origin && !ALLOWED_SUPPORT_ORIGINS.has(origin) && !isLocalOrigin) {
+    return res.status(403).json({ error: 'Origen no permitido' });
+  }
+
+  const clientIp = String(req.headers['x-forwarded-for'] || req.socket?.remoteAddress || 'unknown').split(',')[0].trim();
+  if (isSupportRateLimited(clientIp)) {
+    return res.status(429).json({ error: 'Demasiados tickets enviados. Intenta de nuevo en unos minutos.' });
   }
 
   const { name, email, company, plan, category, priority, message } = req.body || {};

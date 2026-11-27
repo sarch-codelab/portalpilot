@@ -36,7 +36,7 @@ async function init() {
       { clave: 'pulperia', nombre: 'Pulpería / Mercadito', precio_mensual: 299, descripcion: 'POS de mostrador, libreta de fiado, caja y factura SAR simplificada.' },
       { clave: 'tienda', nombre: 'Tienda / Supermercado', precio_mensual: 799, descripcion: 'POS retail con escáner, SAR formal, compras, CRM y reportes.' },
       { clave: 'club', nombre: 'Club / Membresía', precio_mensual: 1399, descripcion: 'Membresías QR, barra y mesas, BI, 2FA y fidelización.' },
-      { clave: 'personalizado', nombre: 'Personalizado (Cotizador)', precio_mensual: 150, descripcion: 'Cuota base + módulos a la carta desde el cotizador de 21.' },
+      { clave: 'personalizado', nombre: 'Personalizado (Cotizador)', precio_mensual: 150, descripcion: 'Cuota base + módulos a la carta desde el cotizador de 23 módulos.' },
       { clave: 'business', nombre: 'Business (legacy)', precio_mensual: 1499, descripcion: 'Plan legacy para clientes con contrato anterior.' },
       { clave: 'enterprise', nombre: 'Enterprise (legacy)', precio_mensual: 4999, descripcion: 'Plan legacy para clientes con contrato anterior.' }
     ];

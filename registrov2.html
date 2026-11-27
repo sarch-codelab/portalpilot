@@ -1000,7 +1000,7 @@
                 </div>
                 <label class="check-label" style="margin:20px 0; display:flex; align-items:flex-start; gap:8px; cursor:pointer;">
                     <input type="checkbox" id="acceptTerms" style="margin-top:3px;">
-                    <span style="font-size:12px; color:var(--text-dim);">Acepto los <a href="#" style="color:var(--accent-soft);">Términos de Servicio</a> y la <a href="#" style="color:var(--accent-soft);">Política de Privacidad</a>.</span>
+                    <span style="font-size:12px; color:var(--text-dim);">Acepto los <a href="terminos.html" style="color:var(--accent-soft);" target="_blank">Términos de Servicio</a> y la <a href="privacidad.html" style="color:var(--accent-soft);" target="_blank">Política de Privacidad</a>.</span>
                 </label>
                 <div class="btn-row">
                     <button class="btn-submit secondary" onclick="prevStep(7)"><i class="fas fa-arrow-left" style="font-size:12px;"></i> Atrás</button>
@@ -1017,7 +1017,7 @@
                     <div class="success-info">
                         <div class="success-info-row"><span class="success-info-label">Código de tenant</span><span class="success-info-value" id="finalCode">PP-XXXX</span></div>
                         <div class="success-info-row"><span class="success-info-label">URL de acceso</span><span class="success-info-value" id="finalUrl">portal-pilot.vercel.app</span></div>
-                        <div class="success-info-row"><span class="success-info-label">Plan</span><span class="success-info-value" id="finalPlan" style="color:var(--green);">Startup (15 días gratis)</span></div>
+                        <div class="success-info-row"><span class="success-info-label">Plan</span><span class="success-info-value" id="finalPlan" style="color:var(--green);">Prueba (15 días gratis)</span></div>
                     </div>
                     <div class="btn-row single">
                         <button class="btn-submit" onclick="goToDashboard()"><i class="fas fa-arrow-right-to-bracket"></i> Acceder al dashboard</button>
@@ -1027,7 +1027,7 @@
         </div>
 
         <div class="page-footer">
-            <span>© 2026 Portal Pilot</span><span>·</span><a href="#">Privacidad</a><span>·</span><a href="#">Términos</a>
+            <span>© 2026 Portal Pilot</span><span>·</span><a href="privacidad.html">Privacidad</a><span>·</span><a href="terminos.html">Términos</a>
         </div>
     </div>
 
@@ -1076,7 +1076,7 @@
         let backupCodes = [];
         let verified2FACode = '';
         let twoFASetupToken = '';
-        let emailVerificationCode = '';
+        let emailVerificationToken = '';
 
         function updateProgress() {
             document.querySelectorAll('.step-circle').forEach((circle, i) => {
@@ -1532,20 +1532,21 @@
 
         // ─── EMAIL VERIFICATION ───
         async function sendEmailVerificationCode() {
-            const email = document.getElementById('regEmail').value;
+            const email = document.getElementById('regEmail').value.trim().toLowerCase();
             document.getElementById('verifyEmailDisplay').textContent = email;
             setupOTPInputs('emailOtpGroup');
-            emailVerificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+            emailVerificationToken = '';
             let emailSent = false;
             try {
                 const resp = await fetch(`${API_ROOT}/api/enviar-codigo-verificacion`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, codigo: emailVerificationCode })
+                    body: JSON.stringify({ email })
                 });
                 const data = await resp.json();
-                emailSent = resp.ok && data.success;
-                if (!emailSent) console.warn('API envió error:', data.error || resp.status);
+                emailSent = resp.ok && data.success && Boolean(data.verificationToken);
+                if (emailSent) emailVerificationToken = data.verificationToken;
+                else console.warn('API envió error:', data.error || resp.status);
             } catch (error) {
                 console.warn('No se pudo enviar el código por API:', error.message);
             }
@@ -1557,16 +1558,17 @@
         }
         window.resendEmailCode = async function () {
             const btn = document.getElementById('resendBtn'); btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
-            emailVerificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+            const email = document.getElementById('regEmail').value.trim().toLowerCase();
             let emailSent = false;
             try {
                 const resp = await fetch(`${API_ROOT}/api/enviar-codigo-verificacion`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email: document.getElementById('regEmail').value, codigo: emailVerificationCode })
+                    body: JSON.stringify({ email })
                 });
                 const data = await resp.json();
-                emailSent = resp.ok && data.success;
+                emailSent = resp.ok && data.success && Boolean(data.verificationToken);
+                if (emailSent) emailVerificationToken = data.verificationToken;
             } catch (error) {
                 console.warn('No se pudo reenviar el código por API:', error.message);
             }
@@ -1589,10 +1591,25 @@
 
         window.finalizeRegistration = async function () { 
             if (!document.getElementById('acceptTerms').checked) { showMessage('Debes aceptar los términos', 'error'); return; }
-            if (getOTPValue('emailOtpGroup').length !== 6) { showMessage('Ingresa el código de verificación completo', 'error'); return; }
-            if (getOTPValue('emailOtpGroup') !== emailVerificationCode) { showMessage('Código de verificación incorrecto', 'error'); return; }
+            const emailOtpCode = getOTPValue('emailOtpGroup');
+            if (emailOtpCode.length !== 6) { showMessage('Ingresa el código de verificación completo', 'error'); return; }
+            if (!emailVerificationToken) { showMessage('Solicita primero el código de verificación a tu correo', 'error'); return; }
 
-            const btn = document.getElementById('finalizeBtn'); btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creando...'; btn.disabled = true;
+            const btn = document.getElementById('finalizeBtn'); btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verificando...'; btn.disabled = true;
+
+            try {
+                const emailForOtp = document.getElementById('regEmail').value.trim().toLowerCase();
+                const verifyResp = await fetch(`${API_ROOT}/api/registro/verificar-email`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: emailForOtp, code: emailOtpCode, verificationToken: emailVerificationToken })
+                });
+                const verifyData = await readJsonResponse(verifyResp);
+                if (!verifyResp.ok || !verifyData.emailVerifiedToken) {
+                    throw new Error(verifyData.error || 'Código de verificación incorrecto');
+                }
+                const emailVerifiedToken = verifyData.emailVerifiedToken;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creando...';
 
             try {
                 const sizeMap = {
@@ -1659,6 +1676,7 @@
                     dosFaBackupCodes: backupCodes,
                     dosFaCode: verified2FACode || null,
                     dosFaSetupToken: twoFASetupToken,
+                    emailVerifiedToken,
                     terminosAceptados: true,
                     plan,
                     // Modelo de precios Honduras: ciclo de facturación y cotización
@@ -1781,12 +1799,17 @@
 
                 // Mapeo de tamaño de operación al dropdown del formulario
                 const sizeMap = {
-                    'pequeño': '1-10 empleados',
-                    'pequeno': '1-10 empleados',
-                    'mediano': '11-50 empleados',
-                    'grande': '51-200 empleados',
-                    'muy grande': 'Más de 200 empleados',
-                    'mega': 'Más de 200 empleados'
+                    'pequeño': '1-10',
+                    'pequeno': '1-10',
+                    'micro': '1-10',
+                    'mediano': '11-50',
+                    'small': '11-50',
+                    'grande': '51-200',
+                    'medium': '51-200',
+                    'muy grande': '201-500',
+                    'large': '201-500',
+                    'mega': '500+',
+                    'enterprise': '500+'
                 };
                 const empresaSizeField = document.getElementById('regSize');
                 if (operacion && empresaSizeField) {

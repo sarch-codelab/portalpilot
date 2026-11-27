@@ -228,13 +228,13 @@ setInterval(toggleUserStatus, 30000);
 document.getElementById('createTenantBtn')?.addEventListener('click', () => window.location.href = 'tenants.html');
 document.getElementById('deployBotBtn')?.addEventListener('click', () => {
   showToast('Desplegando Bot', 'Redirigiendo...', 'info');
-  setTimeout(() => window.location.href = 'bots.html', 1000);
+  setTimeout(() => window.location.href = 'bots_rpa.html', 1000);
 });
 document.getElementById('exportAuditBtn')?.addEventListener('click', () => {
   showToast('Exportando', 'Descargando...', 'success');
 });
 document.getElementById('managePermissionsBtn')?.addEventListener('click', () => window.location.href = 'usuarios.html');
-document.getElementById('newBotBtn')?.addEventListener('click', () => window.location.href = 'bots.html');
+document.getElementById('newBotBtn')?.addEventListener('click', () => window.location.href = 'bots_rpa.html');
 document.getElementById('checkServices')?.addEventListener('click', function () {
   this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verificando...';
   this.disabled = true;
@@ -568,7 +568,7 @@ function showWidgetDetails(widgetType) {
         <div class="detail-card"><div class="detail-icon"><i class="fas fa-plug"></i></div><div class="detail-label">API REST</div><div class="detail-value" style="color:var(--green);font-size:14px;">99.98% uptime</div></div>
         <div class="detail-card"><div class="detail-icon"><i class="fas fa-database"></i></div><div class="detail-label">NocoDB</div><div class="detail-value" style="color:var(--green);font-size:14px;">99.95% uptime</div></div>
         <div class="detail-card"><div class="detail-icon"><i class="fas fa-brain"></i></div><div class="detail-label">Gemma 3N</div><div class="detail-value" style="color:var(--green);font-size:14px;">99.90% uptime</div></div>
-        <div class="detail-card"><div class="detail-icon"><i class="fas fa-link"></i></div><div class="detail-label">Blockchain</div><div class="detail-value" style="color:var(--yellow);font-size:14px;">98.20% uptime</div></div>`
+        <div class="detail-card"><div class="detail-icon"><i class="fas fa-link"></i></div><div class="detail-label">Auditoría</div><div class="detail-value" style="color:var(--yellow);font-size:14px;">98.20% uptime</div></div>`
     },
     'calendar': {
       title: 'Todos los Eventos',

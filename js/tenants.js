@@ -150,7 +150,7 @@ modalConfirm.addEventListener('click', () => {
   localStorage.clear();
   sessionStorage.clear();
   alert('Sesión cerrada. Redirigiendo...');
-  window.location.href = 'login.html';
+  window.location.href = '/login.html';
 });
 
 logoutModal.addEventListener('click', (e) => {
@@ -188,7 +188,7 @@ function validateSession() {
   if (!token) {
     console.error('[TENANTS] No se encontró token de sesión válido');
     localStorage.clear();
-    window.location.href = 'login.html';
+    window.location.href = '/login.html';
     return false;
   }
   return true;
@@ -216,7 +216,7 @@ async function fetchTenants() {
       console.error('[TENANTS] Error de autenticación:', response.status);
       localStorage.clear();
       sessionStorage.clear();
-      window.location.href = 'login.html';
+      window.location.href = '/login.html';
       return;
     }
 
@@ -276,7 +276,7 @@ async function deleteTenant(id, name) {
     const token = localStorage.getItem('token');
     if (!token) {
       alert('No se encontró token de sesión. Por favor inicia sesión de nuevo.');
-      window.location.href = 'login.html';
+      window.location.href = '/login.html';
       return;
     }
 
@@ -294,7 +294,7 @@ async function deleteTenant(id, name) {
       alert('Tu sesión ha expirado. Por favor inicia sesión de nuevo.');
       localStorage.clear();
       sessionStorage.clear();
-      window.location.href = 'login.html';
+      window.location.href = '/login.html';
       return;
     }
 

@@ -12,10 +12,20 @@
 
     var banner = document.createElement('div');
     banner.id = 'global-banner';
-    banner.className = 'global-banner ' + (data.type || 'info');
-    banner.innerHTML = data.message + '<button class="close" aria-label="Cerrar" title="Cerrar">&times;</button>';
+    var allowedTypes = { info: 1, warning: 1, danger: 1, success: 1 };
+    var safeType = allowedTypes[data.type] ? data.type : 'info';
+    banner.className = 'global-banner ' + safeType;
 
-    var closeBtn = banner.querySelector('.close');
+    var msgSpan = document.createElement('span');
+    msgSpan.textContent = String(data.message || '');
+    banner.appendChild(msgSpan);
+
+    var closeBtn = document.createElement('button');
+    closeBtn.className = 'close';
+    closeBtn.setAttribute('aria-label', 'Cerrar');
+    closeBtn.setAttribute('title', 'Cerrar');
+    closeBtn.innerHTML = '&times;';
+    banner.appendChild(closeBtn);
     closeBtn.onclick = function() {
       dismissBanner();
       var msg = data.message || '';

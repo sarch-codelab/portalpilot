@@ -21,8 +21,10 @@ jobs:
           node-version: 20
       - name: Instalar dependencias
         run: npm ci
-      - name: Sintaxis del backend
-        run: node --check backend/server.js
+      - name: Sintaxis del backend (lint)
+        run: npm run lint
+      - name: Suite de contratos e integridad ERP
+        run: npm test
       - name: Verificación de esquema (check_schema.js)
         if: ${{ env.SUPABASE_URL != '' && env.SUPABASE_SERVICE_ROLE_KEY != '' }}
         run: node backend/check_schema.js

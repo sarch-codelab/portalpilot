@@ -8,10 +8,9 @@ backend/.env
 .gemini/
 *.log
 .vercel
+.vercel
 .env*
 !.env.example
-
-.env*
 # privado - no subir a git (costos y estrés)
 ANALISIS_COSTOS_PLANES.md
 PRIVADO_*.md
@@ -24,8 +23,6 @@ empresa/enteprise.txt
 img/img-index/*.txt
 .playwright-mcp/
 
-.vercel
-.env*
 .ping-secret.local
 
 # Scripts de diagnostico local (contienen rutas absolutas de la maquina)
